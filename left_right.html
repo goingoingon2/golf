@@ -89,6 +89,7 @@ const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
             const [user, setUser] = useState(null);
             const [isDbReady, setIsDbReady] = useState(false);
             const [isSyncing, setIsSyncing] = useState(false);
+            const [dbError, setDbError] = useState(''); // 서버 접속 에러 표시용
 
             // 권한(비밀번호) 상태
             const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem(`golf_auth_${appId}`) === 'true');
@@ -135,7 +136,10 @@ const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
                     try {
                         if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
                         else await signInAnonymously(auth);
-                    } catch (e) { console.error("Auth Error", e); }
+                    } catch (e) { 
+                        console.error("Auth Error", e);
+                        setDbError(e.code || "인증 설정 오류");
+                    }
 
                     onAuthStateChanged(auth, (u) => {
                         if (isMounted) {
@@ -384,7 +388,6 @@ const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
                                     <form onSubmit={handleAuthSubmit}>
                                         <input type="password" inputMode="numeric" pattern="\d*" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="비밀번호(7905)" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-emerald-500 mb-6" autoFocus />
                                         <div className="flex gap-3">
-                                            {/* 관리자가 아니더라도 로컬에서만 게임을 시작시켜 입장할 수 있게 허용 (DB 저장 안 됨) */}
                                             <button type="button" onClick={() => {
                                                 setIsAuthModalOpen(false);
                                                 if (pendingActionRef.current?.isStartAction && pendingActionRef.current?.fn) {
@@ -402,9 +405,17 @@ const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
                         )}
 
                         <div className="pt-16 pb-8 px-6 text-white text-center relative flex-shrink-0">
-                            {isDbReady && (
+                            {isDbReady ? (
                                 <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold tracking-wider border border-white/20">
                                     <Icon name="check" size={10} className="text-white"/> <span className="opacity-90">LIVE</span>
+                                </div>
+                            ) : dbError ? (
+                                <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold tracking-wider border border-white/20 bg-rose-500/90">
+                                    <span className="opacity-90">ERROR</span>
+                                </div>
+                            ) : (
+                                <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold tracking-wider border border-white/20 bg-rose-500/90">
+                                    <span className="opacity-90">OFFLINE</span>
                                 </div>
                             )}
                             <Icon name="trophy" size={56} className="mx-auto mb-4 drop-shadow-md" strokeWidth={1.5} />
@@ -478,13 +489,18 @@ const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
 
                             <button onClick={() => {
                                 handleAuthAction(() => {
+                                    if (dbError) {
+                                        setToastMessage(`[서버 에러] ${dbError}. 설정을 확인하세요.`);
+                                        setShowToast(true);
+                                        return;
+                                    }
                                     if (!isDbReady && firebaseConfig) {
                                         setToastMessage('서버에 연결 중입니다. 잠시 후 다시 눌러주세요.');
                                         setShowToast(true);
                                         return;
                                     }
                                     updateGameState({ isStarted: true, players, feeMode, feeSettings, holes, currentHoleIdx: 0 });
-                                }, true); // true = 시작(입장) 액션임을 명시
+                                }, true);
                             }} className="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-[0_8px_20px_rgba(5,150,105,0.3)] active:scale-95 transition-transform text-lg uppercase tracking-widest mt-6 flex-shrink-0">
                                 Game Start
                             </button>
@@ -615,10 +631,20 @@ const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
                         <div className="flex justify-between items-center px-5 py-3.5">
                             <div className="flex items-center">
                                 <h1 className="font-black italic text-[22px] tracking-tight text-slate-900 mr-2">LEFT & RIGHT</h1>
-                                {isDbReady && (
+                                {isDbReady ? (
                                     <div className="flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider">
                                         <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`}></span>
                                         LIVE
+                                    </div>
+                                ) : dbError ? (
+                                    <div className="flex items-center gap-1 bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        ERROR
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1 bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        OFFLINE
                                     </div>
                                 )}
                             </div>
@@ -747,6 +773,11 @@ const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
             );
         }
 
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
