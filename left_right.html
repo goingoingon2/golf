@@ -43,17 +43,19 @@
     <script type="text/babel">
         const { useState, useMemo, useEffect, useRef } = React;
 
-// 환경 변수 설정
-const appId = 'my-golf-group-1';
-const firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
-const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
+        // ⛳️ 사용자님의 Firebase 설정값이 입력된 부분입니다!
+        const appId = 'my-golf-group-1';
+        const firebaseConfig = {
+            apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+            authDomain: "left-right-6da31.firebaseapp.com",
+            projectId: "left-right-6da31",
+            storageBucket: "left-right-6da31.firebasestorage.app",
+            messagingSenderId: "128347797181",
+            appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+        };
+        const initialAuthToken = null;
+
+        let db, auth;
 
         // 아이콘 컴포넌트
         const Icon = ({ name, size = 20, className = "" }) => {
@@ -773,11 +775,6 @@ const initialAuthToken = null; // 이 줄도 꼭 남겨주세요!
             );
         }
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
-    </script>
-</body>
-</html>
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
