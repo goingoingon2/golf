@@ -7,7 +7,7 @@
   <title>골프 타당 내기</title>
 
   <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.tailwindcss.com" onerror="document.getElementById('css-error').style.display='block'"></script>
 
   <!-- React & ReactDOM (버전 18) -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -24,12 +24,17 @@
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
     * { font-family: 'Pretendard', sans-serif; }
-    body { background-color: #f4f6f8; -webkit-tap-highlight-color: transparent; }
+    body { background-color: #f4f6f8; -webkit-tap-highlight-color: transparent; margin: 0; }
     /* iOS 안전 영역 대응 */
     .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
   </style>
 </head>
 <body>
+  <div id="css-error" style="display:none; padding:20px; background-color:#ff4444; color:white; text-align:center; font-family:sans-serif; font-weight:bold; line-height:1.5;">
+    ⚠️ 디자인(CSS) 파일을 불러오지 못했습니다.<br/><br/>
+    스마트폰의 '기본 파일 뷰어'나 '카카오톡' 등에서는 외부 디자인 로딩이 차단될 수 있습니다.<br/><br/>
+    파일을 여실 때 연결 앱을 반드시 <b>크롬(Chrome)</b>이나 <b>사파리(Safari)</b> 정식 브라우저로 선택해서 열어주세요!
+  </div>
   <div id="root"></div>
 
   <!-- React 애플리케이션 코드 -->
