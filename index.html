@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>골프 타당 내기</title>
+  <title>골프 타당 게임(Stroke play)</title>
 
   <!-- 1. 폰트 로드 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
@@ -49,7 +49,6 @@
     // =====================================================================
     // ★ 0. Firebase 설정 ★
     // =====================================================================
-    // 🚨 파이어베이스 콘솔에서 발급받은 본인의 config 정보를 아래에 붙여넣으세요!
     const MY_FIREBASE_CONFIG = {
   apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
   authDomain: "left-right-6da31.firebaseapp.com",
@@ -129,7 +128,6 @@
     // =====================================================================
     function App() {
       const [isAdmin, setIsAdmin] = useState(true);
-
       const [step, setStep] = useState('setup'); 
       const [selectedCourseId, setSelectedCourseId] = useState('standard_72');
       const [frontNineId, setFrontNineId] = useState('OUT');
@@ -165,6 +163,8 @@
       
       const [currentNear, setCurrentNear] = useState(null);
       const [currentLongest, setCurrentLongest] = useState(null);
+      const [isReverseNear, setIsReverseNear] = useState(false);
+      const [isReverseLongest, setIsReverseLongest] = useState(false);
 
       const [multiplier, setMultiplier] = useState(1); 
       const [hasManualMultiplier, setHasManualMultiplier] = useState(false); 
@@ -185,6 +185,9 @@
       const [elapsedTime, setElapsedTime] = useState('00:00');
       const [user, setUser] = useState(null);
       const [roomId, setRoomId] = useState('');
+
+      // 🚨 정보 모달 (도움말) 
+      const [infoModal, setInfoModal] = useState({ show: false, title: '', desc: '' });
       
       const lastSyncedStr = useRef('');
       const lastSentUpdate = useRef(0);
@@ -194,6 +197,11 @@
       const parPressTimer = useRef(null);
       const isParLongPress = useRef(false);
       const livePressTimer = useRef(null);
+
+      // 도움말 팝업 함수
+      const openInfo = (title, desc) => {
+        setInfoModal({ show: true, title, desc });
+      };
 
       // =====================================================================
       // ★ Firebase 통신 ★
@@ -238,7 +246,7 @@
         const roomRef = getRoomRef(roomId);
         const unsubscribe = roomRef.onSnapshot((snap) => {
           if (snap.exists) {
-            if (isAdmin && hasReceivedData.current) return; // 방장 초기 로드 방지
+            if (isAdmin && hasReceivedData.current) return;
             
             hasReceivedData.current = true;
             const data = snap.data();
@@ -260,7 +268,9 @@
             if (data.currentScores !== undefined) setCurrentScores(data.currentScores);
             if (data.currentPutts !== undefined) setCurrentPutts(data.currentPutts);
             if (data.currentNear !== undefined) setCurrentNear(data.currentNear);
+            if (data.isReverseNear !== undefined) setIsReverseNear(data.isReverseNear);
             if (data.currentLongest !== undefined) setCurrentLongest(data.currentLongest);
+            if (data.isReverseLongest !== undefined) setIsReverseLongest(data.isReverseLongest);
             if (data.multiplier !== undefined) setMultiplier(data.multiplier);
             if (data.hasManualMultiplier !== undefined) setHasManualMultiplier(data.hasManualMultiplier);
             if (data.currentExcluded !== undefined) setCurrentExcluded(data.currentExcluded);
@@ -275,7 +285,7 @@
 
         const payload = { 
           step, players, holes, currentHole, startTime, usePutts, gaepyungRate, isRoundThousand, isProportionalDistribution,
-          currentPar, currentScores, currentPutts, currentNear, currentLongest, multiplier, hasManualMultiplier, currentExcluded, isHoleExcluded
+          currentPar, currentScores, currentPutts, currentNear, isReverseNear, currentLongest, isReverseLongest, multiplier, hasManualMultiplier, currentExcluded, isHoleExcluded
         };
         const currentStr = JSON.stringify(payload);
         if (currentStr === lastSyncedStr.current) return;
@@ -287,7 +297,7 @@
           getRoomRef(roomId).set(finalPayload, { merge: true }).catch(e => console.error(e));
         }, 300); 
         return () => clearTimeout(timer);
-      }, [step, players, holes, currentHole, startTime, usePutts, gaepyungRate, isRoundThousand, isProportionalDistribution, currentPar, currentScores, currentPutts, currentNear, currentLongest, multiplier, hasManualMultiplier, currentExcluded, isHoleExcluded, user, roomId, isAdmin]);
+      }, [step, players, holes, currentHole, startTime, usePutts, gaepyungRate, isRoundThousand, isProportionalDistribution, currentPar, currentScores, currentPutts, currentNear, isReverseNear, currentLongest, isReverseLongest, multiplier, hasManualMultiplier, currentExcluded, isHoleExcluded, user, roomId, isAdmin]);
 
       // =====================================================================
       // ★ 파생 데이터 계산 ★
@@ -516,7 +526,9 @@
         let initialExcluded = [false, false, false, false];
         let initialIsHoleExcluded = false;
         let initialNear = null;
+        let initialIsReverseNear = false;
         let initialLongest = null;
+        let initialIsReverseLongest = false;
 
         if (existingData) {
           initialPar = existingData.par;
@@ -527,7 +539,9 @@
           initialExcluded = existingData.excluded || [false, false, false, false];
           initialIsHoleExcluded = existingData.isHoleExcluded || false;
           initialNear = existingData.near !== undefined ? existingData.near : null;
+          initialIsReverseNear = existingData.isReverseNear !== undefined ? existingData.isReverseNear : false;
           initialLongest = existingData.longest !== undefined ? existingData.longest : null;
+          initialIsReverseLongest = existingData.isReverseLongest !== undefined ? existingData.isReverseLongest : false;
         } else {
           const prevHole = holeIndex > 0 ? holes[holeIndex - 1] : null;
           initialExcluded = [...globalExcluded]; 
@@ -544,7 +558,9 @@
         setCurrentScores(initialScores);
         setCurrentPutts(initialPutts);
         setCurrentNear(initialNear);
+        setIsReverseNear(initialIsReverseNear);
         setCurrentLongest(initialLongest);
+        setIsReverseLongest(initialIsReverseLongest);
         setMultiplier(initialMultiplier);
         setHasManualMultiplier(initialHasManual);
         setCurrentExcluded(initialExcluded);
@@ -577,7 +593,9 @@
           par: currentPar, scores: [...currentScores], putts: [...currentPutts],
           multiplier, excluded: [...currentExcluded], isHoleExcluded, hasManualMultiplier,
           near: currentPar === 3 ? currentNear : null,
-          longest: currentPar === 5 ? currentLongest : null
+          isReverseNear: currentPar === 3 ? isReverseNear : false,
+          longest: currentPar === 5 ? currentLongest : null,
+          isReverseLongest: currentPar === 5 ? isReverseLongest : false
         };
         setHoles(newHoles);
         setStep('hole-result');
@@ -644,20 +662,25 @@
           }
         });
 
-        const applySpecialBonus = (winnerIdx) => {
+        const applySpecialBonus = (winnerIdx, isReverse) => {
           if (winnerIdx !== null && winnerIdx !== undefined && !excluded[winnerIdx]) {
             const bonus = baseAmount * mult;
             for (let j = 0; j < 4; j++) {
               if (j !== winnerIdx && !excluded[j]) {
-                balances[winnerIdx] += bonus;
-                balances[j] -= bonus;
+                if (isReverse) {
+                  balances[winnerIdx] -= bonus;
+                  balances[j] += bonus;
+                } else {
+                  balances[winnerIdx] += bonus;
+                  balances[j] -= bonus;
+                }
               }
             }
           }
         };
 
-        if (hole.par === 3) applySpecialBonus(hole.near);
-        if (hole.par === 5) applySpecialBonus(hole.longest);
+        if (hole.par === 3) applySpecialBonus(hole.near, hole.isReverseNear);
+        if (hole.par === 5) applySpecialBonus(hole.longest, hole.isReverseLongest);
 
         return balances;
       };
@@ -745,12 +768,12 @@
 
       const generateScorecardText = () => {
         const date = new Date().toLocaleDateString('ko-KR');
-        let text = `⛳ 골프 타당 내기 스코어카드\n📍 코스: ${actualCourseName} (${actualFrontName} / ${actualBackName})\n📅 일시: ${date}\n\n[현재 합산 결과]\n`;
+        let text = `⛳ 골프 타당 게임(Stroke play) 스코어카드\n📍 코스: ${actualCourseName} (${actualFrontName} / ${actualBackName})\n📅 일시: ${date}\n\n[현재 합산 결과]\n`;
         players.forEach((p, i) => {
           const bal = gameBalances[i];
           const total = totalBalances[i];
           const balText = bal > 0 ? `+${bal.toLocaleString()}` : bal === 0 ? '0' : bal.toLocaleString();
-          text += `🏌️ ${p}: ${balText}원 (핸디포함 ${total > 0 ? '+' : ''}${total.toLocaleString()}원)\n`;
+          text += `🏌️ ${p}: ${balText}P (핸디포함 ${total > 0 ? '+' : ''}${total.toLocaleString()}P)\n`;
         });
         text += `\n* 진행 상황: ${currentHole}H 완료`;
         return text;
@@ -803,9 +826,9 @@
             <div className="bg-[#128853] text-white pt-12 pb-24 px-6 rounded-b-[40px] text-center shadow-md relative z-0 pointer-events-auto">
               <div className="flex justify-center items-center gap-2 mb-2">
                 <span className="text-2xl">⛳</span>
-                <h1 className="text-2xl font-black tracking-tight">골프 타당 내기</h1>
+                <h1 className="text-2xl font-black tracking-tight">골프 타당 게임(Stroke play)</h1>
               </div>
-              <p className="text-[#a7e2c9] text-sm font-medium">라운딩 전 설정을 완료해주세요</p>
+              <p className="text-[#a7e2c9] text-sm font-medium">라운드 전 설정을 완료해 주세요</p>
             </div>
             
             <div className="max-w-md w-full mx-auto px-4 -mt-16 relative z-10 space-y-4 flex-1">
@@ -851,7 +874,7 @@
 
               <div className="bg-white rounded-[24px] shadow-sm p-5 border border-gray-100 pointer-events-auto">
                 <label className="flex items-center text-[15px] font-bold text-gray-800 mb-4">
-                  <Icon name="Users" className="w-5 h-5 mr-2 text-gray-600" /> 플레이어 및 핸디캡 (원)
+                  <Icon name="Users" className="w-5 h-5 mr-2 text-gray-600" /> 플레이어 및 핸디캡 (P)
                 </label>
                 <div className={`space-y-3 ${!isAdmin ? 'pointer-events-none opacity-80' : ''}`}>
                   {players.map((player, idx) => (
@@ -872,7 +895,7 @@
                       <input type="text" value={player} onChange={(e) => updatePlayerName(idx, e.target.value)} className="flex-1 bg-transparent py-2 outline-none transition text-[15px] font-bold text-gray-800 min-w-0" placeholder={`이름 ${idx + 1}`} onTouchStart={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} />
                       <div className="relative w-28 shrink-0 bg-gray-50 rounded-[12px] overflow-hidden border border-gray-200 focus-within:border-[#128853] focus-within:ring-1 focus-within:ring-[#128853] transition-all">
                         <input type="text" inputMode="numeric" value={initialBalances[idx] === 0 || initialBalances[idx] === '' ? '' : (initialBalances[idx] === '-' ? '-' : Number(initialBalances[idx]).toLocaleString())} onChange={(e) => updateInitialBalance(idx, e.target.value)} className="w-full bg-transparent px-3 py-2.5 outline-none transition text-right pr-7 text-sm font-bold text-gray-700" placeholder="0" onTouchStart={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} />
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs pointer-events-none">원</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs pointer-events-none">P</span>
                       </div>
                     </div>
                   ))}
@@ -881,15 +904,15 @@
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 px-1">
                   <span className="text-[14px] font-bold text-gray-800">핸디캡 합계</span>
                   <span className={`text-[16px] font-black ${handicapSum === 0 ? 'text-[#128853]' : 'text-red-500'}`}>
-                    {handicapSum > 0 ? '+' : ''}{handicapSum.toLocaleString()}원
+                    {handicapSum > 0 ? '+' : ''}{handicapSum.toLocaleString()}P
                   </span>
                 </div>
               </div>
 
               <div className={`bg-white rounded-[24px] shadow-sm p-5 border border-gray-100 pointer-events-auto ${!isAdmin ? 'pointer-events-none opacity-80' : ''}`}>
                 <label className="flex items-center text-[15px] font-bold text-gray-800 mb-4">
-                  <div className="w-5 h-5 mr-2 bg-[#e5f5ec] text-[#128853] rounded-full flex items-center justify-center font-black text-[10px]">₩</div> 
-                  1타당 금액 (원)
+                  <div className="w-5 h-5 mr-2 bg-[#e5f5ec] text-[#128853] rounded-full flex items-center justify-center font-black text-[10px]">P</div> 
+                  1타당 포인트 (P)
                 </label>
                 
                 <div className="grid grid-cols-3 gap-2.5 mb-2">
@@ -899,20 +922,23 @@
                     </button>
                   ))}
                   {isCustomAmount ? (
-                    <input 
-                      type="text" 
-                      inputMode="numeric" 
-                      value={baseAmount ? Number(baseAmount).toLocaleString() : ''} 
-                      onChange={(e) => { 
-                        const rawValue = e.target.value.replace(/,/g, ''); 
-                        if (rawValue === '') setBaseAmount(''); 
-                        else { const num = parseInt(rawValue, 10); if (!isNaN(num)) setBaseAmount(num); } 
-                      }} 
-                      onBlur={() => { if (!baseAmount) setIsCustomAmount(false); }}
-                      className="py-3.5 rounded-xl text-sm font-bold bg-[#128853] text-white shadow-md outline-none text-center focus:ring-2 focus:ring-green-300 w-full placeholder-white/70" 
-                      placeholder="입력" 
-                      autoFocus 
-                    />
+                    <div className="relative">
+                      <input 
+                        type="text" 
+                        inputMode="numeric" 
+                        value={baseAmount ? Number(baseAmount).toLocaleString() : ''} 
+                        onChange={(e) => { 
+                          const rawValue = e.target.value.replace(/,/g, ''); 
+                          if (rawValue === '') setBaseAmount(''); 
+                          else { const num = parseInt(rawValue, 10); if (!isNaN(num)) setBaseAmount(num); } 
+                        }} 
+                        onBlur={() => { if (!baseAmount) setIsCustomAmount(false); }}
+                        className="py-3.5 rounded-xl text-sm font-bold bg-[#128853] text-white shadow-md outline-none text-center focus:ring-2 focus:ring-green-300 w-full placeholder-white/70 pr-6" 
+                        placeholder="입력" 
+                        autoFocus 
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 font-bold text-xs pointer-events-none">P</span>
+                    </div>
                   ) : (
                     <button onClick={() => { setIsCustomAmount(true); setBaseAmount(''); }} className="py-3.5 rounded-xl text-sm font-bold transition-all bg-gray-100 text-gray-600 hover:bg-gray-200">
                       직접입력
@@ -935,14 +961,20 @@
                   <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 animate-in fade-in slide-in-from-top-2">
                     <div className="space-y-5">
                       <div>
-                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">배판 적용 기준 시점</label>
-                        <div className="flex bg-gray-100 p-1 rounded-[12px]">
-                          <button onClick={() => setDoubleRules({...doubleRules, timing: 'current'})} className={`flex-1 py-2.5 text-[13px] font-bold rounded-[8px] transition ${doubleRules.timing === 'current' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>당홀 기준</button>
-                          <button onClick={() => setDoubleRules({...doubleRules, timing: 'prev'})} className={`flex-1 py-2.5 text-[13px] font-bold rounded-[8px] transition ${doubleRules.timing === 'prev' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>전홀 기준</button>
+                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">
+                          배판 적용 기준 시점
+                        </label>
+                        <div className="flex bg-gray-100 p-1 rounded-[12px] gap-1">
+                          <button onClick={() => setDoubleRules({timing: 'none', birdie: false, threeTie: false, prevTie: false, triple: false, doublePar3: false})} className={`flex-1 py-2 text-[12px] font-bold rounded-[8px] transition ${doubleRules.timing === 'none' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>미적용</button>
+                          <button onClick={() => setDoubleRules({timing: 'current', birdie: true, threeTie: true, prevTie: true, triple: true, doublePar3: true})} className={`flex-1 py-2 text-[12px] font-bold rounded-[8px] transition ${doubleRules.timing === 'current' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>당홀</button>
+                          <button onClick={() => setDoubleRules({timing: 'prev', birdie: true, threeTie: true, prevTie: true, triple: true, doublePar3: true})} className={`flex-1 py-2 text-[12px] font-bold rounded-[8px] transition ${doubleRules.timing === 'prev' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>전홀</button>
                         </div>
                       </div>
                       <div>
-                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">자동 배판 조건</label>
+                        <label className="flex items-center text-[13px] font-bold text-gray-800 mb-2.5 block">
+                          자동 배판 조건
+                          <Icon name="Info" className="w-[14px] h-[14px] ml-1.5 text-gray-400 cursor-pointer hover:text-gray-600 inline-block" onClick={() => openInfo('자동 배판 조건', '아래 체크된 조건 중 하나라도 만족하는 플레이어가 있으면, 해당 홀의 타당 포인트가 자동으로 2배가 됩니다.')} />
+                        </label>
                         <div className="space-y-2">
                           {[
                             { id: 'birdie', label: '버디 이상' },
@@ -952,7 +984,18 @@
                             { id: 'doublePar3', label: '파3 더블 보기 이상' },
                           ].map(condition => (
                             <label key={condition.id} className="flex items-center p-3.5 bg-gray-50 border border-gray-100 rounded-[12px] cursor-pointer transition hover:bg-gray-100">
-                              <input type="checkbox" checked={doubleRules[condition.id]} onChange={(e) => setDoubleRules({...doubleRules, [condition.id]: e.target.checked})} className="w-5 h-5 text-[#128853] rounded border-gray-300 focus:ring-[#128853]" />
+                              <input 
+                                type="checkbox" 
+                                checked={doubleRules[condition.id]} 
+                                onChange={(e) => {
+                                  const newRules = { ...doubleRules, [condition.id]: e.target.checked };
+                                  if (doubleRules.timing === 'none' && e.target.checked) {
+                                    newRules.timing = 'current';
+                                  }
+                                  setDoubleRules(newRules);
+                                }} 
+                                className="w-5 h-5 text-[#128853] rounded border-gray-300 focus:ring-[#128853]" 
+                              />
                               <span className="ml-3 text-[14px] font-bold text-gray-700">{condition.label}</span>
                             </label>
                           ))}
@@ -966,24 +1009,27 @@
                   <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 animate-in fade-in slide-in-from-top-2">
                     <div className="space-y-5">
                       <div>
-                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">버디 (Birdie) 축하금</label>
+                        <label className="flex items-center text-[13px] font-bold text-gray-800 mb-2.5 block">
+                          버디 (Birdie) 축하금
+                          <Icon name="Info" className="w-[14px] h-[14px] ml-1.5 text-gray-400 cursor-pointer hover:text-gray-600 inline-block" onClick={() => openInfo('버디/이글 축하금', '• 타수 추가: 지정된 "타수" 만큼의 포인트를 다른 모든 플레이어에게서 각각 받습니다. (1타당 포인트 × 홀 배수 × 지정 타수)\n\n• 지정 포인트: 홀 배수 적용과 상관없이 고정된 지정 포인트를 각각 받습니다.')} />
+                        </label>
                         <div className="grid grid-cols-3 gap-2 w-full h-[44px]">
                           <button onClick={() => setBirdieRule({...birdieRule, type: 'strokes'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${birdieRule.type === 'strokes' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>타수 추가</button>
-                          <button onClick={() => setBirdieRule({...birdieRule, type: 'fixed'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${birdieRule.type === 'fixed' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>지정 금액</button>
+                          <button onClick={() => setBirdieRule({...birdieRule, type: 'fixed'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${birdieRule.type === 'fixed' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>지정 포인트</button>
                           <div className="col-span-1 relative flex items-center bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                             <input type="text" inputMode="numeric" value={birdieRule.type === 'strokes' ? birdieRule.strokeValue : (birdieRule.fixedValue ? birdieRule.fixedValue.toLocaleString() : '')} onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '') { if (birdieRule.type === 'strokes') setBirdieRule({...birdieRule, strokeValue: ''}); else setBirdieRule({...birdieRule, fixedValue: ''}); } else { const num = parseInt(val, 10); if (!isNaN(num)) { if (birdieRule.type === 'strokes') setBirdieRule({...birdieRule, strokeValue: num}); else setBirdieRule({...birdieRule, fixedValue: num}); } } }} className="w-full h-full text-right bg-transparent outline-none font-bold text-[#128853] text-[13px] pr-6 pl-1" />
-                            <span className="text-[11px] font-bold text-gray-400 absolute right-2 pointer-events-none">{birdieRule.type === 'strokes' ? '타' : '원'}</span>
+                            <span className="text-[11px] font-bold text-gray-400 absolute right-2 pointer-events-none">{birdieRule.type === 'strokes' ? '타' : 'P'}</span>
                           </div>
                         </div>
                       </div>
                       <div className="border-t border-gray-100 pt-5">
-                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">이글 (Eagle) 축하금</label>
+                        <label className="flex items-center text-[13px] font-bold text-gray-800 mb-2.5 block">이글 (Eagle) 축하금</label>
                         <div className="grid grid-cols-3 gap-2 w-full h-[44px]">
                           <button onClick={() => setEagleRule({...eagleRule, type: 'strokes'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${eagleRule.type === 'strokes' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>타수 추가</button>
-                          <button onClick={() => setEagleRule({...eagleRule, type: 'fixed'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${eagleRule.type === 'fixed' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>지정 금액</button>
+                          <button onClick={() => setEagleRule({...eagleRule, type: 'fixed'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${eagleRule.type === 'fixed' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>지정 포인트</button>
                           <div className="col-span-1 relative flex items-center bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                             <input type="text" inputMode="numeric" value={eagleRule.type === 'strokes' ? eagleRule.strokeValue : (eagleRule.fixedValue ? eagleRule.fixedValue.toLocaleString() : '')} onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '') { if (eagleRule.type === 'strokes') setEagleRule({...eagleRule, strokeValue: ''}); else setEagleRule({...eagleRule, fixedValue: ''}); } else { const num = parseInt(val, 10); if (!isNaN(num)) { if (eagleRule.type === 'strokes') setEagleRule({...eagleRule, strokeValue: num}); else setEagleRule({...eagleRule, fixedValue: num}); } } }} className="w-full h-full text-right bg-transparent outline-none font-bold text-[#128853] text-[13px] pr-6 pl-1" />
-                            <span className="text-[11px] font-bold text-gray-400 absolute right-2 pointer-events-none">{eagleRule.type === 'strokes' ? '타' : '원'}</span>
+                            <span className="text-[11px] font-bold text-gray-400 absolute right-2 pointer-events-none">{eagleRule.type === 'strokes' ? '타' : 'P'}</span>
                           </div>
                         </div>
                       </div>
@@ -1059,7 +1105,7 @@
                     onClick={() => {
                       if (joinCode.length > 0) {
                         setRoomId(joinCode);
-                        setIsAdmin(false); // 참여자는 뷰어로 변경
+                        setIsAdmin(false); 
                         setShowJoinModal(false);
                         showToastMsg("방에 접속 중입니다...");
                         try {
@@ -1169,15 +1215,31 @@
                 </div>
               </div>
 
-              {/* 🚨 PAR 3 니어 / PAR 5 롱기 선택 UI */}
               {(currentPar === 3 || currentPar === 5) && (
                 <div className={`bg-white rounded-[16px] shadow-sm p-3 border border-gray-100 flex flex-col gap-2 ${!isAdmin ? 'pointer-events-none opacity-80' : ''} animate-in fade-in slide-in-from-top-2`}>
-                  <div className="flex items-center gap-1.5 px-1">
-                    <Icon name={currentPar === 3 ? 'Flag' : 'Target'} className="w-4 h-4 text-[#128853]" />
-                    <span className="font-black text-gray-800 text-[14px]">
-                      {currentPar === 3 ? '니어 (Near) 달성자' : '롱기 (Longest) 달성자'}
-                    </span>
-                    <span className="text-[10px] font-bold text-gray-400 ml-auto pt-0.5">(미선택 가능)</span>
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-1.5">
+                      <Icon name={currentPar === 3 ? 'Flag' : 'Target'} className="w-4 h-4 text-[#128853]" />
+                      <label className="flex items-center font-black text-gray-800 text-[14px]">
+                        {currentPar === 3 ? '니어리스트(미선택 가능)' : '롱기스트(미선택 가능)'}
+                        <Icon name="Info" className="w-[14px] h-[14px] ml-1.5 text-gray-400 cursor-pointer hover:text-gray-600 inline-block pointer-events-auto" onClick={() => openInfo(currentPar === 3 ? '역니어' : '역롱기', '선택된 플레이어가 다른 모든 플레이어에게 1타에 해당하는 포인트를 지불하는 재미있는 페널티 룰입니다.')} />
+                      </label>
+                    </div>
+                    <label className="flex items-center gap-1.5 cursor-pointer pointer-events-auto">
+                      <input
+                        type="checkbox"
+                        className="w-4 h-4 text-[#128853] rounded border-gray-300 focus:ring-[#128853]"
+                        checked={currentPar === 3 ? isReverseNear : isReverseLongest}
+                        onChange={(e) => {
+                          if (currentPar === 3) setIsReverseNear(e.target.checked);
+                          if (currentPar === 5) setIsReverseLongest(e.target.checked);
+                        }}
+                        disabled={!isAdmin}
+                      />
+                      <span className="text-[12px] font-bold text-gray-600">
+                        {currentPar === 3 ? '역니어' : '역롱기'}
+                      </span>
+                    </label>
                   </div>
                   <div className="flex gap-1.5 overflow-x-auto pb-1 mt-1">
                     {players.map((p, idx) => !currentExcluded[idx] && (
@@ -1254,7 +1316,7 @@
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                   </span>
-                  방장이 입력 중입니다...
+                  방장이 조작 중입니다...
                 </div>
               )}
             </div>
@@ -1291,15 +1353,19 @@
                   <div className="text-[14px] space-y-3 text-gray-700 py-2">
                     <div className="bg-gray-50 p-3.5 rounded-[16px] flex items-center justify-between border border-gray-100">
                       <span className="font-bold text-gray-600">기준 시점</span>
-                      <span className="font-bold text-[#128853]">{doubleRules.timing === 'current' ? '당홀 기준' : '전홀 기준'}</span>
+                      <span className="font-bold text-[#128853]">
+                        {doubleRules.timing === 'none' ? '미적용' : doubleRules.timing === 'current' ? '당홀 기준' : '전홀 기준'}
+                      </span>
                     </div>
-                    <ul className="space-y-2.5 pl-2 pt-2">
-                      {doubleRules.birdie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 버디 이상</li>}
-                      {doubleRules.threeTie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 3인 동타</li>}
-                      {doubleRules.prevTie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 이전 홀 무승부 (모두 동타)</li>}
-                      {doubleRules.triple && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 파4/파5 트리플 보기 이상</li>}
-                      {doubleRules.doublePar3 && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 파3 더블 보기 이상</li>}
-                    </ul>
+                    {doubleRules.timing !== 'none' && (
+                      <ul className="space-y-2.5 pl-2 pt-2">
+                        {doubleRules.birdie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 버디 이상</li>}
+                        {doubleRules.threeTie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 3인 동타</li>}
+                        {doubleRules.prevTie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 이전 홀 무승부 (모두 동타)</li>}
+                        {doubleRules.triple && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 파4/파5 트리플 보기 이상</li>}
+                        {doubleRules.doublePar3 && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 파3 더블 보기 이상</li>}
+                      </ul>
+                    )}
                   </div>
                   <div className="flex gap-2 mt-4 pt-2">
                     <button onClick={() => { setShowRuleModal(false); setStep('setup'); }} className={`flex-[1] bg-gray-100 hover:bg-gray-200 transition text-gray-700 font-bold py-3.5 rounded-[16px] text-[15px] ${!isAdmin ? 'hidden' : ''}`}>설정 변경</button>
@@ -1465,8 +1531,17 @@
                                            <span>{score}</span>
                                            {usePutts && <span className="text-[9px] font-semibold text-gray-500 ml-0.5">({hole.putts?.[i]||0})</span>}
                                          </div>
-                                         {hole.par === 3 && hole.near === i && <span className="text-[9px] text-blue-500 font-black mt-0.5 leading-none">니어</span>}
-                                         {hole.par === 5 && hole.longest === i && <span className="text-[9px] text-orange-500 font-black mt-0.5 leading-none">롱기</span>}
+                                         {hole.par === 3 && hole.near === i && (
+                                          <span className={`text-[9px] font-black mt-0.5 leading-none ${hole.isReverseNear ? 'text-red-500' : 'text-blue-500'}`}>
+                                            {hole.isReverseNear ? '역니어' : '니어'}
+                                          </span>
+                                         )}
+                                         {hole.par === 5 && hole.longest === i && (
+                                          <span className={`text-[9px] font-black mt-0.5 leading-none ${hole.isReverseLongest ? 'text-red-500' : 'text-orange-500'}`}>
+                                            {hole.isReverseLongest ? '역롱기' : '롱기'}
+                                          </span>
+                                         )}
+                                         
                                          {!hole.isHoleExcluded && (
                                             <div className={`text-[9px] font-bold mt-1 whitespace-nowrap tracking-tighter ${bal > 0 ? 'text-[#1ea34a]' : bal < 0 ? 'text-red-500' : 'text-gray-400'}`}>
                                               {bal > 0 ? `+${bal.toLocaleString()}` : ''}{bal === 0 ? '-' : bal < 0 ? `${bal.toLocaleString()}` : ''}
@@ -1558,7 +1633,6 @@
       // ★ UI 렌더링 - 홀 결과 화면 (안전 로직 포함) ★
       // =====================================================================
       if (step === 'hole-result') {
-        // 🚨 동기화 시차로 인한 백화 현상(Null 에러) 완벽 방지 Fallback 
         const currentHoleData = holes[currentHole] || {
           par: currentPar || 4,
           scores: currentScores || [4,4,4,4],
@@ -1567,7 +1641,9 @@
           excluded: currentExcluded || [false,false,false,false],
           isHoleExcluded: isHoleExcluded || false,
           near: null,
-          longest: null
+          isReverseNear: false,
+          longest: null,
+          isReverseLongest: false
         };
         const holeBalances = getHoleBalance(currentHoleData);
         const transfers = calculateTransfers(holeBalances);
@@ -1621,9 +1697,17 @@
                             {diff === -1 && <span className="text-[9px] bg-[#e5f5ec] text-[#128853] px-1.5 py-0.5 rounded mt-0.5 font-black leading-tight">버디</span>}
                             {diff <= -2 && <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded mt-0.5 font-black leading-tight">이글</span>}
                             
-                            {/* 🚨 니어/롱기 표시 추가 */}
-                            {currentHoleData.par === 3 && currentHoleData.near === idx && <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded mt-0.5 font-black leading-tight">니어</span>}
-                            {currentHoleData.par === 5 && currentHoleData.longest === idx && <span className="text-[9px] bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded mt-0.5 font-black leading-tight">롱기</span>}
+                            {/* 🚨 니어/롱기 표시 (결과 화면) */}
+                            {currentHoleData.par === 3 && currentHoleData.near === idx && (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded mt-0.5 font-black leading-tight ${currentHoleData.isReverseNear ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
+                                {currentHoleData.isReverseNear ? '역니어' : '니어'}
+                              </span>
+                            )}
+                            {currentHoleData.par === 5 && currentHoleData.longest === idx && (
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded mt-0.5 font-black leading-tight ${currentHoleData.isReverseLongest ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                                {currentHoleData.isReverseLongest ? '역롱기' : '롱기'}
+                              </span>
+                            )}
                           </div>
                           <div className={`text-[11px] font-black mt-1 ${bal > 0 ? 'text-[#1ea34a]' : bal < 0 ? 'text-red-500' : 'text-gray-400'}`}>
                             {bal > 0 ? '+' : ''}{bal === 0 ? '-' : bal.toLocaleString()}
@@ -1642,12 +1726,12 @@
               ) : (
                 <div>
                   <div className="text-center text-[13px] font-bold text-gray-600 mb-4 flex items-center justify-center">
-                    <div className="w-5 h-5 mr-1.5 bg-[#1ea34a] text-white rounded-full flex items-center justify-center font-bold text-[10px]">₩</div> 지출 가이드 (주는 사람 기준)
+                    <div className="w-5 h-5 mr-1.5 bg-[#1ea34a] text-white rounded-full flex items-center justify-center font-bold text-[10px]">P</div> 포인트 이동 (주는 사람 기준)
                   </div>
                   
                   {Object.keys(transfers).length === 0 ? (
                     <div className="bg-white rounded-[24px] shadow-sm p-8 text-center text-gray-400 font-semibold border border-gray-100">
-                      변동 금액이 없습니다.
+                      변동 포인트가 없습니다.
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -1664,8 +1748,8 @@
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-[10px] text-gray-400 font-bold mb-0.5">총 송금액</div>
-                              <div className="font-black text-[19px] text-red-500">{data.total.toLocaleString()}원</div>
+                              <div className="text-[10px] text-gray-400 font-bold mb-0.5">총 이동 포인트</div>
+                              <div className="font-black text-[19px] text-red-500">{data.total.toLocaleString()}P</div>
                             </div>
                           </div>
                           <div className="bg-gray-50 rounded-[16px] p-3 space-y-2 border border-gray-100">
@@ -1675,7 +1759,7 @@
                                   <Icon name="ArrowRight" className="w-3.5 h-3.5 mx-2 text-gray-400" /> 
                                   {players[detail.to]}
                                 </span>
-                                <span className="font-bold text-blue-600">{detail.amount.toLocaleString()}원</span>
+                                <span className="font-bold text-blue-600">{detail.amount.toLocaleString()}P</span>
                               </div>
                             ))}
                           </div>
@@ -1687,10 +1771,9 @@
               )}
             </div>
             
-            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 flex gap-3 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
               {isAdmin ? (
                <div className="max-w-md mx-auto flex flex-col gap-2 w-full">
-                 {/* 🚨 수정하기 버튼이 포함된 3버튼 레이아웃 */}
                  <div className="flex gap-2 w-full">
                    <button onClick={() => setStep('play')} className="flex-[1] py-4 rounded-[16px] font-bold flex flex-col items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-[13px] shadow-sm">
                      <div className="flex items-center gap-1"><Icon name="Edit3" className="w-4 h-4"/> 수정하기</div>
@@ -1785,7 +1868,6 @@
               <button onClick={() => setStep('scorecard')} className="p-2 hover:bg-white/10 rounded-full transition"><Icon name="ArrowLeft" className="w-5 h-5"/></button>
               <div className="flex items-center gap-2">
                 <h1 className="text-[17px] font-bold flex items-center"><Icon name="Calculator" className="w-5 h-5 mr-2"/> 최종 정산 내역</h1>
-                {/* 🚨 라이브 뱃지 롱프레스 기능 추가 */}
                 {roomId && (
                   <div className="flex items-center gap-1.5 ml-2">
                     <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
@@ -1815,11 +1897,21 @@
                   </div>
                 )}
                 <div className={`flex items-center justify-between py-2 border-t border-gray-100 mt-2 pt-4 ${!isAdmin ? 'opacity-80' : ''}`}>
-                  <div className="flex flex-col"><span className="text-[13px] font-bold text-gray-800">천원 단위 절사</span><span className="text-[10px] text-gray-500 mt-0.5">100원 단위 버림</span></div>
+                  <div className="flex flex-col flex-1">
+                    <span className="text-[13px] font-bold text-gray-800 flex items-center">
+                      1000P 단위 절사
+                    </span>
+                    <span className="text-[10px] text-gray-500 mt-0.5">100P 단위 버림</span>
+                  </div>
                   <button onClick={() => setIsRoundThousand(!isRoundThousand)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isRoundThousand ? 'bg-[#128853]' : 'bg-gray-200'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isRoundThousand ? 'translate-x-5' : 'translate-x-0.5'}`} /></button>
                 </div>
                 <div className={`flex items-center justify-between py-2 border-t border-gray-100 mt-2 pt-4 ${!isAdmin ? 'opacity-80' : ''}`}>
-                  <div className="flex flex-col"><span className="text-[13px] font-bold text-gray-800">잃은 비율대로 전액 분배</span><span className="text-[10px] text-gray-500 mt-0.5">체크 해제시 몰아주기</span></div>
+                  <div className="flex flex-col flex-1">
+                    <span className="text-[13px] font-bold text-gray-800 flex items-center">
+                      잃은 비율대로 전액 분배
+                    </span>
+                    <span className="text-[10px] text-gray-500 mt-0.5">체크 해제시 몰아주기</span>
+                  </div>
                   <button onClick={() => setIsProportionalDistribution(!isProportionalDistribution)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isProportionalDistribution ? 'bg-[#128853]' : 'bg-gray-200'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isProportionalDistribution ? 'translate-x-5' : 'translate-x-0.5'}`} /></button>
                 </div>
               </div>
@@ -1834,17 +1926,17 @@
                           <div className="w-8 h-8 bg-gray-100 rounded-full overflow-hidden shrink-0"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${d.name}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
                           <span className="font-bold text-gray-800 text-[15px]">{d.name}</span>
                         </div>
-                        <span className={`font-black text-[15px] ${d.original > 0 ? 'text-[#128853]' : d.original < 0 ? 'text-red-500' : 'text-gray-500'}`}>기존: {d.original > 0 ? '+' : ''}{d.original.toLocaleString()}원</span>
+                        <span className={`font-black text-[15px] ${d.original > 0 ? 'text-[#128853]' : d.original < 0 ? 'text-red-500' : 'text-gray-500'}`}>기존: {d.original > 0 ? '+' : ''}{d.original.toLocaleString()}P</span>
                       </div>
                       <div className="p-4 space-y-2">
                         <div className="flex justify-between items-center text-[12px]">
-                          <span className="text-gray-500 font-medium">개평 ({d.original > 0 ? '주는 돈' : d.original < 0 ? '받는 돈' : '해당 없음'})</span>
-                          <span className={`font-bold ${d.original > 0 ? 'text-red-500' : d.original < 0 ? 'text-blue-500' : 'text-gray-400'}`}>{d.original > 0 ? '-' + d.cut.toLocaleString() : d.original < 0 ? '+' + d.receive.toLocaleString() : '0'}원</span>
+                          <span className="text-gray-500 font-medium">개평 ({d.original > 0 ? '주는 포인트' : d.original < 0 ? '받는 포인트' : '해당 없음'})</span>
+                          <span className={`font-bold ${d.original > 0 ? 'text-red-500' : d.original < 0 ? 'text-blue-500' : 'text-gray-400'}`}>{d.original > 0 ? '-' + d.cut.toLocaleString() : d.original < 0 ? '+' + d.receive.toLocaleString() : '0'}P</span>
                         </div>
                       </div>
                       <div className="flex justify-between items-center bg-gray-50 p-4 border-t border-gray-100">
-                        <span className="text-[13px] font-bold text-gray-800">최종 수령(지불)액</span>
-                        <span className={`text-[20px] tracking-tight font-black ${d.final > 0 ? 'text-[#128853]' : d.final < 0 ? 'text-red-500' : 'text-gray-600'}`}>{d.final > 0 ? '+' : ''}{d.final === 0 ? '0' : d.final.toLocaleString()}원</span>
+                        <span className="text-[13px] font-bold text-gray-800">최종 수령(지불) 포인트</span>
+                        <span className={`text-[20px] tracking-tight font-black ${d.final > 0 ? 'text-[#128853]' : d.final < 0 ? 'text-red-500' : 'text-gray-600'}`}>{d.final > 0 ? '+' : ''}{d.final === 0 ? '0' : d.final.toLocaleString()}P</span>
                       </div>
                     </div>
                   ))}
@@ -1919,7 +2011,27 @@
         );
       }
 
-      return null;
+      // 공통 Info 모달
+      return (
+        <Fragment>
+          {infoModal.show && (
+            <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm pointer-events-auto">
+              <div className="bg-white rounded-[24px] w-full max-w-sm p-6 shadow-xl text-center flex flex-col items-center">
+                <div className="flex justify-between items-center w-full border-b border-gray-100 pb-3 mb-4">
+                  <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Icon name="Info" className="w-5 h-5 mr-2 text-[#128853]"/> {infoModal.title}</h3>
+                  <button onClick={() => setInfoModal({ show: false, title: '', desc: '' })} className="p-1 hover:bg-gray-100 rounded-full transition"><Icon name="X" className="w-5 h-5 text-gray-500"/></button>
+                </div>
+                <p className="text-[14px] text-gray-600 font-medium leading-relaxed text-left whitespace-pre-wrap w-full mb-6">
+                  {infoModal.desc}
+                </p>
+                <button onClick={() => setInfoModal({ show: false, title: '', desc: '' })} className="w-full bg-[#128853] text-white font-bold py-3.5 rounded-[16px] transition shadow-sm">
+                  확인
+                </button>
+              </div>
+            </div>
+          )}
+        </Fragment>
+      );
     }
 
     ReactDOM.render(<App />, document.getElementById('root'));
