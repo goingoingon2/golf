@@ -8,7 +8,7 @@
   <!-- 1. 폰트 로드 -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
 
-  <!-- 2. Tailwind CSS (HTML 단일 파일용) -->
+  <!-- 2. Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <!-- 3. React 및 Babel 로드 -->
@@ -47,7 +47,7 @@
     const { useState, useMemo, useRef, useEffect, Fragment } = React;
 
     // =====================================================================
-    // ★ 0. Firebase 설정 (여기에 정보를 입력하세요!) ★
+    // ★ 0. Firebase 설정 ★
     // =====================================================================
     // 🚨 파이어베이스 콘솔에서 발급받은 본인의 config 정보를 아래에 붙여넣으세요!
     const MY_FIREBASE_CONFIG = {
@@ -128,7 +128,6 @@
     // ★ 2. 메인 앱 컴포넌트 ★
     // =====================================================================
     function App() {
-      // 🚨 관리자 권한 상태 추가 (방을 만든 사람이면 true, 참여자로 들어왔으면 false)
       const [isAdmin, setIsAdmin] = useState(true);
 
       const [step, setStep] = useState('setup'); 
@@ -164,7 +163,6 @@
       const [currentScores, setCurrentScores] = useState([4, 4, 4, 4]);
       const [currentPutts, setCurrentPutts] = useState([0, 0, 0, 0]);
       
-      // 🚨 니어 / 롱기 관련 상태
       const [currentNear, setCurrentNear] = useState(null);
       const [currentLongest, setCurrentLongest] = useState(null);
 
@@ -198,7 +196,7 @@
       const livePressTimer = useRef(null);
 
       // =====================================================================
-      // ★ Firebase 통신 (HTML CDN 방식) ★
+      // ★ Firebase 통신 ★
       // =====================================================================
       useEffect(() => {
         if (!firebaseInitialized || !authInstance) return;
@@ -218,17 +216,13 @@
         return () => unsubscribe();
       }, []);
 
-      // 🚨 URL로 들어올 때, 본인이 방을 만든 방장인지 확인
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const rId = params.get('roomId');
         if (rId) {
           setRoomId(rId);
-          if (localStorage.getItem('golf_admin_room') === rId) {
-            setIsAdmin(true);
-          } else {
-            setIsAdmin(false); // 참여자로 들어왔으면 관리자 권한 뺏기
-          }
+          if (localStorage.getItem('golf_admin_room') === rId) setIsAdmin(true);
+          else setIsAdmin(false);
         }
       }, []);
 
@@ -239,13 +233,12 @@
         return dbInstance.collection('golf_rooms').doc(rId);
       };
 
-      // Firestore에서 데이터 가져오기 (수신)
       useEffect(() => {
         if (!user || !roomId || !dbInstance || !firebaseInitialized) return;
         const roomRef = getRoomRef(roomId);
         const unsubscribe = roomRef.onSnapshot((snap) => {
           if (snap.exists) {
-            if (isAdmin && hasReceivedData.current) return;
+            if (isAdmin && hasReceivedData.current) return; // 방장 초기 로드 방지
             
             hasReceivedData.current = true;
             const data = snap.data();
@@ -253,7 +246,6 @@
             const { updatedAt, ...stateData } = data;
             lastSyncedStr.current = JSON.stringify(stateData);
             
-            // 데이터 동기화
             if (data.step !== undefined) setStep(data.step);
             if (data.holes !== undefined) setHoles(data.holes);
             if (data.currentHole !== undefined) setCurrentHole(data.currentHole);
@@ -278,10 +270,8 @@
         return () => unsubscribe();
       }, [user, roomId, isAdmin]);
 
-      // Firestore에 데이터 저장하기 (송신)
       useEffect(() => {
-        if (!user || !roomId || !dbInstance || !firebaseInitialized) return;
-        if (!isAdmin) return; // 방장(Admin)이 아니면 데이터 덮어쓰기 금지
+        if (!user || !roomId || !dbInstance || !firebaseInitialized || !isAdmin) return;
 
         const payload = { 
           step, players, holes, currentHole, startTime, usePutts, gaepyungRate, isRoundThousand, isProportionalDistribution,
@@ -525,8 +515,6 @@
         let initialHasManual = false;
         let initialExcluded = [false, false, false, false];
         let initialIsHoleExcluded = false;
-        
-        // 🚨 니어 / 롱기 초기화
         let initialNear = null;
         let initialLongest = null;
 
@@ -538,7 +526,6 @@
           initialHasManual = existingData.hasManualMultiplier || false;
           initialExcluded = existingData.excluded || [false, false, false, false];
           initialIsHoleExcluded = existingData.isHoleExcluded || false;
-          
           initialNear = existingData.near !== undefined ? existingData.near : null;
           initialLongest = existingData.longest !== undefined ? existingData.longest : null;
         } else {
@@ -589,8 +576,8 @@
         newHoles[currentHole] = {
           par: currentPar, scores: [...currentScores], putts: [...currentPutts],
           multiplier, excluded: [...currentExcluded], isHoleExcluded, hasManualMultiplier,
-          near: currentPar === 3 ? currentNear : null,     // 🚨 PAR 3 일때만 저장
-          longest: currentPar === 5 ? currentLongest : null // 🚨 PAR 5 일때만 저장
+          near: currentPar === 3 ? currentNear : null,
+          longest: currentPar === 5 ? currentLongest : null
         };
         setHoles(newHoles);
         setStep('hole-result');
@@ -645,7 +632,6 @@
           balances[idx] = netStrokes * baseAmount * mult;
         });
 
-        // 🚨 보너스 적용 (버디 / 이글)
         hole.scores.forEach((score, index) => {
           if (excluded[index]) return;
           const diff = score - hole.par;
@@ -658,10 +644,9 @@
           }
         });
 
-        // 🚨 니어 / 롱기 보너스 (1타당 금액 * 배수 만큼 추가 획득)
         const applySpecialBonus = (winnerIdx) => {
           if (winnerIdx !== null && winnerIdx !== undefined && !excluded[winnerIdx]) {
-            const bonus = baseAmount * mult; // 1타 금액 기준으로 모두에게서 징수
+            const bonus = baseAmount * mult;
             for (let j = 0; j < 4; j++) {
               if (j !== winnerIdx && !excluded[j]) {
                 balances[winnerIdx] += bonus;
@@ -1184,7 +1169,7 @@
                 </div>
               </div>
 
-              {/* 🚨 PAR 3 니어 / PAR 5 롱기 선택 UI (선택형) */}
+              {/* 🚨 PAR 3 니어 / PAR 5 롱기 선택 UI */}
               {(currentPar === 3 || currentPar === 5) && (
                 <div className={`bg-white rounded-[16px] shadow-sm p-3 border border-gray-100 flex flex-col gap-2 ${!isAdmin ? 'pointer-events-none opacity-80' : ''} animate-in fade-in slide-in-from-top-2`}>
                   <div className="flex items-center gap-1.5 px-1">
@@ -1269,7 +1254,7 @@
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
                   </span>
-                  방장이 조작 중입니다...
+                  방장이 입력 중입니다...
                 </div>
               )}
             </div>
@@ -1480,10 +1465,8 @@
                                            <span>{score}</span>
                                            {usePutts && <span className="text-[9px] font-semibold text-gray-500 ml-0.5">({hole.putts?.[i]||0})</span>}
                                          </div>
-                                         {/* 🚨 니어/롱기 표시 추가 (스코어카드) */}
                                          {hole.par === 3 && hole.near === i && <span className="text-[9px] text-blue-500 font-black mt-0.5 leading-none">니어</span>}
                                          {hole.par === 5 && hole.longest === i && <span className="text-[9px] text-orange-500 font-black mt-0.5 leading-none">롱기</span>}
-                                         
                                          {!hole.isHoleExcluded && (
                                             <div className={`text-[9px] font-bold mt-1 whitespace-nowrap tracking-tighter ${bal > 0 ? 'text-[#1ea34a]' : bal < 0 ? 'text-red-500' : 'text-gray-400'}`}>
                                               {bal > 0 ? `+${bal.toLocaleString()}` : ''}{bal === 0 ? '-' : bal < 0 ? `${bal.toLocaleString()}` : ''}
@@ -1526,6 +1509,7 @@
                </div>
             </div>
 
+            {/* 🚨 QR 초대 모달 */}
             {showQrModal && (
               <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
                 <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-4 shadow-xl text-center flex flex-col items-center">
@@ -1571,10 +1555,20 @@
       }
 
       // =====================================================================
-      // ★ UI 렌더링 - 홀 결과 화면 ★
+      // ★ UI 렌더링 - 홀 결과 화면 (안전 로직 포함) ★
       // =====================================================================
       if (step === 'hole-result') {
-        const currentHoleData = holes[currentHole];
+        // 🚨 동기화 시차로 인한 백화 현상(Null 에러) 완벽 방지 Fallback 
+        const currentHoleData = holes[currentHole] || {
+          par: currentPar || 4,
+          scores: currentScores || [4,4,4,4],
+          putts: currentPutts || [0,0,0,0],
+          multiplier: multiplier || 1,
+          excluded: currentExcluded || [false,false,false,false],
+          isHoleExcluded: isHoleExcluded || false,
+          near: null,
+          longest: null
+        };
         const holeBalances = getHoleBalance(currentHoleData);
         const transfers = calculateTransfers(holeBalances);
 
@@ -1693,7 +1687,7 @@
               )}
             </div>
             
-            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 flex gap-3 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
               {isAdmin ? (
                <div className="max-w-md mx-auto flex flex-col gap-2 w-full">
                  {/* 🚨 수정하기 버튼이 포함된 3버튼 레이아웃 */}
