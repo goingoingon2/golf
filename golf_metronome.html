@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>골프 메트로놈</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React & ReactDOM (UMD) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel (In-browser JSX compilation) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* Custom Scrollbar for Modal */
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        
+        /* Prevent selection highlighting on interactive elements */
+        .select-none { user-select: none; -webkit-user-select: none; }
+        
+        /* Hide arrows on number inputs */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+    </style>
+</head>
+<body class="bg-neutral-950 m-0 p-0 font-sans text-slate-100">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // --- Inline SVG Icons (Replaces lucide-react) ---
+        const Activity = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
+        const Bell = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>;
+        const MessageSquare = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+        const Clock = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const Save = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
+        const Bookmark = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>;
+        const Plus = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+        const Minus = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+        const X = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+        const ChevronLeft = ({ size, strokeWidth, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth || "2"} strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 18 9 12 15 6"/></svg>;
+        const ChevronRight = ({ size, strokeWidth, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth || "2"} strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"/></svg>;
+        const Play = ({ size, fill, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+        const Square = ({ size, fill, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>;
+
+        // --- Data & Constants ---
+        const DEFAULT_PHRASES = [
+          { id: 'd1', name: '짬-뽕', beats: 2, labels: ['짬', '뽕'], isDefault: true, lastUsed: 99 },
+          { id: 'd2', name: '똑-딱', beats: 2, labels: ['똑', '딱'], isDefault: true }, 
+          { id: 'd3', name: '하-나', beats: 2, labels: ['하', '나'], isDefault: true },
+          { id: 'd4', name: '백-스윙', beats: 2, labels: ['백', '스윙'], isDefault: true },
+          { id: 'd9', name: '머리-고정', beats: 2, labels: ['머리', '고정'], isDefault: true, lastUsed: 95 },
+          { id: 'd10', name: '체중-이동', beats: 2, labels: ['체중', '이동'], isDefault: true },
+          { id: 'd11', name: '힘을-빼자', beats: 2, labels: ['힘을', '빼자'], isDefault: true },
+          { id: 'd16', name: '손목-유지', beats: 2, labels: ['손목', '유지'], isDefault: true },
+          
+          { id: 'd0', name: '골프-메트로-놈', beats: 3, labels: ['골프', '메트로', '놈'], isDefault: true, lastUsed: 105 },
+          { id: 'd5', name: '짜-장-면', beats: 3, labels: ['짜', '장', '면'], isDefault: true, lastUsed: 100 },
+          { id: 'd6', name: '에-델-바이스', beats: 3, labels: ['에', '델', '바이스'], isDefault: true },
+          { id: 'd7', name: '백-스-윙', beats: 3, labels: ['백', '스', '윙'], isDefault: true },
+          { id: 'd8', name: '원-투-쓰리', beats: 3, labels: ['원', '투', '쓰리'], isDefault: true },
+          { id: 'd12', name: '머-리-고정', beats: 3, labels: ['머', '리', '고정'], isDefault: true },
+          { id: 'd13', name: '체-중-이동', beats: 3, labels: ['체', '중', '이동'], isDefault: true },
+          { id: 'd14', name: '부-드-럽게', beats: 3, labels: ['부', '드', '럽게'], isDefault: true },
+          { id: 'd15', name: '끝-까-지', beats: 3, labels: ['끝', '까', '지'], isDefault: true },
+          { id: 'd17', name: '몸으로-팔을-던져', beats: 3, labels: ['몸으로', '팔을', '던져'], isDefault: true },
+          { id: 'd18', name: '하체-리드-스윙', beats: 3, labels: ['하체', '리드', '스윙'], isDefault: true },
+          { id: 'd19', name: '헤드를-똑바로-보내', beats: 3, labels: ['헤드를', '똑바로', '보내'], isDefault: true, lastUsed: 96 },
+          { id: 'd20', name: '팔-은-아래로만', beats: 3, labels: ['팔', '은', '아래로만'], isDefault: true, lastUsed: 98 },
+        ];
+
+        const BASE_RHYTHMS = {
+          TWO_FOUR: { id: 'base-2', name: '2박자 (기본)', beats: 2, labels: ['시작', '2'] },
+          THREE_FOUR: { id: 'base-3', name: '3박자 (기본)', beats: 3, labels: ['시작', '2', '3'] },
+        };
+
+        // --- Main App Component ---
+        function App() {
+          const [bpm, setBpm] = useState(60); 
+          const [isPlaying, setIsPlaying] = useState(false);
+          const [currentRhythm, setCurrentRhythm] = useState({ ...DEFAULT_PHRASES.find(p => p.name === '골프-메트로-놈') }); 
+          const [activeBeat, setActiveBeat] = useState(-1);
+          const [soundMode, setSoundMode] = useState('metronome'); 
+          const [volume, setVolume] = useState(0.8);
+          const [isModalOpen, setIsModalOpen] = useState(false); 
+          const [alertMessage, setAlertMessage] = useState(''); 
+          const [deletingId, setDeletingId] = useState(null); 
+          const [confirmDialog, setConfirmDialog] = useState(null); 
+
+          const [isEditingBigBpm, setIsEditingBigBpm] = useState(false);
+          const [bigBpmInputValue, setBigBpmInputValue] = useState('');
+
+          const [bpmPresets, setBpmPresets] = useState(() => {
+            const saved = localStorage.getItem('golfMetronomeBpmPresets');
+            return saved ? JSON.parse(saved) : [40, 50, 60, 70, 80];
+          });
+          const [editingPresetIndex, setEditingPresetIndex] = useState(null);
+          const presetPressTimer = useRef(null);
+          const isPresetLongPressed = useRef(false);
+
+          const longPressTimer = useRef(null);
+          const isLongPressed = useRef(false);
+
+          const [savedPhrases, setSavedPhrases] = useState(() => {
+            const saved = localStorage.getItem('golfMetronomePhrases');
+            if (saved) {
+              try { 
+                const parsed = JSON.parse(saved); 
+                const customPhrases = parsed.filter(p => !p.isDefault);
+                const mergedDefaults = DEFAULT_PHRASES.map(dp => {
+                  const savedDp = parsed.find(p => p.id === dp.id);
+                  return savedDp ? { ...dp, lastUsed: savedDp.lastUsed || dp.lastUsed, isDeleted: savedDp.isDeleted } : dp;
+                });
+                return [...mergedDefaults, ...customPhrases];
+              } catch (e) { 
+                return DEFAULT_PHRASES; 
+              }
+            }
+            return DEFAULT_PHRASES;
+          });
+
+          useEffect(() => {
+            localStorage.setItem('golfMetronomePhrases', JSON.stringify(savedPhrases));
+          }, [savedPhrases]);
+
+          useEffect(() => {
+            localStorage.setItem('golfMetronomeBpmPresets', JSON.stringify(bpmPresets));
+          }, [bpmPresets]);
+
+          const audioCtxRef = useRef(null);
+          const nextNoteTimeRef = useRef(0);
+          const currentBeatRef = useRef(0);
+          const timerIdRef = useRef(null);
+          const isPlayingRef = useRef(false);
+
+          const lookahead = 25.0; 
+          const scheduleAheadTime = 0.1; 
+
+          const initAudioAndVoice = () => {
+            if (!audioCtxRef.current) {
+              const AudioContext = window.AudioContext || window.webkitAudioContext;
+              audioCtxRef.current = new AudioContext();
+            }
+            if (audioCtxRef.current.state === 'suspended') {
+              audioCtxRef.current.resume();
+            }
+            if ('speechSynthesis' in window) {
+              const dummyUtterance = new SpeechSynthesisUtterance('');
+              window.speechSynthesis.speak(dummyUtterance);
+            }
+          };
+
+          const speakText = (text) => {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            
+            let textToSpeak = text;
+            if (text === '2') textToSpeak = '둘';
+            if (text === '3') textToSpeak = '셋';
+
+            const utterance = new SpeechSynthesisUtterance(textToSpeak);
+            utterance.lang = 'ko-KR'; 
+            utterance.rate = Math.min(2.5, Math.max(1.0, bpm / 60)); 
+            utterance.pitch = 1.1;
+
+            window.speechSynthesis.speak(utterance);
+          };
+
+          const playClick = (time, isAccent, mode) => {
+            if (!audioCtxRef.current) return;
+            const osc = audioCtxRef.current.createOscillator();
+            const gainNode = audioCtxRef.current.createGain();
+
+            if (mode === 'metronome') {
+              osc.type = 'square';
+              osc.frequency.setValueAtTime(isAccent ? 1200 : 800, time);
+              osc.frequency.exponentialRampToValueAtTime(isAccent ? 600 : 400, time + 0.02);
+              
+              osc.connect(gainNode);
+              gainNode.connect(audioCtxRef.current.destination);
+
+              const currentVol = isAccent ? volume * 0.7 : volume * 0.4;
+              gainNode.gain.setValueAtTime(currentVol, time);
+              gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.03); 
+
+              osc.start(time);
+              osc.stop(time + 0.04);
+            } else {
+              osc.type = 'sine';
+              osc.frequency.value = isAccent ? 1000 : 800;
+              osc.connect(gainNode);
+              gainNode.connect(audioCtxRef.current.destination);
+
+              const currentVol = isAccent ? volume : volume * 0.5;
+              gainNode.gain.setValueAtTime(currentVol, time);
+              gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+
+              osc.start(time);
+              osc.stop(time + 0.1);
+            }
+          };
+
+          const nextNote = useCallback(() => {
+            const secondsPerBeat = 60.0 / bpm;
+            nextNoteTimeRef.current += secondsPerBeat;
+            
+            currentBeatRef.current++;
+            if (currentBeatRef.current >= currentRhythm.beats) {
+              currentBeatRef.current = 0;
+            }
+          }, [bpm, currentRhythm]);
+
+          const scheduleNote = useCallback((beatNumber, time) => {
+            const isAccent = beatNumber === 0;
+
+            if (soundMode === 'beep' || soundMode === 'metronome') {
+              playClick(time, isAccent, soundMode);
+            }
+
+            const timeToNote = (time - audioCtxRef.current.currentTime) * 1000;
+            setTimeout(() => {
+              if (isPlayingRef.current) {
+                setActiveBeat(beatNumber);
+                if (soundMode === 'voice') {
+                  speakText(currentRhythm.labels[beatNumber]);
+                }
+              }
+            }, Math.max(0, timeToNote)); 
+          }, [currentRhythm, soundMode, volume, bpm]);
+
+          const scheduler = useCallback(() => {
+            while (nextNoteTimeRef.current < audioCtxRef.current.currentTime + scheduleAheadTime) {
+              scheduleNote(currentBeatRef.current, nextNoteTimeRef.current);
+              nextNote();
+            }
+            timerIdRef.current = setTimeout(scheduler, lookahead);
+          }, [nextNote, scheduleNote]);
+
+          const togglePlay = () => {
+            if (!isPlaying) {
+              initAudioAndVoice();
+              isPlayingRef.current = true;
+              setIsPlaying(true);
+              currentBeatRef.current = 0;
+              nextNoteTimeRef.current = audioCtxRef.current.currentTime + 0.05;
+              scheduler();
+            } else {
+              isPlayingRef.current = false;
+              setIsPlaying(false);
+              clearTimeout(timerIdRef.current);
+              setActiveBeat(-1);
+              if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            }
+          };
+
+          useEffect(() => {
+            return () => {
+              clearTimeout(timerIdRef.current);
+              if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') audioCtxRef.current.close();
+              if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+              if (presetPressTimer.current) clearTimeout(presetPressTimer.current);
+            };
+          }, []);
+
+          const handlePressStart = (id) => {
+            isLongPressed.current = false;
+            longPressTimer.current = setTimeout(() => {
+              isLongPressed.current = true;
+              setDeletingId(id);
+              if (navigator.vibrate) navigator.vibrate(50); 
+            }, 500); 
+          };
+
+          const handlePressEnd = () => {
+            if (longPressTimer.current) clearTimeout(longPressTimer.current);
+          };
+
+          const handlePhraseClick = (phrase) => {
+            if (isLongPressed.current) return; 
+            if (deletingId) {
+              setDeletingId(null);
+              return; 
+            }
+            applyPhrase(phrase);
+          };
+          
+          const handlePresetPressStart = (index) => {
+            isPresetLongPressed.current = false;
+            presetPressTimer.current = setTimeout(() => {
+              isPresetLongPressed.current = true;
+              setEditingPresetIndex(index);
+              if (navigator.vibrate) navigator.vibrate(50); 
+            }, 500); 
+          };
+
+          const handlePresetPressEnd = () => {
+            if (presetPressTimer.current) clearTimeout(presetPressTimer.current);
+          };
+
+          const handlePresetClick = (val) => {
+            if (isPresetLongPressed.current) return;
+            setBpm(val);
+          };
+
+          const handlePresetChange = (index, newValue) => {
+            const val = parseInt(newValue, 10);
+            if (!isNaN(val) && val >= 30 && val <= 200) {
+              setBpmPresets(prev => {
+                const updated = [...prev];
+                updated[index] = val;
+                return updated;
+              });
+            }
+            setEditingPresetIndex(null);
+          };
+
+          const handleBpmChange = (e) => setBpm(Number(e.target.value));
+          const changeBpmBy = (amount) => setBpm((prev) => Math.min(Math.max(30, prev + amount), 200));
+
+          const submitBigBpm = () => {
+            const val = parseInt(bigBpmInputValue, 10);
+            if (!isNaN(val) && val >= 30 && val <= 200) {
+              setBpm(val);
+            }
+            setIsEditingBigBpm(false);
+          };
+
+          const handleLabelChange = (index, value) => {
+            if (value.length > 4) {
+              setAlertMessage("각 박자당 최대 4자까지만 입력 가능합니다.");
+              return;
+            }
+            
+            const newLabels = [...currentRhythm.labels];
+            newLabels[index] = value;
+            
+            const totalLength = newLabels.join('').length;
+            if (totalLength > 8) {
+              setAlertMessage("메시지는 전체 합쳐서 최대 8자까지만 입력 가능합니다.");
+              return;
+            }
+            
+            setCurrentRhythm(prev => {
+              return { ...prev, labels: newLabels };
+            });
+          };
+
+          const saveCurrentPhrase = () => {
+            const name = currentRhythm.labels.join('-');
+            if (savedPhrases.some(p => p.labels.join('-') === name && !p.isDeleted)) return;
+
+            const currentBeatPhrases = savedPhrases.filter(p => !p.isDeleted && p.beats === currentRhythm.beats);
+            if (currentBeatPhrases.length >= 15) {
+              setAlertMessage(`메시지는 샘플을 포함하여 최대 15줄까지만 유지할 수 있습니다.\n\n불필요한 메시지를 꾹~ 길게 눌러 삭제한 뒤 새로운 메시지를 추가해주세요.`);
+              return;
+            }
+
+            const newPhrase = {
+              id: `custom-${Date.now()}`,
+              name: name,
+              beats: currentRhythm.beats,
+              labels: [...currentRhythm.labels],
+              isDefault: false,
+              lastUsed: Date.now() 
+            };
+            setSavedPhrases(prev => [...prev, newPhrase]);
+            setIsModalOpen(true); 
+          };
+
+          const deletePhrase = (id, e) => {
+            e.stopPropagation(); 
+            setSavedPhrases(prev => {
+              const target = prev.find(p => p.id === id);
+              if (target?.isDefault) {
+                return prev.map(p => p.id === id ? { ...p, isDeleted: true } : p);
+              }
+              return prev.filter(p => p.id !== id);
+            });
+            setDeletingId(null); 
+          };
+
+          const restoreDefaults = () => {
+            setConfirmDialog({
+              message: "삭제된 기본 메시지들을 모두 복구하시겠습니까?\n(박자당 15개 메시지가 넘어가면 추가가 제한될 수 있습니다)",
+              onConfirm: () => {
+                setSavedPhrases(prev => prev.map(p => p.isDefault ? { ...p, isDeleted: false } : p));
+                setConfirmDialog(null);
+              }
+            });
+          };
+
+          const applyPhrase = (phrase) => {
+            setCurrentRhythm({ ...phrase, labels: [...phrase.labels] });
+            setSoundMode('voice'); 
+            if (isPlaying) {
+              togglePlay(); 
+              setTimeout(togglePlay, 50); 
+            }
+            setIsModalOpen(false); 
+
+            setSavedPhrases(prev => 
+              prev.map(p => p.id === phrase.id ? { ...p, lastUsed: Date.now() } : p)
+            );
+          };
+
+          const applyBaseRhythm = (rhythm) => {
+            setCurrentRhythm({ ...rhythm, labels: [...rhythm.labels] });
+            if (isPlaying) {
+              togglePlay();
+              setTimeout(togglePlay, 50);
+            }
+            setIsModalOpen(false);
+          };
+
+          const visiblePhrases = savedPhrases.filter(p => !p.isDeleted);
+          
+          const previewPhrases = [...visiblePhrases]
+            .filter(p => p.name !== '똑-딱')
+            .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0))
+            .slice(0, 4);
+
+          const renderPhraseItem = (phrase) => {
+            const isSelected = currentRhythm.labels.join('-') === phrase.labels.join('-');
+            const isDeleting = deletingId === phrase.id;
+            
+            return (
+              <div
+                key={phrase.id}
+                onMouseDown={() => handlePressStart(phrase.id)}
+                onMouseUp={handlePressEnd}
+                onMouseLeave={handlePressEnd}
+                onTouchStart={() => handlePressStart(phrase.id)}
+                onTouchEnd={handlePressEnd}
+                onContextMenu={(e) => { e.preventDefault(); return false; }} 
+                onClick={(e) => { e.stopPropagation(); handlePhraseClick(phrase); }}
+                className={`relative group flex items-center justify-center px-4 py-2 rounded-xl text-[13px] tracking-tight font-medium transition-all duration-200 cursor-pointer select-none border shadow-sm ${
+                  isSelected
+                    ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
+                    : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500 hover:text-slate-100'
+                } ${isDeleting ? 'ring-2 ring-red-500 scale-105 shadow-xl' : ''}`}
+              >
+                <span>{phrase.name}</span>
+                
+                {isDeleting && (
+                  <button 
+                    onClick={(e) => deletePhrase(phrase.id, e)}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md z-10 hover:bg-red-600 transition-colors animate-pulse"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+            );
+          };
+
+          return (
+            <div className="min-h-screen bg-neutral-950 flex items-center justify-center sm:p-4 font-sans tracking-tight select-none" onClick={() => setDeletingId(null)}>
+              <div className="w-full max-w-[420px] bg-[#0f172a] sm:rounded-[2.5rem] shadow-2xl overflow-hidden relative min-h-screen sm:min-h-[850px] flex flex-col">
+                
+                <div className="bg-emerald-500 rounded-b-3xl pt-8 pb-4 px-6 text-center shadow-lg relative z-10">
+                  <div className="flex justify-center items-center gap-2">
+                    <Activity size={20} className="text-white" />
+                    <h1 className="text-xl font-extrabold text-white tracking-wide">GOLF METRONOME</h1>
+                  </div>
+                  <p className="text-emerald-50 text-[13px] mt-1 opacity-95 font-medium">나만의 스윙 메시지를 만들어보세요</p>
+                </div>
+
+                <div className="flex-1 flex flex-col px-6 pt-6 pb-32">
+                  
+                  <div className="flex justify-center mb-10">
+                    <div className="bg-slate-800 p-1.5 rounded-full flex gap-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] border border-slate-700/50 w-full">
+                      <button
+                        onClick={() => setSoundMode('beep')}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-[13px] font-bold transition-all ${
+                          soundMode === 'beep' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <Bell size={15} /> 비프음
+                      </button>
+                      <button
+                        onClick={() => setSoundMode('voice')}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-[13px] font-bold transition-all ${
+                          soundMode === 'voice' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <MessageSquare size={15} /> 음성
+                      </button>
+                      <button
+                        onClick={() => setSoundMode('metronome')}
+                        className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-full text-[13px] font-bold transition-all ${
+                          soundMode === 'metronome' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        <Clock size={15} /> 메트로놈
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center gap-3 md:gap-5 mb-8 h-20 items-start">
+                    {Array.from({ length: currentRhythm.beats }).map((_, i) => {
+                      const isActive = activeBeat === i;
+                      const isAccent = i === 0;
+                      
+                      let circleClass = "bg-slate-800 shadow-[inset_0_4px_6px_rgba(0,0,0,0.6)]";
+                      if (isActive) {
+                        circleClass = isAccent ? "bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]" : "bg-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.4)]";
+                      }
+
+                      return (
+                        <div key={i} className="flex flex-col items-center gap-3 relative">
+                          <div className={`w-14 h-14 rounded-full transition-all duration-200 flex items-center justify-center border border-slate-700/30 ${circleClass} ${isActive ? 'scale-110' : 'scale-100'}`} />
+                          
+                          <input
+                            type="text"
+                            maxLength={4} 
+                            value={currentRhythm.labels[i]}
+                            onChange={(e) => handleLabelChange(i, e.target.value)}
+                            className={`text-[14px] font-bold text-center bg-transparent w-[80px] outline-none border-b-2 border-transparent focus:border-emerald-500 transition-all focus:bg-slate-800 rounded py-1 ${isActive ? 'text-slate-100' : 'text-slate-400 hover:text-slate-300'} ${soundMode === 'voice' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex justify-center mb-10 min-h-[40px]">
+                    {soundMode === 'voice' ? (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); saveCurrentPhrase(); }}
+                        className="flex items-center gap-1.5 px-6 py-2.5 border border-emerald-500 text-emerald-500 rounded-full text-[13px] font-bold transition hover:bg-emerald-500/10 active:scale-95"
+                      >
+                        <Save size={15} /> 현재 메시지 추가하기
+                      </button>
+                    ) : (
+                      <div className="flex gap-4">
+                        <button 
+                          onClick={() => applyBaseRhythm(BASE_RHYTHMS.TWO_FOUR)}
+                          className={`flex items-center justify-center w-24 py-2.5 rounded-full text-[13px] font-bold transition border ${currentRhythm.beats === 2 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                        >
+                          2박자
+                        </button>
+                        <button 
+                          onClick={() => applyBaseRhythm(BASE_RHYTHMS.THREE_FOUR)}
+                          className={`flex items-center justify-center w-24 py-2.5 rounded-full text-[13px] font-bold transition border ${currentRhythm.beats === 3 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                        >
+                          3박자
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col items-center mb-10 w-full">
+                    <div className="flex items-center justify-center w-full px-4 mb-8 gap-6">
+                      <button onClick={() => changeBpmBy(-1)} className="text-emerald-500 hover:text-emerald-400 p-2 transition active:scale-90 opacity-80 hover:opacity-100">
+                        <ChevronLeft size={44} strokeWidth={2.5} />
+                      </button>
+                      
+                      <div className="text-center flex flex-col items-center min-w-[120px]">
+                        {isEditingBigBpm ? (
+                          <input
+                            type="number"
+                            autoFocus
+                            value={bigBpmInputValue}
+                            onChange={(e) => setBigBpmInputValue(e.target.value)}
+                            onBlur={submitBigBpm}
+                            onKeyDown={(e) => { if (e.key === 'Enter') submitBigBpm(); }}
+                            className="text-[5rem] font-extrabold text-white tracking-tighter leading-none bg-transparent w-full text-center outline-none border-b-2 border-emerald-500"
+                          />
+                        ) : (
+                          <span 
+                            onClick={() => { setBigBpmInputValue(bpm.toString()); setIsEditingBigBpm(true); }}
+                            className="text-[5rem] font-extrabold text-white tracking-tighter leading-none cursor-pointer hover:text-emerald-50 transition-colors"
+                          >
+                            {bpm}
+                          </span>
+                        )}
+                        <span className="block text-slate-400 text-xs font-bold mt-2 tracking-widest">BPM</span>
+                      </div>
+                      
+                      <button onClick={() => changeBpmBy(1)} className="text-emerald-500 hover:text-emerald-400 p-2 transition active:scale-90 opacity-80 hover:opacity-100">
+                        <ChevronRight size={44} strokeWidth={2.5} />
+                      </button>
+                    </div>
+
+                    <div className="w-full px-4 mb-6">
+                      <input type="range" min="30" max="200" value={bpm} onChange={handleBpmChange} className="w-full h-2 bg-slate-800 border border-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500 shadow-inner" />
+                    </div>
+                    
+                    <div className="flex justify-between w-full px-4 gap-2">
+                      {bpmPresets.map((val, index) => (
+                        editingPresetIndex === index ? (
+                          <input
+                            key={`preset-input-${index}`}
+                            type="number"
+                            autoFocus
+                            defaultValue={val}
+                            onBlur={(e) => handlePresetChange(index, e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handlePresetChange(index, e.target.value);
+                            }}
+                            className="flex-1 w-0 py-2.5 rounded-xl text-[13px] font-bold text-center bg-slate-900 border-2 border-emerald-500 text-white outline-none shadow-inner"
+                          />
+                        ) : (
+                          <button 
+                            key={`preset-${index}`} 
+                            onMouseDown={() => handlePresetPressStart(index)}
+                            onMouseUp={handlePresetPressEnd}
+                            onMouseLeave={handlePresetPressEnd}
+                            onTouchStart={() => handlePresetPressStart(index)}
+                            onTouchEnd={handlePresetPressEnd}
+                            onContextMenu={(e) => { e.preventDefault(); return false; }} 
+                            onClick={() => handlePresetClick(val)} 
+                            className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all shadow-sm ${bpm === val ? 'bg-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700'}`}
+                          >
+                            {val}
+                          </button>
+                        )
+                      ))}
+                    </div>
+                    <div className="text-center mt-3 text-slate-500 text-[11px] font-medium w-full">
+                      숫자를 꾹 길게 누르면 원하는 BPM으로 변경할 수 있습니다.
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/80 p-5 rounded-3xl border border-slate-700 shadow-lg mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2 text-emerald-400">
+                        <Bookmark size={18} />
+                        <span className="text-sm font-bold">메시지 보관함</span>
+                      </div>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
+                        className="flex items-center gap-1 text-[13px] font-bold transition text-emerald-500 hover:opacity-80"
+                      >
+                        <Plus size={14} /> 전체보기
+                      </button>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2.5 items-center">
+                      {previewPhrases.map((phrase) => renderPhraseItem(phrase))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-0 left-0 w-full h-36 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/90 to-transparent flex items-end justify-center pb-8 pointer-events-none z-20">
+                  <button 
+                    onClick={togglePlay} 
+                    className={`pointer-events-auto w-[84px] h-[84px] rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 border-4 ${
+                      isPlaying 
+                        ? 'bg-red-500 border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.5)] text-white' 
+                        : 'bg-emerald-500 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.5)] text-white pl-1.5'
+                    }`}
+                  >
+                    {isPlaying ? <Square size={36} fill="currentColor" className="mr-0" /> : <Play size={44} fill="currentColor" />}
+                  </button>
+                </div>
+              </div>
+
+              {isModalOpen && (
+                <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setDeletingId(null)}>
+                  <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden transform transition-all" onClick={(e) => e.stopPropagation()}>
+                    
+                    <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-800/50 z-10">
+                      <div className="flex items-center gap-3">
+                        <h2 className="text-[17px] font-bold text-emerald-400 flex items-center gap-2">
+                          <Bookmark size={20} /> 전체 메시지
+                        </h2>
+                        <button onClick={restoreDefaults} className="text-[11px] font-bold px-2.5 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded-lg transition">샘플 복구</button>
+                      </div>
+                      <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-700 transition">
+                        <X size={24} />
+                      </button>
+                    </div>
+                    
+                    <div className="p-6 overflow-y-auto custom-scrollbar flex-1">
+                      <div className="mb-8">
+                        <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+                          <span className="text-[15px] font-bold text-slate-200">2박자 <span className="text-slate-500 text-[13px] ml-1 font-medium">(퍼팅, 어프로치)</span></span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">{visiblePhrases.filter(p => p.beats === 2).length} / 15</span>
+                            <button onClick={() => applyBaseRhythm(BASE_RHYTHMS.TWO_FOUR)} className="text-[11px] font-bold px-2.5 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:bg-slate-700">기본 셋팅</button>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2.5">
+                          {visiblePhrases.filter(p => p.beats === 2).map((phrase) => renderPhraseItem(phrase))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+                          <span className="text-[15px] font-bold text-slate-200">3박자 <span className="text-slate-500 text-[13px] ml-1 font-medium">(풀스윙)</span></span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">{visiblePhrases.filter(p => p.beats === 3).length} / 15</span>
+                            <button onClick={() => applyBaseRhythm(BASE_RHYTHMS.THREE_FOUR)} className="text-[11px] font-bold px-2.5 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:bg-slate-700">기본 셋팅</button>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2.5">
+                          {visiblePhrases.filter(p => p.beats === 3).map((phrase) => renderPhraseItem(phrase))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {alertMessage && (
+                <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+                  <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-xs p-6 flex flex-col items-center text-center transform transition-all">
+                    <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-5 text-amber-500">
+                      <Bell size={28} />
+                    </div>
+                    <p className="text-slate-200 text-[15px] whitespace-pre-line leading-relaxed mb-6 font-medium">
+                      {alertMessage}
+                    </p>
+                    <button 
+                      onClick={() => setAlertMessage('')}
+                      className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold rounded-xl transition border border-slate-700"
+                    >
+                      확인
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {confirmDialog && (
+                <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+                  <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-xs p-6 flex flex-col items-center text-center transform transition-all">
+                    <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-5 text-emerald-500">
+                      <Bell size={28} />
+                    </div>
+                    <p className="text-slate-200 text-[15px] whitespace-pre-line leading-relaxed mb-6 font-medium">
+                      {confirmDialog.message}
+                    </p>
+                    <div className="flex gap-3 w-full">
+                      <button 
+                        onClick={() => setConfirmDialog(null)}
+                        className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition border border-slate-700"
+                      >
+                        취소
+                      </button>
+                      <button 
+                        onClick={confirmDialog.onConfirm}
+                        className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition border border-emerald-500"
+                      >
+                        복구
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
