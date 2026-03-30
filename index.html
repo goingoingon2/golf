@@ -2,130 +2,130 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <!-- 모바일 최적화를 위한 뷰포트 설정 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>골프 타당 내기</title>
 
-  <!-- Tailwind CSS -->
+  <!-- 1. 폰트 로드 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+
+  <!-- 2. Tailwind CSS (HTML 단일 파일용) -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- React & ReactDOM (버전 18) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- 3. React 및 Babel 로드 -->
+  <script src="https://unpkg.com/react@17.0.2/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@17.0.2/umd/react-dom.production.min.js" crossorigin></script>
   
-  <!-- Babel (브라우저 내 JSX 컴파일) -->
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    window.__NATIVE_MAP__ = window.Map;
+    window.__NATIVE_SET__ = window.Set;
+  </script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.6/babel.min.js"></script>
+  <script>
+    window.Map = window.__NATIVE_MAP__;
+    window.Set = window.__NATIVE_SET__;
+  </script>
 
-  <!-- Firebase v10 Compat (단일 HTML용) -->
+  <!-- 4. Firebase (HTML에서 사용하는 Compat 버전) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
   <style>
-    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-    * { font-family: 'Pretendard', sans-serif; }
-    body { background-color: #f4f6f8; -webkit-tap-highlight-color: transparent; margin: 0; }
-    /* iOS 안전 영역 대응 */
-    .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
-    .error-box { display:none; padding:25px; background-color:#ef4444; color:white; text-align:center; font-family:sans-serif; line-height:1.6; font-size:14px; }
+    * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif !important; margin: 0; padding: 0; }
+    body { background-color: #f4f6f8; color: #111827; -webkit-tap-highlight-color: transparent; margin: 0; }
+    input, button, select { outline: none; font-family: inherit; }
+    button:disabled { cursor: default !important; opacity: 0.5; pointer-events: none; }
+    .app-wrapper { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #f4f6f8; position: relative; overflow-x: hidden; }
   </style>
-
-  <script>
-    // 사내망/방화벽 차단 감지 로직
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        if (typeof tailwind === 'undefined') {
-          var errBox = document.getElementById('css-error');
-          errBox.style.display = 'block';
-          errBox.innerHTML = "<b>⚠️ 디자인 파일(CSS) 로딩이 차단되었습니다.</b><br/><br/>현재 접속하신 PC의 <b>사내 네트워크/보안 방화벽</b>에서<br/>외부 디자인 서버 접속을 차단하고 있습니다.<br/>(화면이 흑백 텍스트로만 나오는 원인입니다.)<br/><br/>스마트폰에서 <b>와이파이를 끄고 일반 데이터(LTE/5G)</b> 상태로<br/>파일을 열어보시면 예쁜 디자인이 정상적으로 나타납니다!";
-        }
-      }, 800);
-    });
-  </script>
 </head>
 <body>
-  <!-- 방화벽 차단 안내 메시지 영역 -->
-  <div id="css-error" class="error-box"></div>
   
-  <!-- 리액트 앱이 렌더링될 루트 -->
   <div id="root"></div>
 
-  <!-- React 애플리케이션 코드 -->
   <script type="text/babel">
     const { useState, useMemo, useRef, useEffect, Fragment } = React;
 
     // =====================================================================
-    // ★ 1. 파이어베이스 데이터베이스 설정 (내 개인 DB 키로 교체하세요) ★
+    // ★ 0. Firebase 설정 (여기에 정보를 입력하세요!) ★
     // =====================================================================
-    // 여기에 파이어베이스에서 발급받은 firebaseConfig 객체 내용을 채워넣으세요.
-    // 키를 넣지 않아도 '오프라인(개인용)'으로는 완벽하게 정상 작동합니다!
-    const firebaseConfig = {
-      // apiKey: "AIzaSyAYRsI_aYvQN-Es-q6w3ckmqhZeRGe2tms",
-      // authDomain: "stroke-play-4663c.firebaseapp.com",
-      // projectId: "stroke-play-4663c",
-      // storageBucket: "stroke-play-4663c.firebasestorage.app",
-      // messagingSenderId: "1090422201172",
-      // appId: "1:1090422201172:web:3319fd46f5f22b4f8ec6c1"
+    // 🚨 파이어베이스 콘솔에서 발급받은 본인의 config 정보를 아래에 붙여넣으세요!
+    const MY_FIREBASE_CONFIG = {
+      // apiKey: "AIzaSy...",
+      // authDomain: "golf-betting-app.firebaseapp.com",
+      // projectId: "golf-betting-app",
+      // storageBucket: "golf-betting-app.appspot.com",
+      // messagingSenderId: "123456789",
+      // appId: "1:123456789:web:abcdefg"
     };
 
-    // Firebase 초기화 (설정 키가 있을 때만 작동)
-    let auth, db;
-    if (firebaseConfig.apiKey) {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
+    let firebaseInitialized = false;
+    let authInstance, dbInstance;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+    try {
+      let configToUse = null;
+      if (typeof __firebase_config !== 'undefined') {
+        configToUse = JSON.parse(__firebase_config);
+      } else if (Object.keys(MY_FIREBASE_CONFIG).length > 0) {
+        configToUse = MY_FIREBASE_CONFIG;
       }
-      auth = firebase.auth();
-      db = firebase.firestore();
-    } else {
-      console.warn("⚠️ Firebase 키가 설정되지 않아 라이브 연동이 꺼진 상태로 작동합니다.");
+
+      if (configToUse && typeof firebase !== 'undefined') {
+        if (!firebase.apps.length) firebase.initializeApp(configToUse);
+        authInstance = firebase.auth();
+        dbInstance = firebase.firestore();
+        firebaseInitialized = true;
+      }
+    } catch (e) {
+      console.error("Firebase 초기화 에러:", e);
     }
 
-
     // =====================================================================
-    // 2. 아이콘(SVG) 컴포넌트 정의 (lucide-react 대체용)
-    // =====================================================================
-    const Icon = ({ path, className }) => (
-      <svg className={className || "w-5 h-5"} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: path }} />
-    );
-    const Users = (p) => <Icon {...p} path='<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>' />;
-    const Plus = (p) => <Icon {...p} path='<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>' />;
-    const Minus = (p) => <Icon {...p} path='<line x1="5" y1="12" x2="19" y2="12"/>' />;
-    const Check = (p) => <Icon {...p} path='<polyline points="20 6 9 17 4 12"/>' />;
-    const RotateCcw = (p) => <Icon {...p} path='<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>' />;
-    const Trophy = (p) => <Icon {...p} path='<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>' />;
-    const ArrowRight = (p) => <Icon {...p} path='<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>' />;
-    const ArrowLeft = (p) => <Icon {...p} path='<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>' />;
-    const Info = (p) => <Icon {...p} path='<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>' />;
-    const Flag = (p) => <Icon {...p} path='<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>' />;
-    const Settings = (p) => <Icon {...p} path='<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>' />;
-    const ChevronDown = (p) => <Icon {...p} path='<polyline points="6 9 12 15 18 9"/>' />;
-    const ChevronUp = (p) => <Icon {...p} path='<polyline points="18 15 12 9 6 15"/>' />;
-    const X = (p) => <Icon {...p} path='<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>' />;
-    const Map = (p) => <Icon {...p} path='<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>' />;
-    const Search = (p) => <Icon {...p} path='<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' />;
-    const Calculator = (p) => <Icon {...p} path='<rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="8" y1="18" x2="8.01" y2="18"/>' />;
-    const Wallet = (p) => <Icon {...p} path='<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>' />;
-    const Share2 = (p) => <Icon {...p} path='<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>' />;
-    const Download = (p) => <Icon {...p} path='<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>' />;
-    const Edit3 = (p) => <Icon {...p} path='<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>' />;
-    const User = (p) => <Icon {...p} path='<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' />;
-    const UserX = (p) => <Icon {...p} path='<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="22" y2="13"/><line x1="22" y1="8" x2="17" y2="13"/>' />;
-
-
-    // =====================================================================
-    // 3. 메인 애플리케이션 코드
+    // ★ 1. 데이터 및 SVG 아이콘 ★
     // =====================================================================
     const GOLF_COURSES = [
-      { id: 'custom', name: '직접 설정 (자유 입력)', nineHoles: { '전반': [4,4,4,4,4,4,4,4,4], '후반': [4,4,4,4,4,4,4,4,4] } },
-      { id: 'standard_72', name: '표준 파72 (일반 코스)', nineHoles: { 'OUT': [4,4,3,5,4,4,3,5,4], 'IN':  [4,4,3,5,4,4,3,5,4] } },
-      { id: 'club72_hanul', name: '클럽72 - 하늘코스', nineHoles: { 'OUT': [4,4,3,4,5,4,3,4,5], 'IN':  [4,4,3,5,4,4,3,5,4] } },
-      { id: 'club72_ocean', name: '클럽72 - 오션코스', nineHoles: { 'OUT': [4,3,4,4,5,3,4,4,5], 'IN':  [4,4,3,4,5,4,3,5,4] } },
-      { id: 'seowon_valley', name: '서원밸리CC', nineHoles: { '서원': [4,4,5,3,4,4,3,5,4], '밸리': [4,4,3,4,5,4,3,5,4] } },
-      { id: 'southcape', name: '사우스케이프', nineHoles: { '선라이즈': [4,4,3,5,4,5,3,4,4], '선셋': [4,3,4,4,5,3,4,5,4] } }
+      { id: 'custom', name: '직접 설정 (자유 입력)', nineHoles: { '전반': [4, 4, 4, 4, 4, 4, 4, 4, 4], '후반': [4, 4, 4, 4, 4, 4, 4, 4, 4] } },
+      { id: 'standard_72', name: '표준 파72 (일반 코스)', nineHoles: { 'OUT': [4, 4, 3, 5, 4, 4, 3, 5, 4], 'IN':  [4, 4, 3, 5, 4, 4, 3, 5, 4] } },
+      { id: 'club72_hanul', name: '클럽72 - 하늘코스', nineHoles: { 'OUT': [4, 4, 3, 4, 5, 4, 3, 4, 5], 'IN':  [4, 4, 3, 5, 4, 4, 3, 5, 4] } },
+      { id: 'club72_ocean', name: '클럽72 - 오션코스', nineHoles: { 'OUT': [4, 3, 4, 4, 5, 3, 4, 4, 5], 'IN':  [4, 4, 3, 4, 5, 4, 3, 5, 4] } },
+      { id: 'seowon_valley', name: '서원밸리CC', nineHoles: { '서원': [4, 4, 5, 3, 4, 4, 3, 5, 4], '밸리': [4, 4, 3, 4, 5, 4, 3, 5, 4] } },
+      { id: 'southcape', name: '사우스케이프', nineHoles: { '선라이즈': [4, 4, 3, 5, 4, 5, 3, 4, 4], '선셋': [4, 3, 4, 4, 5, 3, 4, 5, 4] } }
     ];
 
+    const Icons = {
+      Users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      Plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      Minus: '<line x1="5" y1="12" x2="19" y2="12"/>',
+      Check: '<polyline points="20 6 9 17 4 12"/>',
+      RotateCcw: '<polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>',
+      Trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+      ArrowRight: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+      ArrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+      Info: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+      Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+      X: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+      Map: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+      Search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+      Calculator: '<rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="8" y1="18" x2="8.01" y2="18"/>',
+      Wallet: '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+      Share2: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>',
+      Download: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+      Edit3: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+      User: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+      UserX: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="17" y1="8" x2="23" y2="14"/><line x1="23" y1="8" x2="17" y2="14"/>',
+      Clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+    };
+
+    const Icon = ({ name, className = "", style, onClick }) => (
+      <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: Icons[name] }} className={className} style={{...style, display: 'inline-block', width: '1em', height: '1em'}} />
+    );
+
+    // =====================================================================
+    // ★ 2. 메인 앱 컴포넌트 ★
+    // =====================================================================
     function App() {
       const [step, setStep] = useState('setup'); 
+      
       const [selectedCourseId, setSelectedCourseId] = useState('standard_72');
       const [frontNineId, setFrontNineId] = useState('OUT');
       const [backNineId, setBackNineId] = useState('IN');
@@ -134,24 +134,29 @@
       const [customBackName, setCustomBackName] = useState('후반');
       const [showCourseSearchModal, setShowCourseSearchModal] = useState(false);
       const [courseSearchQuery, setCourseSearchQuery] = useState('');
-      const [players, setPlayers] = useState(['타이거 우즈', '로리 매킬로이', '스코티 셰플러', '존 람']);
+
+      const [players, setPlayers] = useState(['타이어 우즈', '로리 맥일로이', '스코티 셔플러', '필 미친손']);
       const [initialBalances, setInitialBalances] = useState([0, 0, 0, 0]); 
       const [baseAmount, setBaseAmount] = useState(1000);
       const [isCustomAmount, setIsCustomAmount] = useState(false);
-      const [gaepyungRate, setGaepyungRate] = useState(10); 
+      const [gaepyungRate, setGaepyungRate] = useState(50);
       const [isCustomRate, setIsCustomRate] = useState(false);
-      const [isRoundThousand, setIsRoundThousand] = useState(true); 
-      const [isProportionalDistribution, setIsProportionalDistribution] = useState(false); 
+      const [isRoundThousand, setIsRoundThousand] = useState(true);
+      const [isProportionalDistribution, setIsProportionalDistribution] = useState(false);
+
       const [scoreCaddieIdx, setScoreCaddieIdx] = useState(0);
       const [showDoubleSettings, setShowDoubleSettings] = useState(false);
       const [showBonusSettings, setShowBonusSettings] = useState(false);
       const [doubleRules, setDoubleRules] = useState({ timing: 'current', birdie: true, threeTie: true, prevTie: true, triple: true, doublePar3: true });
       const [birdieRule, setBirdieRule] = useState({ type: 'strokes', strokeValue: 1, fixedValue: 10000 });
       const [eagleRule, setEagleRule] = useState({ type: 'strokes', strokeValue: 3, fixedValue: 30000 });
+
+      const [usePutts, setUsePutts] = useState(false);
       const [holes, setHoles] = useState(Array(18).fill(null));
       const [currentHole, setCurrentHole] = useState(0); 
       const [currentPar, setCurrentPar] = useState(4);
       const [currentScores, setCurrentScores] = useState([4, 4, 4, 4]);
+      const [currentPutts, setCurrentPutts] = useState([0, 0, 0, 0]);
       const [multiplier, setMultiplier] = useState(1); 
       const [hasManualMultiplier, setHasManualMultiplier] = useState(false); 
       const [currentExcluded, setCurrentExcluded] = useState([false, false, false, false]); 
@@ -163,81 +168,73 @@
       const [showResetConfirm, setShowResetConfirm] = useState(false); 
       const [scorecardTab, setScorecardTab] = useState('front'); 
 
-      // Firebase 라이브 상태
+      const [startTime, setStartTime] = useState(null);
+      const [elapsedTime, setElapsedTime] = useState('00:00');
       const [user, setUser] = useState(null);
       const [roomId, setRoomId] = useState('');
+      
       const lastSyncedStr = useRef('');
       const lastSentUpdate = useRef(0);
+      const pressTimer = useRef(null);
+      const parPressTimer = useRef(null);
+      const isParLongPress = useRef(false);
 
-      // 1. Firebase Auth 연결
+      // =====================================================================
+      // ★ Firebase 통신 (HTML용 객체 활용) ★
+      // =====================================================================
       useEffect(() => {
-        if (!auth) return;
-        auth.signInAnonymously().catch(console.error);
-        const unsubscribe = auth.onAuthStateChanged(setUser);
+        if (!firebaseInitialized || !authInstance) return;
+        const initAuth = async () => {
+          try {
+            if (typeof window.__initial_auth_token !== 'undefined' && window.__initial_auth_token) {
+              await authInstance.signInWithCustomToken(window.__initial_auth_token);
+            } else {
+              await authInstance.signInAnonymously();
+            }
+          } catch (e) {
+            console.error("Auth error:", e);
+          }
+        };
+        initAuth();
+        const unsubscribe = authInstance.onAuthStateChanged(setUser);
         return () => unsubscribe();
       }, []);
 
-      // 2. URL에서 Room ID 읽기
       useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlRoomId = urlParams.get('roomId');
-        if (urlRoomId) setRoomId(urlRoomId);
+        const params = new URLSearchParams(window.location.search);
+        const rId = params.get('roomId');
+        if (rId) setRoomId(rId);
       }, []);
 
-      // 3. Firestore 원격 데이터 리스너 (수신)
+      const getRoomRef = (rId) => {
+        if (typeof window.__app_id !== 'undefined') {
+          return dbInstance.collection('artifacts').doc(appId).collection('public').doc('data').collection('golf_rooms').doc(rId);
+        }
+        return dbInstance.collection('golf_rooms').doc(rId);
+      };
+
       useEffect(() => {
-        if (!user || !roomId || !db) return;
-        const roomRef = db.collection('golf_rooms').doc(roomId);
+        if (!user || !roomId || !dbInstance || !firebaseInitialized) return;
+        const roomRef = getRoomRef(roomId);
         const unsubscribe = roomRef.onSnapshot((snap) => {
           if (snap.exists) {
             const data = snap.data();
-            if (data.updatedAt && data.updatedAt <= lastSentUpdate.current) return; // 에코 방지
-            
+            if (data.updatedAt && data.updatedAt <= lastSentUpdate.current) return;
             const { updatedAt, ...stateData } = data;
             lastSyncedStr.current = JSON.stringify(stateData);
-
             if (data.step !== undefined) setStep(data.step);
-            if (data.selectedCourseId !== undefined) setSelectedCourseId(data.selectedCourseId);
-            if (data.frontNineId !== undefined) setFrontNineId(data.frontNineId);
-            if (data.backNineId !== undefined) setBackNineId(data.backNineId);
-            if (data.customCourseName !== undefined) setCustomCourseName(data.customCourseName);
-            if (data.customFrontName !== undefined) setCustomFrontName(data.customFrontName);
-            if (data.customBackName !== undefined) setCustomBackName(data.customBackName);
-            if (data.players !== undefined) setPlayers(data.players);
-            if (data.initialBalances !== undefined) setInitialBalances(data.initialBalances);
-            if (data.baseAmount !== undefined) setBaseAmount(data.baseAmount);
-            if (data.isCustomAmount !== undefined) setIsCustomAmount(data.isCustomAmount);
-            if (data.gaepyungRate !== undefined) setGaepyungRate(data.gaepyungRate);
-            if (data.isCustomRate !== undefined) setIsCustomRate(data.isCustomRate);
-            if (data.isRoundThousand !== undefined) setIsRoundThousand(data.isRoundThousand);
-            if (data.isProportionalDistribution !== undefined) setIsProportionalDistribution(data.isProportionalDistribution);
-            if (data.scoreCaddieIdx !== undefined) setScoreCaddieIdx(data.scoreCaddieIdx);
-            if (data.doubleRules !== undefined) setDoubleRules(data.doubleRules);
-            if (data.birdieRule !== undefined) setBirdieRule(data.birdieRule);
-            if (data.eagleRule !== undefined) setEagleRule(data.eagleRule);
             if (data.holes !== undefined) setHoles(data.holes);
             if (data.currentHole !== undefined) setCurrentHole(data.currentHole);
-            if (data.currentPar !== undefined) setCurrentPar(data.currentPar);
-            if (data.currentScores !== undefined) setCurrentScores(data.currentScores);
-            if (data.multiplier !== undefined) setMultiplier(data.multiplier);
-            if (data.hasManualMultiplier !== undefined) setHasManualMultiplier(data.hasManualMultiplier);
-            if (data.currentExcluded !== undefined) setCurrentExcluded(data.currentExcluded);
-            if (data.globalExcluded !== undefined) setGlobalExcluded(data.globalExcluded);
-            if (data.isHoleExcluded !== undefined) setIsHoleExcluded(data.isHoleExcluded);
+            if (data.startTime !== undefined) setStartTime(data.startTime);
+            if (data.players !== undefined) setPlayers(data.players);
           }
-        }, (err) => console.error('Snapshot error:', err));
+        }, (err) => console.error("Snapshot error:", err));
         return () => unsubscribe();
       }, [user, roomId]);
 
-      // 4. 로컬 변경 감지 후 DB 업로드 (송신)
       useEffect(() => {
-        if (!user || !roomId || !db) return;
-        const payload = {
-          step, selectedCourseId, frontNineId, backNineId, customCourseName, customFrontName, customBackName,
-          players, initialBalances, baseAmount, isCustomAmount, gaepyungRate, isCustomRate, isRoundThousand, isProportionalDistribution,
-          scoreCaddieIdx, doubleRules, birdieRule, eagleRule, holes, currentHole,
-          currentPar, currentScores, multiplier, hasManualMultiplier, currentExcluded, globalExcluded, isHoleExcluded
-        };
+        if (!user || !roomId || !dbInstance || !firebaseInitialized) return;
+        const payload = { step, players, holes, currentHole, startTime, usePutts, gaepyungRate, isRoundThousand, isProportionalDistribution };
         const currentStr = JSON.stringify(payload);
         if (currentStr === lastSyncedStr.current) return;
 
@@ -245,62 +242,29 @@
           lastSyncedStr.current = currentStr;
           const finalPayload = { ...payload, updatedAt: Date.now() };
           lastSentUpdate.current = finalPayload.updatedAt;
-          db.collection('golf_rooms').doc(roomId).set(finalPayload, { merge: true }).catch(console.error);
-        }, 400); // 400ms 디바운스
+          getRoomRef(roomId).set(finalPayload, { merge: true }).catch(e => console.error(e));
+        }, 400); 
         return () => clearTimeout(timer);
-      }, [
-        step, selectedCourseId, frontNineId, backNineId, customCourseName, customFrontName, customBackName,
-        players, initialBalances, baseAmount, isCustomAmount, gaepyungRate, isCustomRate, isRoundThousand, isProportionalDistribution,
-        scoreCaddieIdx, doubleRules, birdieRule, eagleRule, holes, currentHole,
-        currentPar, currentScores, multiplier, hasManualMultiplier, currentExcluded, globalExcluded, isHoleExcluded,
-        user, roomId
-      ]);
+      }, [step, players, holes, currentHole, startTime, usePutts, gaepyungRate, isRoundThousand, isProportionalDistribution, user, roomId]);
 
-      const createRoomIdIfNeeded = () => {
-        if (!roomId) {
-          const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-          setRoomId(newRoomId);
-          try {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.set('roomId', newRoomId);
-            window.history.replaceState(null, '', newUrl.toString());
-          } catch(e) {} // file:// 프로토콜 오류 무시
-          return newRoomId;
-        }
-        return roomId;
-      };
-
-      const pressTimer = useRef(null);
-
+      // =====================================================================
+      // ★ 파생 데이터 계산 ★
+      // =====================================================================
       useEffect(() => {
-        if (step === 'scorecard') {
-          setScorecardTab(currentHole < 9 ? 'front' : 'back');
-        }
+        if (step === 'scorecard') setScorecardTab(currentHole < 9 ? 'front' : 'back');
       }, [step, currentHole]);
 
-      const startPress = (e, idx, isGlobal) => {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
-        pressTimer.current = setTimeout(() => {
-          if (isGlobal) {
-            const newEx = [...globalExcluded];
-            newEx[idx] = !newEx[idx];
-            setGlobalExcluded(newEx);
-            setToastMessage(newEx[idx] ? `${players[idx]} 님이 전체 게임에서 제외되었습니다.` : `${players[idx]} 님이 게임에 참여합니다.`);
-          } else {
-            toggleExcluded(idx);
-            const isExcluding = !currentExcluded[idx];
-            setToastMessage(isExcluding ? `${players[idx]} 님이 이 홀 내기에서 제외되었습니다.` : `${players[idx]} 님이 내기에 참여합니다.`);
-          }
-          setTimeout(() => setToastMessage(''), 2000);
-        }, 500); 
-      };
-
-      const cancelPress = () => {
-        if (pressTimer.current) {
-          clearTimeout(pressTimer.current);
-          pressTimer.current = null;
-        }
-      };
+      useEffect(() => {
+        if (!startTime || step === 'setup') return;
+        const timerId = setInterval(() => {
+          const diff = Date.now() - startTime;
+          const h = Math.floor(diff / 3600000);
+          const m = Math.floor((diff % 3600000) / 60000);
+          const s = Math.floor((diff % 60000) / 1000);
+          setElapsedTime(`${h > 0 ? h+':' : ''}${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`);
+        }, 1000);
+        return () => clearInterval(timerId);
+      }, [startTime, step]);
 
       const actualCourseName = selectedCourseId === 'custom' ? customCourseName : (GOLF_COURSES.find(c => c.id === selectedCourseId)?.name || '');
       const actualFrontName = selectedCourseId === 'custom' ? customFrontName : frontNineId;
@@ -314,19 +278,51 @@
         return [...front, ...back];
       }, [selectedCourseId, frontNineId, backNineId]);
 
+      const totalParSumAll = useMemo(() => {
+        let sum = 0;
+        for (let i = 0; i < currentHole; i++) sum += (holes[i] ? holes[i].par : coursePars[i]);
+        return sum;
+      }, [holes, currentHole, coursePars]);
+
+      const totalStrokesSum = useMemo(() => {
+        let strokes = [0, 0, 0, 0];
+        holes.forEach(hole => {
+          if (!hole) return;
+          hole.scores.forEach((s, i) => { if (!(hole.excluded && hole.excluded[i])) strokes[i] += s; });
+        });
+        return strokes;
+      }, [holes]);
+
+      const totalPuttsSum = useMemo(() => {
+        let putts = [0, 0, 0, 0];
+        holes.forEach(hole => {
+          if (!hole || !hole.putts) return;
+          hole.putts.forEach((p, i) => { if (!(hole.excluded && hole.excluded[i])) putts[i] += p; });
+        });
+        return putts;
+      }, [holes]);
+
+      const showToastMsg = (msg) => {
+        setToastMessage(msg);
+        setTimeout(() => setToastMessage(''), 3000);
+      };
+
       const checkAutoDouble = (targetScores, targetPar, rules, prevHoleForTie, excludedArr) => {
         if (!targetScores) return false;
         let isDbl = false;
         const excluded = excludedArr || [false, false, false, false];
         const activeScores = targetScores.filter((_, idx) => !excluded[idx]);
+        
         if (activeScores.length === 0) return false;
+        
         if (rules.birdie && activeScores.some(s => s <= targetPar - 1)) isDbl = true;
         if (rules.triple && targetPar >= 4 && activeScores.some(s => s >= targetPar + 3)) isDbl = true;
         if (rules.doublePar3 && targetPar === 3 && activeScores.some(s => s >= targetPar + 2)) isDbl = true;
         if (rules.threeTie) {
           const counts = {};
           activeScores.forEach(s => counts[s] = (counts[s] || 0) + 1);
-          if (Object.values(counts).some(c => c >= 3)) isDbl = true;
+          // 4명이 다 똑같을 때는 이전 홀 무승부 룰로 커버, 3명만 정확히 같을 때 3인 동타 배판 적용
+          if (Object.values(counts).some(c => c === 3 && activeScores.length >= 4)) isDbl = true;
         }
         if (rules.prevTie && prevHoleForTie) {
           const prevExcluded = prevHoleForTie.excluded || [false, false, false, false];
@@ -339,17 +335,112 @@
         return isDbl;
       };
 
-      const handleStart = () => {
-        createRoomIdIfNeeded(); 
-        setStep('play');
-        loadHoleData(0);
+      useEffect(() => {
+        if (!hasManualMultiplier && doubleRules.timing === 'current' && step === 'play' && !isHoleExcluded) {
+          const prevHole = currentHole > 0 ? holes[currentHole - 1] : null;
+          const isAutoDouble = checkAutoDouble(currentScores, currentPar, doubleRules, prevHole, currentExcluded);
+          setMultiplier(isAutoDouble ? 2 : 1);
+        }
+      }, [currentScores, currentPar, currentExcluded, doubleRules, hasManualMultiplier, currentHole, step, holes, isHoleExcluded]);
+
+      // =====================================================================
+      // ★ 핸들러 함수 ★
+      // =====================================================================
+      const updateScore = (index, delta) => {
+        if (currentExcluded[index]) return; 
+        setCurrentScores(prev => {
+          const newScores = [...prev];
+          newScores[index] = Math.max(1, newScores[index] + delta);
+          return newScores;
+        });
+      };
+
+      const updatePutts = (index, delta) => {
+        if (currentExcluded[index]) return; 
+        setCurrentPutts(prev => {
+          const newPutts = [...prev];
+          newPutts[index] = Math.max(0, newPutts[index] + delta);
+          return newPutts;
+        });
+      };
+
+      const handleParSelect = (par) => {
+        if (isParLongPress.current) { isParLongPress.current = false; return; }
+        setCurrentPar(par);
+      };
+
+      const startParPress = () => {
+        if (parPressTimer.current) clearTimeout(parPressTimer.current);
+        parPressTimer.current = setTimeout(() => {
+          isParLongPress.current = true;
+          setCurrentPar(p => p >= 5 ? p + 1 : 6);
+        }, 500);
+      };
+
+      const cancelParPress = () => {
+        if (parPressTimer.current) clearTimeout(parPressTimer.current);
+      };
+
+      const handleMultiplierMinus = () => {
+        setHasManualMultiplier(true);
+        if (isHoleExcluded) return; 
+        if (multiplier > 1) {
+          setMultiplier(multiplier - 1);
+        } else if (multiplier === 1) {
+          setIsHoleExcluded(true);
+        }
+      };
+
+      const handleMultiplierPlus = () => {
+        setHasManualMultiplier(true);
+        if (isHoleExcluded) { 
+          setIsHoleExcluded(false); 
+          setMultiplier(1); 
+        } else {
+          setMultiplier(multiplier + 1);
+        }
+      };
+
+      const toggleExcluded = (index) => {
+        setCurrentExcluded(prev => {
+          const newExcluded = [...prev];
+          newExcluded[index] = !newExcluded[index];
+          return newExcluded;
+        });
+      };
+
+      const startPress = (e, idx, isGlobal) => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.closest('button')) return;
+        pressTimer.current = setTimeout(() => {
+          if (isGlobal) {
+            setGlobalExcluded(prev => {
+              const newEx = [...prev];
+              newEx[idx] = !newEx[idx];
+              showToastMsg(newEx[idx] ? `${players[idx]} 님이 전체 게임에서 제외되었습니다.` : `${players[idx]} 님이 게임에 참여합니다.`);
+              return newEx;
+            });
+          } else {
+            toggleExcluded(idx);
+            const isExcluding = !currentExcluded[idx];
+            showToastMsg(isExcluding ? `${players[idx]} 님이 이 홀 내기에서 제외되었습니다.` : `${players[idx]} 님이 내기에 참여합니다.`);
+          }
+        }, 500); 
+      };
+
+      const cancelPress = () => {
+        if (pressTimer.current) {
+          clearTimeout(pressTimer.current);
+          pressTimer.current = null;
+        }
       };
 
       const loadHoleData = (holeIndex) => {
         setCurrentHole(holeIndex);
         const existingData = holes[holeIndex];
+
         let initialPar = coursePars[holeIndex] || 4; 
         let initialScores = [initialPar, initialPar, initialPar, initialPar]; 
+        let initialPutts = [0, 0, 0, 0];
         let initialMultiplier = 1;
         let initialHasManual = false;
         let initialExcluded = [false, false, false, false];
@@ -358,6 +449,7 @@
         if (existingData) {
           initialPar = existingData.par;
           initialScores = [...existingData.scores];
+          initialPutts = existingData.putts ? [...existingData.putts] : [0,0,0,0];
           initialMultiplier = existingData.multiplier || 1;
           initialHasManual = existingData.hasManualMultiplier || false;
           initialExcluded = existingData.excluded || [false, false, false, false];
@@ -373,23 +465,28 @@
           }
           initialMultiplier = isAutoDouble ? 2 : 1;
         }
+
         setCurrentPar(initialPar);
         setCurrentScores(initialScores);
+        setCurrentPutts(initialPutts);
         setMultiplier(initialMultiplier);
         setHasManualMultiplier(initialHasManual);
         setCurrentExcluded(initialExcluded);
         setIsHoleExcluded(initialIsHoleExcluded);
       };
 
+      const handleStart = () => {
+        if (!roomId) setRoomId(Math.random().toString(36).substring(2, 8).toUpperCase());
+        if (!startTime) setStartTime(Date.now());
+        setStep('play');
+        loadHoleData(0);
+      };
+
       const saveHole = () => {
         const newHoles = [...holes];
         newHoles[currentHole] = {
-          par: currentPar,
-          scores: [...currentScores],
-          multiplier: multiplier,
-          hasManualMultiplier: hasManualMultiplier,
-          excluded: [...currentExcluded],
-          isHoleExcluded: isHoleExcluded
+          par: currentPar, scores: [...currentScores], putts: [...currentPutts],
+          multiplier, excluded: [...currentExcluded], isHoleExcluded, hasManualMultiplier
         };
         setHoles(newHoles);
         setStep('hole-result');
@@ -413,39 +510,18 @@
       const updateInitialBalance = (index, val) => {
         const rawValue = val.replace(/,/g, '');
         const newBalances = [...initialBalances];
-        if (rawValue === '-' || rawValue === '') newBalances[index] = rawValue;
-        else {
+        if (rawValue === '-' || rawValue === '') {
+          newBalances[index] = rawValue;
+        } else {
           const num = parseInt(rawValue, 10);
           newBalances[index] = isNaN(num) ? 0 : num;
         }
         setInitialBalances(newBalances);
       };
 
-      const updateScore = (index, delta) => {
-        if (currentExcluded[index]) return; 
-        const newScores = [...currentScores];
-        newScores[index] = Math.max(1, newScores[index] + delta);
-        setCurrentScores(newScores);
-
-        if (!hasManualMultiplier && doubleRules.timing === 'current') {
-          const prevHole = currentHole > 0 ? holes[currentHole - 1] : null;
-          const isAutoDouble = checkAutoDouble(newScores, currentPar, doubleRules, prevHole, currentExcluded);
-          setMultiplier(isAutoDouble ? 2 : 1);
-        }
-      };
-
-      const toggleExcluded = (index) => {
-        const newExcluded = [...currentExcluded];
-        newExcluded[index] = !newExcluded[index];
-        setCurrentExcluded(newExcluded);
-
-        if (!hasManualMultiplier && doubleRules.timing === 'current') {
-          const prevHole = currentHole > 0 ? holes[currentHole - 1] : null;
-          const isAutoDouble = checkAutoDouble(currentScores, currentPar, doubleRules, prevHole, newExcluded);
-          setMultiplier(isAutoDouble ? 2 : 1);
-        }
-      };
-
+      // =====================================================================
+      // ★ 정산 및 텍스트 데이터 산출 ★
+      // =====================================================================
       const getHoleBalance = (hole) => {
         if (!hole || hole.isHoleExcluded) return [0, 0, 0, 0]; 
         const excluded = hole.excluded || [false, false, false, false];
@@ -454,8 +530,8 @@
 
         const sumScores = hole.scores.reduce((sum, score, idx) => excluded[idx] ? sum : sum + score, 0);
         const mult = hole.multiplier || 1;
-        
         let balances = [0, 0, 0, 0];
+        
         hole.scores.forEach((score, idx) => {
           if (excluded[idx]) return;
           const netStrokes = sumScores - (score * activeCount);
@@ -467,14 +543,10 @@
           const diff = score - hole.par;
           if (diff === -1) { 
             const bonus = birdieRule.type === 'strokes' ? (birdieRule.strokeValue || 0) * baseAmount * mult : (birdieRule.fixedValue || 0);
-            for(let j=0; j<4; j++) {
-              if(j !== index && !excluded[j]) { balances[index] += bonus; balances[j] -= bonus; }
-            }
+            for(let j=0; j<4; j++) if(j !== index && !excluded[j]) { balances[index] += bonus; balances[j] -= bonus; }
           } else if (diff <= -2) { 
             const bonus = eagleRule.type === 'strokes' ? (eagleRule.strokeValue || 0) * baseAmount * mult : (eagleRule.fixedValue || 0);
-            for(let j=0; j<4; j++) {
-              if(j !== index && !excluded[j]) { balances[index] += bonus; balances[j] -= bonus; }
-            }
+            for(let j=0; j<4; j++) if(j !== index && !excluded[j]) { balances[index] += bonus; balances[j] -= bonus; }
           }
         });
         return balances;
@@ -512,101 +584,14 @@
         return gameBalances.map((gb, i) => gb + (parseInt(initialBalances[i], 10) || 0));
       }, [gameBalances, initialBalances]);
 
-      const generateScorecardText = () => {
-        const date = new Date().toLocaleDateString('ko-KR');
-        let text = `⛳ 골프 타당 내기 스코어카드\n📍 코스: ${actualCourseName} (${actualFrontName} / ${actualBackName})\n📅 일시: ${date}\n\n[현재 합산 결과]\n`;
-        players.forEach((p, i) => {
-          const bal = gameBalances[i];
-          const total = totalBalances[i];
-          const balText = bal > 0 ? `+${bal.toLocaleString()}` : bal === 0 ? '0' : bal.toLocaleString();
-          text += `🏌️ ${p}: ${balText}원 (핸디포함 ${total > 0 ? '+' : ''}${total.toLocaleString()}원)\n`;
-        });
-        text += `\n[상세 홀 기록]\n`;
-        holes.forEach((hole, hIdx) => {
-          if (!hole) return;
-          text += `${(hIdx + 1).toString().padStart(2, '0')}H (PAR ${hole.par}): `;
-          if (hole.isHoleExcluded) text += `전체 내기 제외`;
-          else {
-            let row = [];
-            players.forEach((p, i) => {
-              if (hole.excluded && hole.excluded[i]) row.push(`${p}(제외)`);
-              else row.push(`${p}(${hole.scores[i]}타)`);
-            });
-            text += row.join(' / ');
-            if (hole.multiplier > 1) text += ` [x${hole.multiplier}배판]`;
-          }
-          text += '\n';
-        });
-        text += `\n* 진행 상황: ${currentHole}H 완료`;
-        return text;
-      };
-
-      const handleShare = async () => {
-        const shareText = generateScorecardText();
-        const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(''), 3000); };
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(shareText);
-            showToast('스코어 결과가 복사되었습니다. 카카오톡 등에 붙여넣기 하세요!');
-          } else throw new Error('Clipboard API not supported');
-        } catch (err) {
-          const textArea = document.createElement("textarea");
-          textArea.value = shareText;
-          document.body.appendChild(textArea);
-          textArea.select();
-          try { document.execCommand('copy'); showToast('스코어 결과가 복사되었습니다. 카카오톡 등에 붙여넣기 하세요!'); } 
-          catch (err) { showToast('복사에 실패했습니다.'); }
-          document.body.removeChild(textArea);
-        }
-      };
-
-      const handleSave = () => {
-        const text = generateScorecardText();
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        link.download = `골프스코어_${dateStr}.txt`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        setToastMessage('스코어카드가 기기에 저장되었습니다.');
-        setTimeout(() => setToastMessage(''), 3000);
-      };
-
-      const handleShareSetup = async () => {
-        const rId = createRoomIdIfNeeded();
-        const url = new URL(window.location.href);
-        url.searchParams.set('roomId', rId);
-        const shareUrl = url.toString();
-        const activePlayers = players.filter((p, i) => !globalExcluded[i]);
-        const shareText = `⛳ 골프 타당 내기 방이 생성되었습니다!\n\n🏌️ 참가자: ${activePlayers.join(', ')}\n💰 1타당: ${baseAmount.toLocaleString()}원\n\n아래 링크로 접속해서 스코어를 실시간으로 함께 확인하세요.\n${shareUrl}`;
-        const showToast = (msg) => { setToastMessage(msg); setTimeout(() => setToastMessage(''), 3000); };
-        try {
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            await navigator.clipboard.writeText(shareText);
-            showToast('실시간 방 링크가 복사되었습니다! 카카오톡에 공유해보세요.');
-          } else throw new Error('Clipboard not supported');
-        } catch (err) {
-          const textArea = document.createElement("textarea");
-          textArea.value = shareText;
-          document.body.appendChild(textArea);
-          textArea.select();
-          try { document.execCommand('copy'); showToast('실시간 방 링크가 복사되었습니다! 카카오톡에 공유해보세요.'); } 
-          catch (err) { showToast('복사에 실패했습니다.'); }
-          document.body.removeChild(textArea);
-        }
-      };
-
       const settlementData = useMemo(() => {
         let totalGiven = 0;
+        const safeGaepyungRate = isNaN(gaepyungRate) ? 0 : gaepyungRate;
         const details = players.map((p, i) => {
           const bal = totalBalances[i];
           let cut = 0;
           if (bal > 0) {
-            const rawCut = bal * (gaepyungRate / 100);
+            const rawCut = bal * (safeGaepyungRate / 100);
             cut = isRoundThousand ? Math.floor(rawCut / 1000) * 1000 : Math.floor(rawCut);
             totalGiven += cut;
           }
@@ -621,8 +606,9 @@
             let remainingGiven = totalGiven;
             const totalLost = losers.reduce((sum, l) => sum + l.amount, 0);
             losers.forEach((loser, idx) => {
-              if (idx === losers.length - 1) details[loser.index].receive = remainingGiven; 
-              else {
+              if (idx === losers.length - 1) {
+                details[loser.index].receive = remainingGiven; 
+              } else {
                 const ratio = loser.amount / totalLost;
                 const rawReceive = totalGiven * ratio;
                 let receive = isRoundThousand ? Math.round(rawReceive / 1000) * 1000 : Math.round(rawReceive);
@@ -634,7 +620,7 @@
           } else {
             let totalReceived = 0;
             losers.forEach(loser => {
-              const rawReceive = loser.amount * (gaepyungRate / 100);
+              const rawReceive = loser.amount * (safeGaepyungRate / 100);
               const receive = isRoundThousand ? Math.floor(rawReceive / 1000) * 1000 : Math.floor(rawReceive);
               details[loser.index].receive = receive;
               totalReceived += receive;
@@ -647,11 +633,57 @@
         return { details };
       }, [players, totalBalances, gaepyungRate, isRoundThousand, isProportionalDistribution]);
 
+      const generateScorecardText = () => {
+        const date = new Date().toLocaleDateString('ko-KR');
+        let text = `⛳ 골프 타당 내기 스코어카드\n📍 코스: ${actualCourseName} (${actualFrontName} / ${actualBackName})\n📅 일시: ${date}\n\n[현재 합산 결과]\n`;
+        players.forEach((p, i) => {
+          const bal = gameBalances[i];
+          const total = totalBalances[i];
+          const balText = bal > 0 ? `+${bal.toLocaleString()}` : bal === 0 ? '0' : bal.toLocaleString();
+          text += `🏌️ ${p}: ${balText}원 (핸디포함 ${total > 0 ? '+' : ''}${total.toLocaleString()}원)\n`;
+        });
+        text += `\n* 진행 상황: ${currentHole}H 완료`;
+        return text;
+      };
 
+      const handleShare = () => {
+        const shareText = generateScorecardText();
+        const textArea = document.createElement("textarea");
+        textArea.value = shareText;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          showToastMsg('스코어 결과가 복사되었습니다. 카카오톡 등에 붙여넣기 하세요!');
+        } catch (err) {
+          showToastMsg('복사에 실패했습니다.');
+        }
+        document.body.removeChild(textArea);
+      };
+
+      const handleSave = () => {
+        const text = generateScorecardText();
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        link.download = `골프스코어_${dateStr}.txt`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToastMsg('스코어카드가 기기에 저장되었습니다.');
+      };
+
+      // =====================================================================
+      // ★ UI 렌더링 - 셋업 화면 ★
+      // =====================================================================
       if (step === 'setup') {
         const handicapSum = initialBalances.reduce((sum, val, idx) => globalExcluded[idx] ? sum : sum + (parseInt(val, 10) || 0), 0);
+
         return (
-          <div className="min-h-screen bg-[#f4f6f8] font-sans relative pb-10">
+          <div className="app-wrapper flex flex-col h-screen overflow-y-auto relative">
             {toastMessage && (
               <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-3 rounded-full shadow-lg text-xs font-bold z-50 animate-in fade-in slide-in-from-top-4 w-11/12 max-w-sm text-center">
                 {toastMessage}
@@ -664,28 +696,22 @@
                 <h1 className="text-2xl font-black tracking-tight">골프 타당 내기</h1>
               </div>
               <p className="text-[#a7e2c9] text-sm font-medium">라운딩 전 설정을 완료해주세요</p>
-              {roomId && <div className="absolute top-4 right-4 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">🔴 LIVE</div>}
             </div>
             
-            <div className="max-w-md mx-auto px-4 -mt-16 relative z-10 space-y-4">
+            <div className="max-w-md w-full mx-auto px-4 -mt-16 relative z-10 space-y-4 flex-1">
+              
               <div className="bg-white rounded-[24px] shadow-sm p-5 border border-gray-100">
                 <label className="flex items-center text-[15px] font-bold text-gray-800 mb-4">
-                  <Map className="w-5 h-5 mr-2 text-gray-600" /> 골프장 및 코스 설정
+                  <Icon name="Map" className="w-5 h-5 mr-2 text-gray-600" /> 골프장 및 코스 설정
                 </label>
                 <div className="space-y-3">
                   <div className="flex gap-2">
                     {selectedCourseId === 'custom' ? (
-                      <input
-                        type="text" value={customCourseName} onChange={(e) => setCustomCourseName(e.target.value)}
-                        className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-[#128853] transition"
-                        placeholder="골프장 이름 입력"
-                      />
+                      <input type="text" value={customCourseName} onChange={(e) => setCustomCourseName(e.target.value)} className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-semibold text-gray-800 outline-none focus:ring-2 focus:ring-[#128853] transition" placeholder="골프장 이름 입력" />
                     ) : (
                       <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 flex items-center text-sm font-semibold text-gray-800">{actualCourseName}</div>
                     )}
-                    <button onClick={() => setShowCourseSearchModal(true)} className="bg-[#1e9f64] hover:bg-[#128853] text-white px-4 rounded-xl font-bold text-sm transition flex items-center shrink-0 shadow-sm">
-                      <Search className="w-4 h-4 mr-1.5" /> 검색
-                    </button>
+                    <button onClick={() => setShowCourseSearchModal(true)} className="bg-[#1e9f64] hover:bg-[#128853] text-white px-4 rounded-xl font-bold text-sm transition flex items-center shrink-0 shadow-sm"><Icon name="Search" className="w-4 h-4 mr-1.5" /> 검색</button>
                   </div>
 
                   <div className="flex gap-2">
@@ -714,147 +740,178 @@
               </div>
 
               <div className="bg-white rounded-[24px] shadow-sm p-5 border border-gray-100">
-                <div className="flex items-center justify-between mb-4">
-                  <label className="flex items-center text-[15px] font-bold text-gray-800">
-                    <Users className="w-5 h-5 mr-2 text-gray-600" /> 플레이어 및 핸디캡 (원)
-                  </label>
-                  <button onClick={handleShareSetup} className="flex items-center text-[11px] bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full font-bold hover:bg-blue-100 transition active:scale-95">
-                    <Share2 className="w-3 h-3 mr-1" /> 실시간 링크 공유
-                  </button>
-                </div>
+                <label className="flex items-center text-[15px] font-bold text-gray-800 mb-4">
+                  <Icon name="Users" className="w-5 h-5 mr-2 text-gray-600" /> 플레이어 및 핸디캡 (원)
+                </label>
                 <div className="space-y-3">
                   {players.map((player, idx) => (
-                    <div key={idx} className={`flex items-center gap-3 p-2.5 border rounded-[16px] transition cursor-pointer select-none ${globalExcluded[idx] ? 'bg-gray-50 border-gray-200 opacity-50 grayscale' : 'bg-white border-gray-200 hover:border-gray-300'}`}
-                      onTouchStart={(e) => startPress(e, idx, true)} onTouchEnd={cancelPress} onTouchMove={cancelPress} onMouseDown={(e) => startPress(e, idx, true)} onMouseUp={cancelPress} onMouseLeave={cancelPress} onContextMenu={(e) => { if (e.target.tagName !== 'INPUT') e.preventDefault(); }}>
-                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 overflow-hidden shrink-0"><User className="w-6 h-6 mt-1" /></div>
+                    <div 
+                      key={idx} 
+                      className={`flex items-center gap-3 p-2.5 border rounded-[16px] transition cursor-pointer select-none ${globalExcluded[idx] ? 'bg-gray-50 border-gray-200 opacity-50 grayscale' : 'bg-white border-gray-200 hover:border-gray-300'}`}
+                      onTouchStart={(e) => startPress(e, idx, true)}
+                      onTouchEnd={cancelPress}
+                      onTouchMove={cancelPress}
+                      onMouseDown={(e) => startPress(e, idx, true)}
+                      onMouseUp={cancelPress}
+                      onMouseLeave={cancelPress}
+                      onContextMenu={(e) => { if (e.target.tagName !== 'INPUT') e.preventDefault(); }}
+                    >
+                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 overflow-hidden shrink-0">
+                        <Icon name="User" className="w-6 h-6 mt-1" />
+                      </div>
                       <input type="text" value={player} onChange={(e) => updatePlayerName(idx, e.target.value)} className="flex-1 bg-transparent py-2 outline-none transition text-[15px] font-bold text-gray-800 min-w-0" placeholder={`이름 ${idx + 1}`} onTouchStart={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} />
                       <div className="relative w-28 shrink-0 bg-gray-50 rounded-[12px] overflow-hidden border border-gray-200 focus-within:border-[#128853] focus-within:ring-1 focus-within:ring-[#128853] transition-all">
-                        <input type="text" inputMode="numeric" value={initialBalances[idx] === 0 || initialBalances[idx] === '' ? '' : (initialBalances[idx] === '-' ? '-' : Number(initialBalances[idx]).toLocaleString())} onChange={(e) => updateInitialBalance(idx, e.target.value)} className="w-full bg-transparent px-3 py-2.5 outline-none transition text-right pr-7 text-sm font-bold text-gray-700" placeholder="0" onTouchStart={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}/>
+                        <input type="text" inputMode="numeric" value={initialBalances[idx] === 0 || initialBalances[idx] === '' ? '' : (initialBalances[idx] === '-' ? '-' : Number(initialBalances[idx]).toLocaleString())} onChange={(e) => updateInitialBalance(idx, e.target.value)} className="w-full bg-transparent px-3 py-2.5 outline-none transition text-right pr-7 text-sm font-bold text-gray-700" placeholder="0" onTouchStart={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} />
                         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-xs pointer-events-none">원</span>
                       </div>
                     </div>
                   ))}
                 </div>
+
                 <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 px-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[14px] font-bold text-gray-800">핸디캡 합계</span>
-                    {handicapSum !== 0 && (
-                      <button onClick={() => {
-                          const newBalances = [...initialBalances];
-                          const activeIndices = newBalances.map((_, i) => i).filter(i => !globalExcluded[i]);
-                          if (activeIndices.length > 0) {
-                            const lastIdx = activeIndices[activeIndices.length - 1];
-                            let sumWithoutLast = 0;
-                            activeIndices.slice(0, -1).forEach(i => { sumWithoutLast += (parseInt(newBalances[i], 10) || 0); });
-                            newBalances[lastIdx] = -sumWithoutLast;
-                            setInitialBalances(newBalances);
-                          }
-                        }} className="text-[10px] bg-red-50 text-red-500 px-2.5 py-1.5 rounded-[6px] font-bold active:scale-95 transition border border-red-100">0원 맞추기</button>
-                    )}
-                  </div>
-                  <span className={`text-[16px] font-black ${handicapSum === 0 ? 'text-[#128853]' : 'text-red-500'}`}>{handicapSum > 0 ? '+' : ''}{handicapSum.toLocaleString()}원</span>
+                  <span className="text-[14px] font-bold text-gray-800">핸디캡 합계</span>
+                  <span className={`text-[16px] font-black ${handicapSum === 0 ? 'text-[#128853]' : 'text-red-500'}`}>
+                    {handicapSum > 0 ? '+' : ''}{handicapSum.toLocaleString()}원
+                  </span>
                 </div>
               </div>
 
               <div className="bg-white rounded-[24px] shadow-sm p-5 border border-gray-100">
-                <label className="flex items-center text-[15px] font-bold text-gray-800 mb-4"><Edit3 className="w-5 h-5 mr-2 text-gray-600" /> 스코어 캐디 선택</label>
+                <label className="flex items-center text-[15px] font-bold text-gray-800 mb-4">
+                  <div className="w-5 h-5 mr-2 bg-[#e5f5ec] text-[#128853] rounded-full flex items-center justify-center font-black text-[10px]">₩</div> 
+                  1타당 금액 (원)
+                </label>
+                <div className="grid grid-cols-3 gap-2.5 mb-2">
+                  {[1000, 2000, 3000, 5000, 10000].map(amt => (
+                    <button key={amt} onClick={() => { setBaseAmount(amt); setIsCustomAmount(false); }} className={`py-3.5 rounded-xl text-sm font-bold transition-all ${!isCustomAmount && baseAmount === amt ? 'bg-[#128853] text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                      {amt.toLocaleString()}
+                    </button>
+                  ))}
+                  <button onClick={() => setIsCustomAmount(true)} className={`py-3.5 rounded-xl text-sm font-bold transition-all ${isCustomAmount ? 'bg-[#128853] text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    직접입력
+                  </button>
+                </div>
+                {isCustomAmount && (
+                  <div className="relative animate-in fade-in slide-in-from-top-2 duration-200 mt-3">
+                    <input type="text" inputMode="numeric" value={baseAmount ? Number(baseAmount).toLocaleString() : ''} onChange={(e) => { const rawValue = e.target.value.replace(/,/g, ''); if (rawValue === '') setBaseAmount(''); else { const num = parseInt(rawValue, 10); if (!isNaN(num)) setBaseAmount(num); } }} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#128853] outline-none transition pr-10 font-bold text-gray-800 text-right" placeholder="원하는 금액 입력" />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">원</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <button onClick={() => { setShowDoubleSettings(!showDoubleSettings); setShowBonusSettings(false); }} className={`py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center transition-all border ${showDoubleSettings ? 'bg-[#1f2937] text-white border-[#1f2937]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>
+                    <Icon name="Settings" className="w-[18px] h-[18px] mr-1.5"/> 배판 조건
+                  </button>
+                  <button onClick={() => { setShowBonusSettings(!showBonusSettings); setShowDoubleSettings(false); }} className={`py-3.5 rounded-[16px] text-[14px] font-bold flex items-center justify-center transition-all border ${showBonusSettings ? 'bg-[#1f2937] text-white border-[#1f2937]' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}>
+                    <Icon name="Trophy" className="w-[18px] h-[18px] mr-1.5"/> 보너스 설정
+                  </button>
+                </div>
+
+                {showDoubleSettings && (
+                  <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 animate-in fade-in slide-in-from-top-2">
+                    <div className="space-y-5">
+                      <div>
+                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">배판 적용 기준 시점</label>
+                        <div className="flex bg-gray-100 p-1 rounded-[12px]">
+                          <button onClick={() => setDoubleRules({...doubleRules, timing: 'current'})} className={`flex-1 py-2.5 text-[13px] font-bold rounded-[8px] transition ${doubleRules.timing === 'current' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>당홀 기준</button>
+                          <button onClick={() => setDoubleRules({...doubleRules, timing: 'prev'})} className={`flex-1 py-2.5 text-[13px] font-bold rounded-[8px] transition ${doubleRules.timing === 'prev' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>전홀 기준</button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">자동 배판 조건</label>
+                        <div className="space-y-2">
+                          {[
+                            { id: 'birdie', label: '버디 이상' },
+                            { id: 'threeTie', label: '3인 동타 (정확히 3명 동타시)' },
+                            { id: 'prevTie', label: '이전 홀 무승부 (모두 동타)' },
+                            { id: 'triple', label: '파4/파5 트리플 보기 이상' },
+                            { id: 'doublePar3', label: '파3 더블 보기 이상' },
+                          ].map(condition => (
+                            <label key={condition.id} className="flex items-center p-3.5 bg-gray-50 border border-gray-100 rounded-[12px] cursor-pointer transition hover:bg-gray-100">
+                              <input type="checkbox" checked={doubleRules[condition.id]} onChange={(e) => setDoubleRules({...doubleRules, [condition.id]: e.target.checked})} className="w-5 h-5 text-[#128853] rounded border-gray-300 focus:ring-[#128853]" />
+                              <span className="ml-3 text-[14px] font-bold text-gray-700">{condition.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* 🚨 보너스 설정 1/3 완벽 균등 분할 (1:1:1 Grid) */}
+                {showBonusSettings && (
+                  <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 animate-in fade-in slide-in-from-top-2">
+                    <div className="space-y-5">
+                      <div>
+                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">버디 (Birdie) 축하금</label>
+                        <div className="grid grid-cols-3 gap-2 w-full h-[44px]">
+                          <button onClick={() => setBirdieRule({...birdieRule, type: 'strokes'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${birdieRule.type === 'strokes' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>타수 추가</button>
+                          <button onClick={() => setBirdieRule({...birdieRule, type: 'fixed'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${birdieRule.type === 'fixed' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>지정 금액</button>
+                          <div className="col-span-1 relative flex items-center bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                            <input type="text" inputMode="numeric" value={birdieRule.type === 'strokes' ? birdieRule.strokeValue : (birdieRule.fixedValue ? birdieRule.fixedValue.toLocaleString() : '')} onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '') { if (birdieRule.type === 'strokes') setBirdieRule({...birdieRule, strokeValue: ''}); else setBirdieRule({...birdieRule, fixedValue: ''}); } else { const num = parseInt(val, 10); if (!isNaN(num)) { if (birdieRule.type === 'strokes') setBirdieRule({...birdieRule, strokeValue: num}); else setBirdieRule({...birdieRule, fixedValue: num}); } } }} className="w-full h-full text-right bg-transparent outline-none font-bold text-[#128853] text-[13px] pr-6 pl-1" />
+                            <span className="text-[11px] font-bold text-gray-400 absolute right-2 pointer-events-none">{birdieRule.type === 'strokes' ? '타' : '원'}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="border-t border-gray-100 pt-5">
+                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">이글 (Eagle) 축하금</label>
+                        <div className="grid grid-cols-3 gap-2 w-full h-[44px]">
+                          <button onClick={() => setEagleRule({...eagleRule, type: 'strokes'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${eagleRule.type === 'strokes' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>타수 추가</button>
+                          <button onClick={() => setEagleRule({...eagleRule, type: 'fixed'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${eagleRule.type === 'fixed' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>지정 금액</button>
+                          <div className="col-span-1 relative flex items-center bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                            <input type="text" inputMode="numeric" value={eagleRule.type === 'strokes' ? eagleRule.strokeValue : (eagleRule.fixedValue ? eagleRule.fixedValue.toLocaleString() : '')} onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '') { if (eagleRule.type === 'strokes') setEagleRule({...eagleRule, strokeValue: ''}); else setEagleRule({...eagleRule, fixedValue: ''}); } else { const num = parseInt(val, 10); if (!isNaN(num)) { if (eagleRule.type === 'strokes') setEagleRule({...eagleRule, strokeValue: num}); else setEagleRule({...eagleRule, fixedValue: num}); } } }} className="w-full h-full text-right bg-transparent outline-none font-bold text-[#128853] text-[13px] pr-6 pl-1" />
+                            <span className="text-[11px] font-bold text-gray-400 absolute right-2 pointer-events-none">{eagleRule.type === 'strokes' ? '타' : '원'}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-[24px] shadow-sm p-5 border border-gray-100">
+                <div className="flex justify-between items-center mb-4">
+                  <label className="flex items-center text-[15px] font-bold text-gray-800">
+                    <Icon name="Edit3" className="w-5 h-5 mr-2 text-gray-600" /> 스코어 캐디 선택
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-bold text-gray-500">퍼팅 기록</span>
+                    <button onClick={() => setUsePutts(!usePutts)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${usePutts ? 'bg-[#128853]' : 'bg-gray-200'}`}>
+                      <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${usePutts ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+                </div>
                 <div className="flex justify-between px-2">
                   {players.map((p, idx) => {
                     const isSelected = scoreCaddieIdx === idx;
                     const isExcluded = globalExcluded[idx];
                     return (
                       <div key={`caddie-${idx}`} className="flex flex-col items-center gap-2 cursor-pointer" onClick={() => !isExcluded && setScoreCaddieIdx(idx)}>
-                        <div className={`relative w-[60px] h-[60px] rounded-full flex items-center justify-center transition-all ${isExcluded ? 'bg-gray-100 opacity-50 grayscale' : isSelected ? 'bg-[#e5f5ec] ring-2 ring-[#128853]' : 'bg-gray-100 hover:bg-gray-200'}`}>
-                          <User className={`w-8 h-8 mt-2 ${isSelected ? 'text-[#128853]' : 'text-gray-500'}`} />
-                          {isSelected && <div className="absolute -bottom-1 -right-1 bg-[#128853] rounded-full p-0.5 border-2 border-white"><Check className="w-3.5 h-3.5 text-white" /></div>}
+                        <div className={`relative w-12 h-12 rounded-full flex items-center justify-center transition-all ${isExcluded ? 'bg-gray-100 opacity-50 grayscale' : isSelected ? 'bg-[#e5f5ec] ring-2 ring-[#128853]' : 'bg-gray-100 hover:bg-gray-200'}`}>
+                          <Icon name="User" className={`w-6 h-6 mt-1 ${isSelected ? 'text-[#128853]' : 'text-gray-500'}`} />
+                          {isSelected && <div className="absolute -bottom-1 -right-1 bg-[#128853] rounded-full p-0.5 border border-white"><Icon name="Check" className="w-3 h-3 text-white" /></div>}
                         </div>
-                        <span className={`text-[11px] font-bold truncate w-[70px] text-center ${isSelected ? 'text-gray-800' : 'text-gray-500'}`}>{p}</span>
+                        <span className={`text-[10px] font-bold truncate w-14 text-center ${isSelected ? 'text-gray-800' : 'text-gray-500'}`}>{p}</span>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              <div className="bg-white rounded-[24px] shadow-sm p-5 border border-gray-100">
-                <label className="flex items-center text-[15px] font-bold text-gray-800 mb-4">
-                  <div className="w-5 h-5 mr-2 bg-[#e5f5ec] text-[#128853] rounded-full flex items-center justify-center font-black text-[10px]">₩</div> 1타당 금액 (원)
-                </label>
-                <div className="grid grid-cols-2 gap-2.5 mb-2">
-                  {[1000, 2000, 3000, 5000, 10000].map(amt => (
-                    <button key={amt} onClick={() => { setBaseAmount(amt); setIsCustomAmount(false); }} className={`py-3.5 rounded-xl text-sm font-bold transition-all ${!isCustomAmount && baseAmount === amt ? 'bg-[#128853] text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{amt.toLocaleString()}</button>
-                  ))}
-                  <button onClick={() => setIsCustomAmount(true)} className={`py-3.5 rounded-xl text-sm font-bold transition-all ${isCustomAmount ? 'bg-[#128853] text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>직접입력</button>
-                </div>
-                {isCustomAmount && (
-                  <div className="relative animate-in fade-in slide-in-from-top-2 duration-200 mt-3">
-                    <input type="text" inputMode="numeric" value={baseAmount ? Number(baseAmount).toLocaleString() : ''} onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '') setBaseAmount(''); else { const num = parseInt(val, 10); if (!isNaN(num)) setBaseAmount(num); } }} className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#128853] outline-none transition pr-10 font-bold text-gray-800 text-right" placeholder="금액 입력" />
-                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">원</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="space-y-3 pt-2">
-                <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden">
-                  <button onClick={() => setShowDoubleSettings(!showDoubleSettings)} className="w-full px-5 py-4 flex justify-between items-center bg-white text-[15px] font-bold text-gray-800 transition">
-                    <span className="flex items-center"><Settings className="w-5 h-5 mr-2.5 text-gray-500"/> 배판(x2) 상세 조건 설정</span>{showDoubleSettings ? <ChevronUp className="w-5 h-5 text-gray-400"/> : <ChevronDown className="w-5 h-5 text-gray-400"/>}
-                  </button>
-                  {showDoubleSettings && (
-                    <div className="p-5 bg-gray-50 border-t border-gray-100 space-y-5">
-                      <div>
-                        <label className="text-sm font-bold text-gray-800 mb-2.5 block">배판 적용 기준 시점</label>
-                        <div className="flex bg-gray-200/50 p-1.5 rounded-xl">
-                          <button onClick={() => setDoubleRules({...doubleRules, timing: 'current'})} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${doubleRules.timing === 'current' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>당홀 기준</button>
-                          <button onClick={() => setDoubleRules({...doubleRules, timing: 'prev'})} className={`flex-1 py-2 text-sm font-bold rounded-lg transition ${doubleRules.timing === 'prev' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>전홀 기준</button>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="text-sm font-bold text-gray-800 mb-2.5 block">자동 배판 조건</label>
-                        <div className="space-y-2">
-                          {[{ id: 'birdie', label: '버디 이상' }, { id: 'threeTie', label: '3인 동타' }, { id: 'prevTie', label: '이전 홀 무승부 (4인 모두 동타)' }, { id: 'triple', label: '파4/파5 트리플 보기 이상' }, { id: 'doublePar3', label: '파3 더블 보기 이상' }].map(c => (
-                            <label key={c.id} className="flex items-center p-3.5 bg-white border border-gray-100 rounded-xl cursor-pointer transition">
-                              <input type="checkbox" checked={doubleRules[c.id]} onChange={(e) => setDoubleRules({...doubleRules, [c.id]: e.target.checked})} className="w-5 h-5 text-[#128853] rounded border-gray-300 focus:ring-[#128853]" />
-                              <span className="ml-3 text-sm font-semibold text-gray-700">{c.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden">
-                  <button onClick={() => setShowBonusSettings(!showBonusSettings)} className="w-full px-5 py-4 flex justify-between items-center bg-white text-[15px] font-bold text-gray-800 transition">
-                    <span className="flex items-center"><Trophy className="w-5 h-5 mr-2.5 text-gray-500"/> 버디 / 이글 보너스 설정</span>{showBonusSettings ? <ChevronUp className="w-5 h-5 text-gray-400"/> : <ChevronDown className="w-5 h-5 text-gray-400"/>}
-                  </button>
-                  {showBonusSettings && (
-                    <div className="p-5 bg-gray-50 border-t border-gray-100 space-y-6">
-                      <div>
-                        <label className="text-sm font-bold text-gray-800 mb-2.5 block">버디 축하금</label>
-                        <div className="flex bg-gray-200/50 p-1.5 rounded-xl mb-3">
-                          <button onClick={() => setBirdieRule({...birdieRule, type: 'strokes'})} className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${birdieRule.type === 'strokes' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>타수 추가</button>
-                          <button onClick={() => setBirdieRule({...birdieRule, type: 'fixed'})} className={`flex-1 py-2 text-xs font-bold rounded-lg transition ${birdieRule.type === 'fixed' ? 'bg-white shadow-sm text-[#128853]' : 'text-gray-500 hover:text-gray-700'}`}>지정 금액</button>
-                        </div>
-                        <div className="relative">
-                          <input type="text" inputMode="numeric" value={birdieRule.type === 'strokes' ? birdieRule.strokeValue : (birdieRule.fixedValue ? birdieRule.fixedValue.toLocaleString() : '')} onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '') { if (birdieRule.type === 'strokes') setBirdieRule({...birdieRule, strokeValue: ''}); else setBirdieRule({...birdieRule, fixedValue: ''}); } else { const num = parseInt(val, 10); if (!isNaN(num)) { if (birdieRule.type === 'strokes') setBirdieRule({...birdieRule, strokeValue: num}); else setBirdieRule({...birdieRule, fixedValue: num}); } } }} className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-[#128853] text-right pr-12 font-bold text-gray-800" />
-                          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-sm">{birdieRule.type === 'strokes' ? '타 더' : '원'}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <button onClick={handleStart} className="w-full bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 px-4 rounded-[20px] shadow-md flex items-center justify-center mt-6 text-[17px]">
-                게임 시작 <ArrowRight className="w-5 h-5 ml-2" />
+              <button onClick={handleStart} className="w-full bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 px-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center mt-6 text-[17px]">
+                게임 시작 <Icon name="ArrowRight" className="w-5 h-5 ml-2" />
               </button>
             </div>
 
+            {/* 골프장 검색 모달 */}
             {showCourseSearchModal && (
               <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
                 <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-4 shadow-xl flex flex-col max-h-[80vh]">
                   <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                    <h3 className="font-bold text-lg text-gray-800 flex items-center"><Search className="w-5 h-5 mr-2 text-[#128853]"/> 골프장 검색</h3>
-                    <button onClick={() => setShowCourseSearchModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition"><X className="w-5 h-5 text-gray-500"/></button>
+                    <h3 className="font-bold text-lg text-gray-800 flex items-center"><Icon name="Search" className="w-5 h-5 mr-2 text-[#128853]"/> 골프장 검색</h3>
+                    <button onClick={() => setShowCourseSearchModal(false)} className="p-1 hover:bg-gray-100 rounded-full"><Icon name="X" className="w-5 h-5 text-gray-500"/></button>
                   </div>
                   <input type="text" value={courseSearchQuery} onChange={(e) => setCourseSearchQuery(e.target.value)} placeholder="골프장 이름 검색..." className="w-full px-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#128853] outline-none text-[15px] font-semibold transition" autoFocus />
                   <div className="overflow-y-auto flex-1 space-y-2 min-h-[200px] pt-2">
@@ -869,39 +926,376 @@
         );
       }
 
+      // =====================================================================
+      // ★ UI 렌더링 - 메인 플레이 (입력) 화면 ★
+      // =====================================================================
+      if (step === 'play') {
+        return (
+          <div className="app-wrapper flex flex-col min-h-screen pb-24 relative">
+            <style>{`
+              @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+              * { font-family: 'Pretendard', sans-serif; }
+            `}</style>
+            
+            {toastMessage && (
+              <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[11px] font-bold z-50 animate-in fade-in slide-in-from-top-4 w-11/12 max-w-sm text-center">
+                {toastMessage}
+              </div>
+            )}
+
+            {/* 🚨 라이브 뱃지, 타이머 포함된 헤더 */}
+            <div className="bg-[#128853] text-white p-4 pt-10 sticky top-0 z-20 shadow-md flex justify-between items-center rounded-b-[24px]">
+              <button onClick={() => setStep('scorecard')} className="p-2 hover:bg-white/10 rounded-full transition flex flex-col items-center"><Icon name="Trophy" className="w-6 h-6" /></button>
+              <div className="text-center flex flex-col items-center justify-center">
+                <div className="font-black text-[20px] tracking-tight flex items-center gap-2">
+                  <span>{currentHole + 1}H</span>
+                  {roomId && <span className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse">LIVE</span>}
+                </div>
+                {startTime && <div className="text-[11px] text-[#bbf7d0] font-bold mt-0.5">{elapsedTime}</div>}
+              </div>
+              <button onClick={() => setStep('setup')} className="p-2 hover:bg-white/10 rounded-full transition text-xs font-semibold flex flex-col items-center"><Icon name="Settings" className="w-6 h-6" /></button>
+            </div>
+
+            <div className="max-w-md mx-auto w-full p-4 space-y-4 pt-6 flex-1">
+              <div className="flex gap-3">
+                <div className="flex-1 bg-white rounded-[16px] shadow-sm p-3 border border-gray-100 flex flex-col justify-center gap-2">
+                  <span className="font-black text-gray-800 text-[14px] ml-1">PAR</span>
+                  <div className="flex bg-gray-100 rounded-[12px] p-1 gap-1">
+                    {[3, 4].map((par) => (
+                      <button key={par} onClick={() => handleParSelect(par)} className={`flex-1 h-9 rounded-[8px] font-black text-[15px] transition-all ${currentPar === par ? 'bg-[#128853] shadow-sm text-white' : 'text-gray-400 hover:text-gray-800'}`}>{par}</button>
+                    ))}
+                    {/* 🚨 PAR 롱프레스 기능 복구 */}
+                    <button
+                      onMouseDown={startParPress} onTouchStart={startParPress} onMouseUp={cancelParPress} onTouchEnd={cancelParPress} onMouseLeave={cancelParPress}
+                      onClick={() => { const newPar = currentPar >= 5 ? currentPar : 5; handleParSelect(newPar); }}
+                      className={`flex-1 h-9 rounded-[8px] font-black text-[15px] transition-all ${currentPar >= 5 ? 'bg-[#128853] shadow-sm text-white' : 'text-gray-400 hover:text-gray-800'}`}
+                    >
+                      {currentPar >= 5 ? currentPar : 5}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 bg-white rounded-[16px] shadow-sm p-3 border border-gray-100 flex flex-col justify-center gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-gray-800 text-[14px] ml-1">배수 적용</span>
+                    <button onClick={() => setShowRuleModal(true)} className="text-gray-300 hover:text-[#128853] transition mr-1"><Icon name="Info" className="w-4 h-4" /></button>
+                  </div>
+                  {/* 🚨 내기 제외 버튼 통합 (-) 누르면 제외 */}
+                  <div className="flex items-center justify-between bg-gray-50 p-1.5 rounded-[12px] border border-gray-100 h-11">
+                    <button onClick={handleMultiplierMinus} className="w-8 h-8 flex justify-center items-center bg-white rounded-[8px] text-gray-500 shadow-sm transition active:scale-95"><Icon name="Minus" className="w-4 h-4" /></button>
+                    <span className={`font-black text-center ${isHoleExcluded ? 'text-gray-400 text-[13px]' : multiplier > 1 ? 'text-red-500 text-[16px]' : 'text-gray-800 text-[16px]'}`}>
+                      {isHoleExcluded ? '제외' : `x${multiplier}`}
+                    </span>
+                    <button onClick={handleMultiplierPlus} className="w-8 h-8 flex justify-center items-center bg-white rounded-[8px] text-gray-500 shadow-sm transition active:scale-95"><Icon name="Plus" className="w-4 h-4" /></button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-2 space-y-1">
+                {players.map((player, idx) => (
+                  <div 
+                    key={idx} 
+                    className={`p-3 flex items-center justify-between transition cursor-pointer select-none rounded-[16px] ${currentExcluded[idx] ? 'opacity-50 grayscale bg-gray-50' : 'bg-white'}`}
+                    onTouchStart={(e) => startPress(e, idx, false)} onTouchEnd={cancelPress} onTouchMove={cancelPress} onMouseDown={(e) => startPress(e, idx, false)} onMouseUp={cancelPress} onMouseLeave={cancelPress} onContextMenu={(e) => e.preventDefault()}
+                  >
+                    <div className="flex flex-col flex-1 pointer-events-none">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-gray-100 rounded-full overflow-hidden shrink-0 border border-gray-200">
+                          <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${player}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/>
+                        </div>
+                        <span className={`font-bold text-[15px] truncate ${currentExcluded[idx] ? 'text-gray-500 line-through' : 'text-gray-800'}`}>{player}</span>
+                        {/* 🚨 캐디 펜 아이콘 (이름 옆으로) */}
+                        {scoreCaddieIdx === idx && (
+                          <button className="text-[#128853] bg-[#e5f5ec] rounded-full p-1.5 pointer-events-auto ml-1 shadow-sm" onClick={(e) => { e.stopPropagation(); setShowCaddieModal(true); }}>
+                            <Icon name="Edit3" className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className={`flex items-center space-x-5 bg-transparent ${currentExcluded[idx] ? 'pointer-events-none opacity-60' : ''}`}>
+                      <button onClick={(e) => { e.stopPropagation(); updateScore(idx, -1); }} className="w-10 h-10 flex justify-center items-center bg-white rounded-[12px] text-red-500 border border-gray-200 shadow-sm active:bg-red-50 transition"><Icon name="Minus" className="w-5 h-5 font-bold" /></button>
+                      <div className="w-8 flex flex-col items-center justify-center shrink-0 pointer-events-none">
+                        <span className={`text-center font-black text-[22px] tracking-tight leading-none ${currentExcluded[idx] ? 'text-gray-400' : currentScores[idx] - currentPar === -1 ? 'text-[#128853]' : currentScores[idx] - currentPar <= -2 ? 'text-purple-600' : 'text-gray-800'}`}>
+                          {currentScores[idx]}
+                        </span>
+                        {/* 🚨 퍼팅 입력 모드 중앙 배치 (타수 아래) */}
+                        {usePutts && (
+                          <div className="flex items-center justify-center gap-1.5 mt-2 w-full pointer-events-auto">
+                            <button onClick={(e) => { e.stopPropagation(); updatePutts(idx, -1); }} className="w-5 h-5 flex items-center justify-center bg-gray-100 text-gray-500 rounded cursor-pointer active:scale-95"><Icon name="Minus" className="w-3 h-3" /></button>
+                            <span className="text-[12px] font-bold text-gray-500 w-3 text-center">{currentPutts[idx]}</span>
+                            <button onClick={(e) => { e.stopPropagation(); updatePutts(idx, 1); }} className="w-5 h-5 flex items-center justify-center bg-gray-100 text-gray-500 rounded cursor-pointer active:scale-95"><Icon name="Plus" className="w-3 h-3" /></button>
+                          </div>
+                        )}
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); updateScore(idx, 1); }} className="w-10 h-10 flex justify-center items-center bg-white rounded-[12px] text-blue-500 border border-gray-200 shadow-sm active:bg-blue-50 transition"><Icon name="Plus" className="w-5 h-5 font-bold" /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+              <div className="max-w-md mx-auto flex gap-3 w-full">
+                <button onClick={() => currentHole > 0 && loadHoleData(currentHole - 1)} disabled={currentHole === 0} className={`flex-[1] py-4 rounded-[16px] font-bold flex items-center justify-center transition text-[15px] ${currentHole === 0 ? 'bg-gray-100 text-gray-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}><Icon name="ArrowLeft" className="w-5 h-5 mr-1" /> 이전 홀</button>
+                <button onClick={saveHole} className="flex-[2] bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 rounded-[16px] shadow-md flex items-center justify-center transition text-[15px]">결과 및 정산 <Icon name="ArrowRight" className="w-5 h-5 ml-2" /></button>
+              </div>
+            </div>
+
+            {/* 캐디 변경 모달 */}
+            {showCaddieModal && (
+              <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
+                <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-5 shadow-xl">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                    <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Icon name="Edit3" className="w-5 h-5 mr-2 text-[#128853]"/> 스코어 캐디 변경</h3>
+                    <button onClick={() => setShowCaddieModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition"><Icon name="X" className="w-5 h-5 text-gray-500"/></button>
+                  </div>
+                  <p className="text-[13px] text-gray-500 font-medium">현재 라운딩의 스코어를 입력할 담당자를 선택해주세요.</p>
+                  <div className="grid grid-cols-2 gap-3 mt-2">
+                    {players.map((p, idx) => (
+                      <button key={`change-caddie-${idx}`} disabled={globalExcluded[idx]} onClick={() => { setScoreCaddieIdx(idx); setShowCaddieModal(false); showToastMsg(`${p} 님으로 스코어 캐디가 변경되었습니다.`); }} className={`py-4 px-2 flex flex-col items-center justify-center gap-2 rounded-[16px] transition border ${globalExcluded[idx] ? 'bg-gray-50 border-gray-100 text-gray-300 grayscale opacity-50' : scoreCaddieIdx === idx ? 'bg-[#e5f5ec] border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
+                        <div className="w-10 h-10 bg-gray-100 rounded-full overflow-hidden shrink-0"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${p}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
+                        <span className="text-[13px] font-bold w-full truncate px-1">{p}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 배판 기준 확인 모달 */}
+            {showRuleModal && (
+              <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
+                <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-4 shadow-xl">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-3">
+                    <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Icon name="Info" className="w-5 h-5 mr-2 text-[#128853]"/> 배판 적용 기준</h3>
+                    <button onClick={() => setShowRuleModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition"><Icon name="X" className="w-5 h-5 text-gray-500"/></button>
+                  </div>
+                  <div className="text-[14px] space-y-3 text-gray-700 py-2">
+                    <div className="bg-gray-50 p-3.5 rounded-[16px] flex items-center justify-between border border-gray-100">
+                      <span className="font-bold text-gray-600">기준 시점</span>
+                      <span className="font-bold text-[#128853]">{doubleRules.timing === 'current' ? '당홀 기준' : '전홀 기준'}</span>
+                    </div>
+                    <ul className="space-y-2.5 pl-2 pt-2">
+                      {doubleRules.birdie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 버디 이상</li>}
+                      {doubleRules.threeTie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 3인 동타</li>}
+                      {doubleRules.prevTie && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 이전 홀 무승부 (모두 동타)</li>}
+                      {doubleRules.triple && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 파4/파5 트리플 보기 이상</li>}
+                      {doubleRules.doublePar3 && <li className="flex items-center font-semibold"><Icon name="Check" className="w-4 h-4 text-[#128853] mr-2"/> 파3 더블 보기 이상</li>}
+                    </ul>
+                  </div>
+                  <div className="flex gap-2 mt-4 pt-2">
+                    <button onClick={() => { setShowRuleModal(false); setStep('setup'); }} className="flex-[1] bg-gray-100 hover:bg-gray-200 transition text-gray-700 font-bold py-3.5 rounded-[16px] text-[15px]">설정 변경</button>
+                    <button onClick={() => setShowRuleModal(false)} className="flex-[2] bg-[#128853] hover:bg-[#0f7646] transition text-white font-bold py-3.5 rounded-[16px] text-[15px] shadow-sm">확인</button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // =====================================================================
+      // ★ UI 렌더링 - 스코어카드 화면 ★
+      // =====================================================================
+      if (step === 'scorecard') {
+        return (
+          <div className="app-wrapper flex flex-col min-h-screen pb-24 relative">
+            <style>{`
+              @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+              * { font-family: 'Pretendard', sans-serif; }
+            `}</style>
+            
+            {toastMessage && (
+              <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[11px] font-bold z-50">
+                {toastMessage}
+              </div>
+            )}
+
+            <div className="bg-[#1f2937] p-3 text-white flex items-center justify-between sticky top-0 z-20 shadow-md">
+              <button onClick={() => setStep('play')} className="p-2 hover:bg-white/10 rounded-full transition"><Icon name="ArrowLeft" className="w-5 h-5"/></button>
+              <h1 className="text-[17px] font-bold">전체 스코어보드</h1>
+              <div className="flex gap-1.5 items-center">
+                <button onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Icon name="Download" className="w-5 h-5"/></button>
+                <button onClick={handleShare} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Icon name="Share2" className="w-5 h-5"/></button>
+                <button onClick={() => setStep('settlement')} className="px-3 py-1.5 ml-1 bg-[#1e9f64] hover:bg-[#128853] rounded-lg text-[13px] font-bold transition flex items-center shadow-sm text-white">정산</button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-x-auto relative w-full bg-[#f4f6f8] pb-10">
+              <div className="flex bg-white py-3 border-b border-gray-200 sticky top-0 z-10 px-2 gap-1 shadow-sm">
+                 <div className="w-16 shrink-0"></div>
+                 {players.map((p, i) => {
+                   const rel = totalStrokesSum[i] - totalParSumAll;
+                   const formattedRel = rel > 0 ? `+${rel}` : rel === 0 ? 'E' : `${rel}`;
+                   return (
+                     <div key={i} className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-[12px] py-2 px-1 border border-gray-100 mx-[1px]">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full mb-1 overflow-hidden">
+                           <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${p}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/>
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-800 truncate w-full text-center px-1">{p}</span>
+                        {/* 🚨 스코어보드 요약 (한 줄 표기 +4(3)) */}
+                        <div className="text-[12px] font-black text-[#16a34a] mt-1 whitespace-nowrap flex items-center justify-center">
+                          <span>{formattedRel}</span>
+                          {usePutts ? <span className="text-[10px] font-semibold text-gray-500 ml-0.5">({totalPuttsSum[i]})</span> : null}
+                        </div>
+                     </div>
+                   );
+                 })}
+              </div>
+
+              <div className="flex gap-2 px-3 pt-3">
+                <button onClick={() => setScorecardTab('front')} className={`flex-1 py-3 rounded-[12px] text-[13px] font-bold transition-all border ${scorecardTab === 'front' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{actualFrontName} 코스</button>
+                <button onClick={() => setScorecardTab('back')} className={`flex-1 py-3 rounded-[12px] text-[13px] font-bold transition-all border ${scorecardTab === 'back' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{actualBackName} 코스</button>
+              </div>
+
+              <div className="p-3 space-y-2">
+                {holes.map((hole, hIdx) => {
+                  const isFront = hIdx < 9;
+                  if (scorecardTab === 'front' && !isFront) return null;
+                  if (scorecardTab === 'back' && isFront) return null;
+                  
+                  return (
+                    <React.Fragment key={hIdx}>
+                      {!hole ? (
+                        <div onClick={() => { loadHoleData(hIdx); setStep('play'); }} className="flex items-center py-2 px-2 bg-white rounded-[16px] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition mb-1.5">
+                           <div className="w-10 flex flex-col items-center justify-center shrink-0">
+                              <span className="font-bold text-gray-800 text-[13px]">{hIdx + 1}H</span>
+                              <span className="text-[9px] text-gray-400 mt-0.5">P {coursePars[hIdx] || 4}</span>
+                           </div>
+                           <div className="w-6 shrink-0 text-center"></div>
+                           {players.map((_, i) => (
+                             <div key={i} className="flex-1 px-1">
+                               <div className="bg-gray-100 rounded-lg py-1.5 text-gray-300 text-center text-[10px] font-bold">대기</div>
+                             </div>
+                           ))}
+                        </div>
+                      ) : (
+                        (() => {
+                          const balances = getHoleBalance(hole);
+                          return (
+                            <div onClick={() => { loadHoleData(hIdx); setStep('play'); }} className="flex items-center py-2 px-2 bg-white rounded-[16px] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition mb-1.5">
+                               <div className="w-10 flex flex-col items-center justify-center shrink-0">
+                                  <span className="font-black text-gray-800 text-[14px]">{hIdx + 1}H</span>
+                                  <span className="text-[9px] text-gray-500 mt-0.5 font-bold">P {hole.par}</span>
+                               </div>
+                               <div className="w-6 flex items-center justify-center shrink-0">
+                                  {hole.isHoleExcluded ? '' : ( hole.multiplier > 1 ? <span className="text-red-500 bg-red-50 text-[9px] font-black px-1 py-0.5 rounded">x{hole.multiplier}</span> : <span className="text-gray-300 text-xs font-black">-</span> )}
+                               </div>
+                               {players.map((p, i) => {
+                                 const isExcluded = (hole.excluded && hole.excluded[i]) || hole.isHoleExcluded;
+                                 const score = hole.scores[i];
+                                 const diff = score - hole.par;
+                                 const bal = balances[i];
+                                 return (
+                                   <div key={i} className={`flex-1 px-1 flex flex-col items-center justify-center ${isExcluded ? 'opacity-40' : ''}`}>
+                                     {isExcluded && !hole.isHoleExcluded ? (
+                                       <div className="w-full bg-gray-50 rounded-lg py-1.5 text-center font-bold text-gray-400 text-[10px]">제외</div>
+                                     ) : (
+                                       <>
+                                         <div className={`w-full rounded-lg py-1 flex items-center justify-center gap-0.5 font-black text-[15px] ${hole.isHoleExcluded ? 'text-gray-400' : diff <= -2 ? 'text-purple-600 bg-purple-50' : diff === -1 ? 'text-[#128853] bg-[#e5f5ec]' : 'text-gray-800'}`}>
+                                           <span>{score}</span>
+                                           {usePutts && <span className="text-[9px] font-semibold text-gray-500 ml-0.5">({hole.putts?.[i]||0})</span>}
+                                         </div>
+                                         {!hole.isHoleExcluded && (
+                                           <div className={`text-[9px] font-bold mt-1 whitespace-nowrap tracking-tighter ${bal > 0 ? 'text-[#1ea34a]' : bal < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                                             {bal > 0 ? `+${bal.toLocaleString()}` : ''}{bal === 0 ? '-' : bal < 0 ? `${bal.toLocaleString()}` : ''}
+                                           </div>
+                                         )}
+                                       </>
+                                     )}
+                                   </div>
+                                 );
+                               })}
+                            </div>
+                          );
+                        })()
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <div className="bg-[#fcfcfc] border-t border-gray-200 shadow-[0_-15px_20px_-5px_rgba(0,0,0,0.05)] fixed bottom-0 left-0 right-0 z-30">
+               <div className="max-w-md mx-auto p-4 pt-3">
+                  <div className="flex justify-between items-center mb-2.5">
+                    <div className="text-[12px] font-bold text-gray-800 flex items-center"><Icon name="Trophy" className="w-4 h-4 text-yellow-500 mr-1.5"/> 현재 합산 결과</div>
+                    <button onClick={()=>setStep('settlement')} className="bg-[#1f2937] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">최종 정산하기</button>
+                  </div>
+                  <div className="flex gap-2">
+                    {players.map((p, i) => (
+                      <div key={i} className={`flex-1 bg-white rounded-[16px] p-2 text-center border border-gray-100 flex flex-col items-center justify-center ${gameBalances[i] > 0 ? 'bg-green-50/30' : ''}`}>
+                        <div className="text-[10px] text-gray-500 font-bold truncate mb-1 w-full">{p}</div>
+                        <div className={`text-[16px] tracking-tight font-black ${gameBalances[i] > 0 ? 'text-[#128853]' : gameBalances[i] < 0 ? 'text-red-500' : 'text-gray-800'}`}>
+                          {gameBalances[i] === 0 ? '0' : gameBalances[i].toLocaleString()}
+                        </div>
+                        <div className="text-[8.5px] text-gray-400 font-semibold mt-0.5">
+                          핸디포함 <span className={totalBalances[i] > 0 ? 'text-[#128853]' : totalBalances[i] < 0 ? 'text-red-400' : ''}>{totalBalances[i] > 0 ? '+' : ''}{totalBalances[i].toLocaleString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+               </div>
+            </div>
+          </div>
+        );
+      }
+
+      // =====================================================================
+      // ★ UI 렌더링 - 홀 결과 화면 ★
+      // =====================================================================
       if (step === 'hole-result') {
         const currentHoleData = holes[currentHole];
         const holeBalances = getHoleBalance(currentHoleData);
         const transfers = calculateTransfers(holeBalances);
+
         return (
-          <div className="min-h-screen bg-[#f4f6f8] font-sans pb-24 relative">
+          <div className="app-wrapper min-h-screen bg-[#f4f6f8] font-sans pb-24 relative">
+            <style>{`
+              @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+              * { font-family: 'Pretendard', sans-serif; }
+            `}</style>
+            
             <div className="bg-gradient-to-b from-[#128853] to-[#1e9f64] text-white pt-12 pb-16 px-6 rounded-b-[40px] shadow-sm text-center relative z-0">
-              <div className="absolute top-8 left-6 inline-flex items-center justify-center w-10 h-10 bg-white/20 rounded-full text-sm font-bold backdrop-blur-sm">{currentHole + 1}H</div>
-              {roomId && <div className="absolute top-8 right-6 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full animate-pulse">🔴 LIVE</div>}
+              <div className="absolute top-8 left-6 inline-flex items-center justify-center w-10 h-10 bg-white/20 rounded-full text-sm font-bold backdrop-blur-sm">
+                {currentHole + 1}H
+              </div>
               <h1 className="text-3xl font-black italic tracking-tight mt-1">HOLE RESULT</h1>
-              <p className="text-[15px] font-bold mt-1 text-yellow-300">{currentHoleData.isHoleExcluded ? <span className="text-red-200">전체 내기 제외 홀</span> : <>{currentHoleData.multiplier > 1 ? `x${currentHoleData.multiplier} 배판` : ' '}</>}</p>
+              <p className="text-[15px] font-bold mt-1 text-yellow-300">
+                {currentHoleData.isHoleExcluded ? <span className="text-red-200">전체 내기 제외 홀</span> : <>{currentHoleData.multiplier > 1 ? `x${currentHoleData.multiplier} 배판` : ' '}</>}
+              </p>
             </div>
 
             <div className="max-w-md mx-auto px-4 -mt-10 relative z-10 space-y-6">
               <div className="bg-white rounded-[24px] shadow-sm p-5 flex justify-between text-center divide-x divide-gray-100">
                 {players.map((player, idx) => {
                   const score = currentHoleData.scores[idx];
-                  const diff = score - currentHoleData.par;
+                  const par = currentHoleData.par;
+                  const diff = score - par;
                   const bal = holeBalances[idx];
+
                   return (
                     <div key={idx} className={`flex-1 px-1 ${currentHoleData.excluded?.[idx] ? 'opacity-40' : ''}`}>
-                      <div className="w-8 h-8 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-2 overflow-hidden"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${player}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
+                      <div className="w-8 h-8 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-2 overflow-hidden">
+                         {currentHoleData.excluded?.[idx] ? <Icon name="UserX" className="w-5 h-5 text-gray-400 mt-1" /> : <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${player}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/>}
+                      </div>
                       <div className="text-[10px] text-gray-500 font-bold mb-2 truncate px-1">{player}</div>
+                      
                       {currentHoleData.excluded?.[idx] ? (
                         <div className="font-bold text-gray-400 text-xs mt-3 bg-gray-50 py-1 rounded-md">제외됨</div>
                       ) : (
                         <>
                           <div className={`font-bold text-[13px] mb-1 flex flex-col items-center justify-center gap-0.5 ${diff === -1 ? 'text-[#128853]' : diff <= -2 ? 'text-purple-600' : 'text-gray-800'}`}>
-                            <div className="flex items-center gap-1">{score}타 ({diff > 0 ? `+${diff}` : diff === 0 ? 'E' : diff})</div>
+                            <div className="flex items-center gap-1">
+                              {score}타 {usePutts && <span style={{fontSize:'10px', color:'#9ca3af'}}>({currentHoleData.putts?.[idx] || 0}펏)</span>}
+                            </div>
                             {diff === -1 && <span className="text-[9px] bg-[#e5f5ec] text-[#128853] px-1.5 py-0.5 rounded mt-0.5 font-black">버디</span>}
                             {diff <= -2 && <span className="text-[9px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded mt-0.5 font-black">이글</span>}
                           </div>
-                          <div className={`text-[11px] font-black mt-1 ${bal > 0 ? 'text-[#1ea34a]' : bal < 0 ? 'text-red-500' : 'text-gray-400'}`}>{bal > 0 ? '+' : ''}{bal === 0 ? '-' : bal.toLocaleString()}</div>
+                          <div className={`text-[11px] font-black mt-1 ${bal > 0 ? 'text-[#1ea34a]' : bal < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                            {bal > 0 ? '+' : ''}{bal === 0 ? '-' : bal.toLocaleString()}
+                          </div>
                         </>
                       )}
                     </div>
@@ -910,27 +1304,45 @@
               </div>
 
               {currentHoleData.isHoleExcluded ? (
-                <div className="bg-red-50 rounded-[20px] shadow-sm p-6 text-center text-red-500 font-bold border border-red-100 mb-6">⚠️ 이 홀은 전체 내기에서 제외되었습니다.</div>
+                <div className="bg-red-50 rounded-[20px] shadow-sm p-6 text-center text-red-500 font-bold border border-red-100 mb-6">
+                  ⚠️ 이 홀은 전체 내기에서 제외되었습니다. (타수만 기록됨)
+                </div>
               ) : (
                 <div>
-                  <div className="text-center text-[13px] font-bold text-gray-600 mb-4 flex items-center justify-center"><div className="w-5 h-5 mr-1.5 bg-[#1ea34a] text-white rounded-full flex items-center justify-center font-bold text-[10px]">₩</div> 지출 가이드 (주는 사람 기준)</div>
+                  <div className="text-center text-[13px] font-bold text-gray-600 mb-4 flex items-center justify-center">
+                    <div className="w-5 h-5 mr-1.5 bg-[#1ea34a] text-white rounded-full flex items-center justify-center font-bold text-[10px]">₩</div> 지출 가이드 (주는 사람 기준)
+                  </div>
+                  
                   {Object.keys(transfers).length === 0 ? (
-                    <div className="bg-white rounded-[24px] shadow-sm p-8 text-center text-gray-400 font-semibold border border-gray-100">변동 금액이 없습니다.</div>
+                    <div className="bg-white rounded-[24px] shadow-sm p-8 text-center text-gray-400 font-semibold border border-gray-100">
+                      변동 금액이 없습니다.
+                    </div>
                   ) : (
                     <div className="space-y-4">
                       {Object.entries(transfers).map(([fromId, data]) => (
                         <div key={fromId} className="bg-white rounded-[24px] border border-gray-100 p-5 shadow-sm">
                           <div className="flex justify-between items-center mb-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 bg-gray-100 rounded-full overflow-hidden shrink-0"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${players[fromId]}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
-                              <div><div className="text-[10px] text-gray-400 font-bold mb-0.5">주는 사람</div><div className="font-black text-base text-gray-800">{players[fromId]}</div></div>
+                              <div className="w-10 h-10 bg-gray-100 rounded-full overflow-hidden shrink-0">
+                                <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${players[fromId]}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/>
+                              </div>
+                              <div>
+                                <div className="text-[10px] text-gray-400 font-bold mb-0.5">주는 사람</div>
+                                <div className="font-black text-base text-gray-800">{players[fromId]}</div>
+                              </div>
                             </div>
-                            <div className="text-right"><div className="text-[10px] text-gray-400 font-bold mb-0.5">총 송금액</div><div className="font-black text-[19px] text-red-500">{data.total.toLocaleString()}원</div></div>
+                            <div className="text-right">
+                              <div className="text-[10px] text-gray-400 font-bold mb-0.5">총 송금액</div>
+                              <div className="font-black text-[19px] text-red-500">{data.total.toLocaleString()}원</div>
+                            </div>
                           </div>
                           <div className="bg-gray-50 rounded-[16px] p-3 space-y-2 border border-gray-100">
                             {data.details.map((detail, idx) => (
                               <div key={idx} className="flex justify-between items-center text-[13px]">
-                                <span className="text-gray-600 font-semibold flex items-center"><ArrowRight className="w-3.5 h-3.5 mx-2 text-gray-400" /> {players[detail.to]}</span>
+                                <span className="text-gray-600 font-semibold flex items-center">
+                                  <Icon name="ArrowRight" className="w-3.5 h-3.5 mx-2 text-gray-400" /> 
+                                  {players[detail.to]}
+                                </span>
                                 <span className="font-bold text-blue-600">{detail.amount.toLocaleString()}원</span>
                               </div>
                             ))}
@@ -945,128 +1357,46 @@
             
             <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 flex gap-3 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
                <div className="max-w-md mx-auto w-full flex gap-3">
-                 <button onClick={() => setStep('scorecard')} className="flex-[1] py-4 rounded-[16px] font-bold flex flex-col items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-[15px]">전체 스코어</button>
-                 <button onClick={handleNextHole} className="flex-[2] bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 rounded-[16px] shadow-md flex items-center justify-center transition text-[15px]">{currentHole === 17 ? '최종 스코어보드' : '다음 홀 이동'} <ArrowRight className="w-5 h-5 ml-1.5" /></button>
+                 <button onClick={() => setStep('scorecard')} className="flex-[1] py-4 rounded-[16px] font-bold flex flex-col items-center justify-center bg-gray-100 text-gray-600 hover:bg-gray-200 transition text-[15px]">
+                  전체 스코어
+                </button>
+                <button onClick={handleNextHole} className="flex-[2] bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 rounded-[16px] shadow-md flex items-center justify-center transition text-[15px]">
+                  {currentHole === 17 ? '최종 스코어보드' : '다음 홀 이동'} <Icon name="ArrowRight" className="w-5 h-5 ml-1.5" />
+                </button>
                </div>
             </div>
           </div>
         );
       }
 
-      if (step === 'scorecard') {
-        return (
-          <div className="min-h-screen bg-[#f4f6f8] font-sans flex flex-col">
-            {toastMessage && (<div className="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[11px] font-bold z-50 animate-in fade-in slide-in-from-top-4 w-11/12 max-w-sm text-center">{toastMessage}</div>)}
-            <div className="bg-[#1f2937] p-3 text-white flex items-center justify-between sticky top-0 z-20 shadow-md">
-              <button onClick={() => setStep('play')} className="p-2 hover:bg-white/10 rounded-full transition"><ArrowLeft className="w-5 h-5"/></button>
-              <h1 className="text-[17px] font-bold flex items-center gap-2">전체 스코어보드 {roomId && <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm animate-pulse">LIVE</span>}</h1>
-              <div className="flex gap-1.5">
-                <button onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Download className="w-5 h-5"/></button>
-                <button onClick={handleShare} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Share2 className="w-5 h-5"/></button>
-                <button onClick={() => setStep('settlement')} className="px-3 py-1.5 ml-1 bg-[#1e9f64] hover:bg-[#128853] rounded-lg text-[13px] font-bold transition flex items-center shadow-sm text-white">정산</button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-x-auto relative">
-              <div className="w-full bg-[#f4f6f8] pb-32">
-                <div className="flex bg-white py-3 border-b border-gray-200 sticky top-0 z-10 px-2 gap-1 shadow-sm">
-                   <div className="w-16 shrink-0"></div> 
-                   {players.map((p, i) => (
-                     <div key={i} className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-[12px] py-2 px-1 border border-gray-100">
-                        <div className="w-6 h-6 bg-gray-200 rounded-full mb-1 overflow-hidden"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${p}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
-                        <span className="text-[10px] md:text-[11px] font-bold text-gray-800 truncate w-full text-center px-1">{p}</span>
-                     </div>
-                   ))}
-                </div>
-
-                <div className="flex gap-2 px-3 pt-3">
-                  <button onClick={() => setScorecardTab('front')} className={`flex-1 py-3 rounded-[12px] text-[13px] font-bold transition-all border ${scorecardTab === 'front' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{actualFrontName} 코스</button>
-                  <button onClick={() => setScorecardTab('back')} className={`flex-1 py-3 rounded-[12px] text-[13px] font-bold transition-all border ${scorecardTab === 'back' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{actualBackName} 코스</button>
-                </div>
-
-                <div className="p-3 space-y-2">
-                  {holes.map((hole, hIdx) => {
-                    const isFront = hIdx < 9;
-                    if (scorecardTab === 'front' && !isFront) return null;
-                    if (scorecardTab === 'back' && isFront) return null;
-                    return (
-                      <React.Fragment key={hIdx}>
-                        {!hole ? (
-                          <div onClick={() => { loadHoleData(hIdx); setStep('play'); }} className="flex items-center py-2 px-2 bg-white rounded-[16px] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition mb-1.5">
-                             <div className="w-10 flex flex-col items-center justify-center shrink-0"><span className="font-bold text-gray-800 text-[13px]">{hIdx + 1}H</span><span className="text-[9px] text-gray-400 mt-0.5">P {coursePars[hIdx] || 4}</span></div>
-                             <div className="w-6 shrink-0 text-center"></div>
-                             {players.map((_, i) => (<div key={i} className="flex-1 px-1"><div className="bg-gray-100 rounded-lg py-1.5 text-gray-300 text-center text-[10px] font-bold">대기</div></div>))}
-                          </div>
-                        ) : (
-                          (() => {
-                            const balances = getHoleBalance(hole);
-                            return (
-                              <div onClick={() => { loadHoleData(hIdx); setStep('play'); }} className="flex items-center py-2 px-2 bg-white rounded-[16px] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition mb-1.5">
-                                 <div className="w-10 flex flex-col items-center justify-center shrink-0"><span className="font-black text-gray-800 text-[14px]">{hIdx + 1}H</span><span className="text-[9px] text-gray-500 mt-0.5 font-bold">P {hole.par}</span></div>
-                                 <div className="w-6 flex items-center justify-center shrink-0">{hole.isHoleExcluded ? '' : (hole.multiplier > 1 ? (<span className="text-red-500 bg-red-50 text-[9px] font-black px-1 py-0.5 rounded">x{hole.multiplier}</span>) : (<span className="text-gray-300 text-xs font-black">-</span>))}</div>
-                                 {players.map((p, i) => {
-                                   const isExcluded = (hole.excluded && hole.excluded[i]) || hole.isHoleExcluded;
-                                   const score = hole.scores[i];
-                                   const diff = score - hole.par;
-                                   return (
-                                     <div key={i} className={`flex-1 px-1 flex flex-col items-center ${isExcluded ? 'opacity-40' : ''}`}>
-                                       {isExcluded && !hole.isHoleExcluded ? (
-                                         <div className="w-full bg-gray-50 rounded-lg py-1.5 text-center font-bold text-gray-400 text-[10px]">제외</div>
-                                       ) : (
-                                         <>
-                                           <div className={`w-full rounded-lg py-1 flex flex-col items-center justify-center font-black text-[15px] ${hole.isHoleExcluded ? 'text-gray-400' : diff <= -2 ? 'text-purple-600 bg-purple-50' : diff === -1 ? 'text-[#128853] bg-[#e5f5ec]' : 'text-gray-800'}`}>{diff > 0 ? `+${diff}` : diff === 0 ? '0' : diff}</div>
-                                           {!hole.isHoleExcluded && (<div className={`text-[9px] font-bold mt-1 whitespace-nowrap tracking-tighter ${balances[i] > 0 ? 'text-[#1ea34a]' : balances[i] < 0 ? 'text-red-500' : 'text-gray-400'}`}>{balances[i] > 0 ? `+${balances[i].toLocaleString()}` : ''}{balances[i] === 0 ? '-' : balances[i] < 0 ? `${balances[i].toLocaleString()}` : ''}</div>)}
-                                         </>
-                                       )}
-                                     </div>
-                                   );
-                                 })}
-                              </div>
-                            );
-                          })()
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-[#fcfcfc] border-t border-gray-200 shadow-[0_-15px_20px_-5px_rgba(0,0,0,0.05)] fixed bottom-0 left-0 right-0 z-30 pb-safe">
-               <div className="max-w-md mx-auto p-4 pt-3">
-                  <div className="text-[12px] font-bold text-gray-800 mb-2.5 flex items-center"><Trophy className="w-4 h-4 text-yellow-500 mr-1.5"/> 현재 합산 결과</div>
-                  <div className="flex gap-2">
-                    {players.map((p, i) => (
-                      <div key={i} className={`flex-1 bg-white rounded-[16px] p-2 text-center border border-gray-100 flex flex-col items-center justify-center ${gameBalances[i] > 0 ? 'bg-green-50/30' : ''}`}>
-                        <div className="text-[10px] text-gray-500 font-bold truncate mb-1 w-full">{p}</div>
-                        <div className={`text-[16px] tracking-tight font-black ${gameBalances[i] > 0 ? 'text-[#128853]' : gameBalances[i] < 0 ? 'text-red-500' : 'text-gray-800'}`}>{gameBalances[i] === 0 ? '0' : gameBalances[i].toLocaleString()}</div>
-                        <div className="text-[8.5px] text-gray-400 font-semibold mt-0.5">핸디포함 <span className={totalBalances[i] > 0 ? 'text-[#128853]' : totalBalances[i] < 0 ? 'text-red-400' : ''}>{totalBalances[i] > 0 ? '+' : ''}{totalBalances[i].toLocaleString()}</span></div>
-                      </div>
-                    ))}
-                  </div>
-               </div>
-            </div>
-          </div>
-        );
-      }
-
+      // =====================================================================
+      // ★ UI 렌더링 - 최종 정산 화면 ★
+      // =====================================================================
       if (step === 'settlement') {
         return (
-          <div className="min-h-screen bg-[#f4f6f8] font-sans pb-10 relative">
+          <div className="app-wrapper min-h-screen bg-[#f4f6f8] font-sans pb-10 relative">
+            <style>{`
+              @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+              * { font-family: 'Pretendard', sans-serif; }
+            `}</style>
+
             <div className="bg-[#128853] text-white p-4 shadow-sm flex items-center justify-between sticky top-0 z-20">
-              <button onClick={() => setStep('scorecard')} className="p-2 hover:bg-white/10 rounded-full transition"><ArrowLeft className="w-5 h-5"/></button>
-              <h1 className="text-[17px] font-bold flex items-center gap-2"><Calculator className="w-5 h-5 mr-1"/> 개평 및 최종 정산 {roomId && <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm animate-pulse">LIVE</span>}</h1>
+              <button onClick={() => setStep('scorecard')} className="p-2 hover:bg-white/10 rounded-full transition"><Icon name="ArrowLeft" className="w-5 h-5"/></button>
+              <h1 className="text-[17px] font-bold flex items-center"><Icon name="Calculator" className="w-5 h-5 mr-2"/> 최종 정산 내역</h1>
               <div className="w-9"></div> 
             </div>
 
             <div className="max-w-md mx-auto p-4 space-y-4 pt-6">
               <div className="bg-white rounded-[24px] p-5 shadow-sm border border-gray-100">
-                <h2 className="text-[15px] font-bold text-gray-800 mb-4 flex items-center"><Wallet className="w-5 h-5 mr-2 text-[#128853]"/> 개평 비율 설정</h2>
+                <h2 className="text-[15px] font-bold text-gray-800 mb-4 flex items-center">
+                  <Icon name="Wallet" className="w-5 h-5 mr-2 text-[#128853]"/> 개평 비율 설정
+                </h2>
                 <div className="grid grid-cols-4 gap-2 mb-3">
                   <button onClick={() => { setGaepyungRate(0); setIsCustomRate(false); }} className={`col-span-2 py-3 rounded-xl text-xs font-bold transition ${!isCustomRate && gaepyungRate === 0 ? 'bg-[#128853] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>개평 없음 (0%)</button>
-                  {[10, 20].map(rate => <button key={rate} onClick={() => { setGaepyungRate(rate); setIsCustomRate(false); }} className={`py-3 rounded-xl text-xs font-bold transition ${!isCustomRate && gaepyungRate === rate ? 'bg-[#128853] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{rate}%</button>)}
-                  {[30, 50, 70].map(rate => <button key={rate} onClick={() => { setGaepyungRate(rate); setIsCustomRate(false); }} className={`py-3 rounded-xl text-xs font-bold transition ${!isCustomRate && gaepyungRate === rate ? 'bg-[#128853] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{rate}%</button>)}
-                  <button onClick={() => setIsCustomRate(true)} className={`py-3 rounded-xl text-xs font-bold transition ${isCustomRate ? 'bg-[#128853] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>직접 입력</button>
+                  {[10, 20, 30, 50, 70].map(rate => (
+                    <button key={rate} onClick={() => { setGaepyungRate(rate); setIsCustomRate(false); }} className={`py-3 rounded-xl text-xs font-bold transition ${!isCustomRate && gaepyungRate === rate ? 'bg-[#128853] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>{rate}%</button>
+                  ))}
+                  <button onClick={() => setIsCustomRate(true)} className={`py-3 rounded-xl text-xs font-bold transition ${isCustomRate ? 'bg-[#128853] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>입력</button>
                 </div>
                 {isCustomRate && (
                   <div className="relative animate-in fade-in slide-in-from-top-1 mb-4">
@@ -1079,51 +1409,52 @@
                   <button onClick={() => setIsRoundThousand(!isRoundThousand)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isRoundThousand ? 'bg-[#128853]' : 'bg-gray-200'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isRoundThousand ? 'translate-x-5' : 'translate-x-0.5'}`} /></button>
                 </div>
                 <div className="flex items-center justify-between py-2 border-t border-gray-100 mt-2 pt-4">
-                  <div className="flex flex-col"><span className="text-[13px] font-bold text-gray-800">잃은 비율대로 전액 분배</span><span className="text-[10px] text-gray-500 mt-0.5">체크 해제시 남은 금액은 가장 많이 잃은 사람에게</span></div>
+                  <div className="flex flex-col"><span className="text-[13px] font-bold text-gray-800">잃은 비율대로 전액 분배</span><span className="text-[10px] text-gray-500 mt-0.5">체크 해제시 몰아주기</span></div>
                   <button onClick={() => setIsProportionalDistribution(!isProportionalDistribution)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isProportionalDistribution ? 'bg-[#128853]' : 'bg-gray-200'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isProportionalDistribution ? 'translate-x-5' : 'translate-x-0.5'}`} /></button>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-2">
-                <h3 className="font-bold text-[15px] text-gray-700 ml-1">플레이어별 최종 정산</h3>
-                {settlementData.details.map((d, i) => (
-                  <div key={i} className="bg-white rounded-[20px] p-5 shadow-sm border border-gray-100 flex flex-col">
-                    <div className="flex justify-between items-center border-b border-gray-50 pb-3 mb-3">
-                      <div className="flex items-center gap-2">
-                         <div className="w-8 h-8 bg-gray-100 rounded-full overflow-hidden shrink-0"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${d.name}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
-                         <span className="font-bold text-gray-800 text-[15px]">{d.name}</span>
+              <div>
+                <h3 className="font-bold text-[15px] text-gray-700 ml-1 mb-3">플레이어별 최종 정산</h3>
+                <div className="space-y-4">
+                  {settlementData.details.map((d, i) => (
+                    <div key={i} className="bg-white rounded-[20px] p-0 shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                      <div className="flex justify-between items-center p-4 border-b border-gray-50">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-gray-100 rounded-full overflow-hidden shrink-0"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${d.name}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
+                          <span className="font-bold text-gray-800 text-[15px]">{d.name}</span>
+                        </div>
+                        <span className={`font-black text-[15px] ${d.original > 0 ? 'text-[#128853]' : d.original < 0 ? 'text-red-500' : 'text-gray-500'}`}>기존: {d.original > 0 ? '+' : ''}{d.original.toLocaleString()}원</span>
                       </div>
-                      <span className={`font-black text-[15px] ${d.original > 0 ? 'text-[#128853]' : d.original < 0 ? 'text-red-500' : 'text-gray-500'}`}>기존: {d.original > 0 ? '+' : ''}{d.original.toLocaleString()}원</span>
+                      <div className="p-4 space-y-2">
+                        <div className="flex justify-between items-center text-[12px]">
+                          <span className="text-gray-500 font-medium">개평 ({d.original > 0 ? '주는 돈' : d.original < 0 ? '받는 돈' : '해당 없음'})</span>
+                          <span className={`font-bold ${d.original > 0 ? 'text-red-500' : d.original < 0 ? 'text-blue-500' : 'text-gray-400'}`}>{d.original > 0 ? '-' + d.cut.toLocaleString() : d.original < 0 ? '+' + d.receive.toLocaleString() : '0'}원</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center bg-gray-50 p-4 border-t border-gray-100">
+                        <span className="text-[13px] font-bold text-gray-800">최종 수령(지불)액</span>
+                        <span className={`text-[20px] tracking-tight font-black ${d.final > 0 ? 'text-[#128853]' : d.final < 0 ? 'text-red-500' : 'text-gray-600'}`}>{d.final > 0 ? '+' : ''}{d.final === 0 ? '0' : d.final.toLocaleString()}원</span>
+                      </div>
                     </div>
-                    {d.original > 0 ? (
-                      <div className="flex justify-between items-center text-[12px] mb-2"><span className="text-gray-500 font-medium">개평 (주는 돈)</span><span className="font-bold text-red-500">-{d.cut.toLocaleString()}원</span></div>
-                    ) : d.original < 0 ? (
-                      <div className="flex justify-between items-center text-[12px] mb-2"><span className="text-gray-500 font-medium">개평 (받는 돈)</span><span className="font-bold text-blue-500">+{d.receive.toLocaleString()}원</span></div>
-                    ) : (
-                      <div className="flex justify-between items-center text-[12px] mb-2"><span className="text-gray-500 font-medium">개평 (해당 없음)</span><span className="font-bold text-gray-400">0원</span></div>
-                    )}
-                    <div className="flex justify-between items-center mt-2 pt-2 bg-gray-50 -mx-5 px-5 -mb-5 pb-5 rounded-b-[20px]">
-                      <span className="text-[13px] font-bold text-gray-800">최종 수령(지불)액</span>
-                      <span className={`text-[20px] tracking-tight font-black ${d.final > 0 ? 'text-[#128853]' : d.final < 0 ? 'text-red-500' : 'text-gray-600'}`}>{d.final > 0 ? '+' : ''}{d.final === 0 ? '0' : d.final.toLocaleString()}원</span>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
 
               <div className="pt-6 pb-8">
-                <button onClick={() => setShowResetConfirm(true)} className="w-full bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold py-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[15px]"><RotateCcw className="w-5 h-5 mr-2" /> 정산 완료 및 새 게임 시작</button>
+                <button onClick={() => setShowResetConfirm(true)} className="w-full bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold py-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[15px]"><Icon name="RotateCcw" className="w-5 h-5 mr-2" /> 정산 완료 및 새 게임 시작</button>
               </div>
             </div>
 
             {showResetConfirm && (
-              <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
+              <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
                 <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-5 shadow-xl text-center">
-                  <div className="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2"><RotateCcw className="w-7 h-7" /></div>
+                  <div className="w-14 h-14 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-2"><Icon name="RotateCcw" className="w-7 h-7" /></div>
                   <h3 className="font-bold text-[19px] text-gray-800">새 게임 시작</h3>
                   <p className="text-[14px] text-gray-500 font-medium leading-relaxed">모든 스코어 기록이 초기화되고<br/>설정 화면으로 돌아갑니다.<br/>계속하시겠습니까?</p>
                   <div className="flex gap-2.5 mt-4 pt-2">
                     <button onClick={() => setShowResetConfirm(false)} className="flex-1 bg-gray-100 hover:bg-gray-200 transition text-gray-700 font-bold py-3.5 rounded-[16px] text-[15px]">취소</button>
-                    <button onClick={() => { setHoles(Array(18).fill(null)); setCurrentHole(0); setStep('setup'); setShowResetConfirm(false); }} className="flex-1 bg-red-500 hover:bg-red-600 transition text-white font-bold py-3.5 rounded-[16px] text-[15px]">초기화 확인</button>
+                    <button onClick={() => { setHoles(Array(18).fill(null)); setCurrentHole(0); setStartTime(null); setStep('setup'); setShowResetConfirm(false); }} className="flex-1 bg-red-500 hover:bg-red-600 transition text-white font-bold py-3.5 rounded-[16px] text-[15px]">초기화 확인</button>
                   </div>
                 </div>
               </div>
@@ -1132,133 +1463,10 @@
         );
       }
 
-      return (
-        <div className="min-h-screen bg-[#f4f6f8] pb-24 font-sans relative">
-          {toastMessage && (<div className="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[11px] font-bold z-50 animate-in fade-in slide-in-from-top-4 w-11/12 max-w-sm text-center">{toastMessage}</div>)}
-
-          <div className="bg-[#128853] text-white p-4 pt-10 sticky top-0 z-20 shadow-md flex justify-between items-center rounded-b-[24px]">
-            <button onClick={() => setStep('scorecard')} className="p-2 hover:bg-white/10 rounded-full transition flex flex-col items-center"><Trophy className="w-6 h-6" /></button>
-            <div className="text-center font-black text-[20px] tracking-tight flex items-center gap-2">
-              <Flag className="w-5 h-5" />{currentHole + 1} HOLE
-              {roomId && <div className="absolute top-12 right-[50%] translate-x-[50%] mt-4 bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm animate-pulse">LIVE</div>}
-            </div>
-            <button onClick={() => setStep('setup')} className="p-2 hover:bg-white/10 rounded-full transition text-xs font-semibold flex flex-col items-center"><Settings className="w-6 h-6" /></button>
-          </div>
-
-          <div className="max-w-md mx-auto p-4 space-y-4 pt-6">
-            <button onClick={() => setShowCaddieModal(true)} className="w-full bg-[#e5f5ec] text-[#128853] rounded-[16px] p-3.5 flex items-center justify-between shadow-sm transition hover:bg-[#d0eedd] active:scale-[0.98]">
-              <div className="flex items-center"><Edit3 className="w-4 h-4 mr-2" /><span className="text-[13px] font-bold">스코어 캐디 (입력 담당)</span></div>
-              <div className="flex items-center gap-2"><div className="w-7 h-7 bg-white rounded-full overflow-hidden shrink-0 border border-white"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${players[scoreCaddieIdx]}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div><span className="text-[14px] font-black mr-1 text-gray-800">{players[scoreCaddieIdx]}</span><ChevronDown className="w-4 h-4 text-gray-500 opacity-70" /></div>
-            </button>
-
-            <div className="flex items-center gap-3">
-              <div className="flex-1 bg-white rounded-[16px] shadow-sm p-3 border border-gray-100 flex items-center justify-between">
-                <span className="font-black text-gray-800 text-[14px] ml-1">PAR</span>
-                <div className="flex bg-gray-100 rounded-[12px] p-1 gap-1">
-                  {[3, 4, 5].map((par) => (
-                    <button key={par} onClick={() => { setCurrentPar(par); if (!hasManualMultiplier && doubleRules.timing === 'current') { const prevHole = currentHole > 0 ? holes[currentHole - 1] : null; const isAutoDouble = checkAutoDouble(currentScores, par, doubleRules, prevHole, currentExcluded); setMultiplier(isAutoDouble ? 2 : 1); } }} className={`w-8 h-8 rounded-[8px] font-black text-[15px] transition-all ${currentPar === par ? 'bg-[#128853] shadow-sm text-white' : 'text-gray-400 hover:text-gray-800'}`}>{par}</button>
-                  ))}
-                </div>
-              </div>
-              <div className="bg-white rounded-[16px] shadow-sm p-3 border border-gray-100 flex items-center gap-2">
-                <span className="text-[12px] font-bold text-gray-600 flex items-center">내기 제외 <Info className="w-3.5 h-3.5 text-gray-300 ml-1"/></span>
-                <button onClick={() => { setIsHoleExcluded(!isHoleExcluded); }} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isHoleExcluded ? 'bg-red-500' : 'bg-gray-200'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isHoleExcluded ? 'translate-x-5' : 'translate-x-0.5'}`} /></button>
-              </div>
-            </div>
-
-            {!isHoleExcluded && (
-              <div className="bg-white rounded-[16px] shadow-sm p-4 border border-gray-100 flex justify-between items-center relative">
-                <div className="flex flex-col"><div className="flex items-center"><span className="text-[14px] font-black text-gray-800">배수 적용</span><button onClick={() => setShowRuleModal(true)} className="ml-1.5 text-gray-300 hover:text-[#128853] transition"><Info className="w-4 h-4" /></button></div></div>
-                <div className="flex items-center space-x-3 bg-gray-50 p-1.5 rounded-[12px] border border-gray-100">
-                  <button onClick={() => { setMultiplier(Math.max(1, multiplier - 1)); setHasManualMultiplier(true); }} className="w-8 h-8 flex justify-center items-center bg-white rounded-[8px] text-gray-500 shadow-sm transition active:scale-95"><Minus className="w-4 h-4" /></button>
-                  <span className={`font-black text-[15px] w-6 text-center ${multiplier > 1 ? 'text-red-500' : 'text-gray-700'}`}>x{multiplier}</span>
-                  <button onClick={() => { setMultiplier(multiplier + 1); setHasManualMultiplier(true); }} className="w-8 h-8 flex justify-center items-center bg-white rounded-[8px] text-gray-500 shadow-sm transition active:scale-95"><Plus className="w-4 h-4" /></button>
-                </div>
-              </div>
-            )}
-
-            <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-2 space-y-1">
-              {players.map((player, idx) => (
-                <div key={idx} className={`p-3 flex items-center justify-between transition cursor-pointer select-none rounded-[16px] ${currentExcluded[idx] ? 'opacity-50 grayscale bg-gray-50' : 'bg-white'}`} onTouchStart={(e) => startPress(e, idx, false)} onTouchEnd={cancelPress} onTouchMove={cancelPress} onMouseDown={(e) => startPress(e, idx, false)} onMouseUp={cancelPress} onMouseLeave={cancelPress} onContextMenu={(e) => e.preventDefault()}>
-                  <div className="flex flex-col flex-1 pointer-events-none">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gray-100 rounded-full overflow-hidden shrink-0"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${player}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
-                      <span className={`font-bold text-[15px] truncate ${currentExcluded[idx] ? 'text-gray-500 line-through' : 'text-gray-800'}`}>{player}</span>
-                    </div>
-                  </div>
-                  <div className={`flex items-center space-x-5 bg-white ${currentExcluded[idx] ? 'pointer-events-none opacity-60' : ''}`}>
-                    <button onClick={(e) => { e.stopPropagation(); updateScore(idx, -1); }} className="w-10 h-10 flex justify-center items-center bg-white rounded-[12px] text-red-500 border border-gray-100 shadow-sm active:bg-red-50 transition"><Minus className="w-5 h-5 font-bold" /></button>
-                    <div className="w-8 flex flex-col items-center justify-center shrink-0 pointer-events-none">
-                      <span className={`text-center font-black text-[22px] tracking-tight leading-none ${currentExcluded[idx] ? 'text-gray-400' : currentScores[idx] - currentPar === -1 ? 'text-[#128853]' : currentScores[idx] - currentPar <= -2 ? 'text-purple-600' : 'text-gray-800'}`}>{currentScores[idx]}</span>
-                      {!currentExcluded[idx] && currentScores[idx] - currentPar === -1 && <span className="text-[10px] font-black text-[#128853] mt-1 tracking-tighter">Birdie</span>}
-                      {!currentExcluded[idx] && currentScores[idx] - currentPar <= -2 && <span className="text-[10px] font-black text-purple-600 mt-1 tracking-tighter">Eagle</span>}
-                    </div>
-                    <button onClick={(e) => { e.stopPropagation(); updateScore(idx, 1); }} className="w-10 h-10 flex justify-center items-center bg-white rounded-[12px] text-blue-500 border border-gray-100 shadow-sm active:bg-blue-50 transition"><Plus className="w-5 h-5 font-bold" /></button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
-              <div className="max-w-md mx-auto flex gap-3 w-full">
-                <button onClick={() => currentHole > 0 && loadHoleData(currentHole - 1)} disabled={currentHole === 0} className={`flex-[1] py-4 rounded-[16px] font-bold flex items-center justify-center transition text-[15px] ${currentHole === 0 ? 'bg-gray-100 text-gray-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}><ArrowLeft className="w-5 h-5 mr-1" /> 이전 홀</button>
-                <button onClick={saveHole} className="flex-[2] bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 rounded-[16px] shadow-md flex items-center justify-center transition text-[15px]">결과 및 정산 <ArrowRight className="w-5 h-5 ml-2" /></button>
-              </div>
-            </div>
-          </div>
-
-          {showCaddieModal && (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
-              <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-5 shadow-xl">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Edit3 className="w-5 h-5 mr-2 text-[#128853]"/> 스코어 캐디 변경</h3>
-                  <button onClick={() => setShowCaddieModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition"><X className="w-5 h-5 text-gray-500"/></button>
-                </div>
-                <div className="grid grid-cols-2 gap-3 mt-2">
-                  {players.map((p, idx) => (
-                    <button key={`change-caddie-${idx}`} disabled={globalExcluded[idx]} onClick={() => { setScoreCaddieIdx(idx); setShowCaddieModal(false); setToastMessage(`${p} 님으로 스코어 캐디가 변경되었습니다.`); setTimeout(() => setToastMessage(''), 3000); }} className={`py-4 px-2 flex flex-col items-center justify-center gap-2 rounded-[16px] transition border ${globalExcluded[idx] ? 'bg-gray-50 border-gray-100 text-gray-300 grayscale opacity-50' : scoreCaddieIdx === idx ? 'bg-[#e5f5ec] border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
-                      <div className="w-10 h-10 bg-gray-100 rounded-full overflow-hidden shrink-0"><img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${p}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/></div>
-                      <span className="text-[13px] font-bold w-full truncate px-1">{p}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {showRuleModal && (
-            <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
-              <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-4 shadow-xl">
-                <div className="flex justify-between items-center border-b border-gray-100 pb-3">
-                  <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Info className="w-5 h-5 mr-2 text-[#128853]"/> 배판 적용 기준</h3>
-                  <button onClick={() => setShowRuleModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition"><X className="w-5 h-5 text-gray-500"/></button>
-                </div>
-                <div className="text-[14px] space-y-3 text-gray-700 py-2">
-                  <div className="bg-gray-50 p-3.5 rounded-[16px] flex items-center justify-between border border-gray-100"><span className="font-bold text-gray-600">기준 시점</span><span className="font-bold text-[#128853]">{doubleRules.timing === 'current' ? '당홀 기준' : '전홀 기준'}</span></div>
-                  <ul className="space-y-2.5 pl-2 pt-2">
-                    {doubleRules.birdie && <li className="flex items-center font-semibold"><Check className="w-4 h-4 text-[#128853] mr-2"/> 버디 이상</li>}
-                    {doubleRules.threeTie && <li className="flex items-center font-semibold"><Check className="w-4 h-4 text-[#128853] mr-2"/> 3인 동타</li>}
-                    {doubleRules.prevTie && <li className="flex items-center font-semibold"><Check className="w-4 h-4 text-[#128853] mr-2"/> 이전 홀 무승부 (모두 동타)</li>}
-                    {doubleRules.triple && <li className="flex items-center font-semibold"><Check className="w-4 h-4 text-[#128853] mr-2"/> 파4/파5 트리플 보기 이상</li>}
-                    {doubleRules.doublePar3 && <li className="flex items-center font-semibold"><Check className="w-4 h-4 text-[#128853] mr-2"/> 파3 더블 보기 이상</li>}
-                  </ul>
-                  {!doubleRules.birdie && !doubleRules.threeTie && !doubleRules.prevTie && !doubleRules.triple && !doubleRules.doublePar3 && (
-                    <div className="text-gray-400 text-center py-2 font-medium">설정된 자동 배판 조건이 없습니다.</div>
-                  )}
-                </div>
-                <div className="flex gap-2 mt-4 pt-2">
-                  <button onClick={() => { setShowRuleModal(false); setStep('setup'); }} className="flex-[1] bg-gray-100 hover:bg-gray-200 transition text-gray-700 font-bold py-3.5 rounded-[16px] text-[15px]">설정 변경</button>
-                  <button onClick={() => setShowRuleModal(false)} className="flex-[2] bg-[#128853] hover:bg-[#0f7646] transition text-white font-bold py-3.5 rounded-[16px] text-[15px] shadow-sm">확인</button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      );
+      return null;
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
+    ReactDOM.render(<App />, document.getElementById('root'));
   </script>
 </body>
 </html>
