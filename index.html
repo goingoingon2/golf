@@ -128,6 +128,7 @@
     // =====================================================================
     function App() {
       const [isAdmin, setIsAdmin] = useState(true);
+
       const [step, setStep] = useState('setup'); 
       const [selectedCourseId, setSelectedCourseId] = useState('standard_72');
       const [frontNineId, setFrontNineId] = useState('OUT');
@@ -185,9 +186,6 @@
       const [elapsedTime, setElapsedTime] = useState('00:00');
       const [user, setUser] = useState(null);
       const [roomId, setRoomId] = useState('');
-
-      // 🚨 정보 모달 (도움말) 
-      const [infoModal, setInfoModal] = useState({ show: false, title: '', desc: '' });
       
       const lastSyncedStr = useRef('');
       const lastSentUpdate = useRef(0);
@@ -197,11 +195,6 @@
       const parPressTimer = useRef(null);
       const isParLongPress = useRef(false);
       const livePressTimer = useRef(null);
-
-      // 도움말 팝업 함수
-      const openInfo = (title, desc) => {
-        setInfoModal({ show: true, title, desc });
-      };
 
       // =====================================================================
       // ★ Firebase 통신 ★
@@ -971,9 +964,8 @@
                         </div>
                       </div>
                       <div>
-                        <label className="flex items-center text-[13px] font-bold text-gray-800 mb-2.5 block">
+                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">
                           자동 배판 조건
-                          <Icon name="Info" className="w-[14px] h-[14px] ml-1.5 text-gray-400 cursor-pointer hover:text-gray-600 inline-block" onClick={() => openInfo('자동 배판 조건', '아래 체크된 조건 중 하나라도 만족하는 플레이어가 있으면, 해당 홀의 타당 포인트가 자동으로 2배가 됩니다.')} />
                         </label>
                         <div className="space-y-2">
                           {[
@@ -1009,9 +1001,8 @@
                   <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 p-5 animate-in fade-in slide-in-from-top-2">
                     <div className="space-y-5">
                       <div>
-                        <label className="flex items-center text-[13px] font-bold text-gray-800 mb-2.5 block">
+                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">
                           버디 (Birdie) 축하금
-                          <Icon name="Info" className="w-[14px] h-[14px] ml-1.5 text-gray-400 cursor-pointer hover:text-gray-600 inline-block" onClick={() => openInfo('버디/이글 축하금', '• 타수 추가: 지정된 "타수" 만큼의 포인트를 다른 모든 플레이어에게서 각각 받습니다. (1타당 포인트 × 홀 배수 × 지정 타수)\n\n• 지정 포인트: 홀 배수 적용과 상관없이 고정된 지정 포인트를 각각 받습니다.')} />
                         </label>
                         <div className="grid grid-cols-3 gap-2 w-full h-[44px]">
                           <button onClick={() => setBirdieRule({...birdieRule, type: 'strokes'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${birdieRule.type === 'strokes' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>타수 추가</button>
@@ -1023,7 +1014,7 @@
                         </div>
                       </div>
                       <div className="border-t border-gray-100 pt-5">
-                        <label className="flex items-center text-[13px] font-bold text-gray-800 mb-2.5 block">이글 (Eagle) 축하금</label>
+                        <label className="text-[13px] font-bold text-gray-800 mb-2.5 block">이글 (Eagle) 축하금</label>
                         <div className="grid grid-cols-3 gap-2 w-full h-[44px]">
                           <button onClick={() => setEagleRule({...eagleRule, type: 'strokes'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${eagleRule.type === 'strokes' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>타수 추가</button>
                           <button onClick={() => setEagleRule({...eagleRule, type: 'fixed'})} className={`col-span-1 flex items-center justify-center text-[12px] whitespace-nowrap font-bold rounded-lg transition border ${eagleRule.type === 'fixed' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-gray-100 border-transparent text-gray-500 hover:bg-gray-200'}`}>지정 포인트</button>
@@ -1161,11 +1152,13 @@
               </div>
             )}
 
+            {/* 🚨 라이브 뱃지, 타이머 포함된 헤더 */}
             <div className="bg-[#128853] text-white p-4 pt-10 sticky top-0 z-20 shadow-md flex justify-between items-center rounded-b-[24px]">
               <button onClick={() => setStep('scorecard')} className="p-2 hover:bg-white/10 rounded-full transition flex flex-col items-center"><Icon name="Trophy" className="w-6 h-6" /></button>
               <div className="text-center flex flex-col items-center justify-center">
                 <div className="font-black text-[20px] tracking-tight flex items-center gap-2">
                   <span>{currentHole + 1}H</span>
+                  {/* 🚨 라이브 뱃지 & QR 모달 호출 */}
                   {roomId && (
                     <div className="flex items-center gap-1.5">
                       <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
@@ -1190,6 +1183,7 @@
                     {[3, 4].map((par) => (
                       <button key={par} onClick={() => handleParSelect(par)} className={`flex-1 h-9 rounded-[8px] font-black text-[15px] transition-all ${currentPar === par ? 'bg-[#128853] shadow-sm text-white' : 'text-gray-400 hover:text-gray-800'}`}>{par}</button>
                     ))}
+                    {/* 🚨 PAR 롱프레스 기능 복구 */}
                     <button
                       onMouseDown={startParPress} onTouchStart={startParPress} onMouseUp={cancelParPress} onTouchEnd={cancelParPress} onMouseLeave={cancelParPress}
                       onClick={() => { const newPar = currentPar >= 5 ? currentPar : 5; handleParSelect(newPar); }}
@@ -1205,6 +1199,7 @@
                     <span className="font-black text-gray-800 text-[14px] ml-1">배수 적용</span>
                     <button onClick={() => setShowRuleModal(true)} className="text-gray-300 hover:text-[#128853] transition mr-1 pointer-events-auto"><Icon name="Info" className="w-4 h-4" /></button>
                   </div>
+                  {/* 🚨 내기 제외 버튼 통합 (-) 누르면 제외 */}
                   <div className="flex items-center justify-between bg-gray-50 p-1.5 rounded-[12px] border border-gray-100 h-11">
                     <button onClick={handleMultiplierMinus} className="w-8 h-8 flex justify-center items-center bg-white rounded-[8px] text-gray-500 shadow-sm transition active:scale-95"><Icon name="Minus" className="w-4 h-4" /></button>
                     <span className={`font-black text-center ${isHoleExcluded ? 'text-gray-400 text-[13px]' : multiplier > 1 ? 'text-red-500 text-[16px]' : 'text-gray-800 text-[16px]'}`}>
@@ -1215,6 +1210,7 @@
                 </div>
               </div>
 
+              {/* 🚨 PAR 3 니어 / PAR 5 롱기 선택 UI */}
               {(currentPar === 3 || currentPar === 5) && (
                 <div className={`bg-white rounded-[16px] shadow-sm p-3 border border-gray-100 flex flex-col gap-2 ${!isAdmin ? 'pointer-events-none opacity-80' : ''} animate-in fade-in slide-in-from-top-2`}>
                   <div className="flex items-center justify-between px-1">
@@ -1222,7 +1218,6 @@
                       <Icon name={currentPar === 3 ? 'Flag' : 'Target'} className="w-4 h-4 text-[#128853]" />
                       <label className="flex items-center font-black text-gray-800 text-[14px]">
                         {currentPar === 3 ? '니어리스트(미선택 가능)' : '롱기스트(미선택 가능)'}
-                        <Icon name="Info" className="w-[14px] h-[14px] ml-1.5 text-gray-400 cursor-pointer hover:text-gray-600 inline-block pointer-events-auto" onClick={() => openInfo(currentPar === 3 ? '역니어' : '역롱기', '선택된 플레이어가 다른 모든 플레이어에게 1타에 해당하는 포인트를 지불하는 재미있는 페널티 룰입니다.')} />
                       </label>
                     </div>
                     <label className="flex items-center gap-1.5 cursor-pointer pointer-events-auto">
@@ -1275,6 +1270,7 @@
                           <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${player}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/>
                         </div>
                         <span className={`font-bold text-[15px] truncate ${currentExcluded[idx] ? 'text-gray-500 line-through' : 'text-gray-800'}`}>{player}</span>
+                        {/* 🚨 캐디 펜 아이콘 (이름 옆으로) */}
                         {scoreCaddieIdx === idx && (
                           <button className={`text-[#128853] bg-[#e5f5ec] rounded-full p-1.5 ml-1 shadow-sm ${!isAdmin ? 'pointer-events-none opacity-50' : 'pointer-events-auto'}`} onClick={(e) => { e.stopPropagation(); setShowCaddieModal(true); }}>
                             <Icon name="Edit3" className="w-3.5 h-3.5" />
@@ -1289,6 +1285,7 @@
                         <span className={`text-center font-black text-[22px] tracking-tight leading-none ${currentExcluded[idx] ? 'text-gray-400' : currentScores[idx] - currentPar === -1 ? 'text-[#128853]' : currentScores[idx] - currentPar <= -2 ? 'text-purple-600' : 'text-gray-800'}`}>
                           {currentScores[idx]}
                         </span>
+                        {/* 🚨 퍼팅 입력 모드 중앙 배치 (타수 아래) */}
                         {usePutts && (
                           <div className={`flex items-center justify-center gap-1.5 mt-2 w-full ${!isAdmin ? 'pointer-events-none' : 'pointer-events-auto'}`}>
                             <button onClick={(e) => { e.stopPropagation(); updatePutts(idx, -1); }} className="w-5 h-5 flex items-center justify-center bg-gray-100 text-gray-500 rounded cursor-pointer active:scale-95"><Icon name="Minus" className="w-3 h-3" /></button>
@@ -1421,215 +1418,6 @@
       }
 
       // =====================================================================
-      // ★ UI 렌더링 - 스코어카드 화면 ★
-      // =====================================================================
-      if (step === 'scorecard') {
-        return (
-          <div className="app-wrapper flex flex-col min-h-screen pb-24 relative">
-            <style>{`
-              @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-              * { font-family: 'Pretendard', sans-serif; }
-            `}</style>
-            
-            {toastMessage && (
-              <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[11px] font-bold z-50">
-                {toastMessage}
-              </div>
-            )}
-
-            <div className="bg-[#1f2937] p-3 text-white flex items-center justify-between sticky top-0 z-20 shadow-md">
-              <button onClick={() => setStep('play')} className="p-2 hover:bg-white/10 rounded-full transition"><Icon name="ArrowLeft" className="w-5 h-5"/></button>
-              <div className="text-center flex flex-col items-center justify-center">
-                <div className="font-black text-[17px] tracking-tight flex items-center gap-2">
-                  <span>전체 스코어보드</span>
-                  {roomId && (
-                    <div className="flex items-center gap-1.5">
-                      <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
-                      <button onClick={() => setShowQrModal(true)} className="bg-white/20 p-1 rounded-md hover:bg-white/30 transition"><Icon name="QrCode" className="w-4 h-4" /></button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div className="flex gap-1.5 items-center">
-                <button onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Icon name="Download" className="w-5 h-5"/></button>
-                <button onClick={handleShare} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Icon name="Share2" className="w-5 h-5"/></button>
-                {isAdmin && <button onClick={() => setStep('settlement')} className="px-3 py-1.5 ml-1 bg-[#1e9f64] hover:bg-[#128853] rounded-lg text-[13px] font-bold transition flex items-center shadow-sm text-white">정산</button>}
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-x-auto relative w-full bg-[#f4f6f8] pb-10">
-              <div className="flex bg-white py-3 border-b border-gray-200 sticky top-0 z-10 px-2 gap-1 shadow-sm">
-                 <div className="w-16 shrink-0"></div>
-                 {players.map((p, i) => {
-                   const rel = totalStrokesSum[i] - totalParSumAll;
-                   const formattedRel = rel > 0 ? `+${rel}` : rel === 0 ? 'E' : `${rel}`;
-                   return (
-                     <div key={i} className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-[12px] py-2 px-1 border border-gray-100 mx-[1px]">
-                        <div className="w-6 h-6 bg-gray-200 rounded-full mb-1 overflow-hidden">
-                           <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${p}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/>
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-800 truncate w-full text-center px-1">{p}</span>
-                        <div className="text-[12px] font-black text-[#16a34a] mt-1 whitespace-nowrap flex items-center justify-center">
-                          <span>{formattedRel}</span>
-                          {usePutts ? <span className="text-[10px] font-semibold text-gray-500 ml-0.5">({totalPuttsSum[i]})</span> : null}
-                        </div>
-                     </div>
-                   );
-                 })}
-              </div>
-
-              <div className="flex gap-2 px-3 pt-3">
-                <button onClick={() => setScorecardTab('front')} className={`flex-1 py-3 rounded-[12px] text-[13px] font-bold transition-all border ${scorecardTab === 'front' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{actualFrontName} 코스</button>
-                <button onClick={() => setScorecardTab('back')} className={`flex-1 py-3 rounded-[12px] text-[13px] font-bold transition-all border ${scorecardTab === 'back' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{actualBackName} 코스</button>
-              </div>
-
-              <div className="p-3 space-y-2">
-                {holes.map((hole, hIdx) => {
-                  const isFront = hIdx < 9;
-                  if (scorecardTab === 'front' && !isFront) return null;
-                  if (scorecardTab === 'back' && isFront) return null;
-                  
-                  return (
-                    <React.Fragment key={hIdx}>
-                      {!hole ? (
-                        <div onClick={() => { if (isAdmin) { loadHoleData(hIdx); setStep('play'); } }} className="flex items-center py-2 px-2 bg-white rounded-[16px] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition mb-1.5">
-                           <div className="w-10 flex flex-col items-center justify-center shrink-0">
-                              <span className="font-bold text-gray-800 text-[13px]">{hIdx + 1}H</span>
-                              <span className="text-[9px] text-gray-400 mt-0.5">P {coursePars[hIdx] || 4}</span>
-                           </div>
-                           <div className="w-6 shrink-0 text-center"></div>
-                           {players.map((_, i) => (
-                             <div key={i} className="flex-1 px-1">
-                               <div className="bg-gray-100 rounded-lg py-1.5 text-gray-300 text-center text-[10px] font-bold">대기</div>
-                             </div>
-                           ))}
-                        </div>
-                      ) : (
-                        (() => {
-                          const balances = getHoleBalance(hole);
-                          return (
-                            <div onClick={() => { if (isAdmin) { loadHoleData(hIdx); setStep('play'); } }} className="flex items-center py-2 px-2 bg-white rounded-[16px] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition mb-1.5">
-                               <div className="w-10 flex flex-col items-center justify-center shrink-0">
-                                  <span className="font-black text-gray-800 text-[14px]">{hIdx + 1}H</span>
-                                  <span className="text-[9px] text-gray-500 mt-0.5 font-bold">P {hole.par}</span>
-                               </div>
-                               <div className="w-6 flex items-center justify-center shrink-0">
-                                  {hole.isHoleExcluded ? '' : ( hole.multiplier > 1 ? <span className="text-red-500 bg-red-50 text-[9px] font-black px-1 py-0.5 rounded">x{hole.multiplier}</span> : <span className="text-gray-300 text-xs font-black">-</span> )}
-                               </div>
-                               {players.map((p, i) => {
-                                 const isExcluded = (hole.excluded && hole.excluded[i]) || hole.isHoleExcluded;
-                                 const score = hole.scores[i];
-                                 const diff = score - hole.par;
-                                 const bal = balances[i];
-                                 return (
-                                   <div key={i} className={`flex-1 px-1 flex flex-col items-center justify-center ${isExcluded ? 'opacity-40' : ''}`}>
-                                     {isExcluded && !hole.isHoleExcluded ? (
-                                       <div className="w-full bg-gray-50 rounded-lg py-1.5 text-center font-bold text-gray-400 text-[10px]">제외</div>
-                                     ) : (
-                                       <>
-                                         <div className={`w-full rounded-lg py-1 flex items-center justify-center gap-0.5 font-black text-[15px] ${hole.isHoleExcluded ? 'text-gray-400' : diff <= -2 ? 'text-purple-600 bg-purple-50' : diff === -1 ? 'text-[#128853] bg-[#e5f5ec]' : 'text-gray-800'}`}>
-                                           <span>{score}</span>
-                                           {usePutts && <span className="text-[9px] font-semibold text-gray-500 ml-0.5">({hole.putts?.[i]||0})</span>}
-                                         </div>
-                                         {hole.par === 3 && hole.near === i && (
-                                          <span className={`text-[9px] font-black mt-0.5 leading-none ${hole.isReverseNear ? 'text-red-500' : 'text-blue-500'}`}>
-                                            {hole.isReverseNear ? '역니어' : '니어'}
-                                          </span>
-                                         )}
-                                         {hole.par === 5 && hole.longest === i && (
-                                          <span className={`text-[9px] font-black mt-0.5 leading-none ${hole.isReverseLongest ? 'text-red-500' : 'text-orange-500'}`}>
-                                            {hole.isReverseLongest ? '역롱기' : '롱기'}
-                                          </span>
-                                         )}
-                                         
-                                         {!hole.isHoleExcluded && (
-                                            <div className={`text-[9px] font-bold mt-1 whitespace-nowrap tracking-tighter ${bal > 0 ? 'text-[#1ea34a]' : bal < 0 ? 'text-red-500' : 'text-gray-400'}`}>
-                                              {bal > 0 ? `+${bal.toLocaleString()}` : ''}{bal === 0 ? '-' : bal < 0 ? `${bal.toLocaleString()}` : ''}
-                                            </div>
-                                         )}
-                                       </>
-                                     )}
-                                   </div>
-                                 );
-                               })}
-                            </div>
-                          );
-                        })()
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </div>
-            </div>
-            
-            <div className="bg-[#fcfcfc] border-t border-gray-200 shadow-[0_-15px_20px_-5px_rgba(0,0,0,0.05)] fixed bottom-0 left-0 right-0 z-30">
-               <div className="max-w-md mx-auto p-4 pt-3">
-                  <div className="flex justify-between items-center mb-2.5">
-                    <div className="text-[12px] font-bold text-gray-800 flex items-center"><Icon name="Trophy" className="w-4 h-4 text-yellow-500 mr-1.5"/> 현재 합산 결과</div>
-                    {isAdmin && <button onClick={()=>setStep('settlement')} className="bg-[#1f2937] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">최종 정산하기</button>}
-                  </div>
-                  <div className="flex gap-2">
-                    {players.map((p, i) => (
-                      <div key={i} className={`flex-1 bg-white rounded-[16px] p-2 text-center border border-gray-100 flex flex-col items-center justify-center ${gameBalances[i] > 0 ? 'bg-green-50/30' : ''}`}>
-                        <div className="text-[10px] text-gray-500 font-bold truncate mb-1 w-full">{p}</div>
-                        <div className={`text-[16px] tracking-tight font-black ${gameBalances[i] > 0 ? 'text-[#128853]' : gameBalances[i] < 0 ? 'text-red-500' : 'text-gray-800'}`}>
-                          {gameBalances[i] === 0 ? '0' : gameBalances[i].toLocaleString()}
-                        </div>
-                        <div className="text-[8.5px] text-gray-400 font-semibold mt-0.5">
-                          핸디포함 <span className={totalBalances[i] > 0 ? 'text-[#128853]' : totalBalances[i] < 0 ? 'text-red-400' : ''}>{totalBalances[i] > 0 ? '+' : ''}{totalBalances[i].toLocaleString()}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-               </div>
-            </div>
-
-            {/* 🚨 QR 초대 모달 */}
-            {showQrModal && (
-              <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
-                <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-4 shadow-xl text-center flex flex-col items-center">
-                  <div className="flex justify-between items-center w-full border-b border-gray-100 pb-3">
-                    <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Icon name="QrCode" className="w-5 h-5 mr-2 text-[#128853]"/> 방 초대하기</h3>
-                    <button onClick={() => setShowQrModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition"><Icon name="X" className="w-5 h-5 text-gray-500"/></button>
-                  </div>
-                  <p className="text-[13px] text-gray-600 font-medium leading-relaxed">친구의 스마트폰 기본 카메라로 스캔하면<br/>바로 게임에 참여할 수 있습니다.</p>
-                  
-                  <div className="bg-white p-3 rounded-[16px] inline-block border border-gray-200 shadow-sm mt-2">
-                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href.split('?')[0] + '?roomId=' + roomId)}`} alt="QR Code" className="w-[160px] h-[160px] mx-auto" />
-                  </div>
-                  
-                  <div className="bg-gray-50 px-4 py-3 rounded-xl w-full flex justify-between items-center border border-gray-100 mt-2">
-                    <div className="text-left">
-                      <span className="text-[11px] text-gray-500 font-bold block mb-0.5">초대 코드</span>
-                      <span className="text-[16px] font-black text-gray-800 tracking-widest">{roomId}</span>
-                    </div>
-                    <button 
-                      onClick={() => {
-                        const url = window.location.href.split('?')[0] + '?roomId=' + roomId;
-                        const textArea = document.createElement("textarea");
-                        textArea.value = url;
-                        document.body.appendChild(textArea);
-                        textArea.select();
-                        try {
-                          document.execCommand('copy');
-                          setShowQrModal(false);
-                          showToastMsg('초대 링크가 복사되었습니다!');
-                        } catch (err) {}
-                        document.body.removeChild(textArea);
-                      }}
-                      className="bg-[#128853] text-white text-[12px] font-bold px-3 py-2 rounded-lg shadow-sm active:scale-95 transition"
-                    >
-                      URL 복사
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        );
-      }
-
-      // =====================================================================
       // ★ UI 렌더링 - 홀 결과 화면 (안전 로직 포함) ★
       // =====================================================================
       if (step === 'hole-result') {
@@ -1662,6 +1450,7 @@
               <h1 className="text-3xl font-black italic tracking-tight mt-1">HOLE RESULT</h1>
               <div className="text-[15px] font-bold mt-1 text-yellow-300 flex items-center justify-center gap-2">
                 {currentHoleData.isHoleExcluded ? <span className="text-red-200">전체 내기 제외 홀</span> : <>{currentHoleData.multiplier > 1 ? `x${currentHoleData.multiplier} 배판` : ' '}</>}
+                {/* 🚨 라이브 뱃지 롱프레스 기능 추가 */}
                 {roomId && (
                   <div className="flex items-center gap-1.5 ml-2">
                     <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
@@ -1774,6 +1563,7 @@
             <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 flex gap-3 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
               {isAdmin ? (
                <div className="max-w-md mx-auto flex flex-col gap-2 w-full">
+                 {/* 🚨 수정하기 버튼이 포함된 3버튼 레이아웃 */}
                  <div className="flex gap-2 w-full">
                    <button onClick={() => setStep('play')} className="flex-[1] py-4 rounded-[16px] font-bold flex flex-col items-center justify-center bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 transition text-[13px] shadow-sm">
                      <div className="flex items-center gap-1"><Icon name="Edit3" className="w-4 h-4"/> 수정하기</div>
@@ -1868,6 +1658,7 @@
               <button onClick={() => setStep('scorecard')} className="p-2 hover:bg-white/10 rounded-full transition"><Icon name="ArrowLeft" className="w-5 h-5"/></button>
               <div className="flex items-center gap-2">
                 <h1 className="text-[17px] font-bold flex items-center"><Icon name="Calculator" className="w-5 h-5 mr-2"/> 최종 정산 내역</h1>
+                {/* 🚨 라이브 뱃지 롱프레스 기능 추가 */}
                 {roomId && (
                   <div className="flex items-center gap-1.5 ml-2">
                     <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
@@ -1897,21 +1688,11 @@
                   </div>
                 )}
                 <div className={`flex items-center justify-between py-2 border-t border-gray-100 mt-2 pt-4 ${!isAdmin ? 'opacity-80' : ''}`}>
-                  <div className="flex flex-col flex-1">
-                    <span className="text-[13px] font-bold text-gray-800 flex items-center">
-                      1000P 단위 절사
-                    </span>
-                    <span className="text-[10px] text-gray-500 mt-0.5">100P 단위 버림</span>
-                  </div>
+                  <div className="flex flex-col"><span className="text-[13px] font-bold text-gray-800">천원 단위 절사</span><span className="text-[10px] text-gray-500 mt-0.5">100원 단위 버림</span></div>
                   <button onClick={() => setIsRoundThousand(!isRoundThousand)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isRoundThousand ? 'bg-[#128853]' : 'bg-gray-200'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isRoundThousand ? 'translate-x-5' : 'translate-x-0.5'}`} /></button>
                 </div>
                 <div className={`flex items-center justify-between py-2 border-t border-gray-100 mt-2 pt-4 ${!isAdmin ? 'opacity-80' : ''}`}>
-                  <div className="flex flex-col flex-1">
-                    <span className="text-[13px] font-bold text-gray-800 flex items-center">
-                      잃은 비율대로 전액 분배
-                    </span>
-                    <span className="text-[10px] text-gray-500 mt-0.5">체크 해제시 몰아주기</span>
-                  </div>
+                  <div className="flex flex-col"><span className="text-[13px] font-bold text-gray-800">잃은 비율대로 전액 분배</span><span className="text-[10px] text-gray-500 mt-0.5">체크 해제시 몰아주기</span></div>
                   <button onClick={() => setIsProportionalDistribution(!isProportionalDistribution)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isProportionalDistribution ? 'bg-[#128853]' : 'bg-gray-200'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isProportionalDistribution ? 'translate-x-5' : 'translate-x-0.5'}`} /></button>
                 </div>
               </div>
@@ -2011,27 +1792,7 @@
         );
       }
 
-      // 공통 Info 모달
-      return (
-        <Fragment>
-          {infoModal.show && (
-            <div className="fixed inset-0 bg-black/60 z-[70] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm pointer-events-auto">
-              <div className="bg-white rounded-[24px] w-full max-w-sm p-6 shadow-xl text-center flex flex-col items-center">
-                <div className="flex justify-between items-center w-full border-b border-gray-100 pb-3 mb-4">
-                  <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Icon name="Info" className="w-5 h-5 mr-2 text-[#128853]"/> {infoModal.title}</h3>
-                  <button onClick={() => setInfoModal({ show: false, title: '', desc: '' })} className="p-1 hover:bg-gray-100 rounded-full transition"><Icon name="X" className="w-5 h-5 text-gray-500"/></button>
-                </div>
-                <p className="text-[14px] text-gray-600 font-medium leading-relaxed text-left whitespace-pre-wrap w-full mb-6">
-                  {infoModal.desc}
-                </p>
-                <button onClick={() => setInfoModal({ show: false, title: '', desc: '' })} className="w-full bg-[#128853] text-white font-bold py-3.5 rounded-[16px] transition shadow-sm">
-                  확인
-                </button>
-              </div>
-            </div>
-          )}
-        </Fragment>
-      );
+      return null;
     }
 
     ReactDOM.render(<App />, document.getElementById('root'));
