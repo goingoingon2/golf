@@ -1210,7 +1210,7 @@
                 </div>
               </div>
 
-              {/* 🚨 PAR 3 니어 / PAR 5 롱기 선택 UI */}
+              {/* 🚨 PAR 3 니어 / PAR 5 롱기 선택 UI (역니어/역롱기 추가) */}
               {(currentPar === 3 || currentPar === 5) && (
                 <div className={`bg-white rounded-[16px] shadow-sm p-3 border border-gray-100 flex flex-col gap-2 ${!isAdmin ? 'pointer-events-none opacity-80' : ''} animate-in fade-in slide-in-from-top-2`}>
                   <div className="flex items-center justify-between px-1">
@@ -1220,6 +1220,7 @@
                         {currentPar === 3 ? '니어리스트(미선택 가능)' : '롱기스트(미선택 가능)'}
                       </label>
                     </div>
+                    {/* 🚨 역니어 / 역롱기 체크박스 */}
                     <label className="flex items-center gap-1.5 cursor-pointer pointer-events-auto">
                       <input
                         type="checkbox"
@@ -1371,6 +1372,216 @@
                 </div>
               </div>
             )}
+
+            {/* 🚨 QR 초대 모달 */}
+            {showQrModal && (
+              <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm">
+                <div className="bg-white rounded-[24px] w-full max-w-sm p-6 space-y-4 shadow-xl text-center flex flex-col items-center">
+                  <div className="flex justify-between items-center w-full border-b border-gray-100 pb-3">
+                    <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Icon name="QrCode" className="w-5 h-5 mr-2 text-[#128853]"/> 방 초대하기</h3>
+                    <button onClick={() => setShowQrModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition"><Icon name="X" className="w-5 h-5 text-gray-500"/></button>
+                  </div>
+                  <p className="text-[13px] text-gray-600 font-medium leading-relaxed">친구의 스마트폰 기본 카메라로 스캔하면<br/>바로 게임에 참여할 수 있습니다.</p>
+                  
+                  <div className="bg-white p-3 rounded-[16px] inline-block border border-gray-200 shadow-sm mt-2">
+                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href.split('?')[0] + '?roomId=' + roomId)}`} alt="QR Code" className="w-[160px] h-[160px] mx-auto" />
+                  </div>
+                  
+                  <div className="bg-gray-50 px-4 py-3 rounded-xl w-full flex justify-between items-center border border-gray-100 mt-2">
+                    <div className="text-left">
+                      <span className="text-[11px] text-gray-500 font-bold block mb-0.5">초대 코드</span>
+                      <span className="text-[16px] font-black text-gray-800 tracking-widest">{roomId}</span>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        const url = window.location.href.split('?')[0] + '?roomId=' + roomId;
+                        const textArea = document.createElement("textarea");
+                        textArea.value = url;
+                        document.body.appendChild(textArea);
+                        textArea.select();
+                        try {
+                          document.execCommand('copy');
+                          setShowQrModal(false);
+                          showToastMsg('초대 링크가 복사되었습니다!');
+                        } catch (err) {}
+                        document.body.removeChild(textArea);
+                      }}
+                      className="bg-[#128853] text-white text-[12px] font-bold px-3 py-2 rounded-lg shadow-sm active:scale-95 transition"
+                    >
+                      URL 복사
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // =====================================================================
+      // ★ UI 렌더링 - 스코어카드 화면 ★
+      // =====================================================================
+      if (step === 'scorecard') {
+        return (
+          <div className="app-wrapper flex flex-col min-h-screen pb-24 relative">
+            <style>{`
+              @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+              * { font-family: 'Pretendard', sans-serif; }
+            `}</style>
+            
+            {toastMessage && (
+              <div className="fixed top-6 left-1/2 -translate-x-1/2 bg-gray-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[11px] font-bold z-50">
+                {toastMessage}
+              </div>
+            )}
+
+            <div className="bg-[#1f2937] p-3 text-white flex items-center justify-between sticky top-0 z-20 shadow-md">
+              <button onClick={() => setStep('play')} className="p-2 hover:bg-white/10 rounded-full transition"><Icon name="ArrowLeft" className="w-5 h-5"/></button>
+              <div className="text-center flex flex-col items-center justify-center">
+                <div className="font-black text-[17px] tracking-tight flex items-center gap-2">
+                  <span>전체 스코어보드</span>
+                  {roomId && (
+                    <div className="flex items-center gap-1.5">
+                      <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
+                      <button onClick={() => setShowQrModal(true)} className="bg-white/20 p-1 rounded-md hover:bg-white/30 transition"><Icon name="QrCode" className="w-4 h-4" /></button>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="flex gap-1.5 items-center">
+                <button onClick={handleSave} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Icon name="Download" className="w-5 h-5"/></button>
+                <button onClick={handleShare} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Icon name="Share2" className="w-5 h-5"/></button>
+                {isAdmin && <button onClick={() => setStep('settlement')} className="px-3 py-1.5 ml-1 bg-[#1e9f64] hover:bg-[#128853] rounded-lg text-[13px] font-bold transition flex items-center shadow-sm text-white">정산</button>}
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-x-auto relative w-full bg-[#f4f6f8] pb-10">
+              <div className="flex bg-white py-3 border-b border-gray-200 sticky top-0 z-10 px-2 gap-1 shadow-sm">
+                 <div className="w-16 shrink-0"></div>
+                 {players.map((p, i) => {
+                   const rel = totalStrokesSum[i] - totalParSumAll;
+                   const formattedRel = rel > 0 ? `+${rel}` : rel === 0 ? 'E' : `${rel}`;
+                   return (
+                     <div key={i} className="flex-1 flex flex-col items-center justify-center bg-gray-50 rounded-[12px] py-2 px-1 border border-gray-100 mx-[1px]">
+                        <div className="w-6 h-6 bg-gray-200 rounded-full mb-1 overflow-hidden">
+                           <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=${p}&backgroundColor=f1f5f9`} alt="avatar" className="w-full h-full object-cover"/>
+                        </div>
+                        <span className="text-[10px] font-bold text-gray-800 truncate w-full text-center px-1">{p}</span>
+                        <div className="text-[12px] font-black text-[#16a34a] mt-1 whitespace-nowrap flex items-center justify-center">
+                          <span>{formattedRel}</span>
+                          {usePutts ? <span className="text-[10px] font-semibold text-gray-500 ml-0.5">({totalPuttsSum[i]})</span> : null}
+                        </div>
+                     </div>
+                   );
+                 })}
+              </div>
+
+              <div className="flex gap-2 px-3 pt-3">
+                <button onClick={() => setScorecardTab('front')} className={`flex-1 py-3 rounded-[12px] text-[13px] font-bold transition-all border ${scorecardTab === 'front' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{actualFrontName} 코스</button>
+                <button onClick={() => setScorecardTab('back')} className={`flex-1 py-3 rounded-[12px] text-[13px] font-bold transition-all border ${scorecardTab === 'back' ? 'bg-white border-[#128853] text-[#128853] shadow-sm' : 'bg-white border-gray-200 text-gray-400 hover:bg-gray-50'}`}>{actualBackName} 코스</button>
+              </div>
+
+              <div className="p-3 space-y-2">
+                {holes.map((hole, hIdx) => {
+                  const isFront = hIdx < 9;
+                  if (scorecardTab === 'front' && !isFront) return null;
+                  if (scorecardTab === 'back' && isFront) return null;
+                  
+                  return (
+                    <React.Fragment key={hIdx}>
+                      {!hole ? (
+                        <div onClick={() => { if (isAdmin) { loadHoleData(hIdx); setStep('play'); } }} className="flex items-center py-2 px-2 bg-white rounded-[16px] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition mb-1.5">
+                           <div className="w-10 flex flex-col items-center justify-center shrink-0">
+                              <span className="font-bold text-gray-800 text-[13px]">{hIdx + 1}H</span>
+                              <span className="text-[9px] text-gray-400 mt-0.5">P {coursePars[hIdx] || 4}</span>
+                           </div>
+                           <div className="w-6 shrink-0 text-center"></div>
+                           {players.map((_, i) => (
+                             <div key={i} className="flex-1 px-1">
+                               <div className="bg-gray-100 rounded-lg py-1.5 text-gray-300 text-center text-[10px] font-bold">대기</div>
+                             </div>
+                           ))}
+                        </div>
+                      ) : (
+                        (() => {
+                          const balances = getHoleBalance(hole);
+                          return (
+                            <div onClick={() => { if (isAdmin) { loadHoleData(hIdx); setStep('play'); } }} className="flex items-center py-2 px-2 bg-white rounded-[16px] border border-gray-100 shadow-sm cursor-pointer hover:bg-gray-50 transition mb-1.5">
+                               <div className="w-10 flex flex-col items-center justify-center shrink-0">
+                                  <span className="font-black text-gray-800 text-[14px]">{hIdx + 1}H</span>
+                                  <span className="text-[9px] text-gray-500 mt-0.5 font-bold">P {hole.par}</span>
+                               </div>
+                               <div className="w-6 flex items-center justify-center shrink-0">
+                                  {hole.isHoleExcluded ? '' : ( hole.multiplier > 1 ? <span className="text-red-500 bg-red-50 text-[9px] font-black px-1 py-0.5 rounded">x{hole.multiplier}</span> : <span className="text-gray-300 text-xs font-black">-</span> )}
+                               </div>
+                               {players.map((p, i) => {
+                                 const isExcluded = (hole.excluded && hole.excluded[i]) || hole.isHoleExcluded;
+                                 const score = hole.scores[i];
+                                 const diff = score - hole.par;
+                                 const bal = balances[i];
+                                 return (
+                                   <div key={i} className={`flex-1 px-1 flex flex-col items-center justify-center ${isExcluded ? 'opacity-40' : ''}`}>
+                                     {isExcluded && !hole.isHoleExcluded ? (
+                                       <div className="w-full bg-gray-50 rounded-lg py-1.5 text-center font-bold text-gray-400 text-[10px]">제외</div>
+                                     ) : (
+                                       <>
+                                         <div className={`w-full rounded-lg py-1 flex items-center justify-center gap-0.5 font-black text-[15px] ${hole.isHoleExcluded ? 'text-gray-400' : diff <= -2 ? 'text-purple-600 bg-purple-50' : diff === -1 ? 'text-[#128853] bg-[#e5f5ec]' : 'text-gray-800'}`}>
+                                           <span>{score}</span>
+                                           {usePutts && <span className="text-[9px] font-semibold text-gray-500 ml-0.5">({hole.putts?.[i]||0})</span>}
+                                         </div>
+                                         {/* 🚨 니어/롱기 표시 추가 (스코어카드) */}
+                                         {hole.par === 3 && hole.near === i && (
+                                          <span className={`text-[9px] font-black mt-0.5 leading-none ${hole.isReverseNear ? 'text-red-500' : 'text-blue-500'}`}>
+                                            {hole.isReverseNear ? '역니어' : '니어'}
+                                          </span>
+                                         )}
+                                         {hole.par === 5 && hole.longest === i && (
+                                          <span className={`text-[9px] font-black mt-0.5 leading-none ${hole.isReverseLongest ? 'text-red-500' : 'text-orange-500'}`}>
+                                            {hole.isReverseLongest ? '역롱기' : '롱기'}
+                                          </span>
+                                         )}
+                                         
+                                         {!hole.isHoleExcluded && (
+                                            <div className={`text-[9px] font-bold mt-1 whitespace-nowrap tracking-tighter ${bal > 0 ? 'text-[#1ea34a]' : bal < 0 ? 'text-red-500' : 'text-gray-400'}`}>
+                                              {bal > 0 ? `+${bal.toLocaleString()}` : ''}{bal === 0 ? '-' : bal < 0 ? `${bal.toLocaleString()}` : ''}
+                                            </div>
+                                         )}
+                                       </>
+                                     )}
+                                   </div>
+                                 );
+                               })}
+                            </div>
+                          );
+                        })()
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </div>
+            </div>
+            
+            <div className="bg-[#fcfcfc] border-t border-gray-200 shadow-[0_-15px_20px_-5px_rgba(0,0,0,0.05)] fixed bottom-0 left-0 right-0 z-30">
+               <div className="max-w-md mx-auto p-4 pt-3">
+                  <div className="flex justify-between items-center mb-2.5">
+                    <div className="text-[12px] font-bold text-gray-800 flex items-center"><Icon name="Trophy" className="w-4 h-4 text-yellow-500 mr-1.5"/> 현재 합산 결과</div>
+                    {isAdmin && <button onClick={()=>setStep('settlement')} className="bg-[#1f2937] text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm">최종 정산하기</button>}
+                  </div>
+                  <div className="flex gap-2">
+                    {players.map((p, i) => (
+                      <div key={i} className={`flex-1 bg-white rounded-[16px] p-2 text-center border border-gray-100 flex flex-col items-center justify-center ${gameBalances[i] > 0 ? 'bg-green-50/30' : ''}`}>
+                        <div className="text-[10px] text-gray-500 font-bold truncate mb-1 w-full">{p}</div>
+                        <div className={`text-[16px] tracking-tight font-black ${gameBalances[i] > 0 ? 'text-[#128853]' : gameBalances[i] < 0 ? 'text-red-500' : 'text-gray-800'}`}>
+                          {gameBalances[i] === 0 ? '0' : gameBalances[i].toLocaleString()}
+                        </div>
+                        <div className="text-[8.5px] text-gray-400 font-semibold mt-0.5">
+                          핸디포함 <span className={totalBalances[i] > 0 ? 'text-[#128853]' : totalBalances[i] < 0 ? 'text-red-400' : ''}>{totalBalances[i] > 0 ? '+' : ''}{totalBalances[i].toLocaleString()}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+               </div>
+            </div>
 
             {/* 🚨 QR 초대 모달 */}
             {showQrModal && (
