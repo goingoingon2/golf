@@ -116,7 +116,6 @@
 
         // --- Main App Component ---
         function App() {
-          const [bpm, setBpm] = useState(60); 
           const [isPlaying, setIsPlaying] = useState(false);
           const [currentRhythm, setCurrentRhythm] = useState({ ...DEFAULT_PHRASES.find(p => p.name === '골프-메트로-놈') }); 
           const [activeBeat, setActiveBeat] = useState(-1);
@@ -127,13 +126,16 @@
           const [deletingId, setDeletingId] = useState(null); 
           const [confirmDialog, setConfirmDialog] = useState(null); 
 
-          const [isEditingBigBpm, setIsEditingBigBpm] = useState(false);
-          const [bigBpmInputValue, setBigBpmInputValue] = useState('');
-
+          // BPM 프리셋 관련 상태
           const [bpmPresets, setBpmPresets] = useState(() => {
             const saved = localStorage.getItem('golfMetronomeBpmPresets');
             return saved ? JSON.parse(saved) : [40, 50, 60, 70, 80];
           });
+          
+          // 현재 선택된 프리셋의 인덱스 (기본값: 60이 있는 2번 인덱스)
+          const [activePresetIndex, setActivePresetIndex] = useState(2);
+          const [bpm, setBpm] = useState(bpmPresets[2] || 60); 
+
           const [editingPresetIndex, setEditingPresetIndex] = useState(null);
           const presetPressTimer = useRef(null);
           const isPresetLongPressed = useRef(false);
@@ -159,7 +161,7 @@
             return DEFAULT_PHRASES;
           });
 
-          // --- Ref For Dynamic Loop (No restart needed) ---
+          // --- Ref For Dynamic Loop ---
           const soundModeRef = useRef(soundMode);
           const bpmRef = useRef(bpm);
           const rhythmRef = useRef(currentRhythm);
@@ -217,18 +219,18 @@
 
             if (mode === 'metronome') {
               osc.type = 'square';
-              osc.frequency.setValueAtTime(isAccent ? 1000 : 700, time);
-              osc.frequency.exponentialRampToValueAtTime(isAccent ? 400 : 300, time + 0.01);
+              osc.frequency.setValueAtTime(isAccent ? 1200 : 800, time);
+              osc.frequency.exponentialRampToValueAtTime(isAccent ? 600 : 400, time + 0.02);
               
               osc.connect(gainNode);
               gainNode.connect(audioCtxRef.current.destination);
 
-              const currentVol = isAccent ? 0.4 : 0.2;
+              const currentVol = isAccent ? 0.7 : 0.4;
               gainNode.gain.setValueAtTime(currentVol, time);
-              gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.02); 
+              gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.03); 
 
               osc.start(time);
-              osc.stop(time + 0.03);
+              osc.stop(time + 0.04);
             } else {
               osc.type = 'sine';
               osc.frequency.value = isAccent ? 1000 : 800;
@@ -309,10 +311,9 @@
 
           // --- SVG Circular Knob Logic ---
           const handleKnobMove = useCallback((e) => {
-            // 다이얼을 드래그하는 동안 화면이 위아래로 스크롤되는 현상 방지
             if (e.cancelable) e.preventDefault(); 
-
             if (!knobSvgRef.current) return;
+            
             const rect = knobSvgRef.current.getBoundingClientRect();
             const cx = rect.left + rect.width / 2;
             const cy = rect.top + rect.height / 2;
@@ -326,9 +327,20 @@
             if (angle > 135) angle = 135;
             if (angle < -135) angle = -135;
             
-            const newBpm = 30 + ((angle - (-135)) / 270) * 170;
-            setBpm(Math.round(newBpm));
-          }, []);
+            const newBpm = Math.round(30 + ((angle - (-135)) / 270) * 170);
+            
+            setBpm(prevBpm => {
+                if (prevBpm !== newBpm) {
+                    setBpmPresets(prevPresets => {
+                        const updated = [...prevPresets];
+                        updated[activePresetIndex] = newBpm;
+                        return updated;
+                    });
+                    return newBpm;
+                }
+                return prevBpm;
+            });
+          }, [activePresetIndex]);
 
           const handleKnobUp = useCallback(() => {
             document.removeEventListener('mousemove', handleKnobMove);
@@ -338,12 +350,10 @@
           }, [handleKnobMove]);
 
           const handleKnobDown = (e) => {
-            if (isEditingBigBpm) return;
             document.addEventListener('mousemove', handleKnobMove);
             document.addEventListener('mouseup', handleKnobUp);
             document.addEventListener('touchmove', handleKnobMove, { passive: false });
             document.addEventListener('touchend', handleKnobUp);
-            // 바탕 원을 눌렀을 때 즉시 해당 BPM으로 점프하는 기능( handleKnobMove(e) ) 제거
           };
 
           // --- Other Handlers ---
@@ -382,8 +392,9 @@
             if (presetPressTimer.current) clearTimeout(presetPressTimer.current);
           };
 
-          const handlePresetClick = (val) => {
+          const handlePresetClick = (index, val) => {
             if (isPresetLongPressed.current) return;
+            setActivePresetIndex(index);
             setBpm(val);
           };
 
@@ -395,16 +406,11 @@
                 updated[index] = val;
                 return updated;
               });
+              if (activePresetIndex === index) {
+                  setBpm(val);
+              }
             }
             setEditingPresetIndex(null);
-          };
-
-          const submitBigBpm = () => {
-            const val = parseInt(bigBpmInputValue, 10);
-            if (!isNaN(val) && val >= 30 && val <= 200) {
-              setBpm(val);
-            }
-            setIsEditingBigBpm(false);
           };
 
           const handleLabelChange = (index, value) => {
@@ -474,11 +480,7 @@
           const applyPhrase = (phrase) => {
             setCurrentRhythm({ ...phrase, labels: [...phrase.labels] });
             setSoundMode('voice'); 
-            if (isPlaying) {
-              // 멈추지 않고 즉시 반영됨 (Ref 사용)
-            }
             setIsModalOpen(false); 
-
             setSavedPhrases(prev => 
               prev.map(p => p.id === phrase.id ? { ...p, lastUsed: Date.now() } : p)
             );
@@ -486,15 +488,10 @@
 
           const applyBaseRhythm = (rhythm) => {
             setCurrentRhythm({ ...rhythm, labels: [...rhythm.labels] });
-            if (isPlaying) {
-              // 멈추지 않고 즉시 반영됨
-            }
             setIsModalOpen(false);
           };
 
           const visiblePhrases = savedPhrases.filter(p => !p.isDeleted);
-          
-          // 메인 페이지 미리보기 (최근 사용 순 4개로 제한하여 딱 2줄 표시)
           const previewPhrases = [...visiblePhrases]
             .filter(p => p.name !== '똑-딱')
             .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0))
@@ -553,7 +550,7 @@
                   <p className="text-emerald-50 text-[13px] mt-1 opacity-95 font-medium">나만의 스윙 메시지를 만들어보세요</p>
                 </div>
 
-                <div className="flex-1 flex flex-col px-6 pt-6 pb-32">
+                <div className="flex-1 flex flex-col px-6 pt-6 pb-10">
                   
                   {/* Sound Mode Toggle */}
                   <div className="flex flex-col items-center mb-8 w-full">
@@ -614,7 +611,7 @@
                   </div>
 
                   {/* Add Message / Select Beat Container */}
-                  <div className="flex justify-center mb-6 min-h-[40px]">
+                  <div className="flex justify-center mb-8 min-h-[40px]">
                     {soundMode === 'voice' ? (
                       <button 
                         onClick={(e) => { e.stopPropagation(); saveCurrentPhrase(); }}
@@ -642,7 +639,7 @@
 
                   {/* Circular BPM Knob & Display */}
                   <div className="flex flex-col items-center mb-8 w-full relative">
-                    <div className="relative w-[240px] h-[240px] flex items-center justify-center select-none touch-none mb-4">
+                    <div className="relative w-[240px] h-[240px] flex items-center justify-center select-none touch-none mb-6">
                       
                       {/* SVG Dial */}
                       <svg ref={knobSvgRef} width="240" height="240" className="absolute inset-0 z-10 cursor-pointer" onMouseDown={handleKnobDown} onTouchStart={handleKnobDown}>
@@ -651,69 +648,68 @@
                         <circle cx={thumbPos.x} cy={thumbPos.y} r="14" fill="#ffffff" className="shadow-lg pointer-events-none" />
                       </svg>
 
-                      {/* Inner Big BPM Text */}
-                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
-                        {isEditingBigBpm ? (
-                          <input
-                            type="number"
-                            autoFocus
-                            value={bigBpmInputValue}
-                            onChange={(e) => setBigBpmInputValue(e.target.value)}
-                            onBlur={submitBigBpm}
-                            onKeyDown={(e) => { if (e.key === 'Enter') submitBigBpm(); }}
-                            className="text-[4.5rem] font-extrabold text-emerald-400 tracking-tighter leading-none bg-transparent w-[140px] text-center outline-none border-b-2 border-emerald-500 pointer-events-auto"
-                          />
-                        ) : (
-                          <span 
-                            onClick={() => { setBigBpmInputValue(bpm.toString()); setIsEditingBigBpm(true); }}
-                            className="text-[4.5rem] font-extrabold text-white tracking-tighter leading-none cursor-pointer hover:text-emerald-50 transition-colors pointer-events-auto"
+                      {/* Play Button inside Knob */}
+                      <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                         <button 
+                            onClick={(e) => { e.stopPropagation(); togglePlay(); }} 
+                            className={`pointer-events-auto w-[110px] h-[110px] rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 border-4 ${
+                              isPlaying 
+                                ? 'bg-red-500 border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.4)] text-white' 
+                                : 'bg-amber-500 border-amber-400 shadow-[0_0_30px_rgba(245,158,11,0.4)] text-white pl-2'
+                            }`}
                           >
-                            {bpm}
-                          </span>
-                        )}
-                        <span className="block text-slate-400 text-xs font-bold mt-1 tracking-widest pointer-events-auto">BPM</span>
+                            {isPlaying ? <Square size={40} fill="currentColor" className="mr-0" /> : <Play size={50} fill="currentColor" />}
+                          </button>
                       </div>
                     </div>
-
+                    
                     {/* Quick Presets */}
-                    <div className="flex justify-between w-full px-4 gap-2">
-                      {bpmPresets.map((val, index) => (
-                        editingPresetIndex === index ? (
-                          <input
-                            key={`preset-input-${index}`}
-                            type="number"
-                            autoFocus
-                            defaultValue={val}
-                            onBlur={(e) => handlePresetChange(index, e.target.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handlePresetChange(index, e.target.value);
-                            }}
-                            className="flex-1 w-0 py-2.5 rounded-xl text-[13px] font-bold text-center bg-slate-900 border-2 border-emerald-500 text-white outline-none shadow-inner"
-                          />
-                        ) : (
-                          <button 
-                            key={`preset-${index}`} 
-                            onMouseDown={() => handlePresetPressStart(index)}
-                            onMouseUp={handlePresetPressEnd}
-                            onMouseLeave={handlePresetPressEnd}
-                            onTouchStart={() => handlePresetPressStart(index)}
-                            onTouchEnd={handlePresetPressEnd}
-                            onContextMenu={(e) => { e.preventDefault(); return false; }} 
-                            onClick={() => handlePresetClick(val)} 
-                            className={`flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all shadow-sm ${bpm === val ? 'bg-emerald-500 text-white' : 'bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700'}`}
-                          >
-                            {val}
-                          </button>
-                        )
-                      ))}
-                    </div>
-                    <div className="text-center mt-3 text-slate-500 text-[11px] font-medium w-full">
-                      가운데 동그라미를 드래그하거나 숫자를 길게 눌러 조절하세요.
+                    <div className="w-full flex flex-col items-center px-4">
+                        <span className="text-slate-400 text-[11px] font-bold mb-3 tracking-widest">BPM</span>
+                        <div className="flex justify-between w-full gap-2">
+                          {bpmPresets.map((val, index) => {
+                            const isActive = activePresetIndex === index;
+                            return editingPresetIndex === index ? (
+                              <input
+                                key={`preset-input-${index}`}
+                                type="number"
+                                autoFocus
+                                defaultValue={val}
+                                onBlur={(e) => handlePresetChange(index, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handlePresetChange(index, e.target.value);
+                                }}
+                                className="flex-1 w-0 py-3 rounded-xl text-[16px] font-bold text-center bg-slate-900 border-2 border-emerald-500 text-white outline-none shadow-inner"
+                              />
+                            ) : (
+                              <button 
+                                key={`preset-${index}`} 
+                                onMouseDown={() => handlePresetPressStart(index)}
+                                onMouseUp={handlePresetPressEnd}
+                                onMouseLeave={handlePresetPressEnd}
+                                onTouchStart={() => handlePresetPressStart(index)}
+                                onTouchEnd={handlePresetPressEnd}
+                                onContextMenu={(e) => { e.preventDefault(); return false; }} 
+                                onClick={() => handlePresetClick(index, val)} 
+                                className={`flex-1 py-3 rounded-xl text-[16px] font-bold transition-all shadow-sm border-2 ${
+                                  isActive 
+                                      ? 'bg-emerald-500 border-emerald-400 text-white scale-105 z-10 shadow-lg' 
+                                      : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                                }`}
+                              >
+                                {val}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        <div className="text-center mt-4 text-slate-500 text-[11px] font-medium w-full">
+                          가운데 동그라미를 드래그하거나 숫자를 길게 눌러 조절하세요.
+                        </div>
                     </div>
                   </div>
 
                   {/* Message Library Section (Main Page) */}
-                  <div className="bg-slate-800/80 p-5 rounded-3xl border border-slate-700 shadow-lg mb-8">
+                  <div className="bg-slate-800/80 p-5 rounded-3xl border border-slate-700 shadow-lg mt-auto">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2 text-emerald-400">
                         <Bookmark size={18} />
@@ -731,20 +727,6 @@
                       {previewPhrases.map((phrase) => renderPhraseItem(phrase))}
                     </div>
                   </div>
-                </div>
-
-                {/* Play Button Container */}
-                <div className="absolute bottom-0 left-0 w-full h-36 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/90 to-transparent flex items-end justify-center pb-8 pointer-events-none z-20">
-                  <button 
-                    onClick={togglePlay} 
-                    className={`pointer-events-auto w-[84px] h-[84px] rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 border-4 ${
-                      isPlaying 
-                        ? 'bg-red-500 border-red-400 shadow-[0_0_30px_rgba(239,68,68,0.5)] text-white' 
-                        : 'bg-emerald-500 border-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.5)] text-white pl-1.5'
-                    }`}
-                  >
-                    {isPlaying ? <Square size={36} fill="currentColor" className="mr-0" /> : <Play size={44} fill="currentColor" />}
-                  </button>
                 </div>
               </div>
 
