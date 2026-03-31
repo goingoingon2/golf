@@ -309,6 +309,9 @@
 
           // --- SVG Circular Knob Logic ---
           const handleKnobMove = useCallback((e) => {
+            // 다이얼을 드래그하는 동안 화면이 위아래로 스크롤되는 현상 방지
+            if (e.cancelable) e.preventDefault(); 
+
             if (!knobSvgRef.current) return;
             const rect = knobSvgRef.current.getBoundingClientRect();
             const cx = rect.left + rect.width / 2;
@@ -340,7 +343,7 @@
             document.addEventListener('mouseup', handleKnobUp);
             document.addEventListener('touchmove', handleKnobMove, { passive: false });
             document.addEventListener('touchend', handleKnobUp);
-            handleKnobMove(e);
+            // 바탕 원을 눌렀을 때 즉시 해당 BPM으로 점프하는 기능( handleKnobMove(e) ) 제거
           };
 
           // --- Other Handlers ---
