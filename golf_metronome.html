@@ -8,6 +8,20 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Pretendard Font -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Pretendard', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
     <!-- React & ReactDOM (UMD) -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -16,15 +30,12 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
     <style>
-        /* Custom Scrollbar for Modal */
         .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
         
-        /* Prevent selection highlighting on interactive elements */
         .select-none { user-select: none; -webkit-user-select: none; }
         
-        /* Hide arrows on number inputs */
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
             -webkit-appearance: none;
@@ -41,20 +52,36 @@
     <script type="text/babel">
         const { useState, useEffect, useRef, useCallback } = React;
 
-        // --- Inline SVG Icons (Replaces lucide-react) ---
+        // --- Inline SVG Icons ---
         const Activity = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
         const Bell = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>;
         const MessageSquare = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
-        const Clock = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const Clock = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
         const Save = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
         const Bookmark = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>;
         const Plus = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
-        const Minus = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="5" y1="12" x2="19" y2="12"/></svg>;
         const X = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
-        const ChevronLeft = ({ size, strokeWidth, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth || "2"} strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="15 18 9 12 15 6"/></svg>;
-        const ChevronRight = ({ size, strokeWidth, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth || "2"} strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="9 18 15 12 9 6"/></svg>;
         const Play = ({ size, fill, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>;
         const Square = ({ size, fill, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>;
+
+        // --- Helper for Circular Knob ---
+        const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+            const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+            return {
+                x: centerX + (radius * Math.cos(angleInRadians)),
+                y: centerY + (radius * Math.sin(angleInRadians))
+            };
+        };
+
+        const describeArc = (x, y, radius, startAngle, endAngle) => {
+            const start = polarToCartesian(x, y, radius, endAngle);
+            const end = polarToCartesian(x, y, radius, startAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+            return [
+                "M", start.x, start.y,
+                "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y
+            ].join(" ");
+        };
 
         // --- Data & Constants ---
         const DEFAULT_PHRASES = [
@@ -94,7 +121,7 @@
           const [currentRhythm, setCurrentRhythm] = useState({ ...DEFAULT_PHRASES.find(p => p.name === '골프-메트로-놈') }); 
           const [activeBeat, setActiveBeat] = useState(-1);
           const [soundMode, setSoundMode] = useState('metronome'); 
-          const [volume, setVolume] = useState(0.8);
+          
           const [isModalOpen, setIsModalOpen] = useState(false); 
           const [alertMessage, setAlertMessage] = useState(''); 
           const [deletingId, setDeletingId] = useState(null); 
@@ -110,9 +137,9 @@
           const [editingPresetIndex, setEditingPresetIndex] = useState(null);
           const presetPressTimer = useRef(null);
           const isPresetLongPressed = useRef(false);
-
           const longPressTimer = useRef(null);
           const isLongPressed = useRef(false);
+          const knobSvgRef = useRef(null);
 
           const [savedPhrases, setSavedPhrases] = useState(() => {
             const saved = localStorage.getItem('golfMetronomePhrases');
@@ -132,13 +159,17 @@
             return DEFAULT_PHRASES;
           });
 
-          useEffect(() => {
-            localStorage.setItem('golfMetronomePhrases', JSON.stringify(savedPhrases));
-          }, [savedPhrases]);
+          // --- Ref For Dynamic Loop (No restart needed) ---
+          const soundModeRef = useRef(soundMode);
+          const bpmRef = useRef(bpm);
+          const rhythmRef = useRef(currentRhythm);
 
-          useEffect(() => {
-            localStorage.setItem('golfMetronomeBpmPresets', JSON.stringify(bpmPresets));
-          }, [bpmPresets]);
+          useEffect(() => { soundModeRef.current = soundMode; }, [soundMode]);
+          useEffect(() => { bpmRef.current = bpm; }, [bpm]);
+          useEffect(() => { rhythmRef.current = currentRhythm; }, [currentRhythm]);
+
+          useEffect(() => { localStorage.setItem('golfMetronomePhrases', JSON.stringify(savedPhrases)); }, [savedPhrases]);
+          useEffect(() => { localStorage.setItem('golfMetronomeBpmPresets', JSON.stringify(bpmPresets)); }, [bpmPresets]);
 
           const audioCtxRef = useRef(null);
           const nextNoteTimeRef = useRef(0);
@@ -163,7 +194,7 @@
             }
           };
 
-          const speakText = (text) => {
+          const speakText = (text, currentBpm) => {
             if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel();
             
@@ -173,7 +204,7 @@
 
             const utterance = new SpeechSynthesisUtterance(textToSpeak);
             utterance.lang = 'ko-KR'; 
-            utterance.rate = Math.min(2.5, Math.max(1.0, bpm / 60)); 
+            utterance.rate = Math.min(2.5, Math.max(1.0, currentBpm / 60)); 
             utterance.pitch = 1.1;
 
             window.speechSynthesis.speak(utterance);
@@ -186,25 +217,25 @@
 
             if (mode === 'metronome') {
               osc.type = 'square';
-              osc.frequency.setValueAtTime(isAccent ? 1200 : 800, time);
-              osc.frequency.exponentialRampToValueAtTime(isAccent ? 600 : 400, time + 0.02);
+              osc.frequency.setValueAtTime(isAccent ? 1000 : 700, time);
+              osc.frequency.exponentialRampToValueAtTime(isAccent ? 400 : 300, time + 0.01);
               
               osc.connect(gainNode);
               gainNode.connect(audioCtxRef.current.destination);
 
-              const currentVol = isAccent ? volume * 0.7 : volume * 0.4;
+              const currentVol = isAccent ? 0.4 : 0.2;
               gainNode.gain.setValueAtTime(currentVol, time);
-              gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.03); 
+              gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.02); 
 
               osc.start(time);
-              osc.stop(time + 0.04);
+              osc.stop(time + 0.03);
             } else {
               osc.type = 'sine';
               osc.frequency.value = isAccent ? 1000 : 800;
               osc.connect(gainNode);
               gainNode.connect(audioCtxRef.current.destination);
 
-              const currentVol = isAccent ? volume : volume * 0.5;
+              const currentVol = isAccent ? 0.8 : 0.4;
               gainNode.gain.setValueAtTime(currentVol, time);
               gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
 
@@ -214,32 +245,33 @@
           };
 
           const nextNote = useCallback(() => {
-            const secondsPerBeat = 60.0 / bpm;
+            const secondsPerBeat = 60.0 / bpmRef.current;
             nextNoteTimeRef.current += secondsPerBeat;
             
             currentBeatRef.current++;
-            if (currentBeatRef.current >= currentRhythm.beats) {
+            if (currentBeatRef.current >= rhythmRef.current.beats) {
               currentBeatRef.current = 0;
             }
-          }, [bpm, currentRhythm]);
+          }, []);
 
           const scheduleNote = useCallback((beatNumber, time) => {
             const isAccent = beatNumber === 0;
+            const currentMode = soundModeRef.current;
 
-            if (soundMode === 'beep' || soundMode === 'metronome') {
-              playClick(time, isAccent, soundMode);
+            if (currentMode === 'beep' || currentMode === 'metronome') {
+              playClick(time, isAccent, currentMode);
             }
 
             const timeToNote = (time - audioCtxRef.current.currentTime) * 1000;
             setTimeout(() => {
               if (isPlayingRef.current) {
                 setActiveBeat(beatNumber);
-                if (soundMode === 'voice') {
-                  speakText(currentRhythm.labels[beatNumber]);
+                if (soundModeRef.current === 'voice') {
+                  speakText(rhythmRef.current.labels[beatNumber], bpmRef.current);
                 }
               }
             }, Math.max(0, timeToNote)); 
-          }, [currentRhythm, soundMode, volume, bpm]);
+          }, []);
 
           const scheduler = useCallback(() => {
             while (nextNoteTimeRef.current < audioCtxRef.current.currentTime + scheduleAheadTime) {
@@ -275,6 +307,43 @@
             };
           }, []);
 
+          // --- SVG Circular Knob Logic ---
+          const handleKnobMove = useCallback((e) => {
+            if (!knobSvgRef.current) return;
+            const rect = knobSvgRef.current.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+            
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            
+            let angle = Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI) + 90;
+            if (angle > 180) angle -= 360;
+            
+            if (angle > 135) angle = 135;
+            if (angle < -135) angle = -135;
+            
+            const newBpm = 30 + ((angle - (-135)) / 270) * 170;
+            setBpm(Math.round(newBpm));
+          }, []);
+
+          const handleKnobUp = useCallback(() => {
+            document.removeEventListener('mousemove', handleKnobMove);
+            document.removeEventListener('mouseup', handleKnobUp);
+            document.removeEventListener('touchmove', handleKnobMove);
+            document.removeEventListener('touchend', handleKnobUp);
+          }, [handleKnobMove]);
+
+          const handleKnobDown = (e) => {
+            if (isEditingBigBpm) return;
+            document.addEventListener('mousemove', handleKnobMove);
+            document.addEventListener('mouseup', handleKnobUp);
+            document.addEventListener('touchmove', handleKnobMove, { passive: false });
+            document.addEventListener('touchend', handleKnobUp);
+            handleKnobMove(e);
+          };
+
+          // --- Other Handlers ---
           const handlePressStart = (id) => {
             isLongPressed.current = false;
             longPressTimer.current = setTimeout(() => {
@@ -327,9 +396,6 @@
             setEditingPresetIndex(null);
           };
 
-          const handleBpmChange = (e) => setBpm(Number(e.target.value));
-          const changeBpmBy = (amount) => setBpm((prev) => Math.min(Math.max(30, prev + amount), 200));
-
           const submitBigBpm = () => {
             const val = parseInt(bigBpmInputValue, 10);
             if (!isNaN(val) && val >= 30 && val <= 200) {
@@ -340,7 +406,7 @@
 
           const handleLabelChange = (index, value) => {
             if (value.length > 4) {
-              setAlertMessage("각 박자당 최대 4자까지만 입력 가능합니다.");
+              setAlertMessage("메시지는 박자당 최대 4자까지만 입력할 수 있습니다.");
               return;
             }
             
@@ -406,8 +472,7 @@
             setCurrentRhythm({ ...phrase, labels: [...phrase.labels] });
             setSoundMode('voice'); 
             if (isPlaying) {
-              togglePlay(); 
-              setTimeout(togglePlay, 50); 
+              // 멈추지 않고 즉시 반영됨 (Ref 사용)
             }
             setIsModalOpen(false); 
 
@@ -419,14 +484,14 @@
           const applyBaseRhythm = (rhythm) => {
             setCurrentRhythm({ ...rhythm, labels: [...rhythm.labels] });
             if (isPlaying) {
-              togglePlay();
-              setTimeout(togglePlay, 50);
+              // 멈추지 않고 즉시 반영됨
             }
             setIsModalOpen(false);
           };
 
           const visiblePhrases = savedPhrases.filter(p => !p.isDeleted);
           
+          // 메인 페이지 미리보기 (최근 사용 순 4개로 제한하여 딱 2줄 표시)
           const previewPhrases = [...visiblePhrases]
             .filter(p => p.name !== '똑-딱')
             .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0))
@@ -466,6 +531,13 @@
             );
           };
 
+          // Knob SVG Variables
+          const knobCx = 120;
+          const knobCy = 120;
+          const knobRadius = 100;
+          const currentKnobAngle = -135 + ((bpm - 30) / 170) * 270;
+          const thumbPos = polarToCartesian(knobCx, knobCy, knobRadius, currentKnobAngle);
+
           return (
             <div className="min-h-screen bg-neutral-950 flex items-center justify-center sm:p-4 font-sans tracking-tight select-none" onClick={() => setDeletingId(null)}>
               <div className="w-full max-w-[420px] bg-[#0f172a] sm:rounded-[2.5rem] shadow-2xl overflow-hidden relative min-h-screen sm:min-h-[850px] flex flex-col">
@@ -480,7 +552,8 @@
 
                 <div className="flex-1 flex flex-col px-6 pt-6 pb-32">
                   
-                  <div className="flex justify-center mb-10">
+                  {/* Sound Mode Toggle */}
+                  <div className="flex flex-col items-center mb-8 w-full">
                     <div className="bg-slate-800 p-1.5 rounded-full flex gap-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] border border-slate-700/50 w-full">
                       <button
                         onClick={() => setSoundMode('beep')}
@@ -509,7 +582,8 @@
                     </div>
                   </div>
 
-                  <div className="flex justify-center gap-3 md:gap-5 mb-8 h-20 items-start">
+                  {/* Visualizer (Dots & Text) */}
+                  <div className="flex justify-center gap-3 md:gap-5 mb-6 h-20 items-start">
                     {Array.from({ length: currentRhythm.beats }).map((_, i) => {
                       const isActive = activeBeat === i;
                       const isAccent = i === 0;
@@ -523,6 +597,7 @@
                         <div key={i} className="flex flex-col items-center gap-3 relative">
                           <div className={`w-14 h-14 rounded-full transition-all duration-200 flex items-center justify-center border border-slate-700/30 ${circleClass} ${isActive ? 'scale-110' : 'scale-100'}`} />
                           
+                          {/* 음성 모드일 때만 메시지 텍스트 노출 */}
                           <input
                             type="text"
                             maxLength={4} 
@@ -535,11 +610,12 @@
                     })}
                   </div>
 
-                  <div className="flex justify-center mb-10 min-h-[40px]">
+                  {/* Add Message / Select Beat Container */}
+                  <div className="flex justify-center mb-6 min-h-[40px]">
                     {soundMode === 'voice' ? (
                       <button 
                         onClick={(e) => { e.stopPropagation(); saveCurrentPhrase(); }}
-                        className="flex items-center gap-1.5 px-6 py-2.5 border border-emerald-500 text-emerald-500 rounded-full text-[13px] font-bold transition hover:bg-emerald-500/10 active:scale-95"
+                        className="flex items-center gap-1.5 px-6 py-2.5 border border-emerald-500 text-emerald-500 rounded-full text-[13px] font-bold transition hover:bg-emerald-500/10 active:scale-95 shadow-sm"
                       >
                         <Save size={15} /> 현재 메시지 추가하기
                       </button>
@@ -547,13 +623,13 @@
                       <div className="flex gap-4">
                         <button 
                           onClick={() => applyBaseRhythm(BASE_RHYTHMS.TWO_FOUR)}
-                          className={`flex items-center justify-center w-24 py-2.5 rounded-full text-[13px] font-bold transition border ${currentRhythm.beats === 2 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                          className={`flex items-center justify-center w-24 py-2.5 rounded-full text-[13px] font-bold transition border shadow-sm ${currentRhythm.beats === 2 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
                         >
                           2박자
                         </button>
                         <button 
                           onClick={() => applyBaseRhythm(BASE_RHYTHMS.THREE_FOUR)}
-                          className={`flex items-center justify-center w-24 py-2.5 rounded-full text-[13px] font-bold transition border ${currentRhythm.beats === 3 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                          className={`flex items-center justify-center w-24 py-2.5 rounded-full text-[13px] font-bold transition border shadow-sm ${currentRhythm.beats === 3 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
                         >
                           3박자
                         </button>
@@ -561,13 +637,19 @@
                     )}
                   </div>
 
-                  <div className="flex flex-col items-center mb-10 w-full">
-                    <div className="flex items-center justify-center w-full px-4 mb-8 gap-6">
-                      <button onClick={() => changeBpmBy(-1)} className="text-emerald-500 hover:text-emerald-400 p-2 transition active:scale-90 opacity-80 hover:opacity-100">
-                        <ChevronLeft size={44} strokeWidth={2.5} />
-                      </button>
+                  {/* Circular BPM Knob & Display */}
+                  <div className="flex flex-col items-center mb-8 w-full relative">
+                    <div className="relative w-[240px] h-[240px] flex items-center justify-center select-none touch-none mb-4">
                       
-                      <div className="text-center flex flex-col items-center min-w-[120px]">
+                      {/* SVG Dial */}
+                      <svg ref={knobSvgRef} width="240" height="240" className="absolute inset-0 z-10 cursor-pointer" onMouseDown={handleKnobDown} onTouchStart={handleKnobDown}>
+                        <path d={describeArc(knobCx, knobCy, knobRadius, -135, 135)} fill="none" stroke="#1e293b" strokeWidth="12" strokeLinecap="round" />
+                        <path d={describeArc(knobCx, knobCy, knobRadius, -135, currentKnobAngle)} fill="none" stroke="#10b981" strokeWidth="12" strokeLinecap="round" />
+                        <circle cx={thumbPos.x} cy={thumbPos.y} r="14" fill="#ffffff" className="shadow-lg pointer-events-none" />
+                      </svg>
+
+                      {/* Inner Big BPM Text */}
+                      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center pointer-events-none">
                         {isEditingBigBpm ? (
                           <input
                             type="number"
@@ -576,28 +658,21 @@
                             onChange={(e) => setBigBpmInputValue(e.target.value)}
                             onBlur={submitBigBpm}
                             onKeyDown={(e) => { if (e.key === 'Enter') submitBigBpm(); }}
-                            className="text-[5rem] font-extrabold text-white tracking-tighter leading-none bg-transparent w-full text-center outline-none border-b-2 border-emerald-500"
+                            className="text-[4.5rem] font-extrabold text-emerald-400 tracking-tighter leading-none bg-transparent w-[140px] text-center outline-none border-b-2 border-emerald-500 pointer-events-auto"
                           />
                         ) : (
                           <span 
                             onClick={() => { setBigBpmInputValue(bpm.toString()); setIsEditingBigBpm(true); }}
-                            className="text-[5rem] font-extrabold text-white tracking-tighter leading-none cursor-pointer hover:text-emerald-50 transition-colors"
+                            className="text-[4.5rem] font-extrabold text-white tracking-tighter leading-none cursor-pointer hover:text-emerald-50 transition-colors pointer-events-auto"
                           >
                             {bpm}
                           </span>
                         )}
-                        <span className="block text-slate-400 text-xs font-bold mt-2 tracking-widest">BPM</span>
+                        <span className="block text-slate-400 text-xs font-bold mt-1 tracking-widest pointer-events-auto">BPM</span>
                       </div>
-                      
-                      <button onClick={() => changeBpmBy(1)} className="text-emerald-500 hover:text-emerald-400 p-2 transition active:scale-90 opacity-80 hover:opacity-100">
-                        <ChevronRight size={44} strokeWidth={2.5} />
-                      </button>
                     </div>
 
-                    <div className="w-full px-4 mb-6">
-                      <input type="range" min="30" max="200" value={bpm} onChange={handleBpmChange} className="w-full h-2 bg-slate-800 border border-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500 shadow-inner" />
-                    </div>
-                    
+                    {/* Quick Presets */}
                     <div className="flex justify-between w-full px-4 gap-2">
                       {bpmPresets.map((val, index) => (
                         editingPresetIndex === index ? (
@@ -630,10 +705,11 @@
                       ))}
                     </div>
                     <div className="text-center mt-3 text-slate-500 text-[11px] font-medium w-full">
-                      숫자를 꾹 길게 누르면 원하는 BPM으로 변경할 수 있습니다.
+                      가운데 동그라미를 드래그하거나 숫자를 길게 눌러 조절하세요.
                     </div>
                   </div>
 
+                  {/* Message Library Section (Main Page) */}
                   <div className="bg-slate-800/80 p-5 rounded-3xl border border-slate-700 shadow-lg mb-8">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2 text-emerald-400">
@@ -654,6 +730,7 @@
                   </div>
                 </div>
 
+                {/* Play Button Container */}
                 <div className="absolute bottom-0 left-0 w-full h-36 bg-gradient-to-t from-[#0f172a] via-[#0f172a]/90 to-transparent flex items-end justify-center pb-8 pointer-events-none z-20">
                   <button 
                     onClick={togglePlay} 
@@ -668,6 +745,7 @@
                 </div>
               </div>
 
+              {/* Message Library Modal */}
               {isModalOpen && (
                 <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setDeletingId(null)}>
                   <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-md max-h-[85vh] flex flex-col overflow-hidden transform transition-all" onClick={(e) => e.stopPropagation()}>
@@ -715,6 +793,7 @@
                 </div>
               )}
 
+              {/* Custom Alert Modal */}
               {alertMessage && (
                 <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
                   <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-xs p-6 flex flex-col items-center text-center transform transition-all">
@@ -734,6 +813,7 @@
                 </div>
               )}
 
+              {/* Custom Confirm Modal */}
               {confirmDialog && (
                 <div className="fixed inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
                   <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-xs p-6 flex flex-col items-center text-center transform transition-all">
