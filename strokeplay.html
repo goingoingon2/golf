@@ -66,7 +66,7 @@
   storageBucket: "left-right-6da31.firebasestorage.app",
   messagingSenderId: "128347797181",
   appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-    };
+};
 
     let firebaseInitialized = false;
     let authInstance, dbInstance;
@@ -608,7 +608,13 @@
       const handleParSelect = (par) => {
         if (!isAdmin) return;
         if (isParLongPress.current) { isParLongPress.current = false; return; }
-        setCurrentPar(par);
+        setCurrentPar(prevPar => {
+          if (par !== prevPar) {
+            // PAR 변경 시, 이전 PAR와의 차이만큼 모든 선수의 타수도 비례하여 조정
+            setCurrentScores(prevScores => prevScores.map(s => Math.max(1, s + (par - prevPar))));
+          }
+          return par;
+        });
       };
 
       const startParPress = () => {
@@ -616,7 +622,12 @@
         if (parPressTimer.current) clearTimeout(parPressTimer.current);
         parPressTimer.current = setTimeout(() => {
           isParLongPress.current = true;
-          setCurrentPar(p => p >= 5 ? p + 1 : 6);
+          setCurrentPar(prevPar => {
+            const newPar = prevPar >= 5 ? prevPar + 1 : 6;
+            // 길게 눌러서 5 이상으로 PAR가 바뀔 때도 동일하게 타수 조정 적용
+            setCurrentScores(prevScores => prevScores.map(s => Math.max(1, s + (newPar - prevPar))));
+            return newPar;
+          });
         }, 500);
       };
       const cancelParPress = () => { if (parPressTimer.current) clearTimeout(parPressTimer.current); };
@@ -998,11 +1009,13 @@
                     </div>
                   )}
                 </div>
-                {startTime && <div className="text-[11px] text-[#bbf7d0] font-bold mt-0.5">{elapsedTime}</div>}
               </div>
-              {isAdmin ? (
-                <button onClick={() => setStep('setup')} className="p-2 hover:bg-white/10 rounded-full transition text-xs font-semibold flex flex-col items-center"><Icon name="Settings" className="w-6 h-6" /></button>
-              ) : ( <div className="w-10"></div> )}
+              <div className="flex items-center gap-2">
+                {startTime && <div className="text-[11px] font-bold text-white bg-black/20 px-2 py-1 rounded-md flex items-center gap-1 whitespace-nowrap"><Icon name="Clock" className="w-3 h-3"/> {elapsedTime}</div>}
+                {isAdmin && (
+                  <button onClick={() => setStep('setup')} className="p-1 hover:bg-white/10 rounded-full transition text-xs font-semibold flex flex-col items-center"><Icon name="Settings" className="w-5 h-5" /></button>
+                )}
+              </div>
             </div>
 
             <div className="max-w-md mx-auto w-full p-4 space-y-4 pt-6 flex-1 pb-24">
@@ -1146,9 +1159,9 @@
                 </div>
               </div>
               <div className="flex gap-1.5 items-center">
+                {startTime && <div className="text-[11px] font-bold text-white bg-black/30 px-2 py-1 rounded-md flex items-center gap-1 whitespace-nowrap"><Icon name="Clock" className="w-3 h-3"/> {elapsedTime}</div>}
                 <button onClick={handleSaveAction} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Icon name="Download" className="w-5 h-5"/></button>
                 <button onClick={handleShareAction} className="p-2 hover:bg-white/10 rounded-full transition text-gray-300 hover:text-white"><Icon name="Share2" className="w-5 h-5"/></button>
-                {/* 우측 상단 정산 버튼 삭제 됨 */}
               </div>
             </div>
 
@@ -1290,6 +1303,11 @@
               <div className="absolute top-8 left-6 inline-flex items-center justify-center w-10 h-10 bg-white/20 rounded-full text-sm font-bold backdrop-blur-sm">
                 {currentHole + 1}H
               </div>
+              {startTime && (
+                <div className="absolute top-8 right-6 text-[11px] font-bold text-white bg-black/20 px-2.5 py-1.5 rounded-lg flex items-center gap-1 backdrop-blur-sm">
+                  <Icon name="Clock" className="w-3.5 h-3.5"/> {elapsedTime}
+                </div>
+              )}
               <h1 className="text-3xl font-black italic tracking-tight mt-1">HOLE RESULT</h1>
               <div className="text-[15px] font-bold mt-1 text-yellow-300 flex items-center justify-center gap-2">
                 {currentHoleData.isHoleExcluded ? <span className="text-red-200">전체 내기 제외 홀</span> : <>{currentHoleData.multiplier > 1 ? `x${currentHoleData.multiplier} 배판` : ' '}</>}
@@ -1445,7 +1463,9 @@
                   </div>
                 )}
               </div>
-              <div className="w-9"></div> 
+              <div className="flex items-center">
+                {startTime && <div className="text-[11px] font-bold text-white bg-black/20 px-2 py-1 rounded-md flex items-center gap-1 whitespace-nowrap"><Icon name="Clock" className="w-3 h-3"/> {elapsedTime}</div>}
+              </div> 
             </div>
 
             <div className={`max-w-md mx-auto w-full p-4 space-y-4 pt-6 ${!isAdmin ? 'pointer-events-none' : ''}`}>
@@ -1482,7 +1502,7 @@
                 </div>
 
                 <div className={`flex items-center justify-between py-2 border-t border-gray-100 mt-2 pt-4 ${!isAdmin ? 'opacity-80' : ''}`}>
-                  <div className="flex flex-col"><span className="text-[13px] font-bold text-gray-800">1000P 단위 절사</span><span className="text-[10px] text-gray-500 mt-0.5">1000P 미만 금액 버림</span></div>
+                  <div className="flex flex-col"><span className="text-[13px] font-bold text-gray-800">1,000P 단위 절사</span><span className="text-[10px] text-gray-500 mt-0.5">1,000P 미만 금액 버림</span></div>
                   <button onClick={() => setIsRoundThousand(!isRoundThousand)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isRoundThousand ? 'bg-[#128853]' : 'bg-gray-200'}`}><span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isRoundThousand ? 'translate-x-5' : 'translate-x-0.5'}`} /></button>
                 </div>
               </div>
