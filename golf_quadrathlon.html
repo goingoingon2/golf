@@ -12,20 +12,6 @@
         /* 스크롤바 숨기기 */
         ::-webkit-scrollbar { width: 0px; background: transparent; }
 
-        /* 커스텀 테마 색상 */
-        .theme-bg { background-color: #139758; }
-        .theme-text { color: #139758; }
-        .theme-border { border-color: #139758; }
-        
-        .card-shadow { box-shadow: 0 4px 14px rgba(0,0,0,0.03); }
-        
-        /* 토글 스위치 */
-        .toggle-checkbox:checked { right: 0; border-color: #139758; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #139758; }
-        
-        /* Select Dropdown Center Alignment */
-        select.score-input { text-align-last: center; padding-right: 0; direction: ltr; }
-
         /* 숫자 입력칸 증감(위아래 화살표) 버튼 숨기기 */
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button {
@@ -36,7 +22,11 @@
             -moz-appearance: textfield;
         }
 
-        /* 하단 탭 바 애니메이션 */
+        /* 토글 스위치 */
+        .toggle-checkbox:checked { right: 0; border-color: #139758; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #139758; }
+        
+        .card-shadow { box-shadow: 0 4px 14px rgba(0,0,0,0.03); }
         .fade-in { animation: fadeIn 0.2s ease-out forwards; }
         @keyframes fadeIn {
             from { opacity: 0; }
@@ -49,7 +39,7 @@
     <!-- ==========================================
          [ 1. 초기 라운드 설정 화면 (Setup View) ]
          ========================================== -->
-    <div id="view-setup" class="max-w-md mx-auto bg-[#f4f6f8] min-h-screen relative pb-10">
+    <div id="view-setup" class="max-w-md mx-auto bg-[#f4f6f8] min-h-screen relative pb-10 fade-in">
         
         <!-- Top Green Background -->
         <div class="bg-[#139758] pt-12 pb-16 px-6 text-center rounded-b-[2.5rem] shadow-sm relative z-0">
@@ -69,7 +59,7 @@
                 </div>
                 <div class="space-y-3">
                     <div class="flex gap-2">
-                        <input type="text" id="setup_golf_club" value="표준 파72 (일반 코스)" placeholder="골프장 이름 검색" class="flex-1 bg-white border border-slate-200 rounded-xl p-2.5 text-sm font-bold text-slate-700 outline-none focus:border-[#139758] shadow-sm transition-all" oninput="triggerSync()">
+                        <input type="text" id="setup_golf_club" value="표준 파72 (일반 코스)" placeholder="골프장 이름 검색" class="flex-1 bg-white border border-slate-200 rounded-xl p-2.5 text-sm font-bold text-slate-700 outline-none focus:border-[#139758] shadow-sm transition-all" oninput="window.pushSharedState()">
                         <button type="button" onclick="window.showToast('골프장 DB 검색 기능은 준비중입니다.')" class="bg-[#139758] text-white px-4 rounded-xl font-bold text-[13px] shadow-sm flex items-center justify-center gap-1 shrink-0 active:scale-95 transition-all">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg> 검색
                         </button>
@@ -77,7 +67,7 @@
                     <div class="flex gap-2">
                         <div class="flex-1 flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 px-3">
                             <span class="text-xs font-bold text-slate-400 w-10 shrink-0">전반</span>
-                            <select id="setup_course_out" class="w-full bg-transparent p-2 text-sm font-bold text-slate-700 outline-none text-right" onchange="triggerSync()">
+                            <select id="setup_course_out" class="w-full bg-transparent p-2 text-sm font-bold text-slate-700 outline-none text-right" onchange="window.pushSharedState()">
                                 <option value="OUT">OUT 코스</option>
                                 <option value="밸리">밸리 코스</option>
                                 <option value="레이크">레이크 코스</option>
@@ -86,7 +76,7 @@
                         </div>
                         <div class="flex-1 flex items-center bg-slate-50 border border-slate-200 rounded-xl p-1 px-3">
                             <span class="text-xs font-bold text-slate-400 w-10 shrink-0">후반</span>
-                            <select id="setup_course_in" class="w-full bg-transparent p-2 text-sm font-bold text-slate-700 outline-none text-right" onchange="triggerSync()">
+                            <select id="setup_course_in" class="w-full bg-transparent p-2 text-sm font-bold text-slate-700 outline-none text-right" onchange="window.pushSharedState()">
                                 <option value="IN">IN 코스</option>
                                 <option value="체리">체리 코스</option>
                                 <option value="파인">파인 코스</option>
@@ -268,7 +258,7 @@
                 </div>
             </section>
             
-            <!-- 하단 시작 버튼 (스크롤 시 자연스럽게 노출) -->
+            <!-- 하단 시작 버튼 -->
             <div class="mt-8 pb-12 space-y-3">
                 <button onclick="window.hostRoom()" class="w-full py-4 bg-[#139758] rounded-[1rem] font-bold text-[15px] text-white shadow-md shadow-green-600/20 hover:bg-[#0e7e48] active:scale-95 transition-all flex justify-center items-center gap-1.5">
                     새 게임 시작 (방장)
@@ -288,6 +278,17 @@
         
         <!-- Top Green Header -->
         <header class="bg-[#139758] pt-10 pb-6 px-4 text-white flex flex-col justify-center rounded-b-[2rem] shadow-sm relative z-10">
+            <!-- 타이머 & 톱니바퀴 (Absolute 묶음) -->
+            <div class="absolute top-10 right-4 flex flex-col items-end gap-2">
+                <div class="play-time-display hidden items-center gap-0.5 text-[10px] font-black text-white/90 bg-black/20 px-2 py-1 rounded-full tracking-wider whitespace-nowrap">
+                    <svg class="w-2.5 h-2.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="time-text">00:00</span>
+                </div>
+                <button onclick="showSetup()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all mr-0.5">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                </button>
+            </div>
+            
             <div class="flex items-center justify-between w-full">
                 <!-- 스코어카드 버튼 (왼쪽) -->
                 <button onclick="openScoreboard()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all">
@@ -302,17 +303,12 @@
                             <button onclick="openInviteModal()" class="bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-md leading-none flex items-center gap-1 shadow-sm active:scale-95">
                                 LIVE (<span class="display_room_code_short"></span>)
                             </button>
-                            <button onclick="openInviteModal()" class="w-6 h-6 flex items-center justify-center rounded-md bg-white/20 hover:bg-white/30 transition-all active:scale-95">
-                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-                            </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- 톱니바퀴 (오른쪽) -->
-                <button onclick="showSetup()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                </button>
+                <!-- 밸런스 유지용 Spacer -->
+                <div class="w-8"></div>
             </div>
             
             <div class="mt-4 text-center">
@@ -329,7 +325,15 @@
                     <div class="flex gap-1 bg-slate-50 p-1 rounded-lg border border-slate-100">
                         <button onclick="setHolePar(3)" id="par-btn-3" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 transition-all">3</button>
                         <button onclick="setHolePar(4)" id="par-btn-4" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-[#139758] text-white shadow-sm transition-all">4</button>
-                        <button onclick="setHolePar(5)" id="par-btn-5" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 transition-all">5</button>
+                        <button id="par-btn-high" 
+                                onmousedown="startParHighPress(event)" 
+                                onmouseup="endParHighPress(event)" 
+                                onmouseleave="cancelParHighPress(event)" 
+                                ontouchstart="startParHighPress(event)" 
+                                ontouchend="endParHighPress(event)" 
+                                ontouchcancel="cancelParHighPress(event)"
+                                class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all bg-transparent select-none"
+                                style="-webkit-touch-callout: none; user-select: none; -webkit-user-select: none;">5</button>
                     </div>
                 </div>
                 <div class="flex-1 bg-white rounded-[1.2rem] p-3 card-shadow border border-slate-100 flex flex-col relative">
@@ -374,6 +378,13 @@
         
         <!-- Top Green Background for Result -->
         <div class="bg-[#139758] pt-10 pb-16 px-4 text-center rounded-b-[2.5rem] shadow-sm relative z-0 text-white">
+            
+            <!-- 타이머 -->
+            <div class="absolute top-10 right-4 play-time-display hidden items-center gap-0.5 text-[10px] font-black text-white/90 bg-black/20 px-2 py-1 rounded-full tracking-wider shadow-sm whitespace-nowrap">
+                <svg class="w-2.5 h-2.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <span class="time-text">00:00</span>
+            </div>
+
             <div class="absolute top-10 left-6 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center font-black text-xs" id="res_hole_num">1H</div>
             <h2 class="text-2xl font-black tracking-tight italic uppercase mb-1 mt-1">Hole Result</h2>
             <div class="inline-block bg-black/10 px-3 py-1 rounded-full text-[11px] font-bold tracking-wide mb-2" id="res_game_type">개인전</div>
@@ -434,18 +445,22 @@
     <div id="view-scoreboard" class="max-w-md mx-auto bg-[#f4f6f8] min-h-screen relative pb-32 hidden fade-in">
         
         <!-- Header -->
-        <header class="bg-slate-800 pt-10 pb-5 px-4 text-white flex items-center justify-between sticky top-0 z-20">
+        <header class="bg-slate-800 pt-10 pb-5 px-4 text-white flex items-start justify-between sticky top-0 z-20">
             <button onclick="closeScoreboard()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </button>
-            <div class="flex items-center gap-2">
+            
+            <div class="flex items-center gap-2 flex-col mt-1">
                 <h1 class="text-xl font-black tracking-tight">전체 스코어보드</h1>
-                <div class="live_badge_container hidden flex items-center gap-1">
-                    <span class="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded leading-none flex items-center gap-0.5 mt-0.5">LIVE</span>
-                </div>
             </div>
-            <div class="flex gap-2">
-                <button class="live_badge_container hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all" onclick="openInviteModal()">
+            
+            <!-- 오른쪽 (초대 버튼 & 타이머) -->
+            <div class="flex flex-col items-end gap-2 relative">
+                <div class="play-time-display hidden items-center gap-0.5 text-[10px] font-black text-white/90 bg-black/40 px-2 py-1 rounded-full tracking-wider shadow-sm whitespace-nowrap absolute right-0 -top-4">
+                    <svg class="w-2.5 h-2.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="time-text">00:00</span>
+                </div>
+                <button class="live_badge_container hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all absolute right-0 top-5 bg-white/10" onclick="openInviteModal()">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                 </button>
             </div>
@@ -500,7 +515,12 @@
                 <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </button>
             <h1 class="text-lg font-black tracking-tight text-center">최종 정산</h1>
-            <div class="w-8"></div>
+            <div class="w-8 relative">
+                <div class="play-time-display hidden items-center gap-0.5 text-[10px] font-black text-slate-500 bg-slate-100 border border-slate-200 px-2 py-1 rounded-full tracking-wider shadow-sm whitespace-nowrap absolute right-0 -top-3">
+                    <svg class="w-2.5 h-2.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="time-text">00:00</span>
+                </div>
+            </div>
         </header>
 
         <div class="flex-1 p-4 space-y-4">
@@ -559,7 +579,12 @@
          [ 6. 개평 요약 화면 (Summary View) ]
          ========================================== -->
     <div id="view-summary" class="max-w-md mx-auto bg-[#f4f6f8] min-h-screen relative hidden fade-in flex flex-col pb-10">
-        
+        <!-- 타이머 -->
+        <div class="absolute top-10 right-4 play-time-display hidden items-center gap-0.5 text-[10px] font-black text-slate-500 bg-white border border-slate-200 px-2 py-1 rounded-full tracking-wider shadow-sm whitespace-nowrap">
+            <svg class="w-2.5 h-2.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span class="time-text">00:00</span>
+        </div>
+
         <div class="pt-12 pb-6 px-4 flex flex-col items-center text-center">
             <div class="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500 mb-3 border border-emerald-100 shadow-sm">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -657,38 +682,34 @@
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-slate-800/90 backdrop-blur-sm text-white px-5 py-2.5 rounded-full text-xs font-bold opacity-0 transition-opacity z-[200] pointer-events-none whitespace-nowrap shadow-lg">안내 메시지</div>
 
-    <!-- Firebase Logic & App Scripts -->
+    <!-- Firebase Logic (Module) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // 🔥 여기에 본인의 Firebase 프로젝트 설정값을 붙여넣으세요! 🔥
+        // 🔥 여기에 본인의 Firebase 프로젝트 설정값을 붙여넣으세요!
         const myFirebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
         let db, auth;
         let currentUser = null;
         let appId = typeof __app_id !== 'undefined' ? __app_id : 'golf-match-app';
-        window.unsubscribeSnapshot = null;
 
-        async function setupFirebase() {
+        window._setupFirebase = async function() {
             try {
-                // 프리뷰 환경 설정이 있으면 우선 사용하고, 없으면 본인이 입력한 설정을 사용합니다.
                 let configToUse;
                 if (typeof __firebase_config !== 'undefined' && __firebase_config) {
                     configToUse = JSON.parse(__firebase_config);
                 } else if (myFirebaseConfig.apiKey !== "YOUR_API_KEY") {
                     configToUse = myFirebaseConfig;
                 } else {
-                    console.log("Firebase 설정이 없습니다. 로컬 모드로 실행합니다.");
                     return false;
                 }
 
@@ -712,55 +733,218 @@
                 console.error("Firebase error:", e);
                 return false;
             }
+        };
+
+        window._startListening = function() {
+            if (!currentUser || !window.roomCode) return;
+            if (window.unsubscribeSnapshot) window.unsubscribeSnapshot();
+            
+            const docRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), window.roomCode);
+            window.unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.metadata.hasPendingWrites) return; 
+                if (docSnap.exists()) {
+                    if(window.applySharedState) window.applySharedState(docSnap.data());
+                }
+            }, (error) => {
+                console.error("Listen failed: ", error);
+            });
+        };
+
+        window._pushSharedState = async function(state) {
+            if (!currentUser || !window.roomCode) return;
+            const docRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), window.roomCode);
+            try {
+                await setDoc(docRef, state);
+            } catch (e) {
+                console.error("Push failed: ", e);
+            }
+        };
+
+        window._joinRoomFirebase = async function(code) {
+            if (!currentUser) return null;
+            try {
+                const docRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), code);
+                const snap = await getDoc(docRef);
+                if (snap.exists()) return snap.data();
+            } catch (e) {
+                console.error("Join failed: ", e);
+            }
+            return null;
+        }
+    </script>
+
+    <!-- App Scripts (일반 스크립트) -->
+    <script>
+        // --- 전역 상태 및 데이터 ---
+        window.currentHole = 0; 
+        window.scores = Array.from({ length: 18 }, () => [null, null, null, null]);
+        window.pars = Array(18).fill(4);
+        window.gameTypes = Array(18).fill("개인전");
+        window.multipliers = Array(18).fill(1);         
+        window.manualMultipliers = Array(18).fill(null); 
+        window.multiplierReasonsArr = Array(18).fill([]);
+        window.points = Array.from({ length: 18 }, () => [0, 0, 0, 0]);
+        window.holeTeamData = Array(18).fill(null);
+        window.holeMoneyArr = Array.from({ length: 18 }, () => [0, 0, 0, 0]);
+        window.totalMoneyArr = [0, 0, 0, 0];
+        window.holeCompleted = Array(18).fill(false);
+        window.handicapsArray = [0, 0, 0, 0];
+        window.finalGaePyeongArr = [0, 0, 0, 0];
+        
+        // --- 타이머 상태 ---
+        window.gameStartTime = null;
+        window.playTimerInterval = null;
+
+        let sbTab = 'OUT'; 
+        let activeSetupTab = null;
+
+        const avatars = ["👩‍💼", "👨‍💼", "🏌️‍♂️", "🏌️‍♀️"];
+        window.activeCaddieIdx = 0; 
+        window.basePointUnit = 2000; 
+        
+        window.defaultNames = ["황돌격", "박큐티", "임예사", "김천재"];
+        
+        // 개평 설정 데이터
+        window.gaeRate = 50; 
+        window.gaeRound = true;
+
+        window.roomCode = null;
+        window.isSyncing = false;
+        window.unsubscribeSnapshot = null;
+        
+        // --- 룰 설정 데이터 ---
+        window.rules = {
+            prevTie: true,
+            threeTie: false,
+            birdie: true,  
+            triple: true,  
+            fixedHoles: [15, 16, 17], 
+            fixedHole4x: true, 
+            birdieValueEnabled: true,  
+            birdieValue: 5000,         
+            eagleValueEnabled: true,  
+            eagleValue: 10000           
+        };
+
+        // --- 타이머 함수 ---
+        window.startPlayTimer = function() {
+            if (window.playTimerInterval) clearInterval(window.playTimerInterval);
+            window.playTimerInterval = setInterval(window.updatePlayTimeDisplay, 1000);
+            window.updatePlayTimeDisplay();
+        };
+
+        window.updatePlayTimeDisplay = function() {
+            if (!window.gameStartTime) return;
+            const now = Date.now();
+            const diff = Math.max(0, Math.floor((now - window.gameStartTime) / 1000));
+            
+            const h = Math.floor(diff / 3600);
+            const m = Math.floor((diff % 3600) / 60);
+            const s = diff % 60;
+            
+            let timeStr = "";
+            if (h > 0) {
+                timeStr += String(h).padStart(2, '0') + ":";
+            }
+            timeStr += String(m).padStart(2, '0') + ":" + String(s).padStart(2, '0');
+            
+            document.querySelectorAll('.play-time-display .time-text').forEach(el => {
+                el.innerText = timeStr;
+            });
+            document.querySelectorAll('.play-time-display').forEach(el => {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+            });
+        };
+
+        // --- Firebase 연동 랩퍼 ---
+        window.pushSharedState = function() {
+            if (!window.roomCode || window.isSyncing || !window._pushSharedState) return;
+            
+            const state = {
+                scores: JSON.stringify(window.scores), 
+                pars: window.pars, 
+                gameTypes: window.gameTypes, 
+                multipliers: window.multipliers, 
+                manualMultipliers: window.manualMultipliers,
+                multiplierReasonsArr: JSON.stringify(window.multiplierReasonsArr), 
+                points: JSON.stringify(window.points), 
+                holeTeamData: JSON.stringify(window.holeTeamData), 
+                holeMoneyArr: JSON.stringify(window.holeMoneyArr), 
+                totalMoneyArr: window.totalMoneyArr, 
+                holeCompleted: window.holeCompleted, 
+                activeCaddieIdx: window.activeCaddieIdx, 
+                basePointUnit: window.basePointUnit,
+                rules: JSON.stringify(window.rules), 
+                names: window.getNames(),
+                handicaps: window.handicapsArray,
+                gaeRate: window.gaeRate,
+                gaeRound: window.gaeRound,
+                currentHole: window.currentHole,
+                gameStartTime: window.gameStartTime,
+                updatedAt: new Date().toISOString()
+            };
+            window._pushSharedState(state);
         }
 
         window.hostRoom = function() {
             window.roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
             
-            const inviteUrl = window.location.origin + window.location.pathname + '?room=' + window.roomCode;
+            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            const inviteUrl = baseUrl + '?room=' + window.roomCode;
+
             document.querySelectorAll('.display_room_code_short').forEach(el => el.innerText = window.roomCode);
             document.querySelectorAll('.display_room_code_url').forEach(el => el.innerText = inviteUrl);
             document.getElementById('qr_image').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(inviteUrl)}`;
             document.querySelectorAll('.live_badge_container').forEach(el => el.classList.remove('hidden'));
 
+            // UI 즉시 전환 & 타이머 시작
             window.startGameLocal(); 
 
-            setupFirebase().then(isFirebaseReady => {
-                if (isFirebaseReady && currentUser) {
-                    window.pushSharedState();
-                    window.startListening();
-                } else {
-                    window.showToast("로컬 모드로 시작합니다. (네트워크 확인 필요)");
-                }
-            });
+            // Firebase 연동 비동기 처리
+            if (window._setupFirebase) {
+                window._setupFirebase().then(isFirebaseReady => {
+                    if (isFirebaseReady) {
+                        window.pushSharedState();
+                        window._startListening();
+                    } else {
+                        window.showToast("로컬 단독 모드로 실행 중입니다.");
+                    }
+                });
+            } else {
+                window.showToast("로컬 모드로 실행합니다.");
+            }
         }
 
         window.joinRoomWithCode = async function(code) {
             if (!code) return;
-            window.showToast("방에 접속하는 중입니다...");
-            const isFirebaseReady = await setupFirebase();
-            if (isFirebaseReady && currentUser) {
+            window.showToast("방에 접속하는 중...");
+
+            if (!window._setupFirebase) {
+                window.showToast("네트워크를 확인할 수 없습니다.");
+                return;
+            }
+
+            const isFirebaseReady = await window._setupFirebase();
+            if (isFirebaseReady) {
                 const upperCode = code.toUpperCase();
-                const docRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), upperCode);
-                const snap = await getDoc(docRef);
-                if (snap.exists()) {
+                const stateData = await window._joinRoomFirebase(upperCode);
+
+                if (stateData) {
                     window.roomCode = upperCode;
-                    const inviteUrl = window.location.origin + window.location.pathname + '?room=' + window.roomCode;
+                    const baseUrl = window.location.href.split('?')[0].split('#')[0];
+                    const inviteUrl = baseUrl + '?room=' + window.roomCode;
+
                     document.querySelectorAll('.display_room_code_short').forEach(el => el.innerText = window.roomCode);
                     document.querySelectorAll('.display_room_code_url').forEach(el => el.innerText = inviteUrl);
                     document.getElementById('qr_image').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(inviteUrl)}`;
                     document.querySelectorAll('.live_badge_container').forEach(el => el.classList.remove('hidden'));
                     
-                    window.applySharedState(snap.data());
-                    window.startListening();
+                    window.applySharedState(stateData);
+                    window._startListening();
                     window.showToast("방에 성공적으로 접속했습니다.");
                 } else {
-                    window.showToast("유효하지 않은 코드입니다.");
-                    try {
-                        if (window.history.replaceState && window.location.protocol !== 'blob:') {
-                            window.history.replaceState(null, null, window.location.pathname);
-                        }
-                    } catch(e) {}
+                    window.showToast("유효하지 않은 코드/URL 입니다.");
                 }
             } else {
                 window.showToast("네트워크 연결을 확인해주세요.");
@@ -782,105 +966,53 @@
             window.joinRoomWithCode(finalCode);
         }
 
-        window.startListening = function() {
-            if (!currentUser || !window.roomCode) return;
-            if (window.unsubscribeSnapshot) window.unsubscribeSnapshot();
-            
-            const docRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), window.roomCode);
-            window.unsubscribeSnapshot = onSnapshot(docRef, (docSnap) => {
-                if (docSnap.metadata.hasPendingWrites) return; 
-                if (docSnap.exists()) {
-                    window.applySharedState(docSnap.data());
-                }
-            }, (error) => {
-                console.error("Listen failed: ", error);
-            });
-        }
+        // --- 파(PAR) 길게 누르기 이벤트 설정 ---
+        let parPressTimer = null;
+        let isLongPress = false;
+        window._isTouchPar = false;
 
-        window.pushSharedState = async function() {
-            if (!currentUser || !window.roomCode || window.isSyncing) return;
-            
-            const docRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'rooms'), window.roomCode);
-            
-            const state = {
-                scores: JSON.stringify(window.scores), 
-                pars: window.pars, 
-                gameTypes: window.gameTypes, 
-                multipliers: window.multipliers, 
-                manualMultipliers: window.manualMultipliers,
-                multiplierReasonsArr: JSON.stringify(window.multiplierReasonsArr), 
-                points: JSON.stringify(window.points), 
-                holeTeamData: JSON.stringify(window.holeTeamData), 
-                holeMoneyArr: JSON.stringify(window.holeMoneyArr), 
-                totalMoneyArr: window.totalMoneyArr, 
-                holeCompleted: window.holeCompleted, 
-                activeCaddieIdx: window.activeCaddieIdx, 
-                basePointUnit: window.basePointUnit,
-                rules: JSON.stringify(window.rules), 
-                names: window.getNames(),
-                handicaps: [1,2,3,4].map(i => {
-                    const el = document.getElementById(`p${i}_handi`);
-                    return el ? parseInt(el.value.replace(/[^0-9\-]/g, '')) || 0 : 0;
-                }),
-                gaeRate: window.gaeRate,
-                gaeRound: window.gaeRound,
-                currentHole: window.currentHole,
-                updatedAt: new Date().toISOString()
-            };
-
-            try {
-                await setDoc(docRef, state);
-            } catch (e) {
-                console.error("Push failed: ", e);
+        window.startParHighPress = function(e) {
+            if (e.type === 'touchstart') {
+                window._isTouchPar = true;
+            } else if (e.type === 'mousedown' && window._isTouchPar) {
+                return;
             }
-        }
-    </script>
 
-    <script>
-        // --- 전역 상태 및 데이터 ---
-        window.currentHole = 0; 
-        window.scores = Array.from({ length: 18 }, () => [null, null, null, null]);
-        window.pars = Array(18).fill(4);
-        window.gameTypes = Array(18).fill("개인전");
-        window.multipliers = Array(18).fill(1);         
-        window.manualMultipliers = Array(18).fill(null); 
-        window.multiplierReasonsArr = Array(18).fill([]);
-        window.points = Array.from({ length: 18 }, () => [0, 0, 0, 0]);
-        window.holeTeamData = Array(18).fill(null);
-        window.holeMoneyArr = Array.from({ length: 18 }, () => [0, 0, 0, 0]);
-        window.totalMoneyArr = [0, 0, 0, 0];
-        window.holeCompleted = Array(18).fill(false);
-        window.handicapsArray = [0, 0, 0, 0];
-        window.finalGaePyeongArr = [0, 0, 0, 0]; // 최종 개평 데이터
-        
-        let sbTab = 'OUT'; 
-        let activeSetupTab = null;
+            isLongPress = false;
+            if (parPressTimer) clearTimeout(parPressTimer);
+            
+            parPressTimer = setTimeout(() => {
+                isLongPress = true;
+                let cur = window.pars[window.currentHole];
+                if (cur < 5) cur = 5; 
+                let next = cur + 1;
+                if (next > 7) next = 5; // 7을 길게 누르면 다시 5로 순환
+                setHolePar(next);
+                window.showToast(`PAR ${next}로 설정되었습니다.`);
+                try { if (navigator.vibrate) navigator.vibrate(50); } catch(err){}
+            }, 500); 
+        };
 
-        const avatars = ["👩‍💼", "👨‍💼", "🏌️‍♂️", "🏌️‍♀️"];
-        window.activeCaddieIdx = 0; 
-        window.basePointUnit = 2000; 
-        
-        window.defaultNames = ["황돌격", "박큐티", "임예사", "김천재"];
-        
-        // 개평 설정 데이터
-        window.gaeRate = 50; 
-        window.gaeRound = true;
+        window.endParHighPress = function(e) {
+            if (e.type === 'touchend') {
+                if (e.cancelable) e.preventDefault();
+            }
+            if (parPressTimer) clearTimeout(parPressTimer);
+            
+            if (!isLongPress) {
+                let cur = window.pars[window.currentHole];
+                if (cur < 5) {
+                    setHolePar(5); 
+                } else {
+                    setHolePar(cur);
+                }
+            }
+            isLongPress = false;
+        };
 
-        window.roomCode = null;
-        window.isSyncing = false;
-        
-        // --- 룰 설정 데이터 ---
-        window.rules = {
-            prevTie: true,
-            threeTie: false,
-            birdie: true,  
-            triple: true,  
-            fixedHoles: [15, 16, 17], 
-            fixedHole4x: true, 
-            birdieValueEnabled: true,  
-            birdieValue: 5000,         
-            eagleValueEnabled: true,  
-            eagleValue: 10000           
+        window.cancelParHighPress = function(e) {
+            if (parPressTimer) clearTimeout(parPressTimer);
+            isLongPress = false;
         };
 
         // --- 유틸 ---
@@ -933,7 +1065,7 @@
 
         // --- Setup 화면 액션 ---
         function triggerSync() {
-            if (window.roomCode && !window.isSyncing && window.pushSharedState) {
+            if (window.roomCode && !window.isSyncing) {
                 window.pushSharedState();
             }
         }
@@ -1053,7 +1185,7 @@
         
         function calcTotalHandi() {
             let total = 0;
-            for(let i=1; i<=4; i++) {
+            window.handicapsArray = [1,2,3,4].map(i => {
                 const el = document.getElementById(`p${i}_handi`);
                 if(el) {
                     const raw = el.value.replace(/[^0-9\-]/g, '');
@@ -1061,8 +1193,10 @@
                     if (isNaN(val)) val = 0;
                     if (raw === '-') val = 0; 
                     total += val;
+                    return val;
                 }
-            }
+                return 0;
+            });
             const display = document.getElementById('total_handi_display');
             const warning = document.getElementById('handi_warning');
             
@@ -1115,15 +1249,13 @@
             const list = document.getElementById('setup-player-list');
             
             if(list) {
-                const handiVals = [1,2,3,4].map(i => {
-                    const el = document.getElementById(`p${i}_handi`);
-                    return el ? el.value : "0";
-                });
-
                 list.innerHTML = '';
                 for(let i=0; i<4; i++) {
                     const isCaddie = (i === window.activeCaddieIdx);
                     const pencilBtn = isCaddie ? `<button id="caddie-pencil-${i}" onclick="openCaddieModal()" class="w-6 h-6 flex items-center justify-center rounded-full bg-emerald-100 text-emerald-600 ml-1 shrink-0 active:scale-95 transition-all"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg></button>` : `<button id="caddie-pencil-${i}" onclick="openCaddieModal()" class="hidden w-6 h-6 ml-1 shrink-0"></button>`;
+
+                    let val = window.handicapsArray[i];
+                    let handiStr = val === 0 ? "0" : (val < 0 ? '-' + Math.abs(val).toLocaleString() : val.toLocaleString());
 
                     list.innerHTML += `
                         <div class="flex items-center bg-slate-50 rounded-xl p-2 px-3 border border-slate-100">
@@ -1132,7 +1264,7 @@
                             ${pencilBtn}
                             <div class="flex-1 flex justify-end items-center pl-2">
                                 <div class="flex items-center gap-1 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-sm w-24 sm:w-28">
-                                    <input type="text" id="p${i+1}_handi" value="${handiVals[i]}" class="w-full text-right text-sm font-black outline-none text-slate-700 focus:text-[#139758]" oninput="formatHandicapInput(this); calcTotalHandi();">
+                                    <input type="text" id="p${i+1}_handi" value="${handiStr}" class="w-full text-right text-sm font-black outline-none text-slate-700 focus:text-[#139758]" oninput="formatHandicapInput(this); calcTotalHandi();">
                                     <span class="text-[10px] font-bold text-slate-400">P</span>
                                 </div>
                             </div>
@@ -1192,24 +1324,16 @@
             document.getElementById('invite-modal').classList.add('hidden');
         }
 
-        window.copyInviteCode = function() {
-            if(!window.roomCode) return;
-            const inviteUrl = window.location.origin + window.location.pathname + '?room=' + window.roomCode;
-            const el = document.createElement('textarea'); 
-            el.value = inviteUrl; 
-            document.body.appendChild(el); 
-            el.select();
-            document.execCommand('copy'); 
-            document.body.removeChild(el);
-            window.showToast('초대 URL이 복사되었습니다.');
-        }
-
         window.startGameLocal = function() {
             window.scores = Array.from({ length: 18 }, () => [null, null, null, null]);
             window.pars = Array(18).fill(4);
             window.holeCompleted = Array(18).fill(false);
             window.manualMultipliers = Array(18).fill(null);
             window.currentHole = 0;
+            
+            // 타이머 시작
+            window.gameStartTime = Date.now();
+            window.startPlayTimer();
             
             calculateAll(); 
             openHoleInput(0);
@@ -1226,6 +1350,15 @@
             window.totalMoneyArr = [0, 0, 0, 0];
             window.points = Array.from({ length: 18 }, () => [0, 0, 0, 0]);
             window.finalGaePyeongArr = [0, 0, 0, 0];
+
+            // 타이머 리셋
+            window.gameStartTime = null;
+            if (window.playTimerInterval) clearInterval(window.playTimerInterval);
+            document.querySelectorAll('.play-time-display').forEach(el => {
+                el.querySelector('.time-text').innerText = '00:00';
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            });
 
             window.roomCode = null;
             window.isSyncing = false;
@@ -1244,6 +1377,8 @@
             } catch(e) {}
 
             showSetup();
+            window.scrollTo(0,0);
+            window.showToast("새 게임이 시작되었습니다.");
         }
 
         // --- Hole Input 화면 ---
@@ -1279,11 +1414,23 @@
 
         function renderHoleInputUI() {
             const curPar = window.pars[window.currentHole];
-            [3,4,5].forEach(v => {
-                const btn = document.getElementById(`par-btn-${v}`);
-                if(v === curPar) btn.className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-[#139758] text-white shadow-sm transition-all";
-                else btn.className = "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all bg-transparent";
-            });
+            
+            const btn3 = document.getElementById('par-btn-3');
+            if (btn3) btn3.className = curPar === 3 ? "flex-1 py-1.5 text-xs font-bold rounded-md bg-[#139758] text-white shadow-sm transition-all" : "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all bg-transparent";
+            
+            const btn4 = document.getElementById('par-btn-4');
+            if (btn4) btn4.className = curPar === 4 ? "flex-1 py-1.5 text-xs font-bold rounded-md bg-[#139758] text-white shadow-sm transition-all" : "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all bg-transparent";
+            
+            const btnHigh = document.getElementById('par-btn-high');
+            if (btnHigh) {
+                if (curPar >= 5) {
+                    btnHigh.className = "flex-1 py-1.5 text-xs font-bold rounded-md bg-[#139758] text-white shadow-sm transition-all select-none";
+                    btnHigh.innerText = curPar;
+                } else {
+                    btnHigh.className = "flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all bg-transparent select-none";
+                    btnHigh.innerText = "5";
+                }
+            }
 
             let displayType = window.gameTypes[window.currentHole];
             let typeColor = "bg-black/10 text-white";
@@ -1396,7 +1543,7 @@
         function prevHole() {
             if(window.currentHole > 0) {
                 openHoleInput(window.currentHole - 1);
-                if (window.roomCode && !window.isSyncing && window.pushSharedState) window.pushSharedState();
+                if (window.roomCode && !window.isSyncing) window.pushSharedState();
             }
         }
 
@@ -1589,7 +1736,7 @@
                 }
             }
 
-            if (window.roomCode && window.pushSharedState) {
+            if (window.roomCode && !window.isSyncing) {
                 window.pushSharedState();
             }
         }
@@ -1615,6 +1762,13 @@
 
             if(state.gaeRate !== undefined) window.gaeRate = state.gaeRate;
             if(state.gaeRound !== undefined) window.gaeRound = state.gaeRound;
+            
+            if(state.gameStartTime !== undefined) {
+                if (!window.gameStartTime || window.gameStartTime !== state.gameStartTime) {
+                    window.gameStartTime = state.gameStartTime;
+                    window.startPlayTimer();
+                }
+            }
 
             if (state.names) {
                 for(let i=0; i<4; i++) {
@@ -1637,7 +1791,6 @@
             calcTotalHandi();
             updateCaddieUI();
             
-            // 외부 동기화로 값이 들어올 때, 현재 열려있는 화면에 따라 커스텀 입력값 UI 상태를 최신화
             const customInput = document.getElementById('gae_input_custom');
             const customWrapper = document.getElementById('gae_custom_wrapper');
             const customPercent = document.getElementById('gae_custom_percent');
@@ -1832,7 +1985,7 @@
         function goToNextHole() {
             if(window.currentHole < 17) {
                 openHoleInput(window.currentHole + 1);
-                if (window.roomCode && !window.isSyncing && window.pushSharedState) window.pushSharedState();
+                if (window.roomCode && !window.isSyncing) window.pushSharedState();
                 switchView('view-hole');
             } else {
                 openScoreboard();
@@ -1990,7 +2143,7 @@
             let val = parseInt(el.value, 10);
             window.gaeRate = isNaN(val) ? 0 : val;
             renderFinalSettlement();
-            if (window.roomCode && !window.isSyncing && window.pushSharedState) window.pushSharedState();
+            if (window.roomCode && !window.isSyncing) window.pushSharedState();
         };
 
         window.handleGaeCustomBlur = function(el) {
@@ -2037,7 +2190,7 @@
                 }
             }
             renderFinalSettlement();
-            if (window.roomCode && !window.isSyncing && window.pushSharedState) window.pushSharedState();
+            if (window.roomCode && !window.isSyncing) window.pushSharedState();
         }
 
         function setGaeCustom(el) {
@@ -2053,13 +2206,13 @@
                 window.gaeRate = 0;
             }
             renderFinalSettlement();
-            if (window.roomCode && !window.isSyncing && window.pushSharedState) window.pushSharedState();
+            if (window.roomCode && !window.isSyncing) window.pushSharedState();
         }
 
         function toggleGaeOption(opt, isChecked) {
             if (opt === 'round') window.gaeRound = isChecked;
             renderFinalSettlement();
-            if (window.roomCode && !window.isSyncing && window.pushSharedState) window.pushSharedState();
+            if (window.roomCode && !window.isSyncing) window.pushSharedState();
         }
 
         function renderFinalSettlement() {
@@ -2331,7 +2484,6 @@
             const urlParams = new URLSearchParams(window.location.search);
             const roomCode = urlParams.get('room');
             if (roomCode) {
-                // Give Firebase module a moment to load and define window.joinRoomWithCode
                 setTimeout(() => {
                     if (window.joinRoomWithCode) window.joinRoomWithCode(roomCode);
                 }, 100);
