@@ -891,7 +891,12 @@
             window.roomCode = Math.random().toString(36).substring(2, 8).toUpperCase();
             
             const baseUrl = window.location.href.split('?')[0].split('#')[0];
-            const inviteUrl = baseUrl + '?room=' + window.roomCode;
+            let inviteUrl = baseUrl + '?room=' + window.roomCode;
+            
+            // 미리보기(Blob) 환경인 경우 깔끔한 URL로 대체 (테스트 및 복사용)
+            if (inviteUrl.startsWith('blob:')) {
+                inviteUrl = "https://golf-match.app/?room=" + window.roomCode;
+            }
 
             document.querySelectorAll('.display_room_code_short').forEach(el => el.innerText = window.roomCode);
             document.querySelectorAll('.display_room_code_url').forEach(el => el.innerText = inviteUrl);
@@ -933,7 +938,11 @@
                 if (stateData) {
                     window.roomCode = upperCode;
                     const baseUrl = window.location.href.split('?')[0].split('#')[0];
-                    const inviteUrl = baseUrl + '?room=' + window.roomCode;
+                    let inviteUrl = baseUrl + '?room=' + window.roomCode;
+                    
+                    if (inviteUrl.startsWith('blob:')) {
+                        inviteUrl = "https://golf-match.app/?room=" + window.roomCode;
+                    }
 
                     document.querySelectorAll('.display_room_code_short').forEach(el => el.innerText = window.roomCode);
                     document.querySelectorAll('.display_room_code_url').forEach(el => el.innerText = inviteUrl);
@@ -1322,6 +1331,36 @@
 
         function closeInviteModal() {
             document.getElementById('invite-modal').classList.add('hidden');
+        }
+
+        window.copyInviteCode = function() {
+            if(!window.roomCode) return;
+            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            let inviteUrl = baseUrl + '?room=' + window.roomCode;
+            
+            if (inviteUrl.startsWith('blob:')) {
+                inviteUrl = "https://golf-match.app/?room=" + window.roomCode;
+            }
+            
+            // 모바일 및 iframe 환경에서 안정적인 복사를 위한 처리
+            const el = document.createElement('textarea'); 
+            el.value = inviteUrl; 
+            el.setAttribute('readonly', ''); // 모바일 키보드 표시 방지
+            el.style.position = 'absolute';
+            el.style.left = '-9999px'; // 화면 밖으로 숨김
+            document.body.appendChild(el); 
+            
+            el.select();
+            el.setSelectionRange(0, 99999); // iOS Safari 대응
+            
+            try {
+                document.execCommand('copy'); 
+                window.showToast('초대 URL이 복사되었습니다.');
+            } catch(e) {
+                window.showToast('복사에 실패했습니다. 권한을 확인해주세요.');
+            }
+            
+            document.body.removeChild(el);
         }
 
         window.startGameLocal = function() {
