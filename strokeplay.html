@@ -1712,6 +1712,70 @@
             </div>
           )}
 
+          {/* 골프장 검색 모달 */}
+          {showCourseSearchModal && (
+            <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end pointer-events-auto backdrop-blur-sm">
+              <div className="bg-white rounded-t-[32px] p-6 animate-in slide-in-from-bottom-4 shadow-2xl flex flex-col max-h-[85vh]">
+                <div className="flex justify-between items-center mb-5 shrink-0">
+                  <h3 className="text-[19px] font-black text-gray-800 flex items-center">
+                    <Icon name="Search" className="w-5 h-5 mr-2 text-[#128853]"/> 골프장 검색
+                  </h3>
+                  <button onClick={() => setShowCourseSearchModal(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition"><Icon name="X" className="w-5 h-5 text-gray-500" /></button>
+                </div>
+                
+                <div className="relative mb-4 shrink-0">
+                  <Icon name="Search" className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input 
+                    type="text" 
+                    value={courseSearchQuery} 
+                    onChange={(e) => setCourseSearchQuery(e.target.value)} 
+                    placeholder="골프장 이름 검색" 
+                    className="w-full bg-gray-50 border border-gray-200 rounded-[16px] pl-12 pr-4 py-3.5 font-bold text-[15px] outline-none focus:border-[#128853] focus:ring-1 focus:ring-[#128853] transition-all"
+                  />
+                </div>
+
+                <div className="flex-1 overflow-y-auto -mx-2 px-2 space-y-2 pb-6">
+                  {GOLF_COURSES.filter(c => c.id !== 'custom' && c.name.toLowerCase().includes(courseSearchQuery.toLowerCase())).map(course => (
+                    <button 
+                      key={course.id} 
+                      onClick={() => { 
+                        setSelectedCourseId(course.id); 
+                        setFrontNineId(Object.keys(course.nineHoles)[0]);
+                        setBackNineId(Object.keys(course.nineHoles)[1] || Object.keys(course.nineHoles)[0]);
+                        setShowCourseSearchModal(false); 
+                        setCourseSearchQuery(''); 
+                      }} 
+                      className="w-full bg-white border border-gray-100 hover:border-[#128853] hover:bg-[#e5f5ec] text-left p-4 rounded-[16px] transition flex items-center justify-between"
+                    >
+                      <span className="font-bold text-[15px] text-gray-800">{course.name}</span>
+                      <Icon name="ArrowRight" className="w-4 h-4 text-gray-400" />
+                    </button>
+                  ))}
+                  
+                  {GOLF_COURSES.filter(c => c.id !== 'custom' && c.name.toLowerCase().includes(courseSearchQuery.toLowerCase())).length === 0 && (
+                    <div className="text-center py-10 text-gray-400 font-bold text-[14px]">
+                      검색 결과가 없습니다.<br/><span className="text-[12px] font-normal mt-1 block">직접 설정을 이용해주세요.</span>
+                    </div>
+                  )}
+                  
+                  <div className="pt-2">
+                    <button 
+                      onClick={() => { 
+                        setSelectedCourseId('custom'); 
+                        setShowCourseSearchModal(false); 
+                        setCourseSearchQuery(''); 
+                      }} 
+                      className="w-full bg-gray-50 border border-gray-200 hover:bg-gray-100 text-left p-4 rounded-[16px] transition flex items-center justify-between mt-2"
+                    >
+                      <span className="font-bold text-[15px] text-gray-700">직접 설정 (자유 입력)</span>
+                      <Icon name="Edit3" className="w-4 h-4 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* 초대 코드로 입장 모달 */}
           {showJoinModal && (
             <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end pointer-events-auto backdrop-blur-sm">
