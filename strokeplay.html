@@ -203,7 +203,6 @@
       const pressTimer = useRef(null);
       const parPressTimer = useRef(null);
       const isParLongPress = useRef(false);
-      const livePressTimer = useRef(null);
 
       // =====================================================================
       // ★ 공통 함수들 ★
@@ -764,6 +763,7 @@
         if (!startTime) setStartTime(Date.now());
         setStep('play');
         loadHoleData(0);
+        setShowQrModal(true); // 🚨 게임 시작과 동시에 초대 모달 오픈
       };
 
       const saveHole = () => {
@@ -982,12 +982,9 @@
                 )}
               </div>
 
-              <div className="space-y-3 mt-4 pt-2 border-t border-gray-100 pointer-events-auto">
+              <div className="space-y-3 mt-4 pt-2 border-t border-gray-100 pointer-events-auto pb-4">
                 <button onClick={handleStart} className="w-full bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 px-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[17px]">
                   새 게임 시작 (방장) <Icon name="ArrowRight" className="w-5 h-5 ml-2" />
-                </button>
-                <button onClick={() => { if (!firebaseInitialized) { showToastMsg("⚠️ 파이어베이스 코드를 먼저 입력해주세요!"); return; } setShowJoinModal(true); }} className="w-full bg-white border-2 border-[#1e9f64] text-[#1e9f64] hover:bg-green-50 font-bold py-3.5 px-4 rounded-[20px] transition shadow-sm flex items-center justify-center text-[15px]">
-                  초대 코드로 참여하기
                 </button>
               </div>
             </div>
@@ -1003,10 +1000,9 @@
                 <div className="font-black text-[20px] tracking-tight flex items-center gap-2">
                   <span>{currentHole + 1}H</span>
                   {roomId && (
-                    <div className="flex items-center gap-1.5">
-                      <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
-                      <button onClick={() => setShowQrModal(true)} className="bg-white/20 p-1 rounded-md hover:bg-white/30 transition"><Icon name="QrCode" className="w-4 h-4" /></button>
-                    </div>
+                    <span onClick={() => setShowQrModal(true)} className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse cursor-pointer select-none">
+                      LIVE
+                    </span>
                   )}
                 </div>
               </div>
@@ -1151,10 +1147,9 @@
                 <div className="font-black text-[17px] tracking-tight flex items-center gap-2">
                   <span>전체 스코어보드</span>
                   {roomId && (
-                    <div className="flex items-center gap-1.5">
-                      <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
-                      <button onClick={() => setShowQrModal(true)} className="bg-white/20 p-1 rounded-md hover:bg-white/30 transition"><Icon name="QrCode" className="w-4 h-4" /></button>
-                    </div>
+                    <span onClick={() => setShowQrModal(true)} className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse cursor-pointer select-none">
+                      LIVE
+                    </span>
                   )}
                 </div>
               </div>
@@ -1312,10 +1307,9 @@
               <div className="text-[15px] font-bold mt-1 text-yellow-300 flex items-center justify-center gap-2">
                 {currentHoleData.isHoleExcluded ? <span className="text-red-200">전체 내기 제외 홀</span> : <>{currentHoleData.multiplier > 1 ? `x${currentHoleData.multiplier} 배판` : ' '}</>}
                 {roomId && (
-                  <div className="flex items-center gap-1.5 ml-2">
-                    <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
-                    <button onClick={() => setShowQrModal(true)} className="bg-white/20 p-1 rounded-md hover:bg-white/30 transition"><Icon name="QrCode" className="w-4 h-4" /></button>
-                  </div>
+                  <span onClick={() => setShowQrModal(true)} className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse cursor-pointer select-none ml-2">
+                    LIVE
+                  </span>
                 )}
               </div>
             </div>
@@ -1457,10 +1451,9 @@
               <div className="flex items-center gap-2">
                 <h1 className="text-[17px] font-bold flex items-center"><Icon name="Calculator" className="w-5 h-5 mr-2"/> 최종 정산 내역</h1>
                 {roomId && (
-                  <div className="flex items-center gap-1.5 ml-2">
-                    <span onTouchStart={handleLivePressStart} onTouchEnd={handleLivePressEnd} onMouseDown={handleLivePressStart} onMouseUp={handleLivePressEnd} onMouseLeave={handleLivePressEnd} className="bg-red-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded-md animate-pulse cursor-pointer select-none">LIVE ({roomId})</span>
-                    <button onClick={() => setShowQrModal(true)} className="bg-white/20 p-1 rounded-md hover:bg-white/30 transition"><Icon name="QrCode" className="w-4 h-4" /></button>
-                  </div>
+                  <span onClick={() => setShowQrModal(true)} className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md animate-pulse cursor-pointer select-none ml-2">
+                    LIVE
+                  </span>
                 )}
               </div>
               <div className="flex items-center">
@@ -1715,6 +1708,99 @@
                     <Icon name="RotateCcw" className="w-5 h-5 mr-2" /> 새 게임 시작
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* 초대 코드로 입장 모달 */}
+          {showJoinModal && (
+            <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end pointer-events-auto backdrop-blur-sm">
+              <div className="bg-white rounded-t-[32px] p-6 animate-in slide-in-from-bottom-4 shadow-2xl">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-xl font-black text-gray-800">초대 코드로 입장</h3>
+                  <button onClick={() => setShowJoinModal(false)} className="p-2 bg-gray-100 rounded-full"><Icon name="X" className="w-5 h-5 text-gray-500" /></button>
+                </div>
+                <input 
+                  type="text" 
+                  value={joinCode} 
+                  onChange={(e) => setJoinCode(e.target.value)} 
+                  placeholder="초대 코드 6자리 입력" 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-[16px] px-4 py-4 text-center font-black text-xl mb-4 outline-none uppercase focus:border-[#128853] focus:ring-1 focus:ring-[#128853] transition-all"
+                  autoFocus
+                />
+                <button onClick={() => {
+                    if (!joinCode.trim()) return showToastMsg('코드를 입력해주세요.');
+                    window.location.href = `?roomId=${joinCode.trim().toUpperCase()}`;
+                  }} 
+                  className="w-full bg-[#128853] text-white font-black py-4 rounded-[16px] text-lg shadow-md hover:bg-[#0f7646] transition">
+                  입장하기
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* QR 코드 공유 모달 (새롭게 개편) */}
+          {showQrModal && (
+            <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm pointer-events-auto">
+              <div className="bg-white rounded-[24px] w-full max-w-sm p-6 shadow-xl text-center flex flex-col items-center">
+                <div className="flex justify-between items-center w-full border-b border-gray-100 pb-3 mb-6">
+                  <h3 className="font-bold text-[17px] text-gray-800 flex items-center"><Icon name="QrCode" className="w-5 h-5 mr-2 text-[#128853]"/> 방 초대하기</h3>
+                  <button onClick={() => setShowQrModal(false)} className="p-1 hover:bg-gray-100 rounded-full transition"><Icon name="X" className="w-5 h-5 text-gray-500"/></button>
+                </div>
+                
+                <p className="text-[13px] text-gray-600 font-medium text-center leading-relaxed mb-6">
+                  라운드 동반자의 스마트폰 카메라로 스캔하거나<br/>초대 URL을 공유해 참여할 수 있습니다.
+                </p>
+
+                <div className="bg-gray-50 p-4 rounded-[16px] mb-6 w-full flex justify-center border border-gray-100">
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.origin + window.location.pathname + '?roomId=' + roomId)}`} alt="QR Code" className="w-40 h-40 rounded-lg mix-blend-multiply"/>
+                </div>
+                
+                <div className="w-full mb-6">
+                  <div className="text-[11px] font-bold text-gray-400 mb-1.5 text-left pl-1">초대 URL</div>
+                  <div className="bg-gray-50 border border-gray-200 text-gray-800 text-[13px] font-bold p-3.5 rounded-[12px] truncate text-left w-full select-all">
+                    {window.location.origin + window.location.pathname + '?roomId=' + roomId}
+                  </div>
+                </div>
+
+                <div className="flex gap-2 w-full mb-6">
+                  <button onClick={() => {
+                    const url = window.location.origin + window.location.pathname + '?roomId=' + roomId;
+                    const textArea = document.createElement("textarea");
+                    textArea.value = url;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try { document.execCommand('copy'); showToastMsg('초대 링크가 복사되었습니다!'); } catch(e){}
+                    document.body.removeChild(textArea);
+                    setShowQrModal(false);
+                  }} className="flex-1 bg-white border border-[#128853] text-[#128853] hover:bg-green-50 font-bold py-3.5 rounded-[16px] transition shadow-sm text-[14px]">
+                    URL 복사
+                  </button>
+                  <button onClick={async () => {
+                    const url = window.location.origin + window.location.pathname + '?roomId=' + roomId;
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({ title: '골프 타당 게임', text: '골프 타당 게임에 초대합니다!', url: url });
+                        setShowQrModal(false);
+                      } catch(e) {}
+                    } else {
+                      const textArea = document.createElement("textarea");
+                      textArea.value = url;
+                      document.body.appendChild(textArea);
+                      textArea.select();
+                      try { document.execCommand('copy'); showToastMsg('초대 링크가 복사되었습니다!'); } catch(e){}
+                      document.body.removeChild(textArea);
+                      setShowQrModal(false);
+                    }
+                  }} className="flex-1 bg-[#128853] hover:bg-[#0f7646] text-white font-bold py-3.5 rounded-[16px] transition shadow-sm text-[14px]">
+                    공유하기
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-gray-400 font-medium text-center leading-relaxed">
+                  지금 공유하시거나, 홀별 타수 기록 페이지<br/>
+                  <span className="text-red-500 font-black">LIVE</span> 버튼을 클릭하시면 언제든 공유할 수 있습니다.
+                </p>
               </div>
             </div>
           )}
