@@ -264,9 +264,6 @@
                     새 게임 시작 (방장)
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
                 </button>
-                <button onclick="window.joinRoom()" class="w-full py-4 bg-white border border-[#139758] text-[#139758] rounded-[1rem] font-bold text-[15px] active:scale-95 transition-all shadow-sm">
-                    초대 URL로 참여하기
-                </button>
             </div>
         </div>
     </div>
@@ -292,7 +289,7 @@
             <div class="flex items-center justify-between w-full">
                 <!-- 스코어카드 버튼 (왼쪽) -->
                 <button onclick="openScoreboard()" class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11A7 7 0 015 11V5h14v6zM7 11H5a2 2 0 01-2-2V7a2 2 0 012-2h2m10 6h2a2 2 0 002-2V7a2 2 0 00-2-2h-2m-6 9v4m-3 0h6"></path></svg>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11A7 7 0 015 11V5h14v6zM7 11H5a2 2 0 012-2h2m10 6h2a2 2 0 002-2V7a2 2 0 00-2-2h-2m-6 9v4m-3 0h6"></path></svg>
                 </button>
                 
                 <div class="flex flex-col items-center">
@@ -301,7 +298,7 @@
                         <!-- Live Badge Area -->
                         <div class="live_badge_container hidden flex items-center gap-1">
                             <button onclick="openInviteModal()" class="bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-md leading-none flex items-center gap-1 shadow-sm active:scale-95">
-                                LIVE (<span class="display_room_code_short"></span>)
+                                LIVE
                             </button>
                         </div>
                     </div>
@@ -326,12 +323,12 @@
                         <button onclick="setHolePar(3)" id="par-btn-3" class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 transition-all">3</button>
                         <button onclick="setHolePar(4)" id="par-btn-4" class="flex-1 py-1.5 text-xs font-bold rounded-md bg-[#139758] text-white shadow-sm transition-all">4</button>
                         <button id="par-btn-high" 
-                                onmousedown="startParHighPress(event)" 
-                                onmouseup="endParHighPress(event)" 
-                                onmouseleave="cancelParHighPress(event)" 
-                                ontouchstart="startParHighPress(event)" 
-                                ontouchend="endParHighPress(event)" 
-                                ontouchcancel="cancelParHighPress(event)"
+                                onmousedown="window.startParHighPress(event)" 
+                                onmouseup="window.endParHighPress(event)" 
+                                onmouseleave="window.cancelParHighPress(event)" 
+                                ontouchstart="window.startParHighPress(event)" 
+                                ontouchend="window.endParHighPress(event)" 
+                                ontouchcancel="window.cancelParHighPress(event)"
                                 class="flex-1 py-1.5 text-xs font-bold rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all bg-transparent select-none"
                                 style="-webkit-touch-callout: none; user-select: none; -webkit-user-select: none;">5</button>
                     </div>
@@ -391,15 +388,20 @@
             <div class="flex items-center justify-center gap-1.5">
                 <span id="res_multiplier" class="text-yellow-300 font-black text-sm">x1 배판</span>
                 <div class="live_badge_container hidden flex items-center gap-1">
-                    <span class="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded leading-none flex items-center gap-0.5">
-                        LIVE <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
-                    </span>
+                    <button onclick="openInviteModal()" class="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded leading-none flex items-center gap-0.5 hover:bg-red-600 active:scale-95 transition-all">
+                        LIVE
+                    </button>
                 </div>
             </div>
         </div>
 
         <div class="px-4 -mt-8 relative z-10 space-y-4">
             
+            <!-- 매치 결과 타수 요약 카드 -->
+            <div id="res_match_summary" class="bg-white rounded-[1.5rem] p-4 card-shadow border border-slate-100 hidden">
+                <!-- JS 동적 생성 -->
+            </div>
+
             <!-- 플레이어 결과 요약 카드 -->
             <div class="bg-white rounded-[1.5rem] p-4 card-shadow border border-slate-100 flex justify-between gap-1" id="res_player_summary">
                 <!-- JS 동적 생성 -->
@@ -460,8 +462,8 @@
                     <svg class="w-2.5 h-2.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span class="time-text">00:00</span>
                 </div>
-                <button class="live_badge_container hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all absolute right-0 top-5 bg-white/10" onclick="openInviteModal()">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
+                <button class="live_badge_container hidden w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 active:scale-95 transition-all absolute right-0 top-5 bg-red-500" onclick="openInviteModal()">
+                    <span class="text-[9px] font-black leading-none">LIVE</span>
                 </button>
             </div>
         </header>
@@ -664,17 +666,21 @@
                 <button onclick="closeInviteModal()" class="text-slate-400 hover:text-slate-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="p-6 flex flex-col items-center">
-                <p class="text-xs text-slate-500 mb-6 text-center leading-relaxed">친구의 스마트폰 카메라로 스캔하거나<br>초대 URL을 공유해 참여할 수 있습니다.</p>
+                <p class="text-xs text-slate-500 mb-6 text-center leading-relaxed">라운드 동반자의 스마트폰 카메라로 스캔하거나<br>초대 URL을 공유해 참여할 수 있습니다.</p>
                 <div class="bg-white p-2 rounded-xl border border-slate-200 shadow-sm mb-6 flex justify-center items-center h-48 w-48">
                     <img id="qr_image" src="" alt="QR Code" class="w-full h-full object-contain">
                 </div>
-                <div class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 flex justify-between items-center gap-3">
+                <div class="w-full bg-slate-50 p-4 rounded-2xl border border-slate-100 flex flex-col gap-3">
                     <div class="flex flex-col overflow-hidden w-full">
                         <span class="text-[10px] text-slate-400 font-bold mb-1">초대 URL</span>
                         <span class="text-[12px] font-black text-slate-800 truncate display_room_code_url"></span>
                     </div>
-                    <button onclick="window.copyInviteCode()" class="bg-[#139758] text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all shrink-0">URL 복사</button>
+                    <div class="flex gap-2 w-full">
+                        <button onclick="window.copyInviteCode()" class="flex-1 bg-white border border-[#139758] text-[#139758] py-2.5 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all">URL 복사</button>
+                        <button onclick="window.shareInviteCode()" class="flex-1 bg-[#139758] text-white py-2.5 rounded-xl text-xs font-bold shadow-sm active:scale-95 transition-all">공유하기</button>
+                    </div>
                 </div>
+                <p class="text-[10px] text-slate-400 mt-4 text-center leading-relaxed">지금 공유하시거나, 홀별 타수 기록 페이지<br><span class="font-bold text-red-500">LIVE</span> 버튼을 클릭하시면 언제든 공유할 수 있습니다.</p>
             </div>
         </div>
     </div>
@@ -893,7 +899,6 @@
             const baseUrl = window.location.href.split('?')[0].split('#')[0];
             let inviteUrl = baseUrl + '?room=' + window.roomCode;
             
-            // 미리보기(Blob) 환경인 경우 깔끔한 URL로 대체 (테스트 및 복사용)
             if (inviteUrl.startsWith('blob:')) {
                 inviteUrl = "https://golf-match.app/?room=" + window.roomCode;
             }
@@ -905,6 +910,9 @@
 
             // UI 즉시 전환 & 타이머 시작
             window.startGameLocal(); 
+            
+            // 모달 열기
+            document.getElementById('invite-modal').classList.remove('hidden');
 
             // Firebase 연동 비동기 처리
             if (window._setupFirebase) {
@@ -912,12 +920,8 @@
                     if (isFirebaseReady) {
                         window.pushSharedState();
                         window._startListening();
-                    } else {
-                        window.showToast("로컬 단독 모드로 실행 중입니다.");
                     }
                 });
-            } else {
-                window.showToast("로컬 모드로 실행합니다.");
             }
         }
 
@@ -960,21 +964,6 @@
             }
         }
 
-        window.joinRoom = function() {
-            const input = prompt('초대 URL 또는 6자리 초대 코드를 입력해주세요:');
-            if (!input) return;
-            
-            let finalCode = input;
-            if (input.includes('room=')) {
-                try {
-                    finalCode = new URL(input).searchParams.get('room') || input;
-                } catch(e) {
-                    finalCode = input.split('room=')[1].split('&')[0];
-                }
-            }
-            window.joinRoomWithCode(finalCode);
-        }
-
         // --- 파(PAR) 길게 누르기 이벤트 설정 ---
         let parPressTimer = null;
         let isLongPress = false;
@@ -995,7 +984,7 @@
                 let cur = window.pars[window.currentHole];
                 if (cur < 5) cur = 5; 
                 let next = cur + 1;
-                if (next > 7) next = 5; // 7을 길게 누르면 다시 5로 순환
+                if (next > 7) next = 5; 
                 setHolePar(next);
                 window.showToast(`PAR ${next}로 설정되었습니다.`);
                 try { if (navigator.vibrate) navigator.vibrate(50); } catch(err){}
@@ -1342,25 +1331,49 @@
                 inviteUrl = "https://golf-match.app/?room=" + window.roomCode;
             }
             
-            // 모바일 및 iframe 환경에서 안정적인 복사를 위한 처리
             const el = document.createElement('textarea'); 
             el.value = inviteUrl; 
-            el.setAttribute('readonly', ''); // 모바일 키보드 표시 방지
+            el.setAttribute('readonly', '');
             el.style.position = 'absolute';
-            el.style.left = '-9999px'; // 화면 밖으로 숨김
+            el.style.left = '-9999px';
             document.body.appendChild(el); 
             
             el.select();
-            el.setSelectionRange(0, 99999); // iOS Safari 대응
+            el.setSelectionRange(0, 99999);
             
             try {
                 document.execCommand('copy'); 
                 window.showToast('초대 URL이 복사되었습니다.');
+                closeInviteModal(); // 모달 닫기
             } catch(e) {
-                window.showToast('복사에 실패했습니다. 권한을 확인해주세요.');
+                window.showToast('복사에 실패했습니다.');
             }
             
             document.body.removeChild(el);
+        }
+
+        window.shareInviteCode = function() {
+            if(!window.roomCode) return;
+            const baseUrl = window.location.href.split('?')[0].split('#')[0];
+            let inviteUrl = baseUrl + '?room=' + window.roomCode;
+            if (inviteUrl.startsWith('blob:')) {
+                inviteUrl = "https://golf-match.app/?room=" + window.roomCode;
+            }
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: '골프 4종 경기 초대',
+                    text: '골프 4종 경기 포인트 매치에 초대합니다!',
+                    url: inviteUrl
+                }).then(() => {
+                    closeInviteModal();
+                }).catch((error) => {
+                    console.error('Error sharing', error);
+                    window.copyInviteCode(); // Fallback to copy
+                });
+            } else {
+                window.copyInviteCode(); // Fallback to copy
+            }
         }
 
         window.startGameLocal = function() {
@@ -1370,7 +1383,6 @@
             window.manualMultipliers = Array(18).fill(null);
             window.currentHole = 0;
             
-            // 타이머 시작
             window.gameStartTime = Date.now();
             window.startPlayTimer();
             
@@ -1390,7 +1402,6 @@
             window.points = Array.from({ length: 18 }, () => [0, 0, 0, 0]);
             window.finalGaePyeongArr = [0, 0, 0, 0];
 
-            // 타이머 리셋
             window.gameStartTime = null;
             if (window.playTimerInterval) clearInterval(window.playTimerInterval);
             document.querySelectorAll('.play-time-display').forEach(el => {
@@ -1428,7 +1439,7 @@
             if(hIdx === 0) document.getElementById('btn-prev-hole').classList.add('invisible');
             else document.getElementById('btn-prev-hole').classList.remove('invisible');
 
-            if (window.scores[hIdx][0] === null && !window.holeCompleted[hIdx]) {
+            if (window.scores[hIdx][0] === null && !window.holeCompleted[hIdx] && !window.isSyncing) {
                 for(let p=0; p<4; p++) window.scores[hIdx][p] = window.pars[hIdx];
             }
 
@@ -1524,12 +1535,12 @@
                 let borderColor = "border-slate-50";
                 if (info && info.type !== "개인전" && info.type !== "준비" && info.type !== "대기") {
                     if (info.type === "라스베가스") {
-                        if (info.teams[0].includes(pIdx)) { rowBgClass = "bg-blue-50/50"; borderColor="border-blue-100"; }
-                        if (info.teams[1].includes(pIdx)) { rowBgClass = "bg-red-50/50"; borderColor="border-red-100"; }
+                        if (info.teams[0].includes(pIdx)) { rowBgClass = "bg-blue-100"; borderColor="border-blue-300"; }
+                        if (info.teams[1].includes(pIdx)) { rowBgClass = "bg-red-100"; borderColor="border-red-300"; }
                     } else if (info.type === "따로또같이") {
-                        if (info.teamIndices.includes(pIdx)) { rowBgClass = "bg-teal-50/50"; borderColor="border-teal-100"; }
+                        if (info.teamIndices.includes(pIdx)) { rowBgClass = "bg-teal-100"; borderColor="border-teal-300"; }
                     } else if (info.type === "후세인") {
-                        if (info.husseinIdx === pIdx) { rowBgClass = "bg-yellow-50/50"; borderColor="border-yellow-100"; }
+                        if (info.husseinIdx === pIdx) { rowBgClass = "bg-yellow-100"; borderColor="border-yellow-400"; }
                     }
                 }
 
@@ -1783,107 +1794,131 @@
         window.applySharedState = function(state) {
             window.isSyncing = true;
             
-            if(state.scores) window.scores = typeof state.scores === 'string' ? JSON.parse(state.scores) : state.scores;
-            if(state.pars) window.pars = state.pars;
-            if(state.gameTypes) window.gameTypes = state.gameTypes;
-            if(state.multipliers) window.multipliers = state.multipliers;
-            if(state.manualMultipliers) window.manualMultipliers = state.manualMultipliers;
-            if(state.multiplierReasonsArr) window.multiplierReasonsArr = typeof state.multiplierReasonsArr === 'string' ? JSON.parse(state.multiplierReasonsArr) : state.multiplierReasonsArr;
-            if(state.points) window.points = typeof state.points === 'string' ? JSON.parse(state.points) : state.points;
-            if(state.holeTeamData) window.holeTeamData = typeof state.holeTeamData === 'string' ? JSON.parse(state.holeTeamData) : state.holeTeamData;
-            if(state.holeMoneyArr) window.holeMoneyArr = typeof state.holeMoneyArr === 'string' ? JSON.parse(state.holeMoneyArr) : state.holeMoneyArr;
-            if(state.totalMoneyArr) window.totalMoneyArr = state.totalMoneyArr;
-            if(state.holeCompleted) window.holeCompleted = state.holeCompleted;
-            if(state.activeCaddieIdx !== undefined) window.activeCaddieIdx = state.activeCaddieIdx;
-            if(state.basePointUnit !== undefined) window.basePointUnit = state.basePointUnit;
-            if(state.rules) window.rules = typeof state.rules === 'string' ? JSON.parse(state.rules) : state.rules;
-            if(state.currentHole !== undefined) window.currentHole = state.currentHole;
+            try {
+                if(state.scores) window.scores = typeof state.scores === 'string' ? JSON.parse(state.scores) : state.scores;
+                if(state.pars) window.pars = state.pars;
+                if(state.gameTypes) window.gameTypes = state.gameTypes;
+                if(state.multipliers) window.multipliers = state.multipliers;
+                if(state.manualMultipliers) window.manualMultipliers = state.manualMultipliers;
+                if(state.multiplierReasonsArr) window.multiplierReasonsArr = typeof state.multiplierReasonsArr === 'string' ? JSON.parse(state.multiplierReasonsArr) : state.multiplierReasonsArr;
+                if(state.points) window.points = typeof state.points === 'string' ? JSON.parse(state.points) : state.points;
+                if(state.holeTeamData) window.holeTeamData = typeof state.holeTeamData === 'string' ? JSON.parse(state.holeTeamData) : state.holeTeamData;
+                if(state.holeMoneyArr) window.holeMoneyArr = typeof state.holeMoneyArr === 'string' ? JSON.parse(state.holeMoneyArr) : state.holeMoneyArr;
+                if(state.totalMoneyArr) window.totalMoneyArr = state.totalMoneyArr;
+                if(state.holeCompleted) window.holeCompleted = state.holeCompleted;
+                if(state.activeCaddieIdx !== undefined) window.activeCaddieIdx = state.activeCaddieIdx;
+                if(state.basePointUnit !== undefined) window.basePointUnit = state.basePointUnit;
+                if(state.rules) window.rules = typeof state.rules === 'string' ? JSON.parse(state.rules) : state.rules;
+                if(state.currentHole !== undefined) window.currentHole = state.currentHole;
 
-            if(state.gaeRate !== undefined) window.gaeRate = state.gaeRate;
-            if(state.gaeRound !== undefined) window.gaeRound = state.gaeRound;
-            
-            if(state.gameStartTime !== undefined) {
-                if (!window.gameStartTime || window.gameStartTime !== state.gameStartTime) {
-                    window.gameStartTime = state.gameStartTime;
-                    window.startPlayTimer();
+                if(state.gaeRate !== undefined) window.gaeRate = state.gaeRate;
+                if(state.gaeRound !== undefined) window.gaeRound = state.gaeRound;
+                
+                if(state.gameStartTime !== undefined) {
+                    if (!window.gameStartTime || window.gameStartTime !== state.gameStartTime) {
+                        window.gameStartTime = state.gameStartTime;
+                        window.startPlayTimer();
+                    }
                 }
-            }
 
-            if (state.names) {
-                for(let i=0; i<4; i++) {
-                    const el = document.getElementById(`p${i+1}_name`);
-                    if(el) el.value = state.names[i];
-                }
-            }
-            if (state.handicaps) {
-                window.handicapsArray = state.handicaps;
-                for(let i=0; i<4; i++) {
-                    const el = document.getElementById(`p${i+1}_handi`);
-                    if(el) {
-                        let val = window.handicapsArray[i];
-                        el.value = val < 0 ? '-' + Math.abs(val).toLocaleString() : val.toLocaleString();
+                if (state.names) {
+                    for(let i=0; i<4; i++) {
+                        const el = document.getElementById(`p${i+1}_name`);
+                        if(el) el.value = state.names[i];
                     }
                 }
-            }
-            
-            updatePointUI();
-            calcTotalHandi();
-            updateCaddieUI();
-            
-            const customInput = document.getElementById('gae_input_custom');
-            const customWrapper = document.getElementById('gae_custom_wrapper');
-            const customPercent = document.getElementById('gae_custom_percent');
-            if (customInput && document.activeElement !== customInput) {
-                clearGaeButtons();
-                let rates = [0, 10, 20, 30, 50, 70];
-                if (!rates.includes(window.gaeRate) && window.gaeRate > 0) {
-                    customInput.value = window.gaeRate + ''; // value
-                    if(customWrapper) {
-                        customWrapper.classList.add('bg-[#139758]', 'border-[#139758]', 'shadow-md', 'shadow-green-600/30');
-                        customWrapper.classList.remove('bg-slate-50', 'border-slate-100', 'hover:bg-slate-100');
-                    }
-                    customInput.classList.add('text-white', 'text-right', 'pr-7');
-                    customInput.classList.remove('text-slate-600', 'text-center');
-                    if(customPercent) {
-                        customPercent.classList.add('opacity-100', 'text-white');
-                        customPercent.classList.remove('opacity-0', 'text-slate-500');
-                    }
-                } else {
-                    customInput.value = '';
-                    if(customWrapper) {
-                        customWrapper.classList.remove('bg-[#139758]', 'border-[#139758]', 'shadow-md', 'shadow-green-600/30');
-                        customWrapper.classList.add('bg-slate-50', 'border-slate-100', 'hover:bg-slate-100');
-                    }
-                    customInput.classList.remove('text-white', 'text-right', 'pr-7');
-                    customInput.classList.add('text-slate-600', 'text-center');
-                    if(customPercent) {
-                        customPercent.classList.remove('opacity-100', 'text-white');
-                        customPercent.classList.add('opacity-0', 'text-slate-500');
-                    }
-                    if(rates.includes(window.gaeRate)) {
-                        const btn = document.getElementById(`gae-btn-${window.gaeRate}`);
-                        if(btn) {
-                            let baseClass = window.gaeRate === 0 ? "gae-btn col-span-2 py-2.5 rounded-xl text-[13px] font-bold transition-all " : "gae-btn py-2.5 rounded-xl text-[13px] font-bold transition-all ";
-                            btn.className = baseClass + "bg-[#139758] text-white shadow-md shadow-green-600/30 border-[#139758]";
+                if (state.handicaps) {
+                    window.handicapsArray = state.handicaps;
+                    for(let i=0; i<4; i++) {
+                        const el = document.getElementById(`p${i+1}_handi`);
+                        if(el) {
+                            let val = window.handicapsArray[i];
+                            el.value = val < 0 ? '-' + Math.abs(val).toLocaleString() : val.toLocaleString();
                         }
                     }
                 }
-            }
+                
+                updatePointUI();
+                calcTotalHandi();
+                updateCaddieUI();
+                
+                // 직접입력 UI 상태 업데이트
+                const customInput = document.getElementById('gae_input_custom');
+                const customWrapper = document.getElementById('gae_custom_wrapper');
+                const customPercent = document.getElementById('gae_custom_percent');
+                if (customInput && document.activeElement !== customInput) {
+                    clearGaeButtons();
+                    let rates = [0, 10, 20, 30, 50, 70];
+                    if (!rates.includes(window.gaeRate) && window.gaeRate > 0) {
+                        customInput.value = window.gaeRate + ''; // value
+                        if(customWrapper) {
+                            customWrapper.classList.add('bg-[#139758]', 'border-[#139758]', 'shadow-md', 'shadow-green-600/30');
+                            customWrapper.classList.remove('bg-slate-50', 'border-slate-100', 'hover:bg-slate-100');
+                        }
+                        customInput.classList.add('text-white', 'text-right', 'pr-7');
+                        customInput.classList.remove('text-slate-600', 'text-center');
+                        if(customPercent) {
+                            customPercent.classList.add('opacity-100', 'text-white');
+                            customPercent.classList.remove('opacity-0', 'text-slate-500');
+                        }
+                    } else {
+                        customInput.value = '';
+                        if(customWrapper) {
+                            customWrapper.classList.remove('bg-[#139758]', 'border-[#139758]', 'shadow-md', 'shadow-green-600/30');
+                            customWrapper.classList.add('bg-slate-50', 'border-slate-100', 'hover:bg-slate-100');
+                        }
+                        customInput.classList.remove('text-white', 'text-right', 'pr-7');
+                        customInput.classList.add('text-slate-600', 'text-center');
+                        if(customPercent) {
+                            customPercent.classList.remove('opacity-100', 'text-white');
+                            customPercent.classList.add('opacity-0', 'text-slate-500');
+                        }
+                        if(rates.includes(window.gaeRate)) {
+                            const btn = document.getElementById(`gae-btn-${window.gaeRate}`);
+                            if(btn) {
+                                let baseClass = window.gaeRate === 0 ? "gae-btn col-span-2 py-2.5 rounded-xl text-[13px] font-bold transition-all " : "gae-btn py-2.5 rounded-xl text-[13px] font-bold transition-all ";
+                                btn.className = baseClass + "bg-[#139758] text-white shadow-md shadow-green-600/30 border-[#139758]";
+                            }
+                        }
+                    }
+                }
 
-            if (!document.getElementById('view-hole').classList.contains('hidden')) {
-                openHoleInput(window.currentHole); 
-            } else if (!document.getElementById('view-result').classList.contains('hidden')) {
-                showHoleResult(window.currentHole);
-            } else if (!document.getElementById('view-scoreboard').classList.contains('hidden')) {
-                renderScoreboard();
-            } else if (!document.getElementById('view-final').classList.contains('hidden')) {
-                renderFinalSettlement();
-            } else if (!document.getElementById('view-summary').classList.contains('hidden')) {
-                showSummary();
+                // 화면 자동 동기화 (Auto-follow)
+                if (!document.getElementById('view-setup').classList.contains('hidden')) {
+                    if (window.holeCompleted[window.currentHole]) {
+                        showHoleResult(window.currentHole);
+                    } else {
+                        openHoleInput(window.currentHole);
+                        switchView('view-hole');
+                    }
+                } else {
+                    if (!document.getElementById('view-hole').classList.contains('hidden')) {
+                        if (window.holeCompleted[window.currentHole]) {
+                            showHoleResult(window.currentHole);
+                        } else {
+                            openHoleInput(window.currentHole);
+                        }
+                    } else if (!document.getElementById('view-result').classList.contains('hidden')) {
+                        if (!window.holeCompleted[window.currentHole]) {
+                            openHoleInput(window.currentHole);
+                            switchView('view-hole');
+                        } else {
+                            showHoleResult(window.currentHole);
+                        }
+                    } else if (!document.getElementById('view-scoreboard').classList.contains('hidden')) {
+                        renderScoreboard();
+                    } else if (!document.getElementById('view-final').classList.contains('hidden')) {
+                        renderFinalSettlement();
+                    } else if (!document.getElementById('view-summary').classList.contains('hidden')) {
+                        showSummary();
+                    }
+                }
+            } catch(e) {
+                console.error("State apply error:", e);
+            } finally {
+                window.isSyncing = false;
             }
-            
-            window.isSyncing = false;
-        }
+        };
 
         // --- 홀 결과 화면 (Hole Result) ---
         function showHoleResult(idx) {
@@ -1896,6 +1931,127 @@
 
             const resGameTypeEl = document.getElementById('res_game_type');
             if (resGameTypeEl) resGameTypeEl.innerText = `${gType}`;
+
+            // ---- 매치 스코어(팀별 타수) 요약 추가 ----
+            const matchSummaryDiv = document.getElementById('res_match_summary');
+            let matchSummaryHtml = "";
+            let calcInfo = window.holeTeamData[idx] || { type: "개인전" };
+
+            if (gType.includes("동타")) {
+                matchSummaryHtml = `
+                    <div class="text-center py-2">
+                        <span class="text-sm font-black text-slate-700">전원 무승부 (동타)</span>
+                        <p class="text-[11px] font-bold text-slate-400 mt-1">포인트 변동 없이 배판 조건이 누적됩니다.</p>
+                    </div>
+                `;
+            } else if (calcInfo.type === "라스베가스") {
+                const t1 = calcInfo.teams[0];
+                const t2 = calcInfo.teams[1];
+                const s1 = hScores[t1[0]] + hScores[t1[1]];
+                const s2 = hScores[t2[0]] + hScores[t2[1]];
+                
+                let teams = [
+                    { name: `${names[t1[0]]}, ${names[t1[1]]}`, score: s1, type: 'team1' },
+                    { name: `${names[t2[0]]}, ${names[t2[1]]}`, score: s2, type: 'team2' }
+                ].sort((a, b) => a.score - b.score);
+
+                matchSummaryHtml = `<div class="flex justify-between items-center text-center gap-2">`;
+                teams.forEach((t, i) => {
+                    let isWinner = i === 0 && teams[0].score < teams[1].score;
+                    let isLoser = i === 1 && teams[0].score < teams[1].score;
+                    let boxColor = isWinner ? 'bg-blue-50 border-blue-200' : isLoser ? 'bg-red-50 border-red-200' : 'bg-slate-50 border-slate-200';
+                    let titleColor = isWinner ? 'text-blue-600' : isLoser ? 'text-red-500' : 'text-slate-600';
+                    
+                    matchSummaryHtml += `
+                        <div class="flex-1 py-3 px-2 rounded-xl border ${boxColor}">
+                            <div class="text-[10px] ${titleColor} font-bold mb-1 truncate">${t.name}</div>
+                            <div class="text-lg font-black text-slate-800">${t.score}<span class="text-[10px] font-medium ml-0.5 text-slate-500">타(합산)</span></div>
+                        </div>
+                    `;
+                    if (i === 0) matchSummaryHtml += `<div class="px-1 text-slate-300 font-black italic text-xs">VS</div>`;
+                });
+                matchSummaryHtml += `</div>`;
+
+            } else if (calcInfo.type === "따로또같이") {
+                const tIdxs = calcInfo.teamIndices;
+                const sIdxs = calcInfo.singleIndices;
+                const tAvg = (hScores[tIdxs[0]] + hScores[tIdxs[1]]) / 2;
+                const s1 = hScores[sIdxs[0]];
+                const s2 = hScores[sIdxs[1]];
+                
+                let groups = [
+                    { name: `팀[${names[tIdxs[0]]},${names[tIdxs[1]]}]`, score: tAvg, isAvg: true, type: 'team' },
+                    { name: `싱글 [${names[sIdxs[0]]}]`, score: s1, isAvg: false, type: 'single' },
+                    { name: `싱글 [${names[sIdxs[1]]}]`, score: s2, isAvg: false, type: 'single' }
+                ].sort((a, b) => a.score - b.score);
+
+                matchSummaryHtml = `<div class="flex justify-between items-center text-center gap-1.5">`;
+                groups.forEach(g => {
+                    let boxColor = g.type === 'team' ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200';
+                    let titleColor = g.type === 'team' ? 'text-teal-700' : 'text-slate-500';
+                    let suffix = g.isAvg ? "타(평균)" : "타";
+                    matchSummaryHtml += `
+                        <div class="flex-1 py-3 px-1 rounded-xl border ${boxColor}">
+                            <div class="text-[9px] ${titleColor} font-bold mb-1 truncate">${g.name}</div>
+                            <div class="text-[15px] font-black text-slate-800">${g.score}<span class="text-[9px] font-medium ml-0.5 text-slate-500">${suffix}</span></div>
+                        </div>
+                    `;
+                });
+                matchSummaryHtml += `</div>`;
+
+            } else if (calcInfo.type === "후세인") {
+                const hIdx = calcInfo.husseinIdx;
+                const others = [0,1,2,3].filter(i => i !== hIdx);
+                const oAvg = (hScores[others[0]] + hScores[others[1]] + hScores[others[2]]) / 3;
+                const hScore = hScores[hIdx];
+                
+                let groups = [
+                    { name: `후세인 [${names[hIdx]}]`, score: hScore, rawScore: hScore, isAvg: false, type: 'hussein' },
+                    { name: `나머지 3인`, score: (Math.round(oAvg*10)/10).toFixed(1), rawScore: oAvg, isAvg: true, type: 'others' }
+                ].sort((a, b) => a.rawScore - b.rawScore);
+
+                matchSummaryHtml = `<div class="flex justify-between items-center text-center gap-2">`;
+                groups.forEach((g, i) => {
+                    let isWinner = i === 0 && groups[0].rawScore < groups[1].rawScore;
+                    let isLoser = i === 1 && groups[0].rawScore < groups[1].rawScore;
+                    let boxColor = g.type === 'hussein' ? 'bg-yellow-50 border-yellow-300' : 'bg-blue-50 border-blue-200';
+                    let titleColor = g.type === 'hussein' ? 'text-yellow-700' : 'text-blue-600';
+                    let suffix = g.isAvg ? "타(평균)" : "타";
+
+                    matchSummaryHtml += `
+                        <div class="flex-1 py-3 px-2 rounded-xl border ${boxColor}">
+                            <div class="text-[10px] ${titleColor} font-bold mb-1 truncate">${g.name}</div>
+                            <div class="text-lg font-black text-slate-800">${g.score}<span class="text-[10px] font-medium ml-0.5 text-slate-500">${suffix}</span></div>
+                        </div>
+                    `;
+                    if (i === 0) matchSummaryHtml += `<div class="px-1 text-slate-300 font-black italic text-xs">VS</div>`;
+                });
+                matchSummaryHtml += `</div>`;
+
+            } else { // 개인전
+                const sorted = hScores.map((s, i) => ({ score: s, idx: i })).sort((a, b) => a.score - b.score);
+                
+                matchSummaryHtml = `<div class="flex justify-between items-center text-center gap-1.5">`;
+                sorted.forEach((item, index) => {
+                    let medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "😥";
+                    let bg = index === 0 ? "bg-amber-50 border-amber-300" : "bg-slate-50 border-slate-200";
+                    matchSummaryHtml += `
+                        <div class="flex-1 py-2 px-1 rounded-xl border ${bg}">
+                            <div class="text-[9px] text-slate-600 font-bold mb-0.5 truncate">${medal} ${names[item.idx]}</div>
+                            <div class="text-[14px] font-black text-slate-800">${item.score}<span class="text-[9px] font-medium ml-0.5 text-slate-500">타</span></div>
+                        </div>
+                    `;
+                });
+                matchSummaryHtml += `</div>`;
+            }
+
+            if (matchSummaryHtml) {
+                matchSummaryDiv.innerHTML = matchSummaryHtml;
+                matchSummaryDiv.classList.remove('hidden');
+            } else {
+                matchSummaryDiv.classList.add('hidden');
+            }
+            // ------------------------------------------
 
             const playerSummary = document.getElementById('res_player_summary');
             playerSummary.innerHTML = "";
@@ -2504,14 +2660,6 @@
 
         function closeFinalSettlement() {
             switchView('view-scoreboard');
-        }
-
-        function handleShareFinal() {
-            window.showToast('공유하기 기능은 준비 중입니다.');
-        }
-
-        function shareScoreboard() {
-            window.showToast('스코어보드 공유 기능은 준비 중입니다.');
         }
 
         window.onload = () => {
