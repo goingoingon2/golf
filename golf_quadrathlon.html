@@ -1490,21 +1490,16 @@
         };
 
         window.showHoleResult = function(idx) {
-            const names = window.getNames();
-            const hScores = window.scores[idx], gType = window.gameTypes[idx], mFactor = window.multipliers[idx];
-
+            const names = window.getNames(); const hScores = window.scores[idx]; const gType = window.gameTypes[idx]; const mFactor = window.multipliers[idx];
             document.getElementById('res_hole_num').innerText = `${idx + 1}H`;
-            if (mFactor === 0) document.getElementById('res_multiplier').innerText = `내기 제외 (0배판)`;
-            else document.getElementById('res_multiplier').innerText = `x${mFactor} 배판`;
+            if (mFactor === 0) document.getElementById('res_multiplier').innerText = `내기 제외 (0배판)`; else document.getElementById('res_multiplier').innerText = `x${mFactor} 배판`;
+            const resGameTypeEl = document.getElementById('res_game_type'); if (resGameTypeEl) resGameTypeEl.innerText = `${gType}`;
 
-            const resGameTypeEl = document.getElementById('res_game_type');
-            if (resGameTypeEl) resGameTypeEl.innerText = `${gType}`;
+            const matchSummaryDiv = document.getElementById('res_match_summary'); let matchSummaryHtml = ""; let calcInfo = window.holeTeamData[idx] || { type: "개인전" };
 
-            const matchSummaryDiv = document.getElementById('res_match_summary');
-            let matchSummaryHtml = "";
-            let calcInfo = window.holeTeamData[idx] || { type: "개인전" };
+            const isAllZeroPoints = window.points[idx].every(p => p === 0);
 
-            if (gType.includes("동타")) {
+            if (isAllZeroPoints && mFactor !== 0) {
                 matchSummaryHtml = `<div class="text-center py-2"><span class="text-sm font-black text-slate-700">전원 무승부 (동타)</span><p class="text-[11px] font-bold text-slate-400 mt-1">포인트 변동 없이 배판 조건이 누적됩니다.</p></div>`;
             } else if (calcInfo.type === "라스베가스") {
                 const t1 = calcInfo.teams[0]; const t2 = calcInfo.teams[1];
