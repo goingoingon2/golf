@@ -22,13 +22,13 @@
 
     // 🚀 [필수] 본인의 Firebase 설정값으로 변경하세요!
     window.USER_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
+      apiKey: "",
+      authDomain: "",
+      projectId: "",
+      storageBucket: "",
+      messagingSenderId: "",
+      appId: ""
+    };
 
     window.dispatchEvent(new Event('FirebaseAPIReady'));
   </script>
@@ -404,8 +404,8 @@
                     <div key={idx} className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-green-50 text-green-700 flex items-center justify-center font-bold text-sm shrink-0">{idx + 1}</div>
                       <div className="relative flex-1">
-                        <input type="text" value={player} onChange={(e) => { const n = [...players]; n[idx] = e.target.value; setPlayers(n); }} className={`w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition ${idx === 0 ? 'pr-10 border-yellow-300 bg-yellow-50/20' : ''}`} placeholder={`플레이어 ${idx + 1}`} />
-                        {idx === 0 && <div className="absolute right-3 top-1/2 -translate-y-1/2"><Icons.Crown className="w-5 h-5 fill-yellow-400 text-yellow-500" /></div>}
+                        <input type="text" value={player} onChange={(e) => { const n = [...players]; n[idx] = e.target.value; setPlayers(n); }} className={`w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition text-gray-400 focus:text-gray-900 cursor-pointer focus:cursor-text font-semibold ${idx === 0 ? 'pr-10 border-yellow-300 bg-yellow-50/20' : ''}`} placeholder={`플레이어 ${idx + 1}`} />
+                        {idx === 0 && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><Icons.Crown className="w-5 h-5 fill-yellow-400 text-yellow-500" /></div>}
                       </div>
                     </div>
                   ))}
@@ -415,7 +415,7 @@
               <div className="flex gap-3 mb-6">
                 <button 
                   onClick={() => setActiveSettingMenu(prev => prev === 'JOKER' ? null : 'JOKER')}
-                  className={`flex-1 p-4 rounded-2xl shadow-sm border transition-all flex flex-col items-center gap-2 ${activeSettingMenu === 'JOKER' ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-100' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
+                  className={`flex-1 p-4 rounded-2xl shadow-sm border transition-all flex flex-col items-center gap-2 active:scale-[0.98] ${activeSettingMenu === 'JOKER' ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-100' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
                 >
                   <span className="text-sm font-bold text-gray-700 flex items-center gap-1">🃏 조커 설정</span>
                   <span className="text-xs font-bold text-purple-700 bg-white border border-purple-100 px-3 py-1 rounded-full shadow-sm">{jokerType}</span>
@@ -423,7 +423,7 @@
                 
                 <button 
                   onClick={() => setActiveSettingMenu(prev => prev === 'PERMISSIONS' ? null : 'PERMISSIONS')}
-                  className={`flex-1 p-4 rounded-2xl shadow-sm border transition-all flex flex-col items-center gap-2 ${activeSettingMenu === 'PERMISSIONS' ? 'bg-green-50 border-green-300 ring-2 ring-green-100' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
+                  className={`flex-1 p-4 rounded-2xl shadow-sm border transition-all flex flex-col items-center gap-2 active:scale-[0.98] ${activeSettingMenu === 'PERMISSIONS' ? 'bg-green-50 border-green-300 ring-2 ring-green-100' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
                 >
                   <span className="text-sm font-bold text-gray-700 flex items-center gap-1"><Icons.Check className="w-4 h-4 text-green-600"/> 동반자 권한</span>
                   <span className="text-xs font-bold text-green-700 bg-white border border-green-100 px-3 py-1 rounded-full shadow-sm">
@@ -483,7 +483,7 @@
                 <h1 className="text-2xl font-bold mb-1">라운드 대기실</h1>
                 <p className="text-xs opacity-90">{isHostView ? '모든 플레이어가 입장하면 시작하세요.' : '본인 자리를 선택하세요.'}</p>
               </div>
-              {isHostView && <button onClick={() => setIsInviteOpen(true)} className="w-full bg-white border-2 border-green-500 text-green-600 font-bold py-3.5 rounded-2xl mb-6 flex items-center justify-center gap-2 shadow-sm"><Icons.QrCode className="w-5 h-5" /> 방 초대하기</button>}
+              {isHostView && <button onClick={() => setIsInviteOpen(true)} className="w-full bg-white border-2 border-green-500 text-green-600 font-bold py-3.5 rounded-2xl mb-6 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-transform"><Icons.QrCode className="w-5 h-5" /> 방 초대하기</button>}
               <div className="grid grid-cols-2 gap-4 flex-1 content-start">
                 {players.map((p, i) => {
                   const joined = joinedStatus[i];
@@ -500,8 +500,8 @@
               <div className="mt-8 flex gap-3">
                 {isHostView ? (
                   <>
-                    <button onClick={goHome} className="w-1/3 bg-gray-200 text-gray-600 font-bold py-4 rounded-2xl">처음으로</button>
-                    <button disabled={!joinedStatus.every(s=>s)} onClick={startGame} className={`w-2/3 font-bold py-4 rounded-2xl shadow-lg transition-all ${joinedStatus.every(s=>s) ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-300 text-white cursor-not-allowed'}`}>게임 시작하기</button>
+                    <button onClick={goHome} className="w-1/3 bg-gray-200 text-gray-600 font-bold py-4 rounded-2xl active:scale-[0.98] transition-transform">처음으로</button>
+                    <button disabled={!joinedStatus.every(s=>s)} onClick={startGame} className={`w-2/3 font-bold py-4 rounded-2xl shadow-lg transition-all ${joinedStatus.every(s=>s) ? 'bg-green-600 text-white hover:bg-green-700 active:scale-[0.98]' : 'bg-gray-300 text-white cursor-not-allowed'}`}>게임 시작하기</button>
                   </>
                 ) : <div className="w-full bg-slate-800 text-white/50 text-center py-4 rounded-2xl font-bold">방장이 시작하기를 기다리는 중...</div>}
               </div>
@@ -533,10 +533,10 @@
               </div>
               <div className="mt-8 space-y-3 z-10">
                 <div className="flex gap-3">
-                  <button onClick={() => shuffleDeck('left')} disabled={isShuffling} className="flex-1 bg-slate-700 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-600"><Icons.RotateCcw className={`w-5 h-5 ${isShuffling==='left'?'animate-spin':''}`} /> 왼쪽</button>
-                  <button onClick={() => shuffleDeck('right')} disabled={isShuffling} className="flex-1 bg-slate-700 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-600">오른쪽 <Icons.RotateCw className={`w-5 h-5 ${isShuffling==='right'?'animate-spin':''}`} /></button>
+                  <button onClick={() => shuffleDeck('left')} disabled={isShuffling} className="flex-1 bg-slate-700 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-600 active:scale-[0.98] transition-transform"><Icons.RotateCcw className={`w-5 h-5 ${isShuffling==='left'?'animate-spin':''}`} /> 왼쪽</button>
+                  <button onClick={() => shuffleDeck('right')} disabled={isShuffling} className="flex-1 bg-slate-700 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-600 active:scale-[0.98] transition-transform">오른쪽 <Icons.RotateCw className={`w-5 h-5 ${isShuffling==='right'?'animate-spin':''}`} /></button>
                 </div>
-                {(isHostView || guestPermissions.finishShuffle) ? <button onClick={finishShuffle} className="w-full bg-green-600 py-4 rounded-2xl font-bold text-lg">패 섞기 완료</button> : <div className="text-center text-slate-500 py-4 font-bold">방장이 섞기를 마칠 때까지 대기중...</div>}
+                {(isHostView || guestPermissions.finishShuffle) ? <button onClick={finishShuffle} className="w-full bg-green-600 py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-transform">패 섞기 완료</button> : <div className="text-center text-slate-500 py-4 font-bold">방장이 섞기를 마칠 때까지 대기중...</div>}
               </div>
 
               {/* 조커 설정 모달 (방장 전용) */}
@@ -677,8 +677,8 @@
                 
                 {(isHostView || guestPermissions.nextHole) ? (
                   <div className="mt-8 space-y-3 pb-4">
-                    <button onClick={nextHole} disabled={isJokerPending} className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 ${isJokerPending ? 'bg-gray-700 text-gray-500' : 'bg-green-600 text-white shadow-lg'}`}><Icons.RotateCcw className="w-5 h-5" /> 다음 홀 이동 (다시 뽑기)</button>
-                    {isHostView && <button onClick={endGame} disabled={isJokerPending} className={`w-full py-4 rounded-2xl font-bold ${isJokerPending ? 'bg-slate-800 text-slate-600' : 'bg-slate-700 text-slate-300'}`}>대기실로 돌아가기 (방장 전용)</button>}
+                    <button onClick={nextHole} disabled={isJokerPending} className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform ${isJokerPending ? 'bg-gray-700 text-gray-500' : 'bg-green-600 text-white shadow-lg'}`}><Icons.RotateCcw className="w-5 h-5" /> 다음 홀 이동 (다시 뽑기)</button>
+                    {isHostView && <button onClick={endGame} disabled={isJokerPending} className={`w-full py-4 rounded-2xl font-bold active:scale-[0.98] transition-transform ${isJokerPending ? 'bg-slate-800 text-slate-600' : 'bg-slate-700 text-slate-300'}`}>대기실로 돌아가기 (방장 전용)</button>}
                   </div>
                 ) : (
                   <div className="mt-8 space-y-3 pb-4">
