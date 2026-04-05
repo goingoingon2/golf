@@ -395,7 +395,10 @@
                 <p className="text-sm text-gray-500 font-medium break-keep">실시간 온라인 멀티플레이 팀 정하기</p>
               </div>
               <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 border border-gray-100">
-                <h2 className="text-sm font-semibold text-gray-600 mb-4 flex items-center gap-2"><Icons.Users className="w-4 h-4" /> 플레이어 (4명)</h2>
+                <h2 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2"><Icons.Users className="w-4 h-4" /> 플레이어 (4명)</h2>
+                <p className="text-xs text-gray-500 mb-4 tracking-tight break-keep">
+                  * 선수 이름을 눌러 실제 플레이어들의 이름으로 변경해주세요.
+                </p>
                 <div className="space-y-3">
                   {players.map((player, idx) => (
                     <div key={idx} className="flex items-center gap-3">
