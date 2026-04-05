@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <!-- 모바일 환경에서 화면 비율 최적화 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>⛳ 골프 뽑기 게임</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- React & ReactDOM -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  
+  <!-- Babel (브라우저에서 JSX 컴파일) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- 💡 Firebase DB 연동 설정 💡 (GitHub 업로드 전 세팅) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    
+    // 본인의 Firebase 프로젝트 설정값으로 아래를 변경하세요.
+    const firebaseConfig = {
+  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+  authDomain: "left-right-6da31.firebaseapp.com",
+  projectId: "left-right-6da31",
+  storageBucket: "left-right-6da31.firebasestorage.app",
+  messagingSenderId: "128347797181",
+  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+};
+
+    // 파이어베이스 초기화 (주석을 해제하여 사용하세요)
+    // const app = initializeApp(firebaseConfig);
+    // const db = getFirestore(app);
+    // window.firebaseDb = db; // React 코드 내부에서 접근 가능하게 전역 설정
+  </script>
+
+  <!-- 기본 폰트 및 애니메이션 스타일 -->
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    body { 
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: #f9fafb;
+      margin: 0; 
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 플러그인 없이 Tailwind 느낌의 커스텀 애니메이션 구현 */
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    .animate-in { animation-duration: 0.3s; animation-fill-mode: forwards; animation-timing-function: ease-out; }
+    .fade-in { animation-name: fadeIn; }
+    .zoom-in { animation-name: zoomIn; }
+    .zoom-in-90 { animation-name: zoomIn; }
+    .slide-in-from-bottom-4 { animation-name: slideUp; animation-duration: 0.5s; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- React 앱 비즈니스 로직 -->
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // 아이콘 모음 (lucide-react 대체용)
+    const Icons = {
+      Settings: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+      Users: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+      QrCode: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+      Check: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="20 6 9 17 4 12"/></svg>,
+      RotateCcw: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>,
+      RotateCw: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>,
+      Home: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>,
+      Crown: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>,
+      X: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
+      Link: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>,
+      Loader2: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>,
+      ChevronDown: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m6 9 6 6 6-6"/></svg>,
+      ChevronUp: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m18 15-6-6-6 6"/></svg>,
+      Shuffle: (props) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><polyline points="16 3 21 3 21 8"/><line x1="4" x2="21" y1="20" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/><line x1="4" x2="9" y1="4" y2="9"/></svg>
+    };
+
+    // 게임 진행 단계
+    const PHASES = {
+      SETTINGS: 'SETTINGS',
+      INVITE: 'INVITE',
+      WAITING: 'WAITING',
+      SHUFFLE: 'SHUFFLE',
+      DRAW: 'DRAW',
+      RANDOM_JOKER: 'RANDOM_JOKER',
+      RESULT: 'RESULT'
+    };
+
+    const JOKER_OPTIONS = ['사용안함', '랜덤', '이글', '버디', '파', '보기', '더블', '트리플'];
+    const RANDOM_JOKER_POOL = ['이글', '버디', '파', '보기', '더블', '트리플'];
+
+    function App() {
+      const [phase, setPhase] = useState(PHASES.SETTINGS);
+      
+      // 게임 설정 상태
+      const [players, setPlayers] = useState(['타이어 우즈', '로리 맥일로이', '스코티 셔플러', '필 미친손']);
+      const [jokerType, setJokerType] = useState('보기');
+      const [isJokerMenuOpen, setIsJokerMenuOpen] = useState(false);
+      const [isJokerModalOpen, setIsJokerModalOpen] = useState(false);
+
+      // 대기실 상태
+      const [joinedStatus, setJoinedStatus] = useState([true, false, false, false]);
+
+      // 게임 진행 상태
+      const [deck, setDeck] = useState([0, 1, 2, 3, 4]);
+      const [actualRoles, setActualRoles] = useState([]);
+      const [selectedCards, setSelectedCards] = useState({});
+      
+      // UI 및 실시간 상태
+      const [isShuffling, setIsShuffling] = useState(false);
+      const [shufflePositions, setShufflePositions] = useState(Array(5).fill({ x: 0, y: 0, r: 0 }));
+      const [myCardIndex, setMyCardIndex] = useState(null);
+      const [pickLog, setPickLog] = useState('가장 먼저 카드를 선점하세요!');
+      const [finalJokerStroke, setFinalJokerStroke] = useState('');
+      const [isSpinningJoker, setIsSpinningJoker] = useState(false);
+
+      // 멀티플레이 적용 전 로컬 테스트를 위해 '나'를 항상 0번 플레이어(방장)로 고정
+      const MY_PLAYER_INDEX = 0;
+
+      const handlePick = (cardIndex, playerIdx) => {
+        const pickOrder = Object.keys(selectedCards).length;
+        if (pickOrder >= 4) return;
+        if (selectedCards[cardIndex]) return;
+
+        const assignedRole = actualRoles[pickOrder];
+        const playerName = players[playerIdx];
+
+        setSelectedCards(prev => ({
+          ...prev,
+          [cardIndex]: { playerIndex: playerIdx, player: playerName, role: assignedRole }
+        }));
+
+        if (playerIdx === MY_PLAYER_INDEX) {
+          setMyCardIndex(cardIndex);
+          setPickLog(`✅ 내가 카드를 선택했습니다!`);
+        } else {
+          setPickLog(`💬 ${playerName} 님이 카드를 골랐습니다.`);
+        }
+      };
+
+      const selectCard = (cardIndex) => {
+        if (selectedCards[cardIndex] !== undefined) return;
+        if (myCardIndex !== null) return;
+        if (Object.keys(selectedCards).length >= 4) return;
+        if (MY_PLAYER_INDEX === -1) return;
+        handlePick(cardIndex, MY_PLAYER_INDEX);
+      };
+
+      const handlePlayerNameChange = (index, value) => {
+        const newPlayers = [...players];
+        newPlayers[index] = value;
+        setPlayers(newPlayers);
+      };
+
+      const createRoom = () => {
+        if (players.some(p => p.trim() === '')) return;
+        setPhase(PHASES.INVITE);
+        setJoinedStatus([true, false, false, false]);
+      };
+
+      const toggleJoin = (index) => {
+        const newStatus = [...joinedStatus];
+        newStatus[index] = !newStatus[index];
+        setJoinedStatus(newStatus);
+      };
+
+      const startGame = () => {
+        initDeck();
+        setPhase(PHASES.SHUFFLE);
+      };
+
+      const openInvite = () => setPhase(PHASES.INVITE);
+      const closeInvite = () => setPhase(PHASES.WAITING);
+
+      const INVITE_URL = 'https://goingoingon2.github.io/golf/strokeplay';
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(INVITE_URL)}`;
+
+      const handleCopyUrl = () => {
+        const el = document.createElement('textarea');
+        el.value = INVITE_URL;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+        
+        alert('초대 URL이 복사되었습니다.\n동반자에게 전달해주세요!');
+        closeInvite();
+      };
+
+      const handleShare = async () => {
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: '⛳ 골프 뽑기 게임',
+              text: '라운드 동반자들과 함께 공정하게 팀을 뽑아보세요!',
+              url: INVITE_URL,
+            });
+            closeInvite();
+          } catch (error) {
+            console.log('공유 취소 또는 실패', error);
+            closeInvite();
+          }
+        } else {
+          handleCopyUrl();
+        }
+      };
+
+      const initDeck = () => {
+        let roles = [];
+        if (jokerType === '사용안함') {
+          roles = ['R', 'R', 'B', 'B'];
+        } else {
+          const shortTeam = Math.random() > 0.5 ? 'R' : 'B';
+          const fullTeam = shortTeam === 'R' ? 'B' : 'R';
+          roles = [fullTeam, fullTeam, shortTeam, 'J'];
+        }
+        setActualRoles(roles.sort(() => Math.random() - 0.5));
+        setDeck([0, 1, 2, 3, 4]);
+        setSelectedCards({});
+        setMyCardIndex(null);
+        setPickLog('가장 먼저 카드를 선점하세요!');
+        setFinalJokerStroke(jokerType === '랜덤' ? '' : jokerType);
+        setShufflePositions(Array(5).fill({ x: 0, y: 0, r: 0 }));
+      };
+
+      const shuffleDeck = (direction) => {
+        setIsShuffling(direction);
+        let count = 0;
+        const interval = setInterval(() => {
+          setShufflePositions(deck.map(() => {
+            const xBias = direction === 'left' ? -80 : 80;
+            const rBias = direction === 'left' ? -90 : 90;
+            return {
+              x: (Math.random() - 0.5) * 60 + xBias,
+              y: (Math.random() - 0.5) * 60,
+              r: (Math.random() - 0.5) * 180 + rBias
+            };
+          }));
+          count++;
+          if (count > 8) {
+            clearInterval(interval);
+            setShufflePositions(Array(5).fill({ x: 0, y: 0, r: 0 }));
+            setIsShuffling(false);
+          }
+        }, 100);
+      };
+
+      const finishShuffle = () => {
+        setPhase(PHASES.DRAW);
+      };
+
+      const executeRandomJoker = () => {
+        setPhase(PHASES.RANDOM_JOKER);
+        setIsSpinningJoker(true);
+        
+        let spinCount = 0;
+        const spinInterval = setInterval(() => {
+          setFinalJokerStroke(RANDOM_JOKER_POOL[spinCount % RANDOM_JOKER_POOL.length]);
+          spinCount++;
+          if (spinCount > 20) {
+            clearInterval(spinInterval);
+            const finalStroke = RANDOM_JOKER_POOL[Math.floor(Math.random() * RANDOM_JOKER_POOL.length)];
+            setFinalJokerStroke(finalStroke);
+            setIsSpinningJoker(false);
+            setTimeout(() => setPhase(PHASES.RESULT), 1500); 
+          }
+        }, 100);
+      };
+
+      const revealTeams = () => setPhase(PHASES.RESULT);
+      const nextHole = () => { initDeck(); setPhase(PHASES.SHUFFLE); };
+      const endGame = () => setPhase(PHASES.SETTINGS);
+
+      const getCardStyle = (role, jokerTeam = null) => {
+        if (role === 'R') return 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.4)]';
+        if (role === 'B') return 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.4)]';
+        if (role === 'J') {
+          if (jokerTeam === 'R') return 'bg-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)] border-2 border-yellow-400';
+          if (jokerTeam === 'B') return 'bg-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)] border-2 border-yellow-400';
+          return 'bg-purple-500 text-white border-2 border-purple-400'; 
+        }
+        return 'bg-slate-700 text-slate-300 border-2 border-slate-600';
+      };
+
+      return (
+        <div className="w-full">
+          {/* 1. 설정 페이지 */}
+          {phase === PHASES.SETTINGS && (
+            <div className="min-h-screen bg-gray-50 p-4 max-w-md mx-auto shadow-xl">
+              <div className="text-center mt-8 mb-10">
+                <h1 className="text-4xl font-black text-green-700 tracking-tighter mb-2 drop-shadow-sm">⛳ 골프 뽑기 게임</h1>
+                <p className="text-sm text-gray-500 font-medium break-keep">동반자들과 함께하는 빠르고 공정한 팀 정하기</p>
+              </div>
+              <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2 tracking-tight">
+                <Icons.Settings className="w-6 h-6 text-green-600" /> 게임 설정
+              </h2>
+              
+              <div className="bg-white rounded-xl p-5 shadow-sm mb-6 border border-gray-100">
+                <h2 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2"><Icons.Users className="w-4 h-4" /> 플레이어 (4명)</h2>
+                <p className="text-xs text-gray-500 mb-4 tracking-tight break-keep">
+                  * 선수 이름을 눌러 실제 플레이어들의 이름으로 변경해주세요.
+                </p>
+                <div className="space-y-3">
+                  {players.map((player, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-50 text-green-700 flex items-center justify-center font-bold text-sm shrink-0">{idx + 1}</div>
+                      <div className="relative flex-1">
+                        <input 
+                          type="text" 
+                          value={player} 
+                          onChange={(e) => handlePlayerNameChange(idx, e.target.value)} 
+                          className={`w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition ${idx === 0 ? 'pr-10 border-yellow-300 bg-yellow-50/30' : ''}`} 
+                          placeholder={`플레이어 ${idx + 1}`} 
+                        />
+                        {idx === 0 && (
+                          <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" title="방장">
+                            <Icons.Crown className="w-5 h-5 fill-yellow-400 text-yellow-500 drop-shadow-sm" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl shadow-sm mb-8 border border-gray-100 overflow-hidden">
+                <button 
+                  onClick={() => setIsJokerMenuOpen(!isJokerMenuOpen)}
+                  className="w-full p-5 flex items-center justify-between bg-white hover:bg-gray-50 transition-colors outline-none"
+                >
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-sm font-semibold text-gray-600">🃏 조커(Joker) 설정</h2>
+                    <span className="text-xs font-bold text-purple-700 bg-purple-100 border border-purple-200 px-2.5 py-1 rounded-full shadow-sm">
+                      {jokerType}
+                    </span>
+                  </div>
+                  {isJokerMenuOpen ? <Icons.ChevronUp className="w-5 h-5 text-gray-400" /> : <Icons.ChevronDown className="w-5 h-5 text-gray-400" />}
+                </button>
+                
+                {isJokerMenuOpen && (
+                  <div className="px-5 pb-5 border-t border-gray-50 pt-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="grid grid-cols-4 gap-2">
+                      {JOKER_OPTIONS.map((opt) => (
+                        <button key={opt} onClick={() => setJokerType(opt)} className={`py-2 px-1 text-sm rounded-lg border transition-all tracking-tight ${jokerType === opt ? 'bg-purple-100 border-purple-500 text-purple-700 font-bold' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}>
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-4 p-3 bg-gray-50 rounded-lg text-xs text-gray-500 leading-relaxed break-keep">
+                      * 조커로 뽑힌 플레이어는 인원이 부족한 팀에 자동 배치됩니다.<br/>
+                      * 적용 타수: 팀 승패 계산 시 실제 타수와 무관하게 선택한 타수가 적용됩니다.
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <button onClick={createRoom} className="w-full bg-green-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-green-700 transition active:scale-[0.98] text-lg">방 만들기</button>
+            </div>
+          )}
+
+          {/* 1.5. 방 초대하기 페이지 */}
+          {phase === PHASES.INVITE && (
+            <div className="min-h-screen bg-gray-800/60 max-w-md mx-auto flex items-center justify-center p-4 relative z-50">
+              <div className="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden flex flex-col relative animate-in fade-in zoom-in duration-200">
+                <div className="p-5 flex justify-between items-center border-b border-gray-100">
+                  <div className="flex items-center gap-2"><Icons.QrCode className="w-5 h-5 text-green-600" /><h2 className="text-lg font-bold text-gray-800 tracking-tight">방 초대하기</h2></div>
+                  <button onClick={closeInvite} className="p-1 hover:bg-gray-100 rounded-full transition"><Icons.X className="w-6 h-6 text-gray-400" /></button>
+                </div>
+                <div className="p-6 flex flex-col items-center">
+                  <p className="text-sm text-gray-500 text-center mb-6 break-keep leading-relaxed">라운드 동반자의 스마트폰 카메라로 스캔하거나<br/>초대 URL을 공유해 참여할 수 있습니다.</p>
+                  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 w-48 h-48 flex items-center justify-center shadow-inner">
+                    <img src={qrCodeUrl} alt="초대 QR 코드" className="w-full h-full object-contain mix-blend-multiply" />
+                  </div>
+                  <div className="w-full mb-6">
+                    <label className="text-xs font-bold text-gray-500 mb-2 block">초대 URL</label>
+                    <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg flex items-center text-sm text-gray-600 truncate"><Icons.Link className="w-4 h-4 mr-2 text-gray-400 shrink-0" /><span className="truncate">{INVITE_URL}</span></div>
+                  </div>
+                  <div className="flex gap-3 w-full">
+                    <button onClick={handleCopyUrl} className="flex-1 py-3 border-2 border-green-600 text-green-600 font-bold rounded-xl hover:bg-green-50 transition active:scale-[0.98]">
+                      URL 복사
+                    </button>
+                    <button onClick={handleShare} className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl shadow-md hover:bg-green-700 transition active:scale-[0.98]">
+                      공유하기
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 2. 대기실 페이지 */}
+          {phase === PHASES.WAITING && (() => {
+            const allJoined = joinedStatus.every(s => s);
+            return (
+              <div className="min-h-screen bg-gray-50 max-w-md mx-auto shadow-xl flex flex-col">
+                <div className="p-4">
+                  <div className="bg-green-600 text-white p-6 rounded-2xl shadow-md text-center mb-4">
+                    <h1 className="text-2xl font-bold mb-2 tracking-tight">라운드 대기실</h1>
+                    <p className="text-sm opacity-90 break-keep">
+                      모든 플레이어가 입장하면 게임을 시작할 수 있습니다.
+                    </p>
+                  </div>
+
+                  <button onClick={openInvite} className="w-full bg-white border border-green-200 text-green-600 font-bold py-3.5 rounded-xl shadow-sm mb-6 flex items-center justify-center gap-2 hover:bg-green-50 transition tracking-tight text-[15px]"><Icons.QrCode className="w-5 h-5" /> 방 초대 코드 / URL 열기</button>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {players.map((player, idx) => {
+                      const isJoined = joinedStatus[idx];
+
+                      return (
+                        <div 
+                          key={idx} 
+                          onClick={() => toggleJoin(idx)} 
+                          className={`relative p-5 rounded-2xl border flex flex-col items-center justify-center gap-3 transition-all cursor-pointer bg-white ${
+                            isJoined 
+                              ? 'border-green-400 shadow-[0_4px_20px_-4px_rgba(74,222,128,0.2)]' 
+                              : 'border-dashed border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {isJoined ? (
+                            <>
+                              <div className="relative w-12 h-12 rounded-full flex items-center justify-center shadow-sm bg-white border border-green-300 text-green-500">
+                                <Icons.Check className="w-6 h-6" />
+                              </div>
+                              <span className="font-bold text-[15px] tracking-tight text-green-700">{player}</span>
+                              <span className="text-[11px] font-bold px-3 py-1 rounded-full shadow-sm bg-green-600 text-white">
+                                {idx === 0 ? '방장(스코어 캐디)' : '입장 완료'}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <div className="relative w-12 h-12 rounded-full bg-gray-50 border border-gray-200 text-gray-300 flex items-center justify-center"><Icons.Users className="w-5 h-5" /></div>
+                              <span className="font-medium text-gray-400 text-[15px] tracking-tight">{player}</span>
+                              <span className="text-[11px] bg-gray-100 text-gray-400 px-3 py-1 rounded-full font-medium">대기 중... (클릭)</span>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-auto p-4 bg-white border-t border-gray-100 flex gap-3">
+                  <button onClick={() => setPhase(PHASES.SETTINGS)} className="w-1/3 bg-gray-100 text-gray-600 font-bold py-4 rounded-xl hover:bg-gray-200 transition text-[15px] tracking-tight">설정으로</button>
+                  <button disabled={!allJoined} onClick={startGame} className={`w-2/3 font-bold py-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-[15px] tracking-tight ${allJoined ? 'bg-green-600 text-white hover:bg-green-700 active:scale-[0.98]' : 'bg-gray-300 text-white cursor-not-allowed shadow-none'}`}>{allJoined ? '게임 시작하기' : `${joinedStatus.filter(Boolean).length}/4 명 입장완료`}</button>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 3. 패 섞기 (기리) 페이지 */}
+          {phase === PHASES.SHUFFLE && (
+            <div className="min-h-screen bg-slate-900 max-w-md mx-auto shadow-xl flex flex-col p-6 text-white relative overflow-hidden">
+              <h2 className="text-center text-xl font-bold mb-2 tracking-tight">패 섞기 (기리)</h2>
+              <p className="text-center text-slate-400 text-sm mb-4 break-keep">방장이 아니더라도 누구나 섞을 수 있습니다.</p>
+              
+              <button 
+                onClick={() => setIsJokerModalOpen(true)}
+                className="mx-auto mb-8 bg-slate-800 text-slate-300 border border-slate-700 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-slate-700 transition shadow-sm"
+              >
+                🃏 조커 설정: <span className="text-purple-400">{jokerType}</span>
+              </button>
+
+              <div className="flex flex-wrap justify-center gap-4 flex-1 content-center">
+                {deck.map((_, idx) => (
+                  <div key={idx} className="w-[28%] aspect-[3/4] bg-slate-800 rounded-2xl border-2 border-slate-700 flex items-center justify-center shadow-2xl relative z-10" style={{ transform: `translate(${shufflePositions[idx]?.x || 0}px, ${shufflePositions[idx]?.y || 0}px) rotate(${shufflePositions[idx]?.r || 0}deg) ${isShuffling ? 'scale(0.95)' : 'scale(1)'}`, transition: 'transform 0.1s ease-in-out', backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' }}>
+                    <div className="w-10 h-10 rounded-full border-4 border-slate-600 flex items-center justify-center opacity-50"><span className="font-bold text-slate-600 text-lg">?</span></div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-12 flex flex-col gap-3">
+                <div className="flex gap-3">
+                  <button onClick={() => shuffleDeck('left')} disabled={isShuffling !== false} className="flex-1 bg-slate-700 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-slate-600 transition active:scale-[0.98] text-[15px] tracking-tight">
+                    <Icons.RotateCcw className={`w-5 h-5 ${isShuffling === 'left' ? 'animate-spin' : ''}`} /> 
+                    왼쪽으로 섞기
+                  </button>
+                  <button onClick={() => shuffleDeck('right')} disabled={isShuffling !== false} className="flex-1 bg-slate-700 text-white font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 hover:bg-slate-600 transition active:scale-[0.98] text-[15px] tracking-tight">
+                    오른쪽으로 섞기
+                    <Icons.RotateCw className={`w-5 h-5 ${isShuffling === 'right' ? 'animate-spin' : ''}`} /> 
+                  </button>
+                </div>
+                <button onClick={finishShuffle} className="w-full bg-green-500 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-green-600 transition active:scale-[0.98] text-lg tracking-tight">패 섞기 완료</button>
+              </div>
+
+              {/* 조커 설정 모달 */}
+              {isJokerModalOpen && (
+                <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-sm flex flex-col p-6 items-center justify-center animate-in fade-in zoom-in duration-200">
+                  <div className="bg-white rounded-2xl w-full max-w-sm p-6 shadow-2xl relative text-gray-800">
+                    <button onClick={() => setIsJokerModalOpen(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                      <Icons.X className="w-6 h-6" />
+                    </button>
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 tracking-tight">
+                      🃏 조커 설정
+                    </h3>
+                    <div className="grid grid-cols-4 gap-2 mb-6">
+                      {JOKER_OPTIONS.map((opt) => (
+                        <button 
+                          key={opt} 
+                          onClick={() => {
+                            setJokerType(opt);
+                            let roles = [];
+                            if (opt === '사용안함') {
+                              roles = ['R', 'R', 'B', 'B'];
+                            } else {
+                              const shortTeam = Math.random() > 0.5 ? 'R' : 'B';
+                              const fullTeam = shortTeam === 'R' ? 'B' : 'R';
+                              roles = [fullTeam, fullTeam, shortTeam, 'J'];
+                            }
+                            setActualRoles(roles.sort(() => Math.random() - 0.5));
+                            setFinalJokerStroke(opt === '랜덤' ? '' : opt);
+                          }} 
+                          className={`py-2 px-1 text-sm rounded-lg border transition-all tracking-tight ${jokerType === opt ? 'bg-purple-100 border-purple-500 text-purple-700 font-bold' : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                    <button onClick={() => setIsJokerModalOpen(false)} className="w-full bg-slate-800 text-white font-bold py-3 rounded-xl hover:bg-slate-700 transition tracking-tight">
+                      설정 완료
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* 4. 패 뽑기 */}
+          {phase === PHASES.DRAW && (() => {
+            const isAllDrawn = Object.keys(selectedCards).length >= 4;
+
+            return (
+              <div className="min-h-screen bg-slate-900 max-w-md mx-auto shadow-xl flex flex-col p-6 text-white relative">
+                <h2 className="text-center text-xl font-bold mb-6 tracking-tight">팀 뽑기</h2>
+
+                <div className="flex flex-col items-center justify-center flex-1 w-full mb-8 relative">
+                  {myCardIndex !== null ? (
+                    <div className={`w-[70%] max-w-[260px] aspect-[3/4] rounded-3xl shadow-2xl flex flex-col items-center justify-center border-4 border-white/20 animate-in zoom-in-90 fade-in duration-500 ${getCardStyle(selectedCards[myCardIndex].role)}`}>
+                      <span className="text-[6rem] leading-none mb-4 drop-shadow-xl">
+                        {selectedCards[myCardIndex].role === 'J' ? '🃏' : selectedCards[myCardIndex].role}
+                      </span>
+                      <div className="bg-black/40 px-6 py-2.5 rounded-full backdrop-blur-md shadow-inner">
+                        <span className="text-xl font-bold text-white tracking-tight">내 카드</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap justify-center gap-4 w-full animate-in fade-in duration-300">
+                      {deck.map((_, idx) => {
+                        const pickedData = selectedCards[idx];
+                        const isPicked = pickedData !== undefined;
+
+                        return (
+                          <div 
+                            key={idx}
+                            onClick={() => selectCard(idx)}
+                            className={`w-[28%] aspect-[3/4] rounded-2xl flex flex-col items-center justify-center transition-all duration-300 relative shadow-xl ${
+                              !isPicked 
+                                ? 'bg-slate-700 border-2 border-green-400 cursor-pointer hover:bg-slate-600 hover:scale-105 shadow-[0_0_15px_rgba(74,222,128,0.2)]' 
+                                : 'bg-slate-800/80 border border-slate-600 opacity-60 cursor-not-allowed'
+                            }`}
+                            style={!isPicked ? { backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' } : {}}
+                          >
+                            {isPicked ? (
+                              <>
+                                <Icons.Check className="w-8 h-8 text-slate-500 mb-2 opacity-50" />
+                                <div className="w-[calc(100%-1rem)] py-1 absolute bottom-2 rounded text-center backdrop-blur-sm bg-black/20">
+                                  <span className="text-[10px] text-white/70 font-bold truncate block px-1 tracking-tight">
+                                    {pickedData.player}
+                                  </span>
+                                </div>
+                              </>
+                            ) : (
+                              <div className="w-10 h-10 rounded-full border-4 border-slate-500 flex items-center justify-center">
+                                <span className="font-bold text-slate-500 text-lg">?</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-auto flex flex-col gap-3">
+                  <div className="border border-slate-700 bg-slate-800/80 p-5 rounded-xl text-center shadow-inner backdrop-blur-sm transition-all">
+                    <p className={`font-bold text-[15px] tracking-tight mb-3 ${myCardIndex === null ? 'text-green-400 animate-pulse' : 'text-green-300'}`}>
+                      {pickLog}
+                    </p>
+                    <div className="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden">
+                      <div className="bg-green-500 h-full transition-all duration-500" style={{ width: `${(Object.keys(selectedCards).length / 4) * 100}%` }}></div>
+                    </div>
+                    <p className="text-slate-400 text-xs mt-2 font-medium">{Object.keys(selectedCards).length} / 4 명 선택 완료</p>
+                  </div>
+
+                  {isAllDrawn && (
+                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <button 
+                        onClick={revealTeams}
+                        className="w-full bg-green-500 text-white font-bold py-5 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.3)] text-xl tracking-tight hover:bg-green-600 transition active:scale-[0.98] flex items-center justify-center gap-2"
+                      >
+                        <Icons.Check className="w-6 h-6" /> 결과 확인 (전체 공개)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 6. 조커 랜덤 추첨 */}
+          {phase === PHASES.RANDOM_JOKER && (
+            <div className="min-h-screen bg-purple-900 max-w-md mx-auto shadow-xl flex flex-col items-center justify-center p-6 text-white text-center">
+              <h2 className="text-2xl font-bold mb-8 text-purple-200 tracking-tight">조커 타수 추첨 중...</h2>
+              <div className="w-full bg-purple-800/50 rounded-3xl p-10 border-4 border-purple-500 shadow-[0_0_50px_rgba(168,85,247,0.4)]">
+                <span className={`text-6xl font-black ${isSpinningJoker ? 'text-white blur-[1px]' : 'text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.8)] scale-110'} transition-all duration-100 inline-block`}>{finalJokerStroke}</span>
+              </div>
+            </div>
+          )}
+
+          {/* 7. 최종 결과 공개 */}
+          {phase === PHASES.RESULT && (() => {
+            const results = Object.values(selectedCards);
+            const isJokerPending = jokerType === '랜덤' && !finalJokerStroke;
+            
+            const rCount = results.filter(r => r.role === 'R').length;
+            const jokerTeam = rCount === 1 ? 'R' : 'B';
+
+            return (
+              <div className="min-h-screen bg-slate-900 max-w-md mx-auto shadow-xl flex flex-col p-6 text-white relative">
+                <h2 className="text-center text-3xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-yellow-200 tracking-tight">팀 매칭 결과</h2>
+
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  {results.map((res, idx) => {
+                    const isClickableJoker = res.role === 'J' && isJokerPending;
+                    const cardStyle = getCardStyle(res.role, jokerTeam);
+
+                    return (
+                      <div 
+                        key={idx}
+                        onClick={() => isClickableJoker && executeRandomJoker()}
+                        className={`relative aspect-[3/4] rounded-3xl flex flex-col items-center p-3 shadow-2xl transition-transform ${cardStyle} ${
+                          isClickableJoker ? 'cursor-pointer animate-pulse hover:scale-105' : ''
+                        }`}
+                      >
+                        {isClickableJoker && <span className="absolute -top-3 right-2 bg-yellow-400 text-black text-[12px] font-black px-3 py-1.5 rounded-full animate-bounce shadow-lg z-10 border-2 border-yellow-200">Click!</span>}
+
+                        <div className="flex-1 flex flex-col items-center justify-center w-full">
+                          {res.role === 'J' ? (
+                            <div className="flex flex-col items-center pt-2">
+                              <span className="text-[5.5rem] leading-none mb-1 drop-shadow-xl">🃏</span>
+                              {finalJokerStroke ? (
+                                <span className="text-lg font-black text-white bg-black/30 px-4 py-1 rounded-full shadow-inner tracking-tight">
+                                  {finalJokerStroke}
+                                </span>
+                              ) : (
+                                <span className="text-lg font-black text-white/50 bg-black/20 px-4 py-1 rounded-full tracking-tight">
+                                  미확인
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-8xl font-black drop-shadow-[0_4px_10px_rgba(0,0,0,0.3)]">{res.role}</span>
+                          )}
+                        </div>
+
+                        <div className="w-full bg-black/30 py-3 rounded-xl text-center backdrop-blur-md mt-auto">
+                          <span className="font-bold text-base tracking-tight text-white/95">{res.player}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="bg-slate-800 rounded-xl p-5 border border-slate-700 text-center mb-8 shadow-inner">
+                  {isJokerPending ? (
+                    <p className="text-yellow-400 font-bold tracking-tight text-lg animate-pulse">🃏 조커 카드를 클릭해 타수를 확인하세요!</p>
+                  ) : (
+                    <p className="text-yellow-400 font-bold tracking-tight text-lg">🎉 이긴 팀이 포인트를 가져갑니다! 🎉</p>
+                  )}
+                </div>
+
+                <div className="mt-auto flex flex-col gap-3">
+                  <button onClick={nextHole} disabled={isJokerPending} className={`w-full font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.98] text-lg tracking-tight ${isJokerPending ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-500'}`}><Icons.RotateCcw className="w-5 h-5" /> 다음 홀로 이동 (다시 뽑기)</button>
+                  <button onClick={endGame} disabled={isJokerPending} className={`w-full font-bold py-4 rounded-xl shadow-lg flex items-center justify-center gap-2 transition active:scale-[0.98] text-lg tracking-tight ${isJokerPending ? 'bg-gray-800 text-gray-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}`}><Icons.Home className="w-5 h-5" /> 게임 끝내기 (설정으로)</button>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      );
+    }
+
+    // React 렌더링 초기화
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
