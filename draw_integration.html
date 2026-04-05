@@ -155,7 +155,6 @@
       });
 
       const [user, setUser] = useState(null);
-      const [localPlayerId, setLocalPlayerId] = useState(null); // 내 폰의 식별자
 
       const [gameState, setGameState] = useState('SETUP'); 
       const [currentHole, setCurrentHole] = useState(1);
@@ -193,12 +192,20 @@
       const [matchState, setMatchState] = useState({ assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 });
       const [courseInfo, setCourseInfo] = useState({ name: '표준 파72 (일반 코스)', front: 'OUT', back: 'IN' });
 
+      // --- 방장 및 참석자 식별 States ---
+      const [hostUid, setHostUid] = useState(null);
+      const [guestSlots, setGuestSlots] = useState({});
+      const [joinedPlayers, setJoinedPlayers] = useState([]);
+
+      const isHostView = Boolean(user && hostUid === user.uid);
+      const localPlayerId = isHostView ? caddyId : (user ? guestSlots[user.uid] : null);
+
       // --- UI States ---
       const [isCaddyModalOpen, setIsCaddyModalOpen] = useState(false);
       const [isCourseModalOpen, setIsCourseModalOpen] = useState(false);
       const [courseSearchTerm, setCourseSearchTerm] = useState(''); 
       const [isInviteModalOpen, setIsInviteModalOpen] = useState(false); 
-      const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false); // 권한 설정 모달 상태
+      const [isPermissionModalOpen, setIsPermissionModalOpen] = useState(false); 
       const [copySuccess, setCopySuccess] = useState(false); 
       const [activeMoneyTab, setActiveMoneyTab] = useState(null); 
       const [activeSettingsTab, setActiveSettingsTab] = useState(null); 
@@ -206,7 +213,6 @@
       const [elapsedSeconds, setElapsedSeconds] = useState(0);
       const [showScoreboard, setShowScoreboard] = useState(false);
       const [courseTab, setCourseTab] = useState('FRONT');
-      const [joinedPlayers, setJoinedPlayers] = useState([]);
       const [showPotWarning, setShowPotWarning] = useState(false);
       const [warnedHole, setWarnedHole] = useState(0);
       const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: '', onConfirm: null });
@@ -223,9 +229,6 @@
       const [maxParOption, setMaxParOption] = useState(5);
       const pressTimer = useRef(null);
       const isLongPress = useRef(false);
-
-      // 방장 권한 확인 변수
-      const isHostView = localPlayerId === caddyId;
 
       useEffect(() => {
         if (holeData.par >= 5) setMaxParOption(holeData.par);
@@ -291,7 +294,6 @@
             if (data.players) setPlayers(data.players);
             if (data.settings) {
                const updatedSettings = { ...data.settings };
-               // 설정에 권한 정보가 없다면 기본값 추가
                if (!updatedSettings.guestPermissions) {
                   updatedSettings.guestPermissions = { finishShuffle: true, autoPick: true, nextHole: true };
                }
@@ -305,6 +307,9 @@
             if (data.history) setHistory(data.history);
             if (data.drawResult) setDrawResult(data.drawResult);
             if (data.courseInfo) setCourseInfo(data.courseInfo);
+            if (data.hostUid !== undefined) setHostUid(data.hostUid);
+            if (data.guestSlots !== undefined) setGuestSlots(data.guestSlots);
+            if (data.joinedPlayers !== undefined) setJoinedPlayers(data.joinedPlayers);
           }
         }, (err) => console.error("Firestore Listen Error:", err));
         return () => unsub();
@@ -378,6 +383,9 @@
            if (updates.history !== undefined) setHistory(updates.history);
            if (updates.drawResult !== undefined) setDrawResult(updates.drawResult);
            if (updates.courseInfo !== undefined) setCourseInfo(updates.courseInfo);
+           if (updates.hostUid !== undefined) setHostUid(updates.hostUid);
+           if (updates.guestSlots !== undefined) setGuestSlots(updates.guestSlots);
+           if (updates.joinedPlayers !== undefined) setJoinedPlayers(updates.joinedPlayers);
            return;
         }
 
@@ -385,6 +393,7 @@
           const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', roomId);
           await setDoc(roomRef, {
             gameState, players, settings, holeData, matchState, currentHole, commonPot, caddyId, history, drawResult, courseInfo,
+            hostUid, guestSlots, joinedPlayers,
             ...updates
           }, { merge: true });
         } catch (err) {
@@ -419,7 +428,10 @@
           history: [],
           matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 },
           holeData: { ...holeData, par: initialPar, nearWinner: null, longWinner: null, scores: {1:initialPar, 2:initialPar, 3:initialPar, 4:initialPar} },
-          currentHole: 1
+          currentHole: 1,
+          hostUid: user.uid,
+          guestSlots: { [user.uid]: caddyId },
+          joinedPlayers: [caddyId]
         };
 
         try {
@@ -434,7 +446,10 @@
              caddyId, 
              history: updates.history,
              drawResult, 
-             courseInfo
+             courseInfo,
+             hostUid: updates.hostUid,
+             guestSlots: updates.guestSlots,
+             joinedPlayers: updates.joinedPlayers
            }, { merge: true });
            
            setGameState(updates.gameState);
@@ -444,11 +459,51 @@
            setMatchState(updates.matchState);
            setHoleData(updates.holeData);
            setCurrentHole(updates.currentHole);
+           setHostUid(updates.hostUid);
+           setGuestSlots(updates.guestSlots);
+           setJoinedPlayers(updates.joinedPlayers);
         } catch (err) {
            console.error("Room Create Error:", err);
         }
         
         setIsInviteModalOpen(true);
+      };
+
+      // --- 참여자 및 방장 자리 선택 토글 ---
+      const toggleJoin = (targetPlayerId) => {
+        if (!user) return;
+        const slots = { ...guestSlots };
+        let newJoined = [...joinedPlayers];
+
+        if (isHostView) {
+          if (targetPlayerId === caddyId) return; // 방장 자리(캐디)는 토글 불가
+          if (newJoined.includes(targetPlayerId)) {
+            newJoined = newJoined.filter(id => id !== targetPlayerId);
+            // 만약 누군가(게스트)가 차지한 자리라면 슬롯에서도 제거
+            Object.keys(slots).forEach(uid => {
+              if (slots[uid] === targetPlayerId) delete slots[uid];
+            });
+          } else {
+            newJoined.push(targetPlayerId);
+          }
+          syncState({ joinedPlayers: newJoined, guestSlots: slots });
+        } else {
+          if (slots[user.uid] === targetPlayerId) {
+            // 내 자리 해제
+            newJoined = newJoined.filter(id => id !== targetPlayerId);
+            delete slots[user.uid];
+          } else {
+            if (newJoined.includes(targetPlayerId)) return; // 이미 누가 차지함
+            
+            // 기존 내 자리가 있으면 해제
+            const oldId = slots[user.uid];
+            if (oldId) newJoined = newJoined.filter(id => id !== oldId);
+
+            newJoined.push(targetPlayerId);
+            slots[user.uid] = targetPlayerId;
+          }
+          syncState({ joinedPlayers: newJoined, guestSlots: slots });
+        }
       };
 
       const startRound = () => {
@@ -869,9 +924,9 @@
         syncState({
           gameState: 'SETUP', currentHole: 1, players: resetPlayers, commonPot: 0, history: [], drawResult: null,
           matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 },
-          holeData: { par: 4, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, scores: { 1: 4, 2: 4, 3: 4, 4: 4 }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } }
+          holeData: { par: 4, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, scores: { 1: 4, 2: 4, 3: 4, 4: 4 }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
+          joinedPlayers: [], guestSlots: {}, hostUid: null
         });
-        setJoinedPlayers([]); 
         setActiveMoneyTab(null);
         setActiveSettingsTab(null);
       };
@@ -1338,22 +1393,25 @@
               <div className="grid grid-cols-2 gap-3">
                 {players.map(p => {
                   const isJoined = joinedPlayers.includes(p.id);
-                  const isHost = p.id === caddyId;
+                  const isHostSlot = p.id === caddyId;
                   const isMe = localPlayerId === p.id;
 
                   return (
-                    <div key={p.id} onClick={() => { 
-                      if (!isJoined) {
-                        setJoinedPlayers(prev => [...prev, p.id]); 
-                        setLocalPlayerId(p.id);
-                      } 
-                    }} className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all duration-300 ${isJoined ? (isMe ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm transform scale-100 ring-2 ring-emerald-400' : 'border-emerald-300 bg-white text-gray-700 opacity-90') : 'border-dashed border-gray-300 bg-gray-50 text-gray-400 cursor-pointer hover:bg-gray-100 hover:border-gray-400 transform scale-[0.98]'}`}>
-                      <div className={`w-14 h-14 rounded-full mb-3 flex items-center justify-center border-2 transition-colors ${isJoined ? (isMe ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-emerald-200 text-emerald-500') : 'bg-gray-100 border-gray-200'}`}>
+                    <div key={p.id} onClick={() => toggleJoin(p.id)} className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all duration-300 ${isJoined ? (isMe || isHostSlot ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm transform scale-100 ring-2 ring-emerald-400' : 'border-emerald-300 bg-white text-gray-700 opacity-90') : 'border-dashed border-gray-300 bg-gray-50 text-gray-400 cursor-pointer hover:bg-gray-100 hover:border-gray-400 transform scale-[0.98]'}`}>
+                      <div className={`w-14 h-14 rounded-full mb-3 flex items-center justify-center border-2 transition-colors ${isJoined ? (isMe || isHostSlot ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white border-emerald-200 text-emerald-500') : 'bg-gray-100 border-gray-200'}`}>
                         {isJoined ? <CheckCircle2 className="w-7 h-7" /> : <User className="w-6 h-6 text-gray-300" />}
                       </div>
                       <span className="font-bold text-[14px] text-center w-full truncate px-1">{p.name}</span>
                       <div className="mt-2 h-5 flex items-center justify-center">
-                        {isHost ? <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">방장(캐디)</span> : isJoined ? <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm ${isMe ? 'bg-emerald-600 text-white' : 'bg-emerald-200 text-emerald-800'}`}>{isMe ? '내 자리' : '입장 완료'}</span> : <span className="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full font-bold animate-pulse">대기 중... (클릭)</span>}
+                        {isHostSlot ? (
+                          <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">내자리(방장)</span>
+                        ) : isJoined ? (
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm ${isMe ? 'bg-emerald-600 text-white' : 'bg-emerald-200 text-emerald-800'}`}>
+                            {isMe ? '내 자리' : '참여 완료'}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full font-bold animate-pulse">대기 중... (클릭)</span>
+                        )}
                       </div>
                     </div>
                   );
@@ -1362,9 +1420,10 @@
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 flex gap-3 w-full max-w-md mx-auto z-10">
-              <button onClick={() => { syncState({ gameState: 'SETUP' }); setJoinedPlayers([]); setLocalPlayerId(null); }} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 transition-colors">설정으로</button>
-              <button onClick={startRound} className="flex-[2] bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-emerald-500 transition-colors flex items-center justify-center gap-2">
-                게임 시작하기 <Play className="w-4 h-4 fill-current" />
+              <button onClick={() => { syncState({ gameState: 'SETUP', joinedPlayers: [], guestSlots: {}, hostUid: null }); }} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 transition-colors">설정으로</button>
+              <button onClick={startRound} disabled={joinedPlayers.length < 4} className={`flex-[2] text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors ${joinedPlayers.length < 4 ? 'bg-gray-300 cursor-not-allowed' : 'bg-emerald-600 shadow-lg hover:bg-emerald-500'}`}>
+                {joinedPlayers.length < 4 ? `${joinedPlayers.length}/4 명 입장완료` : '게임 시작하기'}
+                {joinedPlayers.length === 4 && <Play className="w-4 h-4 fill-current" />}
               </button>
             </div>
           </div>
