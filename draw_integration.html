@@ -67,13 +67,13 @@
       firebaseConfig = JSON.parse(__firebase_config);
     } else {
       firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
     }
 
     const app = initializeApp(firebaseConfig);
@@ -1094,7 +1094,8 @@
                           newP[i].name = e.target.value;
                           setPlayers(newP);
                         }}
-                        className={`w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${caddyId === p.id ? 'pr-[4.5rem]' : 'pr-2'}`}
+                        placeholder={`플레이어 ${i + 1}`}
+                        className={`w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-400 font-medium hover:bg-gray-100 focus:bg-white focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors cursor-pointer focus:cursor-text ${caddyId === p.id ? 'pr-[4.5rem]' : 'pr-3'}`}
                       />
                       {caddyId === p.id && (
                         <div className="absolute right-1.5 flex items-center gap-1">
