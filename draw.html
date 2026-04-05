@@ -61,20 +61,20 @@
       firebaseConfig = JSON.parse(__firebase_config);
     } else {
       firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
     }
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
     
-    // 게임 데이터를 저장할 고유 방/앱 ID (원하시는 이름으로 변경 가능)
+    // 게임 데이터를 저장할 고유 앱 ID 
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'golf-live-session-v1';
 
     // --- Utils ---
@@ -153,6 +153,12 @@
     const defaultOecdViolations = { ob: false, hazard: false, bunker: false, threePutt: false };
 
     function App() {
+      // URL에서 방 코드(roomId) 파싱하기
+      const [roomId, setRoomId] = useState(() => {
+        const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+        return params.get('room') || '';
+      });
+
       // --- Identity State ---
       const [user, setUser] = useState(null);
       const [myPlayerId, setMyPlayerId] = useState(null); 
@@ -210,7 +216,6 @@
       const [warnedHole, setWarnedHole] = useState(0);
       const [confirmModal, setConfirmModal] = useState({ isOpen: false, message: '', onConfirm: null });
 
-      const getRoomRef = () => doc(db, 'artifacts', appId, 'public', 'data', 'sessions', 'activeSession');
       const totalInitPoint = players.reduce((sum, player) => sum + (player.initPoint || 0), 0);
 
       const [maxParOption, setMaxParOption] = useState(5);
@@ -256,7 +261,6 @@
       useEffect(() => {
         const initAuth = async () => {
           try {
-            // 미리보기(캔버스) 환경에서는 토큰으로 로그인하고, 외부 환경에서는 익명 로그인으로 동작하도록 처리
             if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
               await signInWithCustomToken(auth, __initial_auth_token);
             } else {
@@ -272,8 +276,10 @@
       }, []);
 
       useEffect(() => {
-        if (!user) return;
-        const unsub = onSnapshot(getRoomRef(), (snapshot) => {
+        if (!user || !roomId) return;
+        
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', roomId);
+        const unsub = onSnapshot(roomRef, (snapshot) => {
           if (snapshot.exists()) {
             const data = snapshot.data();
             if (data.gameState) setGameState(data.gameState);
@@ -290,7 +296,7 @@
           }
         }, (err) => console.error("Firestore Listen Error:", err));
         return () => unsub();
-      }, [user]);
+      }, [user, roomId]);
 
       useEffect(() => {
         let interval = null;
@@ -312,8 +318,25 @@
 
       const syncState = async (updates) => {
         if (!user) return;
+        
+        if (!roomId) {
+           if (updates.gameState !== undefined) setGameState(updates.gameState);
+           if (updates.players !== undefined) setPlayers(updates.players);
+           if (updates.settings !== undefined) setSettings(updates.settings);
+           if (updates.holeData !== undefined) setHoleData(updates.holeData);
+           if (updates.matchState !== undefined) setMatchState(updates.matchState);
+           if (updates.currentHole !== undefined) setCurrentHole(updates.currentHole);
+           if (updates.commonPot !== undefined) setCommonPot(updates.commonPot);
+           if (updates.caddyId !== undefined) setCaddyId(updates.caddyId);
+           if (updates.history !== undefined) setHistory(updates.history);
+           if (updates.drawResult !== undefined) setDrawResult(updates.drawResult);
+           if (updates.courseInfo !== undefined) setCourseInfo(updates.courseInfo);
+           return;
+        }
+
         try {
-          await setDoc(getRoomRef(), {
+          const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', roomId);
+          await setDoc(roomRef, {
             gameState, players, settings, holeData, matchState, currentHole, commonPot, caddyId, history, drawResult, courseInfo,
             ...updates
           }, { merge: true });
@@ -323,14 +346,64 @@
       };
 
       const createRoom = async () => {
+        let currentRoomId = roomId;
+        
+        // 방 코드가 없으면 6자리 랜덤 코드 생성 및 주소표시줄 업데이트
+        if (!currentRoomId) {
+          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+          currentRoomId = Array.from({length: 6}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
+          setRoomId(currentRoomId);
+          
+          try {
+            const newUrl = new URL(window.location.href);
+            newUrl.searchParams.set('room', currentRoomId);
+            window.history.pushState({ path: newUrl.href }, '', newUrl.href);
+          } catch (e) {
+            // 브라우저의 보안 정책으로 인해 blob URL에서 pushState가 실패할 수 있습니다. 
+            // 실제 호스팅 환경에서는 정상 작동합니다.
+            console.warn("History API 변경 불가 (미리보기 환경 등에서 발생):", e);
+          }
+        }
+
         const initPlayers = players.map(p => ({ ...p, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 }));
         const initialPar = getHolePar(courseInfo.name, courseInfo.front, courseInfo.back, 1);
-        await syncState({
-          gameState: 'WAITING', players: initPlayers, commonPot: totalInitPoint + settings.initialPot, history: [],
+        
+        const updates = {
+          gameState: 'WAITING',
+          players: initPlayers,
+          commonPot: totalInitPoint + settings.initialPot, 
+          history: [],
           matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 },
           holeData: { ...holeData, par: initialPar, nearWinner: null, longWinner: null, scores: {1:initialPar, 2:initialPar, 3:initialPar, 4:initialPar} },
           currentHole: 1
-        });
+        };
+
+        try {
+           await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'sessions', currentRoomId), {
+             gameState: updates.gameState,
+             players: updates.players,
+             settings, 
+             holeData: updates.holeData,
+             matchState: updates.matchState,
+             currentHole: updates.currentHole,
+             commonPot: updates.commonPot,
+             caddyId, 
+             history: updates.history,
+             drawResult, 
+             courseInfo
+           }, { merge: true });
+           
+           setGameState(updates.gameState);
+           setPlayers(updates.players);
+           setCommonPot(updates.commonPot);
+           setHistory(updates.history);
+           setMatchState(updates.matchState);
+           setHoleData(updates.holeData);
+           setCurrentHole(updates.currentHole);
+        } catch (err) {
+           console.error("Room Create Error:", err);
+        }
+        
         setIsInviteModalOpen(true);
       };
 
@@ -719,6 +792,18 @@
         if (hours > 0) return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       };
+
+      // 공유 URL을 안전하게 가져오는 함수 (blob 환경 예외 처리)
+      const currentShareUrl = (() => {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set('room', roomId);
+          return url.href;
+        } catch (e) {
+          // 브라우저 미리보기(blob 환경)에서는 현재 도메인을 붙여서 반환
+          return window.location.origin + "?room=" + roomId;
+        }
+      })();
 
       // === 렌더링 영역 시작 ===
       return (
@@ -1662,15 +1747,15 @@
               </div>
               <p className="text-center text-[13px] text-gray-500 mb-6 leading-relaxed">라운드 동반자의 스마트폰 카메라로 스캔하거나<br/>초대 URL을 공유해 참여할 수 있습니다.</p>
               <div className="bg-gray-50 rounded-2xl p-6 flex justify-center mb-6 border border-gray-100">
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(window.location.href)}`} alt="Invite QR Code" className="w-44 h-44 mix-blend-multiply" />
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentShareUrl)}`} alt="Invite QR Code" className="w-44 h-44 mix-blend-multiply" />
               </div>
               <div className="mb-6">
                 <label className="block text-[11px] font-bold text-gray-400 mb-1.5 pl-1">초대 URL</label>
-                <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 font-medium truncate">{window.location.href}</div>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 font-medium truncate">{currentShareUrl}</div>
               </div>
               <div className="flex gap-3 mb-6">
-                <button onClick={() => { const shareUrl = window.location.href; const textArea = document.createElement("textarea"); textArea.value = shareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); }} className={`flex-1 py-3.5 rounded-xl border font-bold transition-colors flex items-center justify-center gap-2 ${copySuccess ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-emerald-600 text-emerald-600 hover:bg-emerald-50'}`}>{copySuccess ? '복사 완료!' : 'URL 복사'}</button>
-                <button onClick={() => { const shareUrl = window.location.href; if (navigator.share) { navigator.share({ title: '골프 게임 초대', text: '라운드 스코어 기록에 참여하세요!', url: shareUrl }).then(() => { setIsInviteModalOpen(false); }).catch(console.error); } else { const textArea = document.createElement("textarea"); textArea.value = shareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); } }} className="flex-1 py-3.5 rounded-xl bg-emerald-600 text-white font-bold shadow-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">공유하기</button>
+                <button onClick={() => { const textArea = document.createElement("textarea"); textArea.value = currentShareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); }} className={`flex-1 py-3.5 rounded-xl border font-bold transition-colors flex items-center justify-center gap-2 ${copySuccess ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-emerald-600 text-emerald-600 hover:bg-emerald-50'}`}>{copySuccess ? '복사 완료!' : 'URL 복사'}</button>
+                <button onClick={() => { if (navigator.share) { navigator.share({ title: '골프 게임 초대', text: '라운드 스코어 기록에 참여하세요!', url: currentShareUrl }).then(() => { setIsInviteModalOpen(false); }).catch(console.error); } else { const textArea = document.createElement("textarea"); textArea.value = currentShareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); } }} className="flex-1 py-3.5 rounded-xl bg-emerald-600 text-white font-bold shadow-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">공유하기</button>
               </div>
             </div>
           </div>
