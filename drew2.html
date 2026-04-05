@@ -108,6 +108,9 @@
       const [isJokerMenuOpen, setIsJokerMenuOpen] = useState(false);
       const [isJokerModalOpen, setIsJokerModalOpen] = useState(false);
 
+      // 방 ID (파이어베이스 연동 시 이 ID를 문서 기준으로 사용하게 됨)
+      const [roomId, setRoomId] = useState('');
+
       // 대기실 상태
       const [joinedStatus, setJoinedStatus] = useState([true, false, false, false]);
 
@@ -164,6 +167,11 @@
 
       const createRoom = () => {
         if (players.some(p => p.trim() === '')) return;
+        
+        // 무작위로 방 번호 생성 (파이어베이스 연동 시 이 값을 문서 ID로 활용)
+        const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        setRoomId(newRoomId);
+        
         setPhase(PHASES.INVITE);
         setJoinedStatus([true, false, false, false]);
       };
@@ -182,12 +190,13 @@
       const openInvite = () => setPhase(PHASES.INVITE);
       const closeInvite = () => setPhase(PHASES.WAITING);
 
-      const INVITE_URL = 'https://goingoingon2.github.io/golf/strokeplay';
-      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(INVITE_URL)}`;
+      // 동적 초대 링크 및 QR 코드 URL 설정
+      const inviteUrl = roomId ? `https://goingoingon2.github.io/golf/strokeplay?room=${roomId}` : 'https://goingoingon2.github.io/golf/strokeplay';
+      const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(inviteUrl)}`;
 
       const handleCopyUrl = () => {
         const el = document.createElement('textarea');
-        el.value = INVITE_URL;
+        el.value = inviteUrl;
         document.body.appendChild(el);
         el.select();
         document.execCommand('copy');
@@ -203,7 +212,7 @@
             await navigator.share({
               title: '⛳ 골프 뽑기 게임',
               text: '라운드 동반자들과 함께 공정하게 팀을 뽑아보세요!',
-              url: INVITE_URL,
+              url: inviteUrl,
             });
             closeInvite();
           } catch (error) {
@@ -383,7 +392,7 @@
                   </div>
                   <div className="w-full mb-6">
                     <label className="text-xs font-bold text-gray-500 mb-2 block">초대 URL</label>
-                    <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg flex items-center text-sm text-gray-600 truncate"><Icons.Link className="w-4 h-4 mr-2 text-gray-400 shrink-0" /><span className="truncate">{INVITE_URL}</span></div>
+                    <div className="bg-gray-50 border border-gray-200 p-3 rounded-lg flex items-center text-sm text-gray-600 truncate"><Icons.Link className="w-4 h-4 mr-2 text-gray-400 shrink-0" /><span className="truncate">{inviteUrl}</span></div>
                   </div>
                   <div className="flex gap-3 w-full">
                     <button onClick={handleCopyUrl} className="flex-1 py-3 border-2 border-green-600 text-green-600 font-bold rounded-xl hover:bg-green-50 transition active:scale-[0.98]">
@@ -404,7 +413,8 @@
             return (
               <div className="min-h-screen bg-gray-50 max-w-md mx-auto shadow-xl flex flex-col">
                 <div className="p-4">
-                  <div className="bg-green-600 text-white p-6 rounded-2xl shadow-md text-center mb-4">
+                  <div className="bg-green-600 text-white p-6 rounded-2xl shadow-md text-center mb-4 relative">
+                    {roomId && <span className="absolute top-2 right-4 text-[10px] text-green-200 opacity-70">Room: {roomId}</span>}
                     <h1 className="text-2xl font-bold mb-2 tracking-tight">라운드 대기실</h1>
                     <p className="text-sm opacity-90 break-keep">
                       모든 플레이어가 입장하면 게임을 시작할 수 있습니다.
