@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>골프 스코어 라이브</title>
+  <title>골프 뽑기 게임</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,6 +19,7 @@
       -webkit-user-select: none;
       user-select: none;
       background-color: #f9fafb;
+      -webkit-tap-highlight-color: transparent;
     }
     .custom-scroll::-webkit-scrollbar { width: 4px; }
     .custom-scroll::-webkit-scrollbar-track { background: transparent; }
@@ -61,13 +62,13 @@
       firebaseConfig = JSON.parse(__firebase_config);
     } else {
       firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
+        apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+        authDomain: "left-right-6da31.firebaseapp.com",
+        projectId: "left-right-6da31",
+        storageBucket: "left-right-6da31.firebasestorage.app",
+        messagingSenderId: "128347797181",
+        appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+      };
     }
 
     const app = initializeApp(firebaseConfig);
@@ -192,7 +193,7 @@
 
       const [holeData, setHoleData] = useState({
         par: 4, multiplier: 1, isExcluded: false, manualOverride: false, 
-        nearWinner: null, longWinner: null, scores: { 1: 4, 2: 4, 3: 4, 4: 4 },
+        nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: { 1: 4, 2: 4, 3: 4, 4: 4 },
         oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } }
       });
 
@@ -293,6 +294,7 @@
             if (data.history) setHistory(data.history);
             if (data.drawResult) setDrawResult(data.drawResult);
             if (data.courseInfo) setCourseInfo(data.courseInfo);
+            if (data.joinedPlayers) setJoinedPlayers(data.joinedPlayers);
           }
         }, (err) => console.error("Firestore Listen Error:", err));
         return () => unsub();
@@ -331,13 +333,14 @@
            if (updates.history !== undefined) setHistory(updates.history);
            if (updates.drawResult !== undefined) setDrawResult(updates.drawResult);
            if (updates.courseInfo !== undefined) setCourseInfo(updates.courseInfo);
+           if (updates.joinedPlayers !== undefined) setJoinedPlayers(updates.joinedPlayers);
            return;
         }
 
         try {
           const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'sessions', roomId);
           await setDoc(roomRef, {
-            gameState, players, settings, holeData, matchState, currentHole, commonPot, caddyId, history, drawResult, courseInfo,
+            gameState, players, settings, holeData, matchState, currentHole, commonPot, caddyId, history, drawResult, courseInfo, joinedPlayers,
             ...updates
           }, { merge: true });
         } catch (err) {
@@ -374,8 +377,9 @@
           commonPot: totalInitPoint + settings.initialPot, 
           history: [],
           matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 },
-          holeData: { ...holeData, par: initialPar, nearWinner: null, longWinner: null, scores: {1:initialPar, 2:initialPar, 3:initialPar, 4:initialPar} },
-          currentHole: 1
+          holeData: { ...holeData, par: initialPar, nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: {1:initialPar, 2:initialPar, 3:initialPar, 4:initialPar} },
+          currentHole: 1,
+          joinedPlayers: [caddyId]
         };
 
         try {
@@ -447,8 +451,44 @@
       };
 
       const handleScoreChange = (id, change) => {
-        const newScores = { ...holeData.scores, [id]: Math.max(1, (holeData.scores[id] || 4) + change) };
-        syncState({ holeData: { ...holeData, scores: newScores } });
+        const newScore = Math.max(1, (holeData.scores[id] || 4) + change);
+        const newScores = { ...holeData.scores, [id]: newScore };
+        let updates = { scores: newScores };
+
+        if (holeData.nearWinner === id) updates.nearIsReverse = newScore > holeData.par;
+        if (holeData.longWinner === id) updates.longIsReverse = newScore > holeData.par;
+
+        syncState({ holeData: { ...holeData, ...updates } });
+      };
+
+      const toggleNearWinner = (pId) => {
+         if (holeData.nearWinner === pId) {
+             syncState({ holeData: { ...holeData, nearWinner: null, nearIsReverse: false } });
+         } else {
+             const isRev = holeData.scores[pId] > holeData.par;
+             syncState({ holeData: { ...holeData, nearWinner: pId, nearIsReverse: isRev } });
+         }
+      };
+
+      const toggleLongWinner = (pId) => {
+         if (holeData.longWinner === pId) {
+             syncState({ holeData: { ...holeData, longWinner: null, longIsReverse: false } });
+         } else {
+             const isRev = holeData.scores[pId] > holeData.par;
+             syncState({ holeData: { ...holeData, longWinner: pId, longIsReverse: isRev } });
+         }
+      };
+
+      const toggleNearReverse = () => {
+         if (holeData.nearWinner) {
+             syncState({ holeData: { ...holeData, nearIsReverse: !holeData.nearIsReverse } });
+         }
+      };
+
+      const toggleLongReverse = () => {
+         if (holeData.longWinner) {
+             syncState({ holeData: { ...holeData, longIsReverse: !holeData.longIsReverse } });
+         }
       };
 
       const toggleOecdViolation = (id, condition) => {
@@ -520,6 +560,7 @@
         const holeLog = { 
           hole: currentHole, par: holeData.par, multiplier: finalMultiplier, scores: { ...holeData.scores }, 
           oecdViolations: JSON.parse(JSON.stringify(holeData.oecdViolations)), nearWinner: holeData.nearWinner, longWinner: holeData.longWinner,
+          nearIsReverse: holeData.nearIsReverse || false, longIsReverse: holeData.longIsReverse || false,
           isTie: isTie, winningTeam: winningTeam,
           teamStats: { RED: { total: redTotalStrokes, avg: redAvg }, BLUE: { total: blueTotalStrokes, avg: blueAvg } },
           transfers: [], specials: [], playersBefore: JSON.parse(JSON.stringify(players)), commonPotBefore: commonPot 
@@ -561,8 +602,12 @@
            if (score <= holeData.par - 2 && settings.rewardSource === 'POT') totalIntendedPotPayout += settings.potEagleReward;
         });
         
-        if (settings.useNear && holeData.par === 3 && holeData.nearWinner) totalIntendedPotPayout += settings.potNearReward;
-        if (settings.useLong && holeData.par >= 5 && holeData.longWinner) totalIntendedPotPayout += settings.potLongReward;
+        if (settings.useNear && holeData.par === 3 && holeData.nearWinner && !holeData.nearIsReverse) {
+           totalIntendedPotPayout += settings.potNearReward;
+        }
+        if (settings.useLong && holeData.par >= 5 && holeData.longWinner && !holeData.longIsReverse) {
+           totalIntendedPotPayout += settings.potLongReward;
+        }
 
         const potPayoutRatio = totalIntendedPotPayout > availablePot ? availablePot / totalIntendedPotPayout : 1;
 
@@ -624,27 +669,43 @@
         });
 
         if (settings.useNear && holeData.par === 3 && holeData.nearWinner) {
+          const isReverse = holeData.nearIsReverse;
           const actualReward = Math.floor(settings.potNearReward * potPayoutRatio);
+          
           newPlayers = newPlayers.map(np => {
             if (np.id === holeData.nearWinner) {
-              holeLog.specials.push({ name: np.name, type: 'NEAR', amount: actualReward });
-              return { ...np, currentPoint: np.currentPoint + actualReward, accumulatedRewards: (np.accumulatedRewards || 0) + actualReward };
+              if (isReverse) {
+                holeLog.specials.push({ name: np.name, type: 'REVERSE_NEAR', amount: settings.potNearReward });
+                return { ...np, currentPoint: np.currentPoint - settings.potNearReward };
+              } else {
+                holeLog.specials.push({ name: np.name, type: 'NEAR', amount: actualReward });
+                return { ...np, currentPoint: np.currentPoint + actualReward, accumulatedRewards: (np.accumulatedRewards || 0) + actualReward };
+              }
             }
             return np;
           });
-          potChangeThisHole -= actualReward;
+          if (isReverse) potChangeThisHole += settings.potNearReward;
+          else potChangeThisHole -= actualReward;
         }
 
         if (settings.useLong && holeData.par >= 5 && holeData.longWinner) {
+          const isReverse = holeData.longIsReverse;
           const actualReward = Math.floor(settings.potLongReward * potPayoutRatio);
+          
           newPlayers = newPlayers.map(np => {
             if (np.id === holeData.longWinner) {
-              holeLog.specials.push({ name: np.name, type: 'LONG', amount: actualReward });
-              return { ...np, currentPoint: np.currentPoint + actualReward, accumulatedRewards: (np.accumulatedRewards || 0) + actualReward };
+              if (isReverse) {
+                holeLog.specials.push({ name: np.name, type: 'REVERSE_LONG', amount: settings.potLongReward });
+                return { ...np, currentPoint: np.currentPoint - settings.potLongReward };
+              } else {
+                holeLog.specials.push({ name: np.name, type: 'LONG', amount: actualReward });
+                return { ...np, currentPoint: np.currentPoint + actualReward, accumulatedRewards: (np.accumulatedRewards || 0) + actualReward };
+              }
             }
             return np;
           });
-          potChangeThisHole -= actualReward;
+          if (isReverse) potChangeThisHole += settings.potLongReward;
+          else potChangeThisHole -= actualReward;
         }
 
         if (totalOecdPenaltyThisHole > 0) {
@@ -715,7 +776,7 @@
           const nextPar = getHolePar(courseInfo.name, courseInfo.front, courseInfo.back, nextH);
           syncState({
             currentHole: nextH,
-            holeData: { par: nextPar, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, scores: { 1: nextPar, 2: nextPar, 3: nextPar, 4: nextPar }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
+            holeData: { par: nextPar, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: { 1: nextPar, 2: nextPar, 3: nextPar, 4: nextPar }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
             drawResult: null, gameState: 'PLAYING', matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 }
           });
         }
@@ -726,7 +787,8 @@
         syncState({
           gameState: 'SETUP', currentHole: 1, players: resetPlayers, commonPot: 0, history: [], drawResult: null,
           matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 },
-          holeData: { par: 4, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, scores: { 1: 4, 2: 4, 3: 4, 4: 4 }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } }
+          holeData: { par: 4, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: { 1: 4, 2: 4, 3: 4, 4: 4 }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
+          joinedPlayers: []
         });
         setJoinedPlayers([]); 
         setActiveMoneyTab(null);
@@ -741,7 +803,9 @@
            players: targetLog.playersBefore, commonPot: targetLog.commonPotBefore, history: history.slice(0, logIndex), currentHole: targetHole,
            holeData: {
               par: targetLog.par, multiplier: targetLog.multiplier || 1, isExcluded: targetLog.multiplier === 0, manualOverride: true,
-              nearWinner: targetLog.nearWinner || null, longWinner: targetLog.longWinner || null, scores: targetLog.scores, 
+              nearWinner: targetLog.nearWinner || null, longWinner: targetLog.longWinner || null, 
+              nearIsReverse: targetLog.nearIsReverse || false, longIsReverse: targetLog.longIsReverse || false,
+              scores: targetLog.scores, 
               oecdViolations: targetLog.oecdViolations ? JSON.parse(JSON.stringify(targetLog.oecdViolations)) : { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } 
            },
            drawResult: null, gameState: 'PLAYING', matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 }
@@ -764,7 +828,7 @@
           const nextPar = getHolePar(courseInfo.name, courseInfo.front, courseInfo.back, targetHole);
           syncState({
             currentHole: targetHole,
-            holeData: { par: nextPar, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, scores: { 1: nextPar, 2: nextPar, 3: nextPar, 4: nextPar }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
+            holeData: { par: nextPar, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: { 1: nextPar, 2: nextPar, 3: nextPar, 4: nextPar }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
             drawResult: null, gameState: 'PLAYING', matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 }
           });
           setShowScoreboard(false);
@@ -777,7 +841,7 @@
           h.specials?.forEach(s => {
             if (s.name === playerName) {
               if (s.type.includes('_RECEIVE') || s.type === 'NEAR' || s.type === 'LONG') received += s.amount;
-              else if (s.type === 'BIRDIE_PAY' || s.type === 'EAGLE_PAY') paid += s.amount;
+              else if (s.type === 'BIRDIE_PAY' || s.type === 'EAGLE_PAY' || s.type === 'REVERSE_NEAR' || s.type === 'REVERSE_LONG') paid += s.amount;
               else if (s.type === 'OECD_PAY') oecdPaid += s.amount;
             }
           });
@@ -897,7 +961,7 @@
                           newP[i].name = e.target.value;
                           setPlayers(newP);
                         }}
-                        className={`w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 ${caddyId === p.id ? 'pr-[4.5rem]' : 'pr-2'}`}
+                        className={`w-full bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-gray-400 focus:text-gray-900 cursor-pointer transition-colors ${caddyId === p.id ? 'pr-[4.5rem]' : 'pr-2'}`}
                       />
                       {caddyId === p.id && (
                         <div className="absolute right-1.5 flex items-center gap-1">
@@ -916,6 +980,7 @@
                     <div className="flex items-center gap-1 shrink-0">
                       <input 
                         type="text" 
+                        inputMode="numeric" pattern="[0-9]*"
                         value={formatNum(p.initPoint)}
                         onChange={(e) => {
                           const newP = [...players];
@@ -971,29 +1036,29 @@
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-5">
                       <div className="col-span-2 md:col-span-1">
                         <label className="block text-[10px] md:text-xs text-emerald-600 font-bold mb-1 truncate">승리팀 1인 포인트</label>
-                        <input type="text" value={formatNum(settings.basePoint)} onChange={e => setSettings({...settings, basePoint: parseNum(e.target.value)})} className="w-full text-right bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-2 py-2 text-sm font-bold" />
+                        <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.basePoint)} onChange={e => setSettings({...settings, basePoint: parseNum(e.target.value)})} className="w-full text-right bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-2 py-2 text-sm font-bold" />
                       </div>
                       
                       {settings.rewardSource === 'INDIVIDUAL' ? (
                         <>
                           <div>
                             <label className="block text-[10px] md:text-xs text-gray-500 mb-1 truncate">버디 축하금(1인)</label>
-                            <input type="text" value={formatNum(settings.birdieReward)} onChange={e => setSettings({...settings, birdieReward: parseNum(e.target.value)})} className="w-full text-right bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm" />
+                            <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.birdieReward)} onChange={e => setSettings({...settings, birdieReward: parseNum(e.target.value)})} className="w-full text-right bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm" />
                           </div>
                           <div>
                             <label className="block text-[10px] md:text-xs text-gray-500 mb-1 truncate">이글 축하금(1인)</label>
-                            <input type="text" value={formatNum(settings.eagleReward)} onChange={e => setSettings({...settings, eagleReward: parseNum(e.target.value)})} className="w-full text-right bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm" />
+                            <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.eagleReward)} onChange={e => setSettings({...settings, eagleReward: parseNum(e.target.value)})} className="w-full text-right bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm" />
                           </div>
                         </>
                       ) : (
                         <>
                           <div>
                             <label className="block text-[10px] md:text-xs text-emerald-600 font-bold mb-1 truncate">버디 (포트 지급액)</label>
-                            <input type="text" value={formatNum(settings.potBirdieReward)} onChange={e => setSettings({...settings, potBirdieReward: parseNum(e.target.value)})} className="w-full text-right bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-2 py-2 text-sm font-bold" />
+                            <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.potBirdieReward)} onChange={e => setSettings({...settings, potBirdieReward: parseNum(e.target.value)})} className="w-full text-right bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-2 py-2 text-sm font-bold" />
                           </div>
                           <div>
                             <label className="block text-[10px] md:text-xs text-emerald-600 font-bold mb-1 truncate">이글 (포트 지급액)</label>
-                            <input type="text" value={formatNum(settings.potEagleReward)} onChange={e => setSettings({...settings, potEagleReward: parseNum(e.target.value)})} className="w-full text-right bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-2 py-2 text-sm font-bold" />
+                            <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.potEagleReward)} onChange={e => setSettings({...settings, potEagleReward: parseNum(e.target.value)})} className="w-full text-right bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-2 py-2 text-sm font-bold" />
                           </div>
                         </>
                       )}
@@ -1041,7 +1106,7 @@
                           🎯 니어 (파3)
                         </label>
                         {settings.useNear ? (
-                          <input type="text" value={formatNum(settings.potNearReward)} onChange={e => setSettings({...settings, potNearReward: parseNum(e.target.value)})} className="w-full text-right bg-blue-50 border border-blue-200 text-blue-700 rounded-lg px-2 py-2 text-sm font-bold" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.potNearReward)} onChange={e => setSettings({...settings, potNearReward: parseNum(e.target.value)})} className="w-full text-right bg-blue-50 border border-blue-200 text-blue-700 rounded-lg px-2 py-2 text-sm font-bold" />
                         ) : (
                           <div className="w-full text-center bg-gray-50 border border-gray-200 text-gray-400 rounded-lg px-2 py-2 text-sm font-bold flex items-center justify-center h-[38px]">사용안함</div>
                         )}
@@ -1052,7 +1117,7 @@
                           🏌️ 롱기 (파5 이상)
                         </label>
                         {settings.useLong ? (
-                          <input type="text" value={formatNum(settings.potLongReward)} onChange={e => setSettings({...settings, potLongReward: parseNum(e.target.value)})} className="w-full text-right bg-orange-50 border border-orange-200 text-orange-700 rounded-lg px-2 py-2 text-sm font-bold" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.potLongReward)} onChange={e => setSettings({...settings, potLongReward: parseNum(e.target.value)})} className="w-full text-right bg-orange-50 border border-orange-200 text-orange-700 rounded-lg px-2 py-2 text-sm font-bold" />
                         ) : (
                           <div className="w-full text-center bg-gray-50 border border-gray-200 text-gray-400 rounded-lg px-2 py-2 text-sm font-bold flex items-center justify-center h-[38px]">사용안함</div>
                         )}
@@ -1132,15 +1197,15 @@
                     <div className="grid grid-cols-3 gap-2 mb-4">
                       <div>
                         <label className="block text-[10px] md:text-xs text-gray-500 mb-1 truncate">가입 기준(획득 포인트)</label>
-                        <input type="text" value={formatNum(settings.oecdLimit)} onChange={e => setSettings({...settings, oecdLimit: parseNum(e.target.value)})} className="w-full text-right bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm" />
+                        <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.oecdLimit)} onChange={e => setSettings({...settings, oecdLimit: parseNum(e.target.value)})} className="w-full text-right bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm" />
                       </div>
                       <div>
                         <label className="block text-[10px] md:text-xs text-gray-500 mb-1 truncate">위반 1회 차감 포인트</label>
-                        <input type="text" value={formatNum(settings.oecdPenalty)} onChange={e => setSettings({...settings, oecdPenalty: parseNum(e.target.value)})} className="w-full text-right bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm" />
+                        <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.oecdPenalty)} onChange={e => setSettings({...settings, oecdPenalty: parseNum(e.target.value)})} className="w-full text-right bg-gray-50 border border-gray-200 rounded-lg px-2 py-2 text-sm" />
                       </div>
                       <div>
                         <label className="block text-[10px] md:text-xs text-red-500 font-bold mb-1 truncate">한 홀 최대 차감</label>
-                        <input type="text" value={formatNum(settings.oecdMaxPenalty)} onChange={e => setSettings({...settings, oecdMaxPenalty: parseNum(e.target.value)})} className="w-full text-right bg-red-50 border border-red-200 text-red-700 rounded-lg px-2 py-2 text-sm font-bold" />
+                        <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.oecdMaxPenalty)} onChange={e => setSettings({...settings, oecdMaxPenalty: parseNum(e.target.value)})} className="w-full text-right bg-red-50 border border-red-200 text-red-700 rounded-lg px-2 py-2 text-sm font-bold" />
                       </div>
                     </div>
                     
@@ -1167,7 +1232,7 @@
                       {settings.oecdReleaseEnabled && (
                         <div className="flex items-center gap-2 bg-gray-50 p-2 rounded-lg mb-4">
                           <span className="text-xs text-gray-500">해제 기준 (획득 포인트가)</span>
-                          <input type="text" value={formatNum(settings.oecdReleaseThreshold)} onChange={e => setSettings({...settings, oecdReleaseThreshold: parseNum(e.target.value)})} className="w-24 text-right bg-white border border-gray-200 rounded-md px-2 py-1.5 text-xs font-bold" />
+                          <input type="text" inputMode="numeric" pattern="[0-9]*" value={formatNum(settings.oecdReleaseThreshold)} onChange={e => setSettings({...settings, oecdReleaseThreshold: parseNum(e.target.value)})} className="w-24 text-right bg-white border border-gray-200 rounded-md px-2 py-1.5 text-xs font-bold" />
                           <span className="text-xs text-gray-500">P 이하 시 해제</span>
                         </div>
                       )}
@@ -1187,11 +1252,11 @@
               </div>
 
               {players.some(p => p.name.trim() !== '') && history.length > 0 ? (
-                <button onClick={() => syncState({ gameState: 'PLAYING' })} className="w-full bg-gray-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-gray-900 transition-colors flex justify-center items-center gap-2 mb-10">
+                <button onClick={() => syncState({ gameState: 'PLAYING' })} className="w-full bg-gray-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-gray-900 active:scale-[0.98] transition-all flex justify-center items-center gap-2 mb-10">
                   게임으로 돌아가기 <ChevronRight className="w-5 h-5" />
                 </button>
               ) : (
-                <button onClick={createRoom} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2 mb-10">
+                <button onClick={createRoom} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-emerald-700 active:scale-[0.98] transition-all flex justify-center items-center gap-2 mb-10">
                   방 만들기 (대기실 생성) <ChevronRight className="w-5 h-5" />
                 </button>
               )}
@@ -1208,7 +1273,7 @@
             </div>
 
             <div className="w-full max-w-md px-4 mt-6">
-              <button onClick={() => setIsInviteModalOpen(true)} className="w-full mb-6 bg-white border border-emerald-200 text-emerald-600 font-bold py-3.5 rounded-xl shadow-sm hover:bg-emerald-50 transition-colors flex justify-center items-center gap-2">
+              <button onClick={() => setIsInviteModalOpen(true)} className="w-full mb-6 bg-white border border-emerald-200 text-emerald-600 font-bold py-3.5 rounded-xl shadow-sm hover:bg-emerald-50 active:scale-[0.98] transition-all flex justify-center items-center gap-2">
                 <QrCode className="w-5 h-5" /> 방 초대 코드 / URL 열기
               </button>
 
@@ -1217,13 +1282,13 @@
                   const isJoined = joinedPlayers.includes(p.id);
                   const isHost = p.id === caddyId;
                   return (
-                    <div key={p.id} onClick={() => { if (!isJoined) setJoinedPlayers(prev => [...prev, p.id]); }} className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all duration-300 ${isJoined ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm transform scale-100' : 'border-dashed border-gray-300 bg-gray-50 text-gray-400 cursor-pointer hover:bg-gray-100 hover:border-gray-400 transform scale-[0.98]'}`}>
+                    <div key={p.id} onClick={() => { if (!isJoined) syncState({ joinedPlayers: [...joinedPlayers, p.id] }); }} className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all duration-300 ${isJoined ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm transform scale-100' : 'border-dashed border-gray-300 bg-gray-50 text-gray-400 cursor-pointer hover:bg-gray-100 hover:border-gray-400 transform scale-[0.98]'}`}>
                       <div className={`w-14 h-14 rounded-full mb-3 flex items-center justify-center border-2 transition-colors ${isJoined ? 'bg-white border-emerald-200' : 'bg-gray-100 border-gray-200'}`}>
                         {isJoined ? <CheckCircle2 className="w-7 h-7 text-emerald-500" /> : <User className="w-6 h-6 text-gray-300" />}
                       </div>
                       <span className="font-bold text-[14px] text-center w-full truncate px-1">{p.name}</span>
                       <div className="mt-2 h-5 flex items-center justify-center">
-                        {isHost ? <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">방장(캐디)</span> : isJoined ? <span className="bg-emerald-200 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">입장 완료</span> : <span className="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full font-bold animate-pulse">대기 중... (클릭)</span>}
+                        {isHost ? <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">방장(스코어 캐디)</span> : isJoined ? <span className="bg-emerald-200 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">입장 완료</span> : <span className="text-[10px] bg-gray-200 text-gray-500 px-2 py-0.5 rounded-full font-bold animate-pulse">대기 중... (클릭)</span>}
                       </div>
                     </div>
                   );
@@ -1232,8 +1297,8 @@
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 flex gap-3 w-full max-w-md mx-auto z-10">
-              <button onClick={() => { syncState({ gameState: 'SETUP' }); setJoinedPlayers([]); }} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 transition-colors">설정으로</button>
-              <button onClick={startRound} disabled={joinedPlayers.length < 4} className="flex-[2] bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-emerald-500 transition-colors disabled:bg-gray-300 disabled:text-gray-100 disabled:shadow-none flex items-center justify-center gap-2">
+              <button onClick={() => { syncState({ gameState: 'SETUP' }); setJoinedPlayers([]); }} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 active:scale-[0.98] transition-all">설정으로</button>
+              <button onClick={startRound} disabled={joinedPlayers.length < 4} className="flex-[2] bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-emerald-500 active:scale-[0.98] transition-all disabled:bg-gray-300 disabled:text-gray-100 disabled:shadow-none disabled:active:scale-100 flex items-center justify-center gap-2">
                 {joinedPlayers.length < 4 ? `${joinedPlayers.length}/4 명 입장완료` : '게임 시작하기'}
                 {joinedPlayers.length === 4 && <Play className="w-4 h-4 fill-current" />}
               </button>
@@ -1277,15 +1342,77 @@
                     {holeData.isExcluded ? <span className="bg-gray-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">제외 홀</span> : autoDoubleReason ? <span className="bg-orange-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">{autoDoubleReason}</span> : <span className="w-4 h-4 text-gray-300"><AlertCircle className="w-3 h-3" /></span>}
                   </div>
                   <div className="flex items-center justify-between bg-gray-50 p-1 rounded-xl border border-gray-100">
-                    <button onClick={() => handleMultiplierChange('DOWN')} className="w-8 h-[28px] flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 rounded-lg transition-colors">-</button>
+                    <button onClick={() => handleMultiplierChange('DOWN')} className="w-8 h-[28px] flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 active:bg-gray-300 rounded-lg transition-colors">-</button>
                     <span className={`font-black text-lg ${holeData.isExcluded ? 'text-gray-400' : displayMultiplier > 1 ? 'text-red-500' : 'text-gray-700'}`}>{holeData.isExcluded ? '제외' : `x${displayMultiplier}`}</span>
-                    <button onClick={() => handleMultiplierChange('UP')} className="w-8 h-[28px] flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 rounded-lg transition-colors">+</button>
+                    <button onClick={() => handleMultiplierChange('UP')} className="w-8 h-[28px] flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 active:bg-gray-300 rounded-lg transition-colors">+</button>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="w-full max-w-md px-4 mt-16 pb-28">
+              {/* New Near Card */}
+              {settings.useNear && holeData.par === 3 && (
+                 <div className="bg-white rounded-2xl shadow-sm p-4 mb-3 border border-gray-100">
+                    <div className="flex justify-between items-center mb-3">
+                       <div className="text-[13px] font-bold text-gray-800 flex items-center gap-1.5">
+                          🎯 니어리스트 <span className="text-[11px] text-gray-400 font-normal">(미선택 가능)</span>
+                       </div>
+                       <label className="flex items-center gap-1.5 text-[12px] text-gray-600 font-bold cursor-pointer">
+                          <input type="checkbox"
+                                 checked={holeData.nearIsReverse}
+                                 onChange={toggleNearReverse}
+                                 disabled={!holeData.nearWinner}
+                                 className="w-4 h-4 rounded text-red-500 focus:ring-red-500 disabled:opacity-50 border-gray-300 cursor-pointer" />
+                          <span className={holeData.nearIsReverse ? 'text-red-500' : ''}>역니어</span>
+                       </label>
+                    </div>
+                    <div className="flex gap-2">
+                       {players.map(p => (
+                           <button key={p.id}
+                                   onClick={() => toggleNearWinner(p.id)}
+                                   className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold border transition-colors truncate px-1 active:scale-95
+                                      ${holeData.nearWinner === p.id
+                                          ? (holeData.nearIsReverse ? 'bg-red-500 text-white border-red-600 shadow-md' : 'bg-blue-500 text-white border-blue-600 shadow-md')
+                                          : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>
+                               {p.name.substring(0, 4)}{p.name.length > 4 ? '..' : ''}
+                           </button>
+                       ))}
+                    </div>
+                 </div>
+              )}
+
+              {/* New Long Card */}
+              {settings.useLong && holeData.par >= 5 && (
+                 <div className="bg-white rounded-2xl shadow-sm p-4 mb-3 border border-gray-100">
+                    <div className="flex justify-between items-center mb-3">
+                       <div className="text-[13px] font-bold text-gray-800 flex items-center gap-1.5">
+                          🏌️ 롱기스트 <span className="text-[11px] text-gray-400 font-normal">(미선택 가능)</span>
+                       </div>
+                       <label className="flex items-center gap-1.5 text-[12px] text-gray-600 font-bold cursor-pointer">
+                          <input type="checkbox"
+                                 checked={holeData.longIsReverse}
+                                 onChange={toggleLongReverse}
+                                 disabled={!holeData.longWinner}
+                                 className="w-4 h-4 rounded text-red-500 focus:ring-red-500 disabled:opacity-50 border-gray-300 cursor-pointer" />
+                          <span className={holeData.longIsReverse ? 'text-red-500' : ''}>역롱기</span>
+                       </label>
+                    </div>
+                    <div className="flex gap-2">
+                       {players.map(p => (
+                           <button key={p.id}
+                                   onClick={() => toggleLongWinner(p.id)}
+                                   className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold border transition-colors truncate px-1 active:scale-95
+                                      ${holeData.longWinner === p.id
+                                          ? (holeData.longIsReverse ? 'bg-red-500 text-white border-red-600 shadow-md' : 'bg-orange-500 text-white border-orange-600 shadow-md')
+                                          : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>
+                               {p.name.substring(0, 4)}{p.name.length > 4 ? '..' : ''}
+                           </button>
+                       ))}
+                    </div>
+                 </div>
+              )}
+
               {players.map((p, idx) => {
                  const scoreDiff = holeData.scores[p.id] - holeData.par;
                  return (
@@ -1299,17 +1426,15 @@
                             {caddyId === p.id && <button onClick={() => setIsCaddyModalOpen(true)} className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-200" title="스코어 캐디 변경"><Edit2 className="w-2.5 h-2.5" /></button>}
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1.5">
-                            {settings.useNear && holeData.par === 3 && <button onClick={() => syncState({ holeData: { ...holeData, nearWinner: holeData.nearWinner === p.id ? null : p.id } })} className={`text-[10px] px-2 py-1 rounded-md font-bold border transition-colors ${holeData.nearWinner === p.id ? 'bg-blue-500 text-white border-blue-600 shadow-inner' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>🎯 니어</button>}
-                            {settings.useLong && holeData.par >= 5 && <button onClick={() => syncState({ holeData: { ...holeData, longWinner: holeData.longWinner === p.id ? null : p.id } })} className={`text-[10px] px-2 py-1 rounded-md font-bold border transition-colors ${holeData.longWinner === p.id ? 'bg-orange-500 text-white border-orange-600 shadow-inner' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>🏌️ 롱기</button>}
                             {p.isOecd && <span className="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded font-bold border border-red-200 flex items-center">OECD</span>}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className={`text-sm font-black w-6 text-center ${scoreDiff > 0 ? 'text-red-500' : scoreDiff < 0 ? 'text-blue-600' : 'text-emerald-600'}`}>{scoreDiff === 0 ? 'E' : scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`}</span>
-                        <button onClick={() => handleScoreChange(p.id, -1)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 transition border border-gray-200">-</button>
+                        <button onClick={() => handleScoreChange(p.id, -1)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 active:scale-95 transition-all border border-gray-200">-</button>
                         <span className="text-xl font-black w-5 text-center text-gray-800">{holeData.scores[p.id]}</span>
-                        <button onClick={() => handleScoreChange(p.id, 1)} className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold hover:bg-emerald-700 shadow-sm transition">+</button>
+                        <button onClick={() => handleScoreChange(p.id, 1)} className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold hover:bg-emerald-700 active:scale-95 shadow-sm transition-all">+</button>
                       </div>
                     </div>
                     {p.isOecd && (
@@ -1330,11 +1455,11 @@
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 pb-6 w-full max-w-md mx-auto z-20 flex gap-3">
-              <div onClick={() => setIsJokerModalOpen(true)} className="flex flex-col flex-[1.2] bg-purple-50 rounded-xl px-3 border border-purple-100 justify-center cursor-pointer hover:bg-purple-100 transition-colors">
-                <label className="text-[10px] text-purple-600 font-bold mt-1 mb-0.5 cursor-pointer">조커(Joker) 설정</label>
-                <div className="text-sm font-black text-gray-800 pb-1 flex items-center justify-between"><span>{getJokerLabel(settings.jokerValue)}</span><ChevronDown className="w-3 h-3 text-purple-400" /></div>
+              <div onClick={() => setIsJokerModalOpen(true)} className="flex flex-col flex-[1.2] bg-purple-50 rounded-xl px-3 border border-purple-100 justify-center cursor-pointer hover:bg-purple-100 active:scale-[0.98] transition-all">
+                <label className="text-[10px] text-purple-600 font-bold mt-1 mb-0.5 cursor-pointer pointer-events-none">조커(Joker) 설정</label>
+                <div className="text-sm font-black text-gray-800 pb-1 flex items-center justify-between pointer-events-none"><span>{getJokerLabel(settings.jokerValue)}</span><ChevronDown className="w-3 h-3 text-purple-400" /></div>
               </div>
-              <button onClick={startTeamMatching} className="flex-[2] bg-gray-800 text-white font-bold rounded-xl shadow-lg hover:bg-gray-900 transition-colors flex justify-center items-center gap-2 text-lg">
+              <button onClick={startTeamMatching} className="flex-[2] bg-gray-800 text-white font-bold rounded-xl shadow-lg hover:bg-gray-900 active:scale-[0.98] transition-all flex justify-center items-center gap-2 text-lg">
                 <Users className="w-5 h-5" /> 팀 랜덤 매칭
               </button>
             </div>
@@ -1402,9 +1527,9 @@
             )}
             <div className="w-full max-w-xs flex flex-col gap-4 animate-in slide-in-from-bottom-4 z-20">
                {Object.values(matchState.assignedTeams).includes('JOKER') && !matchState.isJokerRevealed ? (
-                 <button onClick={revealJoker} className="w-full bg-purple-600 text-white py-5 rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(168,85,247,0.6)] flex items-center justify-center gap-2 hover:bg-purple-500 transition"><Eye className="w-6 h-6"/> 조커 타수 확인하기</button>
+                 <button onClick={revealJoker} className="w-full bg-purple-600 text-white py-5 rounded-2xl font-black text-lg shadow-[0_0_20px_rgba(168,85,247,0.6)] flex items-center justify-center gap-2 hover:bg-purple-500 active:scale-[0.98] transition-all"><Eye className="w-6 h-6"/> 조커 타수 확인하기</button>
                ) : (
-                 <button onClick={finalizeHole} className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-2 hover:bg-blue-500 transition">홀 정산하기 <ChevronRight className="w-6 h-6"/></button>
+                 <button onClick={finalizeHole} className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-2 hover:bg-blue-500 active:scale-[0.98] transition-all">홀 정산하기 <ChevronRight className="w-6 h-6"/></button>
                )}
             </div>
           </div>
@@ -1464,7 +1589,9 @@
                             {currentLog?.specials?.filter(s => s.name === p.name && (s.type === 'BIRDIE_PAY' || s.type === 'EAGLE_PAY')).map((s, idx) => <span key={`p_${idx}`} className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded font-bold border border-red-200">지출 {formatNum(s.amount)}</span>)}
                             {currentLog?.specials?.filter(s => s.name === p.name && s.type === 'OECD_PAY').map((s, idx) => <span key={`oecd_${idx}`} className="text-[10px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded font-bold border border-red-200">OECD벌금 -{formatNum(s.amount)}</span>)}
                             {currentLog?.specials?.some(s => s.type === 'NEAR' && s.name === p.name) && <span className="text-[10px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded font-bold border border-blue-200 flex items-center gap-0.5">🎯 니어</span>}
+                            {currentLog?.specials?.some(s => s.type === 'REVERSE_NEAR' && s.name === p.name) && <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded font-bold border border-red-200 flex items-center gap-0.5">💥 역니어</span>}
                             {currentLog?.specials?.some(s => s.type === 'LONG' && s.name === p.name) && <span className="text-[10px] bg-orange-50 text-orange-600 px-1.5 py-0.5 rounded font-bold border border-orange-200 flex items-center gap-0.5">🏌️ 롱기</span>}
+                            {currentLog?.specials?.some(s => s.type === 'REVERSE_LONG' && s.name === p.name) && <span className="text-[10px] bg-red-50 text-red-600 px-1.5 py-0.5 rounded font-bold border border-red-200 flex items-center gap-0.5">💥 역롱기</span>}
                             {p.isOecd && <span className="bg-red-50 text-red-600 text-[10px] px-1.5 py-0.5 rounded font-bold border border-red-200 flex items-center">OECD</span>}
                           </div>
                         </div>
@@ -1480,9 +1607,9 @@
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 flex gap-2 w-full max-w-md mx-auto z-10">
-              <button onClick={() => handleEditHoleRequest(currentHole)} className="flex-[0.8] bg-white border border-gray-200 text-gray-700 font-black py-3.5 rounded-xl shadow-sm hover:bg-gray-50 transition text-[13px] flex items-center justify-center gap-1"><Edit2 className="w-3.5 h-3.5"/> 수정</button>
-              <button onClick={() => setShowScoreboard(true)} className="flex-[0.8] bg-white border border-gray-200 text-gray-700 font-black py-3.5 rounded-xl shadow-sm hover:bg-gray-50 transition text-[13px] flex items-center justify-center gap-1"><List className="w-3.5 h-3.5"/> 스코어</button>
-              <button onClick={nextHole} className="flex-[1.4] bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-emerald-700 transition-colors text-[14px]">다음 홀 이동</button>
+              <button onClick={() => handleEditHoleRequest(currentHole)} className="flex-[0.8] bg-white border border-gray-200 text-gray-700 font-black py-3.5 rounded-xl shadow-sm hover:bg-gray-50 active:scale-[0.98] transition-all text-[13px] flex items-center justify-center gap-1"><Edit2 className="w-3.5 h-3.5"/> 수정</button>
+              <button onClick={() => setShowScoreboard(true)} className="flex-[0.8] bg-white border border-gray-200 text-gray-700 font-black py-3.5 rounded-xl shadow-sm hover:bg-gray-50 active:scale-[0.98] transition-all text-[13px] flex items-center justify-center gap-1"><List className="w-3.5 h-3.5"/> 스코어</button>
+              <button onClick={nextHole} className="flex-[1.4] bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-emerald-700 active:scale-[0.98] transition-all text-[14px]">다음 홀 이동</button>
             </div>
           </div>
         )}
@@ -1568,7 +1695,7 @@
                  <div className="font-black text-gray-800 flex items-center gap-1.5 text-sm">
                    <Trophy className="w-4 h-4 text-yellow-500"/> 현재 합산 결과<span className="text-[10px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-bold border border-emerald-100 ml-1">포트 {formatNum(commonPot)}P</span>
                  </div>
-                 <button onClick={() => { setShowScoreboard(false); syncState({gameState: 'SETTLEMENT'}); }} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-md hover:bg-gray-800 transition">정산하기</button>
+                 <button onClick={() => { setShowScoreboard(false); syncState({gameState: 'SETTLEMENT'}); }} className="bg-gray-900 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-md hover:bg-gray-800 active:scale-[0.98] transition-all">정산하기</button>
                </div>
                <div className="flex justify-between gap-1.5">
                  {players.map(p => {
@@ -1655,8 +1782,8 @@
               </div>
 
               <div className="flex gap-3 mt-8">
-                <button onClick={() => setShowScoreboard(true)} className="flex-1 bg-gray-100 border border-gray-200 text-gray-600 font-bold py-4 rounded-xl shadow-sm hover:bg-gray-200 transition-colors flex justify-center items-center gap-1.5 text-[13px]"><List className="w-4 h-4" /> 스코어카드</button>
-                <button onClick={restartGame} className="flex-[2] bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-emerald-700 transition-colors flex justify-center items-center gap-2"><RotateCcw className="w-5 h-5" /> 새 라운드 시작</button>
+                <button onClick={() => setShowScoreboard(true)} className="flex-1 bg-gray-100 border border-gray-200 text-gray-600 font-bold py-4 rounded-xl shadow-sm hover:bg-gray-200 active:scale-[0.98] transition-all flex justify-center items-center gap-1.5 text-[13px]"><List className="w-4 h-4" /> 스코어카드</button>
+                <button onClick={restartGame} className="flex-[2] bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-emerald-700 active:scale-[0.98] transition-all flex justify-center items-center gap-2"><RotateCcw className="w-5 h-5" /> 새 라운드 시작</button>
               </div>
             </div>
           </div>
@@ -1672,8 +1799,8 @@
                <h3 className="text-lg font-black text-gray-800 mb-2">기록 수정</h3>
                <p className="text-[13px] text-gray-600 mb-6 break-keep leading-relaxed whitespace-pre-wrap">{confirmModal.message}</p>
                <div className="flex gap-3">
-                 <button onClick={() => setConfirmModal({isOpen: false})} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 transition-colors">취소</button>
-                 <button onClick={confirmModal.onConfirm} className="flex-1 bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-red-700 transition-colors">수정하기</button>
+                 <button onClick={() => setConfirmModal({isOpen: false})} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 active:scale-[0.98] transition-all">취소</button>
+                 <button onClick={confirmModal.onConfirm} className="flex-1 bg-red-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-red-700 active:scale-[0.98] transition-all">수정하기</button>
                </div>
              </div>
           </div>
@@ -1688,7 +1815,7 @@
                <p className="text-[13px] text-gray-600 mb-6 break-keep leading-relaxed bg-orange-50 p-4 rounded-xl border border-orange-100">
                  공용 포인트가 승리 포인트와 비슷하거나 적어 승리 포인트와 축하금을 온전히 가져가지 못할 수 있습니다.<br/><br/>게임을 원활하게 계속하시려면 설정창에서 초기 납입 포인트를 올리세요. 포인트를 올리지 않으면 남은 포인트 한도 내에서 비율로 삭감되어 지급됩니다.
                </p>
-               <button onClick={() => setShowPotWarning(false)} className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-emerald-700 transition-colors">확인</button>
+               <button onClick={() => setShowPotWarning(false)} className="w-full bg-emerald-600 text-white font-bold py-3.5 rounded-xl shadow-md hover:bg-emerald-700 active:scale-[0.98] transition-all">확인</button>
              </div>
           </div>
         )}
@@ -1754,8 +1881,8 @@
                 <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 font-medium truncate">{currentShareUrl}</div>
               </div>
               <div className="flex gap-3 mb-6">
-                <button onClick={() => { const textArea = document.createElement("textarea"); textArea.value = currentShareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); }} className={`flex-1 py-3.5 rounded-xl border font-bold transition-colors flex items-center justify-center gap-2 ${copySuccess ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-emerald-600 text-emerald-600 hover:bg-emerald-50'}`}>{copySuccess ? '복사 완료!' : 'URL 복사'}</button>
-                <button onClick={() => { if (navigator.share) { navigator.share({ title: '골프 게임 초대', text: '라운드 스코어 기록에 참여하세요!', url: currentShareUrl }).then(() => { setIsInviteModalOpen(false); }).catch(console.error); } else { const textArea = document.createElement("textarea"); textArea.value = currentShareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); } }} className="flex-1 py-3.5 rounded-xl bg-emerald-600 text-white font-bold shadow-md hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2">공유하기</button>
+                <button onClick={() => { const textArea = document.createElement("textarea"); textArea.value = currentShareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); }} className={`flex-1 py-3.5 rounded-xl border font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${copySuccess ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-emerald-600 text-emerald-600 hover:bg-emerald-50'}`}>{copySuccess ? '복사 완료!' : 'URL 복사'}</button>
+                <button onClick={() => { if (navigator.share) { navigator.share({ title: '골프 게임 초대', text: '라운드 스코어 기록에 참여하세요!', url: currentShareUrl }).then(() => { setIsInviteModalOpen(false); }).catch(console.error); } else { const textArea = document.createElement("textarea"); textArea.value = currentShareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); } }} className="flex-1 py-3.5 rounded-xl bg-emerald-600 text-white font-bold shadow-md hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2">공유하기</button>
               </div>
             </div>
           </div>
