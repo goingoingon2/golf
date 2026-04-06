@@ -60,13 +60,13 @@
     // ★ 0. Firebase 설정 ★
     // =====================================================================
     const MY_FIREBASE_CONFIG = {
-      // apiKey: "AIzaSy...",
-      // authDomain: "golf-betting-app.firebaseapp.com",
-      // projectId: "golf-betting-app",
-      // storageBucket: "golf-betting-app.appspot.com",
-      // messagingSenderId: "123456789",
-      // appId: "1:123456789:web:abcdefg"
-    };
+  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+  authDomain: "left-right-6da31.firebaseapp.com",
+  projectId: "left-right-6da31",
+  storageBucket: "left-right-6da31.firebasestorage.app",
+  messagingSenderId: "128347797181",
+  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+};
 
     let firebaseInitialized = false;
     let authInstance, dbInstance;
@@ -1062,9 +1062,15 @@
               </div>
 
               <div className="space-y-3 mt-4 pt-2 border-t border-gray-100 pointer-events-auto pb-4">
-                <button onClick={handleStart} className="w-full bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 px-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[17px] active:scale-[0.98]">
-                  새 게임 시작 (방장) <Icon name="ArrowRight" className="w-5 h-5 ml-2" />
-                </button>
+                {startTime ? (
+                  <button onClick={() => setStep('play')} className="w-full bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 px-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[17px] active:scale-[0.98]">
+                    게임 계속하기 <Icon name="ArrowRight" className="w-5 h-5 ml-2" />
+                  </button>
+                ) : (
+                  <button onClick={handleStart} className="w-full bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 px-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[17px] active:scale-[0.98]">
+                    새 게임 시작 (방장) <Icon name="ArrowRight" className="w-5 h-5 ml-2" />
+                  </button>
+                )}
               </div>
             </div>
           </div>
