@@ -3,36 +3,22 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>골프 스코어 라이브</title>
+  <title>골프 뽑기 게임 (Live)</title>
   
+  <style>
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+    body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
+    .custom-scroll::-webkit-scrollbar { width: 4px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+    .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
+    * { -webkit-tap-highlight-color: transparent; }
+  </style>
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   
   <!-- Babel for JSX -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-
-  <!-- Custom Fonts & Animations & Scrollbar Styles -->
-  <style>
-    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-    body { 
-      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; 
-      -webkit-user-select: none;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent; /* 모바일 터치 시 기본 음영 제거 */
-      background-color: #f9fafb;
-    }
-    .custom-scroll::-webkit-scrollbar { width: 4px; }
-    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-    .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
-
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-    @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .animate-in { animation-duration: 0.3s; animation-fill-mode: forwards; animation-timing-function: ease-out; }
-    .fade-in { animation-name: fadeIn; }
-    .zoom-in { animation-name: zoomIn; }
-    .slide-in-from-bottom-4 { animation-name: slideUp; animation-duration: 0.5s; }
-  </style>
 
   <!-- Import Map for ES Modules -->
   <script type="importmap">
@@ -48,12 +34,12 @@
   }
   </script>
 </head>
-<body>
+<body class="bg-gray-50 text-gray-900 overflow-x-hidden">
   <div id="root"></div>
 
   <!-- React Application Logic -->
   <script type="text/babel" data-type="module">
-    import React, { useState, useEffect, useRef } from 'react';
+    import React, { useState, useEffect, useRef, useMemo } from 'react';
     import { createRoot } from 'react-dom/client';
     import { initializeApp } from 'firebase/app';
     import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -61,20 +47,20 @@
     import { Settings, Users, User, Play, Coins, ChevronRight, RotateCcw, AlertCircle, CheckCircle2, Trophy, Edit2, Zap, Map, Search, QrCode, X, Clock, ChevronDown, ChevronUp, List, ArrowLeft, Download, Share2, Eye, RotateCw } from 'lucide-react';
 
     // ==========================================
-    // 🚨 파이어베이스 설정 (본인 프로젝트 설정으로 변경하세요)
+    // 🚨 파이어베이스 설정
     // ==========================================
     let firebaseConfig;
     if (typeof __firebase_config !== 'undefined') {
       firebaseConfig = JSON.parse(__firebase_config);
     } else {
       firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
+        apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+        authDomain: "left-right-6da31.firebaseapp.com",
+        projectId: "left-right-6da31",
+        storageBucket: "left-right-6da31.firebasestorage.app",
+        messagingSenderId: "128347797181",
+        appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+      };
     }
 
     const app = initializeApp(firebaseConfig);
@@ -107,11 +93,11 @@
     };
 
     const getCardStyle = (role, jokerTeam = null) => {
-      if (role === 'RED') return 'bg-red-500 text-white shadow-lg border border-red-400';
-      if (role === 'BLUE') return 'bg-blue-500 text-white shadow-lg border border-blue-400';
+      if (role === 'RED') return 'bg-[#ef4444] text-white shadow-lg border border-red-400';
+      if (role === 'BLUE') return 'bg-[#3b82f6] text-white shadow-lg border border-blue-400';
       if (role === 'JOKER') {
-        if (jokerTeam === 'RED') return 'bg-red-500 text-white border-4 border-yellow-400';
-        if (jokerTeam === 'BLUE') return 'bg-blue-500 text-white border-4 border-yellow-400';
+        if (jokerTeam === 'RED') return 'bg-[#ef4444] text-white border-[3px] border-yellow-400';
+        if (jokerTeam === 'BLUE') return 'bg-[#3b82f6] text-white border-[3px] border-yellow-400';
         return 'bg-purple-600 text-white border border-purple-500';
       }
       return 'bg-slate-700 text-slate-300';
@@ -148,12 +134,50 @@
     };
 
     const defaultOecdViolations = { ob: false, hazard: false, bunker: false, threePutt: false };
+    const DEFAULT_NAMES = ['타이어 우즈', '로리 맥일로이', '스코티 셔플러', '필 미친손'];
+
+    const DEFAULT_SETTINGS = {
+      basePoint: 10000, potBirdieReward: 10000, potEagleReward: 30000,
+      useNear: true, potNearReward: 10000, useLong: false, potLongReward: 10000, 
+      birdieReward: 10000, eagleReward: 30000, rewardSource: 'POT',  
+      oecdIncludeIndividual: true, exemptSameTeam: false, initialPot: 0, jokerValue: '1',
+      oecdLimit: 60000, oecdPenalty: 10000, oecdMaxPenalty: 30000, oecdIncludeRewards: true,
+      oecdReleaseEnabled: true, oecdReleaseThreshold: 0, oecdRule: 'POT', 
+      oecdConditions: { ob: true, hazard: true, bunker: true, threePutt: true, triple: true },
+      doubleConditions: { birdie: true, tie: true, triple: false, threeTieCurrent: false, threeTiePrev: false },
+      zeroOutLastHole: false,
+      guestPermissions: { finishShuffle: true, autoPick: true, nextHole: true }
+    };
 
     function App() {
       const [roomId, setRoomId] = useState(() => {
         const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
         return params.get('room') || '';
       });
+
+      // 브라우저 URL을 안전하게 업데이트
+      const safeUpdateUrl = (rId) => {
+        try {
+          if (window.location.protocol === 'blob:' || window.location.href.includes('scf.usercontent') || window.location.origin === 'null') return;
+          const newUrl = new URL(window.location.href);
+          if (newUrl.searchParams.get('room') !== rId) {
+             newUrl.searchParams.set('room', rId);
+             window.history.replaceState(null, '', newUrl.href);
+          }
+        } catch(e) {}
+      };
+
+      useEffect(() => {
+        if (roomId) safeUpdateUrl(roomId);
+      }, [roomId]);
+
+      const shareUrl = useMemo(() => {
+        let base = window.location.origin + window.location.pathname;
+        if (window.location.protocol === 'blob:' || base.includes('scf.usercontent') || base === 'null' || base.includes('about:srcdoc')) {
+          base = 'https://goingoingon2.github.io/golf/draw.html';
+        }
+        return `${base}?room=${roomId}`;
+      }, [roomId]);
 
       const [user, setUser] = useState(null);
 
@@ -165,28 +189,17 @@
       const [drawResult, setDrawResult] = useState(null); 
       
       const [players, setPlayers] = useState([
-        { id: 1, name: '타이어 우즈', initPoint: 100000, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 },
-        { id: 2, name: '로리 맥일로이', initPoint: 100000, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 },
-        { id: 3, name: '스코티 셔플러', initPoint: 100000, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 },
-        { id: 4, name: '필 미친손', initPoint: 100000, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 },
+        { id: 1, name: '', initPoint: 100000, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 },
+        { id: 2, name: '', initPoint: 100000, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 },
+        { id: 3, name: '', initPoint: 100000, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 },
+        { id: 4, name: '', initPoint: 100000, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 },
       ]);
 
-      const [settings, setSettings] = useState({
-        basePoint: 10000, potBirdieReward: 10000, potEagleReward: 30000,
-        useNear: true, potNearReward: 10000, useLong: false, potLongReward: 10000, 
-        birdieReward: 10000, eagleReward: 30000, rewardSource: 'POT',  
-        oecdIncludeIndividual: true, exemptSameTeam: false, initialPot: 0, jokerValue: '1',
-        oecdLimit: 60000, oecdPenalty: 10000, oecdMaxPenalty: 30000, oecdIncludeRewards: true,
-        oecdReleaseEnabled: true, oecdReleaseThreshold: 0, oecdRule: 'POT', 
-        oecdConditions: { ob: true, hazard: true, bunker: true, threePutt: true, triple: true },
-        doubleConditions: { birdie: true, tie: true, triple: false, threeTieCurrent: false, threeTiePrev: false },
-        zeroOutLastHole: false,
-        guestPermissions: { finishShuffle: true, autoPick: true, nextHole: true } 
-      });
+      const [settings, setSettings] = useState(DEFAULT_SETTINGS);
 
       const [holeData, setHoleData] = useState({
         par: 4, multiplier: 1, isExcluded: false, manualOverride: false, 
-        nearWinner: null, longWinner: null, scores: { 1: 4, 2: 4, 3: 4, 4: 4 },
+        nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: { 1: 4, 2: 4, 3: 4, 4: 4 },
         oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } }
       });
 
@@ -256,11 +269,11 @@
           hasThreeTiePrev = Object.values(prevScoreCounts).includes(3);
         }
 
-        if (settings.doubleConditions.birdie && (hasBirdie || hasEagle)) return '버디/이글';
-        if (settings.doubleConditions.tie && wasPrevHoleTied) return '전홀 무승부';
-        if (settings.doubleConditions.threeTiePrev && hasThreeTiePrev) return '전홀 3명동타';
-        if (settings.doubleConditions.threeTieCurrent && hasThreeTieCurrent) return '당홀 3명동타';
-        if (settings.doubleConditions.triple && hasTripleOrWorse) return holeData.par === 3 ? '파3더블' : '트리플';
+        if (settings.doubleConditions?.birdie && (hasBirdie || hasEagle)) return '버디/이글';
+        if (settings.doubleConditions?.tie && wasPrevHoleTied) return '전홀 무승부';
+        if (settings.doubleConditions?.threeTiePrev && hasThreeTiePrev) return '전홀 3명동타';
+        if (settings.doubleConditions?.threeTieCurrent && hasThreeTieCurrent) return '당홀 3명동타';
+        if (settings.doubleConditions?.triple && hasTripleOrWorse) return holeData.par === 3 ? '파3더블' : '트리플';
         return null;
       };
 
@@ -409,17 +422,10 @@
           const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
           currentRoomId = Array.from({length: 6}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
           setRoomId(currentRoomId);
-          
-          try {
-            const newUrl = new URL(window.location.href);
-            newUrl.searchParams.set('room', currentRoomId);
-            window.history.pushState({ path: newUrl.href }, '', newUrl.href);
-          } catch (e) {
-            console.warn("History API 변경 불가 (미리보기 환경 등에서 발생):", e);
-          }
+          safeUpdateUrl(currentRoomId);
         }
 
-        const initPlayers = players.map(p => ({ ...p, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 }));
+        const initPlayers = players.map((p, i) => ({ ...p, name: p.name.trim() || DEFAULT_NAMES[i], currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 }));
         const initialPar = getHolePar(courseInfo.name, courseInfo.front, courseInfo.back, 1);
         
         const updates = {
@@ -428,7 +434,7 @@
           commonPot: totalInitPoint + settings.initialPot, 
           history: [],
           matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 },
-          holeData: { ...holeData, par: initialPar, nearWinner: null, longWinner: null, scores: {1:initialPar, 2:initialPar, 3:initialPar, 4:initialPar} },
+          holeData: { ...holeData, par: initialPar, nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: {1:initialPar, 2:initialPar, 3:initialPar, 4:initialPar} },
           currentHole: 1,
           hostUid: user.uid,
           guestSlots: { [user.uid]: caddyId },
@@ -474,6 +480,7 @@
         if (!user) return;
         const slots = { ...guestSlots };
         let newJoined = [...joinedPlayers];
+        const currentUid = user.uid || 'local';
 
         if (isHostView) {
           if (targetPlayerId === caddyId) return; 
@@ -487,17 +494,17 @@
           }
           syncState({ joinedPlayers: newJoined, guestSlots: slots });
         } else {
-          if (slots[user.uid] === targetPlayerId) {
+          if (slots[currentUid] === targetPlayerId) {
             newJoined = newJoined.filter(id => id !== targetPlayerId);
-            slots[user.uid] = null; 
+            slots[currentUid] = null; 
           } else {
             if (newJoined.includes(targetPlayerId)) return; 
             
-            const oldId = slots[user.uid];
+            const oldId = slots[currentUid];
             if (oldId) newJoined = newJoined.filter(id => id !== oldId);
 
             newJoined.push(targetPlayerId);
-            slots[user.uid] = targetPlayerId;
+            slots[currentUid] = targetPlayerId;
           }
           syncState({ joinedPlayers: newJoined, guestSlots: slots });
         }
@@ -543,8 +550,44 @@
       };
 
       const handleScoreChange = (id, change) => {
-        const newScores = { ...holeData.scores, [id]: Math.max(1, (holeData.scores[id] || 4) + change) };
-        syncState({ holeData: { ...holeData, scores: newScores } });
+        const newScore = Math.max(1, (holeData.scores[id] || 4) + change);
+        const newScores = { ...holeData.scores, [id]: newScore };
+        let updates = { scores: newScores };
+
+        if (holeData.nearWinner === id) updates.nearIsReverse = newScore > holeData.par;
+        if (holeData.longWinner === id) updates.longIsReverse = newScore > holeData.par;
+
+        syncState({ holeData: { ...holeData, ...updates } });
+      };
+
+      const toggleNearWinner = (pId) => {
+         if (holeData.nearWinner === pId) {
+             syncState({ holeData: { ...holeData, nearWinner: null, nearIsReverse: false } });
+         } else {
+             const isRev = holeData.scores[pId] > holeData.par;
+             syncState({ holeData: { ...holeData, nearWinner: pId, nearIsReverse: isRev } });
+         }
+      };
+
+      const toggleLongWinner = (pId) => {
+         if (holeData.longWinner === pId) {
+             syncState({ holeData: { ...holeData, longWinner: null, longIsReverse: false } });
+         } else {
+             const isRev = holeData.scores[pId] > holeData.par;
+             syncState({ holeData: { ...holeData, longWinner: pId, longIsReverse: isRev } });
+         }
+      };
+
+      const toggleNearReverse = () => {
+         if (holeData.nearWinner) {
+             syncState({ holeData: { ...holeData, nearIsReverse: !holeData.nearIsReverse } });
+         }
+      };
+
+      const toggleLongReverse = () => {
+         if (holeData.longWinner) {
+             syncState({ holeData: { ...holeData, longIsReverse: !holeData.longIsReverse } });
+         }
       };
 
       const toggleOecdViolation = (id, condition) => {
@@ -612,7 +655,7 @@
           ...matchState.selectedCards,
           [cardIndex]: {
             playerId: pickerId,
-            playerName: picker.name,
+            playerName: picker?.name || '알수없음',
             role: matchState.actualRoles[pickOrder]
           }
         };
@@ -635,7 +678,7 @@
           const picker = players.find(p => p.id === pId);
           newSelected[cardIndex] = {
             playerId: pId,
-            playerName: picker.name,
+            playerName: picker?.name || '알수없음',
             role: matchState.actualRoles[currentPickOrder]
           };
           currentPickOrder++;
@@ -677,7 +720,7 @@
       };
 
       const finalizeHoleDirect = (currentMatchState) => {
-        const rawTeams = currentMatchState.assignedTeams;
+        const rawTeams = currentMatchState.assignedTeams || {};
         let redCount = 0, blueCount = 0;
         players.forEach(p => { if (rawTeams[p.id] === 'RED') redCount++; if (rawTeams[p.id] === 'BLUE') blueCount++; });
 
@@ -712,6 +755,7 @@
         const holeLog = { 
           hole: currentHole, par: holeData.par, multiplier: finalMultiplier, scores: { ...holeData.scores }, 
           oecdViolations: JSON.parse(JSON.stringify(holeData.oecdViolations)), nearWinner: holeData.nearWinner, longWinner: holeData.longWinner,
+          nearIsReverse: holeData.nearIsReverse || false, longIsReverse: holeData.longIsReverse || false,
           isTie: isTie, winningTeam: winningTeam,
           teamStats: { RED: { total: redTotalStrokes, avg: redAvg }, BLUE: { total: blueTotalStrokes, avg: blueAvg } },
           transfers: [], specials: [], playersBefore: JSON.parse(JSON.stringify(players)), commonPotBefore: commonPot 
@@ -723,11 +767,11 @@
           if (p.isOecd) {
             let penaltyCount = 0;
             const v = holeData.oecdViolations[p.id];
-            if (settings.oecdConditions.ob && v.ob) penaltyCount++;
-            if (settings.oecdConditions.hazard && v.hazard) penaltyCount++;
-            if (settings.oecdConditions.bunker && v.bunker) penaltyCount++;
-            if (settings.oecdConditions.threePutt && v.threePutt) penaltyCount++;
-            if (settings.oecdConditions.triple && (holeData.par === 3 ? (holeData.scores[p.id] - holeData.par >= 2) : (holeData.scores[p.id] - holeData.par >= 3))) penaltyCount++;
+            if (settings.oecdConditions?.ob && v.ob) penaltyCount++;
+            if (settings.oecdConditions?.hazard && v.hazard) penaltyCount++;
+            if (settings.oecdConditions?.bunker && v.bunker) penaltyCount++;
+            if (settings.oecdConditions?.threePutt && v.threePutt) penaltyCount++;
+            if (settings.oecdConditions?.triple && (holeData.par === 3 ? (holeData.scores[p.id] - holeData.par >= 2) : (holeData.scores[p.id] - holeData.par >= 3))) penaltyCount++;
 
             if (penaltyCount > 0) {
               let penalty = penaltyCount * settings.oecdPenalty;
@@ -753,8 +797,12 @@
            if (score <= holeData.par - 2 && settings.rewardSource === 'POT') totalIntendedPotPayout += settings.potEagleReward;
         });
         
-        if (settings.useNear && holeData.par === 3 && holeData.nearWinner) totalIntendedPotPayout += settings.potNearReward;
-        if (settings.useLong && holeData.par >= 5 && holeData.longWinner) totalIntendedPotPayout += settings.potLongReward;
+        if (settings.useNear && holeData.par === 3 && holeData.nearWinner && !holeData.nearIsReverse) {
+           totalIntendedPotPayout += settings.potNearReward;
+        }
+        if (settings.useLong && holeData.par >= 5 && holeData.longWinner && !holeData.longIsReverse) {
+           totalIntendedPotPayout += settings.potLongReward;
+        }
 
         const potPayoutRatio = totalIntendedPotPayout > availablePot ? availablePot / totalIntendedPotPayout : 1;
 
@@ -792,11 +840,7 @@
             } else {
               const reward = special === 'BIRDIE' ? settings.birdieReward : settings.eagleReward;
               const winnerTeam = actualTeams[p.id];
-              const payers = newPlayers.filter(np => {
-                if (np.id === p.id) return false; 
-                if (settings.exemptSameTeam && actualTeams[np.id] === winnerTeam) return false; 
-                return true;
-              });
+              const payers = newPlayers.filter(np => np.id !== p.id && (!settings.exemptSameTeam || actualTeams[np.id] !== winnerTeam));
               const payerIds = payers.map(payer => payer.id);
               const totalReward = reward * payerIds.length;
 
@@ -816,27 +860,43 @@
         });
 
         if (settings.useNear && holeData.par === 3 && holeData.nearWinner) {
+          const isReverse = holeData.nearIsReverse;
           const actualReward = Math.floor(settings.potNearReward * potPayoutRatio);
+          
           newPlayers = newPlayers.map(np => {
             if (np.id === holeData.nearWinner) {
-              holeLog.specials.push({ name: np.name, type: 'NEAR', amount: actualReward });
-              return { ...np, currentPoint: np.currentPoint + actualReward, accumulatedRewards: (np.accumulatedRewards || 0) + actualReward };
+              if (isReverse) {
+                holeLog.specials.push({ name: np.name, type: 'REVERSE_NEAR', amount: settings.potNearReward });
+                return { ...np, currentPoint: np.currentPoint - settings.potNearReward };
+              } else {
+                holeLog.specials.push({ name: np.name, type: 'NEAR', amount: actualReward });
+                return { ...np, currentPoint: np.currentPoint + actualReward, accumulatedRewards: (np.accumulatedRewards || 0) + actualReward };
+              }
             }
             return np;
           });
-          potChangeThisHole -= actualReward;
+          if (isReverse) potChangeThisHole += settings.potNearReward;
+          else potChangeThisHole -= actualReward;
         }
 
         if (settings.useLong && holeData.par >= 5 && holeData.longWinner) {
+          const isReverse = holeData.longIsReverse;
           const actualReward = Math.floor(settings.potLongReward * potPayoutRatio);
+          
           newPlayers = newPlayers.map(np => {
             if (np.id === holeData.longWinner) {
-              holeLog.specials.push({ name: np.name, type: 'LONG', amount: actualReward });
-              return { ...np, currentPoint: np.currentPoint + actualReward, accumulatedRewards: (np.accumulatedRewards || 0) + actualReward };
+              if (isReverse) {
+                holeLog.specials.push({ name: np.name, type: 'REVERSE_LONG', amount: settings.potLongReward });
+                return { ...np, currentPoint: np.currentPoint - settings.potLongReward };
+              } else {
+                holeLog.specials.push({ name: np.name, type: 'LONG', amount: actualReward });
+                return { ...np, currentPoint: np.currentPoint + actualReward, accumulatedRewards: (np.accumulatedRewards || 0) + actualReward };
+              }
             }
             return np;
           });
-          potChangeThisHole -= actualReward;
+          if (isReverse) potChangeThisHole += settings.potLongReward;
+          else potChangeThisHole -= actualReward;
         }
 
         if (totalOecdPenaltyThisHole > 0) {
@@ -907,18 +967,18 @@
           const nextPar = getHolePar(courseInfo.name, courseInfo.front, courseInfo.back, nextH);
           syncState({
             currentHole: nextH,
-            holeData: { par: nextPar, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, scores: { 1: nextPar, 2: nextPar, 3: nextPar, 4: nextPar }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
+            holeData: { par: nextPar, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: { 1: nextPar, 2: nextPar, 3: nextPar, 4: nextPar }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
             drawResult: null, gameState: 'PLAYING', matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 }
           });
         }
       };
 
       const restartGame = () => {
-        const resetPlayers = players.map(p => ({ ...p, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 }));
+        const resetPlayers = players.map((p, i) => ({ ...p, name: p.name === DEFAULT_NAMES[i] ? '' : p.name, currentPoint: 0, currentStrokes: 0, isOecd: false, accumulatedRewards: 0 }));
         syncState({
           gameState: 'SETUP', currentHole: 1, players: resetPlayers, commonPot: 0, history: [], drawResult: null,
           matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 },
-          holeData: { par: 4, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, scores: { 1: 4, 2: 4, 3: 4, 4: 4 }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
+          holeData: { par: 4, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: { 1: 4, 2: 4, 3: 4, 4: 4 }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
           joinedPlayers: [], guestSlots: {}, hostUid: null
         });
         setActiveMoneyTab(null);
@@ -933,7 +993,9 @@
            players: targetLog.playersBefore, commonPot: targetLog.commonPotBefore, history: history.slice(0, logIndex), currentHole: targetHole,
            holeData: {
               par: targetLog.par, multiplier: targetLog.multiplier || 1, isExcluded: targetLog.multiplier === 0, manualOverride: true,
-              nearWinner: targetLog.nearWinner || null, longWinner: targetLog.longWinner || null, scores: targetLog.scores, 
+              nearWinner: targetLog.nearWinner || null, longWinner: targetLog.longWinner || null, 
+              nearIsReverse: targetLog.nearIsReverse || false, longIsReverse: targetLog.longIsReverse || false,
+              scores: targetLog.scores, 
               oecdViolations: targetLog.oecdViolations ? JSON.parse(JSON.stringify(targetLog.oecdViolations)) : { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } 
            },
            drawResult: null, gameState: 'PLAYING', matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 }
@@ -956,7 +1018,7 @@
           const nextPar = getHolePar(courseInfo.name, courseInfo.front, courseInfo.back, targetHole);
           syncState({
             currentHole: targetHole,
-            holeData: { par: nextPar, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, scores: { 1: nextPar, 2: nextPar, 3: nextPar, 4: nextPar }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
+            holeData: { par: nextPar, multiplier: 1, isExcluded: false, manualOverride: false, nearWinner: null, longWinner: null, nearIsReverse: false, longIsReverse: false, scores: { 1: nextPar, 2: nextPar, 3: nextPar, 4: nextPar }, oecdViolations: { 1: { ...defaultOecdViolations }, 2: { ...defaultOecdViolations }, 3: { ...defaultOecdViolations }, 4: { ...defaultOecdViolations } } },
             drawResult: null, gameState: 'PLAYING', matchState: { assignedTeams: {}, isJokerRevealed: false, actualJokerValue: 0 }
           });
           setShowScoreboard(false);
@@ -969,7 +1031,7 @@
           h.specials?.forEach(s => {
             if (s.name === playerName) {
               if (s.type.includes('_RECEIVE') || s.type === 'NEAR' || s.type === 'LONG') received += s.amount;
-              else if (s.type === 'BIRDIE_PAY' || s.type === 'EAGLE_PAY') paid += s.amount;
+              else if (s.type === 'BIRDIE_PAY' || s.type === 'EAGLE_PAY' || s.type === 'REVERSE_NEAR' || s.type === 'REVERSE_LONG') paid += s.amount;
               else if (s.type === 'OECD_PAY') oecdPaid += s.amount;
             }
           });
@@ -984,16 +1046,6 @@
         if (hours > 0) return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
         return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
       };
-
-      const currentShareUrl = (() => {
-        try {
-          const url = new URL(window.location.href);
-          url.searchParams.set('room', roomId);
-          return url.href;
-        } catch (e) {
-          return window.location.origin + "?room=" + roomId;
-        }
-      })();
 
       // === 렌더링 영역 ===
       return (
@@ -1071,7 +1123,7 @@
               <div className="bg-white rounded-2xl shadow-sm p-5 mb-4 border border-gray-100">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                    <Users className="w-4 h-4" /> 플레이어 및 초기 납입 포인트(포트)
+                    <Users className="w-4 h-4" /> 플레이어 및 초기 납입 포인트
                   </h2>
                   <button 
                     onClick={() => setIsPermissionModalOpen(true)}
@@ -1095,8 +1147,9 @@
                           newP[i].name = e.target.value;
                           setPlayers(newP);
                         }}
-                        placeholder={`플레이어 ${i + 1}`}
-                        className={`w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-400 font-medium hover:bg-gray-100 focus:bg-white focus:text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors cursor-pointer focus:cursor-text ${caddyId === p.id ? 'pr-[4.5rem]' : 'pr-3'}`}
+                        onFocus={(e) => e.target.select()}
+                        placeholder={DEFAULT_NAMES[i]}
+                        className={`w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-2.5 text-sm text-gray-900 font-bold hover:bg-gray-100 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-colors cursor-pointer focus:cursor-text placeholder:text-gray-400 placeholder:font-medium ${caddyId === p.id ? 'pr-[4.5rem]' : 'pr-3'}`}
                       />
                       {caddyId === p.id && (
                         <div className="absolute right-1.5 flex items-center gap-1">
@@ -1290,7 +1343,7 @@
                       };
                       return (
                         <label key={cond} className="flex items-center gap-3 text-sm text-gray-700 cursor-pointer group">
-                          <input type="checkbox" checked={settings.doubleConditions[cond]} onChange={e => setSettings({...settings, doubleConditions: {...settings.doubleConditions, [cond]: e.target.checked}})} className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 border-gray-300" />
+                          <input type="checkbox" checked={settings.doubleConditions?.[cond] ?? false} onChange={e => setSettings({...settings, doubleConditions: {...settings.doubleConditions, [cond]: e.target.checked}})} className="w-4 h-4 rounded text-emerald-500 focus:ring-emerald-500 border-gray-300" />
                           <span className="group-hover:text-emerald-700 transition-colors flex items-center gap-1">
                             {labels[cond]}
                             {cond === 'triple' && <span className="text-[10px] text-gray-400 font-normal bg-gray-100 px-1.5 py-0.5 rounded">(파3는 더블 이상)</span>}
@@ -1351,7 +1404,7 @@
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                         {Object.entries({ob: 'OB', hazard: '페널티구역', bunker: '벙커', threePutt: '쓰리펏', triple: '트리플(파3 더블, 자동계산)'}).map(([key, label]) => (
                           <label key={key} className={`flex items-center gap-2 text-xs text-gray-700 cursor-pointer bg-gray-50 px-2 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 ${key === 'triple' ? 'col-span-2' : ''}`}>
-                            <input type="checkbox" checked={settings.oecdConditions[key]} onChange={e => setSettings({...settings, oecdConditions: {...settings.oecdConditions, [key]: e.target.checked}})} className="w-4 h-4 rounded text-red-500 focus:ring-red-500 border-gray-300" />
+                            <input type="checkbox" checked={settings.oecdConditions?.[key] ?? false} onChange={e => setSettings({...settings, oecdConditions: {...settings.oecdConditions, [key]: e.target.checked}})} className="w-4 h-4 rounded text-red-500 focus:ring-red-500 border-gray-300" />
                             <span className="font-medium">{label}</span>
                           </label>
                         ))}
@@ -1361,9 +1414,13 @@
                 )}
               </div>
 
-              {players.some(p => p.name.trim() !== '') && history.length > 0 ? (
-                <button onClick={() => syncState({ gameState: 'PLAYING' })} className="w-full bg-gray-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-gray-900 active:scale-[0.98] transition-all flex justify-center items-center gap-2 mb-10">
-                  게임으로 돌아가기 <ChevronRight className="w-5 h-5" />
+              {hostUid ? (
+                <button onClick={() => syncState({ 
+                  gameState: joinedPlayers.length >= 4 ? 'PLAYING' : 'WAITING',
+                  players: players.map((p, i) => ({ ...p, name: p.name.trim() || DEFAULT_NAMES[i] })),
+                  settings
+                })} className="w-full bg-gray-800 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-gray-900 active:scale-[0.98] transition-all flex justify-center items-center gap-2 mb-10">
+                  게임 계속하기 <ChevronRight className="w-5 h-5" />
                 </button>
               ) : (
                 <button onClick={createRoom} className="w-full bg-emerald-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-emerald-700 active:scale-[0.98] transition-all flex justify-center items-center gap-2 mb-10">
@@ -1417,7 +1474,9 @@
             </div>
 
             <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-gray-200 flex gap-3 w-full max-w-md mx-auto z-10">
-              <button onClick={() => { syncState({ gameState: 'SETUP', joinedPlayers: [], guestSlots: {}, hostUid: null }); }} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 active:scale-[0.98] transition-all">설정으로</button>
+              <button onClick={() => { 
+                syncState({ gameState: 'SETUP' }); 
+              }} className="flex-1 bg-gray-100 text-gray-700 font-bold py-3.5 rounded-xl hover:bg-gray-200 active:scale-[0.98] transition-all">설정으로</button>
               <button onClick={startRound} disabled={joinedPlayers.length < 4} className={`flex-[2] text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${joinedPlayers.length < 4 ? 'bg-gray-300 cursor-not-allowed' : 'bg-emerald-600 shadow-lg hover:bg-emerald-500'}`}>
                 {joinedPlayers.length < 4 ? `${joinedPlayers.length}/4 명 입장완료` : '게임 시작하기'}
                 {joinedPlayers.length === 4 && <Play className="w-4 h-4 fill-current" />}
@@ -1462,15 +1521,77 @@
                     {holeData.isExcluded ? <span className="bg-gray-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">제외 홀</span> : autoDoubleReason ? <span className="bg-orange-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">{autoDoubleReason}</span> : <span className="w-4 h-4 text-gray-300"><AlertCircle className="w-3 h-3" /></span>}
                   </div>
                   <div className="flex items-center justify-between bg-gray-50 p-1 rounded-xl border border-gray-100">
-                    <button onClick={() => handleMultiplierChange('DOWN')} className="w-8 h-[28px] flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 rounded-lg transition-colors">-</button>
+                    <button onClick={() => handleMultiplierChange('DOWN')} className="w-8 h-[28px] flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 active:bg-gray-300 rounded-lg transition-colors">-</button>
                     <span className={`font-black text-lg ${holeData.isExcluded ? 'text-gray-400' : displayMultiplier > 1 ? 'text-red-500' : 'text-gray-700'}`}>{holeData.isExcluded ? '제외' : `x${displayMultiplier}`}</span>
-                    <button onClick={() => handleMultiplierChange('UP')} className="w-8 h-[28px] flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 rounded-lg transition-colors">+</button>
+                    <button onClick={() => handleMultiplierChange('UP')} className="w-8 h-[28px] flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 active:bg-gray-300 rounded-lg transition-colors">+</button>
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="w-full max-w-md px-4 mt-16 pb-28">
+              {/* New Near Card */}
+              {settings.useNear && holeData.par === 3 && (
+                 <div className="bg-white rounded-2xl shadow-sm p-4 mb-3 border border-gray-100">
+                    <div className="flex justify-between items-center mb-3">
+                       <div className="text-[13px] font-bold text-gray-800 flex items-center gap-1.5">
+                          🎯 니어리스트 <span className="text-[11px] text-gray-400 font-normal">(미선택 가능)</span>
+                       </div>
+                       <label className="flex items-center gap-1.5 text-[12px] text-gray-600 font-bold cursor-pointer">
+                          <input type="checkbox"
+                                 checked={holeData.nearIsReverse}
+                                 onChange={toggleNearReverse}
+                                 disabled={!holeData.nearWinner}
+                                 className="w-4 h-4 rounded text-red-500 focus:ring-red-500 disabled:opacity-50 border-gray-300 cursor-pointer" />
+                          <span className={holeData.nearIsReverse ? 'text-red-500' : ''}>역니어</span>
+                       </label>
+                    </div>
+                    <div className="flex gap-2">
+                       {players.map(p => (
+                           <button key={p.id}
+                                   onClick={() => toggleNearWinner(p.id)}
+                                   className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold border transition-colors truncate px-1 active:scale-95
+                                      ${holeData.nearWinner === p.id
+                                          ? (holeData.nearIsReverse ? 'bg-red-500 text-white border-red-600 shadow-md' : 'bg-blue-500 text-white border-blue-600 shadow-md')
+                                          : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>
+                               {p.name.substring(0, 4)}{p.name.length > 4 ? '..' : ''}
+                           </button>
+                       ))}
+                    </div>
+                 </div>
+              )}
+
+              {/* New Long Card */}
+              {settings.useLong && holeData.par >= 5 && (
+                 <div className="bg-white rounded-2xl shadow-sm p-4 mb-3 border border-gray-100">
+                    <div className="flex justify-between items-center mb-3">
+                       <div className="text-[13px] font-bold text-gray-800 flex items-center gap-1.5">
+                          🏌️ 롱기스트 <span className="text-[11px] text-gray-400 font-normal">(미선택 가능)</span>
+                       </div>
+                       <label className="flex items-center gap-1.5 text-[12px] text-gray-600 font-bold cursor-pointer">
+                          <input type="checkbox"
+                                 checked={holeData.longIsReverse}
+                                 onChange={toggleLongReverse}
+                                 disabled={!holeData.longWinner}
+                                 className="w-4 h-4 rounded text-red-500 focus:ring-red-500 disabled:opacity-50 border-gray-300 cursor-pointer" />
+                          <span className={holeData.longIsReverse ? 'text-red-500' : ''}>역롱기</span>
+                       </label>
+                    </div>
+                    <div className="flex gap-2">
+                       {players.map(p => (
+                           <button key={p.id}
+                                   onClick={() => toggleLongWinner(p.id)}
+                                   className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold border transition-colors truncate px-1 active:scale-95
+                                      ${holeData.longWinner === p.id
+                                          ? (holeData.longIsReverse ? 'bg-red-500 text-white border-red-600 shadow-md' : 'bg-orange-500 text-white border-orange-600 shadow-md')
+                                          : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>
+                               {p.name.substring(0, 4)}{p.name.length > 4 ? '..' : ''}
+                           </button>
+                       ))}
+                    </div>
+                 </div>
+              )}
+
               {players.map((p, idx) => {
                  const scoreDiff = holeData.scores[p.id] - holeData.par;
                  return (
@@ -1484,28 +1605,26 @@
                             {caddyId === p.id && <button onClick={() => setIsCaddyModalOpen(true)} className="w-5 h-5 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-200" title="스코어 캐디 변경"><Edit2 className="w-2.5 h-2.5" /></button>}
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1.5">
-                            {settings.useNear && holeData.par === 3 && <button onClick={() => syncState({ holeData: { ...holeData, nearWinner: holeData.nearWinner === p.id ? null : p.id } })} className={`text-[10px] px-2 py-1 rounded-md font-bold border transition-colors ${holeData.nearWinner === p.id ? 'bg-blue-500 text-white border-blue-600 shadow-inner' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>🎯 니어</button>}
-                            {settings.useLong && holeData.par >= 5 && <button onClick={() => syncState({ holeData: { ...holeData, longWinner: holeData.longWinner === p.id ? null : p.id } })} className={`text-[10px] px-2 py-1 rounded-md font-bold border transition-colors ${holeData.longWinner === p.id ? 'bg-orange-500 text-white border-orange-600 shadow-inner' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'}`}>🏌️ 롱기</button>}
                             {p.isOecd && <span className="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded font-bold border border-red-200 flex items-center">OECD</span>}
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
                         <span className={`text-sm font-black w-6 text-center ${scoreDiff > 0 ? 'text-red-500' : scoreDiff < 0 ? 'text-blue-600' : 'text-emerald-600'}`}>{scoreDiff === 0 ? 'E' : scoreDiff > 0 ? `+${scoreDiff}` : `${scoreDiff}`}</span>
-                        <button onClick={() => handleScoreChange(p.id, -1)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 transition border border-gray-200">-</button>
+                        <button onClick={() => handleScoreChange(p.id, -1)} className="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 font-bold hover:bg-gray-200 hover:text-gray-600 active:scale-95 transition-all border border-gray-200">-</button>
                         <span className="text-xl font-black w-5 text-center text-gray-800">{holeData.scores[p.id]}</span>
-                        <button onClick={() => handleScoreChange(p.id, 1)} className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold hover:bg-emerald-700 shadow-sm transition">+</button>
+                        <button onClick={() => handleScoreChange(p.id, 1)} className="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold hover:bg-emerald-700 active:scale-95 shadow-sm transition-all">+</button>
                       </div>
                     </div>
                     {p.isOecd && (
                       <div className="flex gap-1.5 mt-3 bg-red-50/50 p-2 rounded-lg border border-red-100 items-center">
                         <span className="text-[10px] font-black text-red-600 px-1 shrink-0">OECD<br/>내역</span>
                         <div className="flex-1 flex gap-1">
-                          {settings.oecdConditions.ob && <button onClick={() => toggleOecdViolation(p.id, 'ob')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].ob ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>OB</button>}
-                          {settings.oecdConditions.hazard && <button onClick={() => toggleOecdViolation(p.id, 'hazard')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].hazard ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>페널티</button>}
-                          {settings.oecdConditions.bunker && <button onClick={() => toggleOecdViolation(p.id, 'bunker')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].bunker ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>벙커</button>}
-                          {settings.oecdConditions.threePutt && <button onClick={() => toggleOecdViolation(p.id, 'threePutt')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].threePutt ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>3펏</button>}
-                          {settings.oecdConditions.triple && <div className={`flex-1 py-1.5 text-[10px] font-bold rounded-md flex items-center justify-center transition-colors ${(holeData.par === 3 ? holeData.scores[p.id] - holeData.par >= 2 : holeData.scores[p.id] - holeData.par >= 3) ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-300 border border-red-100'}`}>트리플</div>}
+                          {settings.oecdConditions?.ob && <button onClick={() => toggleOecdViolation(p.id, 'ob')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].ob ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>OB</button>}
+                          {settings.oecdConditions?.hazard && <button onClick={() => toggleOecdViolation(p.id, 'hazard')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].hazard ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>페널티</button>}
+                          {settings.oecdConditions?.bunker && <button onClick={() => toggleOecdViolation(p.id, 'bunker')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].bunker ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>벙커</button>}
+                          {settings.oecdConditions?.threePutt && <button onClick={() => toggleOecdViolation(p.id, 'threePutt')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].threePutt ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>3펏</button>}
+                          {settings.oecdConditions?.triple && <div className={`flex-1 py-1.5 text-[10px] font-bold rounded-md flex items-center justify-center transition-colors ${(holeData.par === 3 ? holeData.scores[p.id] - holeData.par >= 2 : holeData.scores[p.id] - holeData.par >= 3) ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-300 border border-red-100'}`}>트리플</div>}
                         </div>
                       </div>
                     )}
@@ -1550,16 +1669,16 @@
         {/* --- SHUFFLE --- */}
         {gameState === 'SHUFFLE' && (
           <div className="w-full min-h-screen bg-slate-900 text-white flex flex-col p-6 animate-in fade-in relative overflow-hidden">
-            <h2 className="text-center text-xl font-bold mb-1">패 섞기 (기리)</h2>
-            <p className="text-center text-slate-400 text-xs mb-4">누구나 카드를 섞을 수 있습니다.</p>
+            <h2 className="text-center text-xl font-bold mb-1">패 섞기</h2>
+            <p className="text-center text-slate-400 text-xs mb-8">누구나 카드를 섞을 수 있습니다.</p>
             
-            <div className="flex flex-wrap justify-center gap-4 flex-1 content-center z-10">
+            <div className="flex flex-wrap justify-center gap-4 w-full max-w-[340px] mx-auto z-10 mb-8">
               {Array.from({length:5}).map((_, i) => (
-                <div key={i} className="w-[28%] aspect-[2/3] bg-slate-800 rounded-2xl border-2 border-slate-700 flex items-center justify-center shadow-2xl relative transition-transform duration-100" style={{ transform: `translate(${shufflePositions[i].x}px, ${shufflePositions[i].y}px) rotate(${shufflePositions[i].r}deg)`, backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' }}><span className="text-slate-600 font-bold text-2xl">?</span></div>
+                <div key={i} className="w-[30%] aspect-[2/3] bg-slate-800 rounded-xl border-2 border-slate-700 flex items-center justify-center shadow-2xl relative transition-transform duration-100" style={{ transform: `translate(${shufflePositions[i].x}px, ${shufflePositions[i].y}px) rotate(${shufflePositions[i].r}deg)`, backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' }}><span className="text-slate-600 font-bold text-4xl">?</span></div>
               ))}
             </div>
             
-            <div className="mt-8 space-y-3 z-10 w-full max-w-sm mx-auto">
+            <div className="mt-auto space-y-3 z-10 w-full max-w-sm mx-auto pb-6">
               <div className="flex gap-3">
                 <button onClick={() => shuffleDeck('left')} disabled={isShuffling} className="flex-1 bg-slate-700 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-600 active:scale-[0.98] transition-all"><RotateCcw className={`w-5 h-5 ${isShuffling==='left'?'animate-spin':''}`} /> 왼쪽</button>
                 <button onClick={() => shuffleDeck('right')} disabled={isShuffling} className="flex-1 bg-slate-700 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-600 active:scale-[0.98] transition-all">오른쪽 <RotateCw className={`w-5 h-5 ${isShuffling==='right'?'animate-spin':''}`} /></button>
@@ -1577,26 +1696,39 @@
         {gameState === 'DRAW' && (
           <div className="w-full min-h-screen bg-slate-900 text-white flex flex-col p-6 animate-in fade-in">
             <h2 className="text-center text-xl font-bold mb-8">팀 뽑기</h2>
-            <div className="flex flex-wrap justify-center gap-4 flex-1 content-center relative">
+            <div className="flex flex-wrap justify-center gap-4 w-full max-w-[340px] mx-auto relative z-10">
               {(() => {
-                const myPick = Object.keys(matchState.selectedCards).find(k => matchState.selectedCards[k].playerId === localPlayerId);
+                const myPick = Object.keys(matchState.selectedCards || {}).find(k => matchState.selectedCards[k].playerId === localPlayerId);
                 
                 if (myPick) {
                   const data = matchState.selectedCards[myPick];
                   return (
-                    <div className={`w-[60%] aspect-[2/3] rounded-3xl shadow-2xl flex flex-col items-center justify-center border-4 border-white/20 animate-in zoom-in-90 ${getCardStyle(data.role)}`}>
-                      <span className="text-[7rem] mb-6 drop-shadow-xl leading-none font-medium tracking-tighter text-white">
-                        {data.role === 'JOKER' ? '🃏' : (data.role === 'RED' ? 'R' : (data.role === 'BLUE' ? 'B' : '꽝'))}
-                      </span>
-                      <div className="bg-black/30 px-6 py-2.5 rounded-full font-bold text-lg shadow-sm backdrop-blur-sm">내 카드</div>
+                    <div className={`w-[65%] aspect-[2/3] rounded-3xl shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-90 ${getCardStyle(data.role)}`}>
+                      <div className="flex-1 flex items-center justify-center w-full">
+                        {data.role === 'JOKER' ? (
+                           <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-md">
+                             <span className="text-5xl">🃏</span>
+                           </div>
+                        ) : (
+                           <span className="text-[7rem] leading-none font-black drop-shadow-sm text-white">
+                             {data.role === 'RED' ? 'R' : (data.role === 'BLUE' ? 'B' : '꽝')}
+                           </span>
+                        )}
+                      </div>
+                      <div className="w-full bg-black/20 py-3 text-center font-bold text-[16px] text-white">내 카드</div>
                     </div>
                   );
                 }
                 return Array.from({length:5}).map((_, i) => {
-                  const p = matchState.selectedCards[i];
+                  const p = matchState.selectedCards?.[i];
                   return (
-                    <div key={i} onClick={() => selectCard(i)} className={`w-[28%] aspect-[2/3] rounded-2xl flex flex-col items-center justify-center transition-all shadow-xl relative ${p ? 'bg-slate-800/80 border border-slate-600 opacity-50 cursor-not-allowed' : 'bg-slate-700 border-2 border-green-500 cursor-pointer hover:scale-105 active:scale-95'}`} style={!p ? { backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' } : {}}>
-                      {p ? <div className="text-center"><CheckCircle2 className="w-6 h-6 mx-auto opacity-50" /><div className="text-[10px] mt-1 truncate px-1">{p.playerName}</div></div> : <span className="text-slate-500 font-bold text-2xl">?</span>}
+                    <div key={i} onClick={() => selectCard(i)} className={`w-[30%] aspect-[2/3] rounded-xl flex flex-col items-center justify-center transition-all shadow-xl relative overflow-hidden ${p ? 'bg-slate-800 border border-slate-700 cursor-not-allowed' : 'bg-slate-700 border-2 border-green-500 cursor-pointer hover:scale-105 active:scale-95'}`} style={!p ? { backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' } : {}}>
+                      {p ? (
+                        <div className="text-center w-full h-full flex flex-col justify-center relative">
+                          <CheckCircle2 className="w-8 h-8 mx-auto opacity-30 text-white mb-2" />
+                          <div className="text-[12px] w-full bg-black/30 py-1.5 truncate px-1 text-white/70 font-medium absolute bottom-0 left-0">{p.playerName}</div>
+                        </div>
+                      ) : <span className="text-slate-500 font-bold text-4xl">?</span>}
                     </div>
                   );
                 });
@@ -1605,23 +1737,23 @@
             
             <div className="mt-8 w-full max-w-sm mx-auto pb-6">
               <div className="border border-slate-700 bg-slate-800/80 p-5 rounded-2xl text-center backdrop-blur-sm">
-                <p className={`font-bold text-sm mb-3 ${!Object.keys(matchState.selectedCards).find(k=>matchState.selectedCards[k].playerId===localPlayerId) ? 'text-green-400 animate-pulse' : 'text-slate-400'}`}>{pickLog}</p>
-                <div className="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden"><div className="bg-green-500 h-full transition-all duration-500" style={{ width: `${(Object.keys(matchState.selectedCards).length / 4) * 100}%` }}></div></div>
+                <p className={`font-bold text-sm mb-3 ${!Object.keys(matchState.selectedCards || {}).find(k=>matchState.selectedCards[k].playerId===localPlayerId) ? 'text-green-400 animate-pulse' : 'text-slate-400'}`}>{pickLog}</p>
+                <div className="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden"><div className="bg-green-500 h-full transition-all duration-500" style={{ width: `${(Object.keys(matchState.selectedCards || {}).length / 4) * 100}%` }}></div></div>
               </div>
               
-              {(isHostView || settings.guestPermissions?.autoPick) && Object.keys(matchState.selectedCards).length < 4 && (
+              {(isHostView || settings.guestPermissions?.autoPick) && Object.keys(matchState.selectedCards || {}).length < 4 && (
                 <button onClick={autoPickRemaining} className="w-full bg-yellow-500 text-yellow-900 py-4 rounded-2xl font-bold text-lg mt-4 shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-yellow-400">
                   <Users className="w-5 h-5" /> 남은 동반자 대신 뽑기
                 </button>
               )}
 
-              {(isHostView || settings.guestPermissions?.autoPick) && Object.keys(matchState.selectedCards).length >= 4 && (
+              {(isHostView || settings.guestPermissions?.autoPick) && Object.keys(matchState.selectedCards || {}).length >= 4 && (
                 <button onClick={revealTeams} className="w-full bg-green-600 text-white py-5 rounded-2xl font-bold text-xl mt-4 shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-green-500">
                   <CheckCircle2 className="w-6 h-6" /> 결과 확인 (전체 공개)
                 </button>
               )}
 
-              {!(isHostView || settings.guestPermissions?.autoPick) && Object.keys(matchState.selectedCards).length >= 4 && (
+              {!(isHostView || settings.guestPermissions?.autoPick) && Object.keys(matchState.selectedCards || {}).length >= 4 && (
                 <div className="w-full bg-slate-800 text-slate-400 font-bold py-5 rounded-xl text-center text-lg mt-4 tracking-tight border border-slate-700">결과 확인을 기다립니다...</div>
               )}
             </div>
@@ -1640,29 +1772,35 @@
 
         {/* --- TEAM MATCHING RESULT --- */}
         {gameState === 'TEAM_MATCHING_RESULT' && (() => {
-          const results = Object.values(matchState.selectedCards);
+          const results = Object.values(matchState.selectedCards || {});
           const isJokerPending = settings.jokerValue === 'RANDOM' && !matchState.isJokerRevealed;
-          const rCount = Object.values(matchState.assignedTeams).filter(r => r === 'RED').length;
+          const rCount = Object.values(matchState.assignedTeams || {}).filter(r => r === 'RED').length;
           const jokerTeam = rCount === 1 ? 'RED' : 'BLUE';
           
           return (
             <div className="w-full min-h-screen bg-slate-900 text-white flex flex-col p-4 animate-in fade-in">
               <h2 className="text-center text-3xl font-black mb-8 text-yellow-400 mt-6">팀 매칭 결과</h2>
-              <div className="grid grid-cols-2 gap-4 mb-6 w-full max-w-sm mx-auto">
+              <div className="grid grid-cols-2 gap-4 mb-6 w-full max-w-[340px] mx-auto">
                 {results.map((res, idx) => {
                   const clickable = res.role === 'JOKER' && isJokerPending;
                   return (
-                    <div key={idx} onClick={() => clickable && executeRandomJoker()} className={`relative aspect-[2/3] rounded-3xl flex flex-col items-center p-3 shadow-2xl transition-all ${getCardStyle(res.role, jokerTeam)} ${clickable ? 'cursor-pointer animate-pulse ring-4 ring-yellow-400 scale-105 active:scale-95' : ''}`}>
-                      {clickable && <span className="absolute -top-3 right-2 bg-yellow-400 text-black text-[12px] font-black px-3 py-1.5 rounded-full z-10 border-2 border-white shadow-lg">Click!</span>}
-                      {res.role === 'JOKER' && isJokerPending && !clickable && <span className="absolute -top-3 right-2 bg-slate-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg z-10 border border-slate-600">확인 대기중</span>}
+                    <div key={idx} onClick={() => clickable && executeRandomJoker()} className={`relative aspect-[2/3] rounded-3xl flex flex-col shadow-xl transition-all overflow-hidden ${getCardStyle(res.role, jokerTeam)} ${clickable ? 'cursor-pointer animate-pulse ring-4 ring-yellow-400 scale-105 active:scale-95' : ''}`}>
+                      {clickable && <span className="absolute -top-1 -right-1 bg-yellow-400 text-black text-[12px] font-black px-3 py-1.5 rounded-bl-lg rounded-tr-lg z-10 shadow-lg">Click!</span>}
+                      {res.role === 'JOKER' && isJokerPending && !clickable && <span className="absolute top-2 right-2 bg-slate-800/80 text-white text-[10px] font-bold px-2 py-1.5 rounded-md shadow-sm z-10">대기중</span>}
+                      
                       <div className="flex-1 flex flex-col items-center justify-center w-full">
                         {res.role === 'JOKER' ? (
-                          <div className="text-center"><span className="text-5xl mb-2 block">🃏</span><span className="text-xs font-black bg-black/30 px-3 py-1 rounded-full">{matchState.finalJokerStroke || '확인중'}</span></div>
+                          <div className="text-center flex flex-col items-center justify-center">
+                            <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-2.5">
+                              <span className="text-4xl">🃏</span>
+                            </div>
+                            <span className="text-[13px] font-black bg-black/30 px-3.5 py-1.5 rounded-full text-white">{matchState.finalJokerStroke || '확인중'}</span>
+                          </div>
                         ) : (
-                          <span className="text-6xl font-black">{res.role === 'RED' ? 'R' : (res.role === 'BLUE' ? 'B' : '꽝')}</span>
+                          <span className="text-[6.5rem] leading-none font-black text-white">{res.role === 'RED' ? 'R' : (res.role === 'BLUE' ? 'B' : '꽝')}</span>
                         )}
                       </div>
-                      <div className="w-full bg-black/40 py-3 rounded-2xl text-center font-bold text-sm truncate px-2">{res.playerName}</div>
+                      <div className="w-full bg-black/20 py-3 text-center font-bold text-[14px] truncate px-2 text-white">{res.playerName}</div>
                     </div>
                   );
                 })}
@@ -1674,7 +1812,7 @@
                   <p className="text-yellow-400 font-black text-xl">🎉 팀 뽑기 완료! 🎉</p>
                 )}
               </div>
-              <div className="w-full max-w-sm mx-auto pb-8">
+              <div className="w-full max-w-sm mx-auto pb-8 mt-auto">
                 {(isHostView || settings.guestPermissions?.nextHole) ? (
                   <button onClick={finalizeHole} disabled={isJokerPending} className={`w-full py-5 rounded-2xl font-black text-lg flex items-center justify-center gap-2 transition-all active:scale-95 ${isJokerPending ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-500 shadow-xl'}`}>
                     홀 정산하기 <ChevronRight className="w-6 h-6"/>
@@ -1704,7 +1842,7 @@
               <div className="bg-emerald-700/60 rounded-2xl p-4 border border-emerald-500/30 flex flex-col items-center justify-center">
                 <div className="text-center text-[11px] text-emerald-200 font-bold mb-1">경기 결과 (팀별 평균 타수)</div>
                 <div className="text-center text-xl font-black mb-3 text-yellow-300 break-keep-all leading-snug">
-                  {drawResult?.isTie ? '무승부 (상금 이월)' : <>🏆 {players.filter(p => drawResult.actual[p.id] === drawResult.winningTeam).map(w => w.name).join(', ')} 승리!</>}
+                  {drawResult?.isTie ? '무승부 (상금 이월)' : <>🏆 {players.filter(p => drawResult?.actual?.[p.id] === drawResult?.winningTeam).map(w => w.name).join(', ')} 승리!</>}
                 </div>
                 <div className="flex justify-center items-center gap-4 text-[13px] font-bold bg-emerald-800/50 py-2.5 px-4 rounded-xl w-full">
                   <div className={`flex-1 text-right ${drawResult?.winningTeam === 'RED' ? 'text-red-300' : 'text-red-200/50'}`}>RED <span className="text-lg">{drawResult?.teamStats?.RED?.avg.toFixed(1)}</span>타</div>
@@ -1718,13 +1856,13 @@
               <div className="space-y-3">
                 {players.map(p => {
                   const currentLog = history[history.length - 1];
-                  const currentProfit = currentLog ? currentLog.profits[p.id] : 0;
+                  const currentProfit = currentLog ? currentLog.profits?.[p.id] || 0 : 0;
                   const isWinning = currentProfit > 0;
                   const isTie = currentLog?.isTie;
-                  const actualTeam = drawResult?.actual[p.id];
-                  const isJoker = drawResult?.raw[p.id] === 'JOKER';
+                  const actualTeam = drawResult?.actual?.[p.id];
+                  const isJoker = drawResult?.raw?.[p.id] === 'JOKER';
                   const teamBg = actualTeam === 'RED' ? 'bg-red-500' : 'bg-blue-500';
-                  const finalScoreUsed = currentLog?.scores[p.id];
+                  const finalScoreUsed = currentLog?.scores?.[p.id] || 4;
                   const currentPar = currentLog?.par || 4;
                   const relativeScore = finalScoreUsed - currentPar;
                   
@@ -1821,8 +1959,8 @@
                        </div>
                        <div className="flex-1 grid grid-cols-4 pl-1 pointer-events-none">
                          {players.map(p => {
-                            const profit = hLog.profits[p.id] || 0;
-                            const score = hLog.scores[p.id];
+                            const profit = hLog.profits?.[p.id] || 0;
+                            const score = hLog.scores?.[p.id] || 4;
                             const isWinner = profit > 0;
                             const isLoser = profit <= 0 && hLog.winningTeam !== 'TIE';
                             const paidBirdie = hLog.specials?.find(s => s.name === p.name && s.type.includes('_PAY'));
@@ -2052,23 +2190,23 @@
 
         {/* Invite Modal */}
         {isInviteModalOpen && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[110] p-4">
-            <div className="bg-white rounded-[1.5rem] w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[110] p-4" onClick={() => setIsInviteModalOpen(false)}>
+            <div className="bg-white rounded-[1.5rem] w-full max-w-sm p-6 shadow-2xl relative animate-in zoom-in-95 duration-200" onClick={e => e.stopPropagation()}>
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2"><QrCode className="w-5 h-5 text-emerald-600" /> 방 초대하기</h3>
                 <button onClick={() => setIsInviteModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1"><X className="w-5 h-5" /></button>
               </div>
               <p className="text-center text-[13px] text-gray-500 mb-6 leading-relaxed">라운드 동반자의 스마트폰 카메라로 스캔하거나<br/>초대 URL을 공유해 참여할 수 있습니다.</p>
-              <div className="bg-gray-50 rounded-2xl p-6 flex justify-center mb-6 border border-gray-100">
-                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentShareUrl)}`} alt="Invite QR Code" className="w-44 h-44 mix-blend-multiply" />
+              <div className="bg-gray-50 rounded-2xl p-6 flex justify-center mb-6 border border-gray-100 relative">
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`} alt="Invite QR Code" className="w-44 h-44 mix-blend-multiply" />
               </div>
               <div className="mb-6">
                 <label className="block text-[11px] font-bold text-gray-400 mb-1.5 pl-1">초대 URL</label>
-                <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 font-medium truncate">{currentShareUrl}</div>
+                <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 font-medium truncate">{shareUrl}</div>
               </div>
               <div className="flex gap-3 mb-6">
-                <button onClick={() => { const textArea = document.createElement("textarea"); textArea.value = currentShareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); }} className={`flex-1 py-3.5 rounded-xl border font-bold transition-all active:scale-95 flex items-center justify-center gap-2 ${copySuccess ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-emerald-600 text-emerald-600 hover:bg-emerald-50'}`}>{copySuccess ? '복사 완료!' : 'URL 복사'}</button>
-                <button onClick={() => { if (navigator.share) { navigator.share({ title: '골프 게임 초대', text: '라운드 스코어 기록에 참여하세요!', url: currentShareUrl }).then(() => { setIsInviteModalOpen(false); }).catch(console.error); } else { const textArea = document.createElement("textarea"); textArea.value = currentShareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); } }} className="flex-1 py-3.5 rounded-xl bg-emerald-600 text-white font-bold shadow-md hover:bg-emerald-700 active:scale-95 transition-all flex items-center justify-center gap-2">공유하기</button>
+                <button onClick={() => { const textArea = document.createElement("textarea"); textArea.value = shareUrl; document.body.appendChild(textArea); textArea.select(); document.execCommand('copy'); document.body.removeChild(textArea); setCopySuccess(true); setTimeout(() => { setCopySuccess(false); setIsInviteModalOpen(false); }, 800); }} className={`flex-1 py-3.5 rounded-xl border font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${copySuccess ? 'border-emerald-600 bg-emerald-50 text-emerald-600' : 'border-emerald-600 text-emerald-600 hover:bg-emerald-50'}`}>{copySuccess ? '복사 완료!' : 'URL 복사'}</button>
+                <button onClick={() => { if (navigator.share) { navigator.share({ title: '골프 게임 초대', text: '라운드 스코어 기록에 참여하세요!', url: shareUrl }).then(() => { setIsInviteModalOpen(false); }).catch(console.error); } else { window.open(shareUrl, '_blank'); } }} className="flex-1 py-3.5 rounded-xl bg-emerald-600 text-white font-bold shadow-md hover:bg-emerald-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2">공유하기</button>
               </div>
             </div>
           </div>
@@ -2077,8 +2215,46 @@
       );
     }
 
-    const root = createRoot(document.getElementById('root'));
-    root.render(<App />);
+    const AppLoader = () => {
+      const [ready, setReady] = useState(false);
+      
+      useEffect(() => {
+        const handleReady = () => {
+          if (window.GolfDB && window.GolfDB.ready) {
+            setReady(true);
+          } else if (window.GolfDB) {
+             window.GolfDB.init(() => {
+               setReady(true);
+             });
+          }
+        };
+
+        if (window.GolfDB && window.GolfDB.ready) {
+           handleReady();
+        } else {
+           window.addEventListener('golf-db-ready', handleReady);
+           const timer = setTimeout(() => setReady(true), 2000); // 2초 후 무조건 렌더링 시작
+           return () => {
+             window.removeEventListener('golf-db-ready', handleReady);
+             clearTimeout(timer);
+           };
+        }
+      }, []);
+
+      if (!ready) {
+        return (
+          <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4">
+            <div className="w-8 h-8 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
+            <div className="text-emerald-600 font-bold text-sm">시스템 초기화 중...</div>
+          </div>
+        );
+      }
+      return <App />;
+    };
+
+    const rootEl = document.getElementById('root');
+    const root = createRoot(rootEl);
+    root.render(<AppLoader />);
   </script>
 </body>
 </html>
