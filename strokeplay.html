@@ -912,13 +912,14 @@
                     <div key={idx} className={`flex items-center gap-3 p-2.5 border rounded-[16px] transition select-none ${globalExcluded[idx] ? 'bg-gray-50 border-gray-200 opacity-50 grayscale' : 'bg-white border-gray-200 hover:border-gray-300'}`} onTouchStart={(e) => startPress(e, idx, true)} onTouchEnd={cancelPress} onTouchMove={cancelPress} onMouseDown={(e) => startPress(e, idx, true)} onMouseUp={cancelPress} onMouseLeave={cancelPress} onContextMenu={(e) => { if (e.target.tagName !== 'INPUT') e.preventDefault(); }}>
                       <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 overflow-hidden shrink-0"><Icon name="User" className="w-6 h-6 mt-1" /></div>
                       <div className="flex flex-1 items-center gap-2 min-w-0">
-                        {/* 🚨 이름 입력창 UI 개선 (기본값 회색 / 터치시 진하게) */}
+                        {/* 🚨 이름 입력창 UI 및 UX 완벽 개선 (플레이스홀더화, 검은색 텍스트) */}
                         <input 
                           type="text" 
-                          value={player} 
+                          value={player === DEFAULT_PLAYERS[idx] ? '' : player} 
                           onChange={(e) => updatePlayerName(idx, e.target.value)} 
-                          className={`w-full bg-transparent py-2 outline-none transition text-[15px] font-bold truncate cursor-pointer focus:cursor-text focus:text-gray-900 placeholder-gray-400 ${DEFAULT_PLAYERS.includes(player) || !player ? 'text-gray-400' : 'text-gray-900'}`} 
-                          placeholder={`이름 ${idx + 1}`} 
+                          onBlur={(e) => { if (e.target.value.trim() === '') updatePlayerName(idx, DEFAULT_PLAYERS[idx]); }}
+                          className="w-full bg-transparent py-2 outline-none transition text-[15px] font-bold truncate cursor-pointer focus:cursor-text text-black placeholder-gray-400" 
+                          placeholder={DEFAULT_PLAYERS[idx]} 
                           onTouchStart={(e) => e.stopPropagation()} 
                           onMouseDown={(e) => e.stopPropagation()} 
                         />
