@@ -151,7 +151,7 @@
       return (course.pars[backCourse] || defaultPars)[holeNum - 10] || 4;
     };
 
-    const defaultOecdViolations = { ob: false, hazard: false, bunker: false, threePutt: false };
+    const defaultOecdViolations = { ob: false, hazard: false, bunker: false, threePutt: false, tree: false, road: false };
 
     function App() {
       // URL에서 방 코드(roomId) 파싱하기
@@ -186,7 +186,7 @@
         oecdIncludeIndividual: true, exemptSameTeam: false, initialPot: 0, jokerValue: '1',
         oecdLimit: 60000, oecdPenalty: 10000, oecdMaxPenalty: 30000, oecdIncludeRewards: true,
         oecdReleaseEnabled: true, oecdReleaseThreshold: 0, oecdRule: 'POT', 
-        oecdConditions: { ob: true, hazard: true, bunker: true, threePutt: true, triple: true },
+        oecdConditions: { ob: true, hazard: true, bunker: true, threePutt: true, triple: true, tree: false, road: false },
         doubleConditions: { birdie: true, tie: true, triple: false, threeTieCurrent: false, threeTiePrev: false },
         zeroOutLastHole: false
       });
@@ -577,6 +577,8 @@
             if (settings.oecdConditions.hazard && v.hazard) penaltyCount++;
             if (settings.oecdConditions.bunker && v.bunker) penaltyCount++;
             if (settings.oecdConditions.threePutt && v.threePutt) penaltyCount++;
+            if (settings.oecdConditions.tree && v.tree) penaltyCount++;
+            if (settings.oecdConditions.road && v.road) penaltyCount++;
             if (settings.oecdConditions.triple && (holeData.par === 3 ? (holeData.scores[p.id] - holeData.par >= 2) : (holeData.scores[p.id] - holeData.par >= 3))) penaltyCount++;
 
             if (penaltyCount > 0) {
@@ -1273,8 +1275,8 @@
 
                       <label className="block text-xs text-gray-500 mb-2">OECD 적용 항목 (위반 내역)</label>
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {Object.entries({ob: 'OB', hazard: '페널티구역', bunker: '벙커', threePutt: '쓰리펏', triple: '트리플(파3 더블, 자동계산)'}).map(([key, label]) => (
-                          <label key={key} className={`flex items-center gap-2 text-xs text-gray-700 cursor-pointer bg-gray-50 px-2 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 ${key === 'triple' ? 'col-span-2' : ''}`}>
+                        {Object.entries({ob: 'OB', hazard: '페널티구역', bunker: '벙커', threePutt: '쓰리펏', tree: '나무', road: '도로', triple: '트리플(파3 더블, 자동계산)'}).map(([key, label]) => (
+                          <label key={key} className={`flex items-center gap-2 text-xs text-gray-700 cursor-pointer bg-gray-50 px-2 py-2 rounded-lg border border-gray-200 hover:bg-gray-100 ${key === 'triple' ? 'col-span-2 md:col-span-3' : ''}`}>
                             <input type="checkbox" checked={settings.oecdConditions[key]} onChange={e => setSettings({...settings, oecdConditions: {...settings.oecdConditions, [key]: e.target.checked}})} className="w-4 h-4 rounded text-red-500 focus:ring-red-500 border-gray-300" />
                             <span className="font-medium">{label}</span>
                           </label>
@@ -1474,12 +1476,14 @@
                     {p.isOecd && (
                       <div className="flex gap-1.5 mt-3 bg-red-50/50 p-2 rounded-lg border border-red-100 items-center">
                         <span className="text-[10px] font-black text-red-600 px-1 shrink-0">OECD<br/>내역</span>
-                        <div className="flex-1 flex gap-1">
-                          {settings.oecdConditions.ob && <button onClick={() => toggleOecdViolation(p.id, 'ob')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].ob ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>OB</button>}
-                          {settings.oecdConditions.hazard && <button onClick={() => toggleOecdViolation(p.id, 'hazard')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].hazard ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>페널티</button>}
-                          {settings.oecdConditions.bunker && <button onClick={() => toggleOecdViolation(p.id, 'bunker')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].bunker ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>벙커</button>}
-                          {settings.oecdConditions.threePutt && <button onClick={() => toggleOecdViolation(p.id, 'threePutt')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].threePutt ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>3펏</button>}
-                          {settings.oecdConditions.triple && <div className={`flex-1 py-1.5 text-[10px] font-bold rounded-md flex items-center justify-center transition-colors ${(holeData.par === 3 ? holeData.scores[p.id] - holeData.par >= 2 : holeData.scores[p.id] - holeData.par >= 3) ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-300 border border-red-100'}`}>트리플</div>}
+                        <div className="flex-1 flex flex-wrap gap-1">
+                          {settings.oecdConditions.ob && <button onClick={() => toggleOecdViolation(p.id, 'ob')} className={`flex-1 min-w-[30px] py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].ob ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>OB</button>}
+                          {settings.oecdConditions.hazard && <button onClick={() => toggleOecdViolation(p.id, 'hazard')} className={`flex-1 min-w-[30px] py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].hazard ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>페널티</button>}
+                          {settings.oecdConditions.bunker && <button onClick={() => toggleOecdViolation(p.id, 'bunker')} className={`flex-1 min-w-[30px] py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].bunker ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>벙커</button>}
+                          {settings.oecdConditions.threePutt && <button onClick={() => toggleOecdViolation(p.id, 'threePutt')} className={`flex-1 min-w-[30px] py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].threePutt ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>3펏</button>}
+                          {settings.oecdConditions.tree && <button onClick={() => toggleOecdViolation(p.id, 'tree')} className={`flex-1 min-w-[30px] py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].tree ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>나무</button>}
+                          {settings.oecdConditions.road && <button onClick={() => toggleOecdViolation(p.id, 'road')} className={`flex-1 min-w-[30px] py-1.5 text-[10px] font-bold rounded-md transition-colors ${holeData.oecdViolations[p.id].road ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-400 border border-red-200 hover:bg-red-50'}`}>도로</button>}
+                          {settings.oecdConditions.triple && <div className={`flex-1 min-w-[30px] py-1.5 text-[10px] font-bold rounded-md flex items-center justify-center transition-colors ${(holeData.par === 3 ? holeData.scores[p.id] - holeData.par >= 2 : holeData.scores[p.id] - holeData.par >= 3) ? 'bg-red-500 text-white shadow-sm' : 'bg-white text-red-300 border border-red-100'}`}>트리플</div>}
                         </div>
                       </div>
                     )}
