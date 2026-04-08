@@ -9,7 +9,8 @@ import {
   Sparkles, Loader2, Instagram,
   Bold, Italic, Underline, Strikethrough, AlignLeft, AlignCenter, AlignRight, List as ListIcon,
   Layers, Check, Timer, Flag, Play, Pause, Minus,
-  User, Camera, ChevronDown, ChevronUp, Share, Menu, X
+  User, Camera, ChevronDown, ChevronUp, Share, Menu, X,
+  Mail, Lock, UserCircle
 } from 'lucide-react';
 
 // --- Global Styles ---
@@ -145,7 +146,116 @@ const INITIAL_SCORES = [
    [Sub Components Definition]
 ========================================= */
 
-function MyPage({ onCancel, blockedUsers, setBlockedUsers, hiddenFromUsers, setHiddenFromUsers, defaultTab, setDefaultTab, baseFontSize, setBaseFontSize, followingUsers, onToggleFollow }) {
+function AuthScreen({ onLogin }) {
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [accountId, setAccountId] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (isLoginMode) {
+      if (!accountId || !password) return alert("아이디와 비밀번호를 입력해주세요.");
+      // 로그인 처리
+      onLogin(); 
+    } else {
+      if (!accountId || !password || !nickname) return alert("모든 항목을 입력해주세요.");
+      if (password !== passwordConfirm) return alert("비밀번호가 일치하지 않습니다.");
+      alert("회원가입이 완료되었습니다! 로그인 해주세요.");
+      setIsLoginMode(true);
+      setPassword('');
+      setPasswordConfirm('');
+    }
+  };
+
+  const handleSocialLogin = (provider) => {
+    alert(`${provider} 계정 연동을 준비 중입니다.`);
+    onLogin();
+  };
+
+  return (
+    <div className="flex flex-col h-full w-full justify-center items-center p-6 animate-in fade-in duration-300 overflow-y-auto scrollbar-hide">
+      <div className="w-full max-w-sm bg-white/90 backdrop-blur-md rounded-[32px] p-8 shadow-xl border border-[#d1c9b8] my-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-[36px] font-[900] stamped-text mb-2 tracking-tight">진심골프메모</h1>
+          <p className="text-[14px] font-bold text-gray-500">
+            {isLoginMode ? "다시 오신 것을 환영합니다!" : "나만의 골프 기록을 시작해보세요"}
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          {!isLoginMode && (
+            <div className="relative">
+              <UserCircle size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="text" placeholder="사용할 닉네임" value={nickname} onChange={e=>setNickname(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-[15px] outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all" />
+            </div>
+          )}
+          <div className="relative">
+            <User size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="text" placeholder="아이디" value={accountId} onChange={e=>setAccountId(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-[15px] outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all" />
+          </div>
+          <div className="relative">
+            <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input type="password" placeholder="비밀번호" value={password} onChange={e=>setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-[15px] outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all" />
+          </div>
+          {!isLoginMode && (
+            <div className="relative">
+              <Lock size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input type="password" placeholder="비밀번호 확인" value={passwordConfirm} onChange={e=>setPasswordConfirm(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-[15px] outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all" />
+            </div>
+          )}
+
+          {/* 로그인 상태 유지 */}
+          <div className="flex items-center px-1 mt-1 mb-1">
+            <label className="flex items-center gap-2 cursor-pointer group select-none">
+              <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${keepLoggedIn ? 'bg-[#1a4314] border-[#1a4314]' : 'bg-white border-gray-300 group-hover:border-[#1a4314]'}`}>
+                {keepLoggedIn && <Check size={12} className="text-white font-black" strokeWidth={3} />}
+              </div>
+              <input type="checkbox" checked={keepLoggedIn} onChange={(e)=>setKeepLoggedIn(e.target.checked)} className="hidden" />
+              <span className="text-[13px] font-bold text-gray-600 group-hover:text-[#1a4314] transition-colors">로그인 상태 유지</span>
+            </label>
+          </div>
+
+          <button type="submit" className="w-full py-4 bg-[#1a4314] text-white rounded-2xl font-black text-[16px] shadow-lg hover:bg-[#2d6a4f] active:scale-95 transition-all mt-1">
+            {isLoginMode ? "아이디로 로그인" : "아이디로 가입하기"}
+          </button>
+        </form>
+
+        {/* 소셜 가입/로그인 */}
+        <div className="mt-6 mb-6 flex items-center gap-3">
+          <div className="flex-1 h-px bg-gray-200"></div>
+          <span className="text-[11px] font-extrabold text-gray-400">SNS 계정으로 3초만에 {isLoginMode ? '시작하기' : '가입하기'}</span>
+          <div className="flex-1 h-px bg-gray-200"></div>
+        </div>
+
+        <div className="flex flex-col gap-2.5">
+          <button onClick={() => handleSocialLogin('카카오')} className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#FEE500] text-[#000000] rounded-2xl font-black text-[15px] hover:bg-[#FDD800] active:scale-95 transition-all shadow-sm relative">
+            <svg className="absolute left-5 w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C6.47715 3 2 6.47715 2 10.7659C2 13.5606 3.82424 15.993 6.51877 17.2917L5.59765 20.669C5.46197 21.1664 6.00287 21.5458 6.43859 21.255L10.5188 18.5332C11.0033 18.5772 11.4965 18.5997 12 18.5997C17.5228 18.5997 22 15.228 22 10.7659C22 6.47715 17.5228 3 12 3Z" fill="#000000"/></svg>
+            카카오로 {isLoginMode ? '로그인' : '가입'}
+          </button>
+          <button onClick={() => handleSocialLogin('네이버')} className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#03C75A] text-white rounded-2xl font-black text-[15px] hover:bg-[#02b351] active:scale-95 transition-all shadow-sm relative">
+            <span className="absolute left-5 font-[900] text-xl leading-none font-sans italic">N</span>
+            네이버로 {isLoginMode ? '로그인' : '가입'}
+          </button>
+          <button onClick={() => handleSocialLogin('구글')} className="w-full flex items-center justify-center gap-2 py-3.5 bg-white text-gray-700 border border-gray-200 rounded-2xl font-black text-[15px] hover:bg-gray-50 active:scale-95 transition-all shadow-sm relative">
+            <svg className="absolute left-5" width="20" height="20" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            구글로 {isLoginMode ? '로그인' : '가입'}
+          </button>
+        </div>
+
+        <div className="mt-8 text-center">
+          <button onClick={() => setIsLoginMode(!isLoginMode)} className="text-[14px] font-bold text-gray-500 hover:text-[#1a4314] transition-colors decoration-[#1a4314] hover:underline underline-offset-4">
+            {isLoginMode ? "아직 계정이 없으신가요? 아이디로 회원가입" : "이미 계정이 있으신가요? 기존 계정 로그인"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MyPage({ onCancel, blockedUsers, setBlockedUsers, hiddenFromUsers, setHiddenFromUsers, defaultTab, setDefaultTab, baseFontSize, setBaseFontSize, followingUsers, onToggleFollow, onLogout }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showBlockSettings, setShowBlockSettings] = useState(false);
 
@@ -154,7 +264,8 @@ function MyPage({ onCancel, blockedUsers, setBlockedUsers, hiddenFromUsers, setH
 
   return (
     <div className="p-6 bg-[#fdfcf9] min-h-full flex flex-col gap-6">
-      <div className="flex flex-col items-center py-8 border-b border-[#d1c9b8]/50 mt-4">
+      <div className="flex flex-col items-center py-8 border-b border-[#d1c9b8]/50 mt-4 relative">
+        <button onClick={onLogout} className="absolute right-0 top-0 text-[13px] font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-red-100 bg-white">로그아웃</button>
         <div className="w-20 h-20 rounded-full bg-[#e8f5e9] border border-[#a5d6a7] text-[#1a4314] flex items-center justify-center text-[32px] font-black shadow-md mb-4">나</div>
         <h2 className="text-[22px] font-black text-gray-900 tracking-tight">나의 프로필</h2>
         <p className="text-[13px] font-bold text-gray-500 mt-1">user@golfmemo.com</p>
@@ -215,7 +326,7 @@ function MyPage({ onCancel, blockedUsers, setBlockedUsers, hiddenFromUsers, setH
                 <p className="text-[12px] font-bold text-gray-500 mb-2">구독 중인 관심 유저</p>
                 <div className="flex flex-col gap-2">
                   {followingUsers.map(u => (
-                    <div key={u} className="flex justify-between items-center bg-white px-3 py-2 rounded-xl border">
+                    <div key={`follow-${u}`} className="flex justify-between items-center bg-white px-3 py-2 rounded-xl border">
                       <span className="text-[14px] font-bold">{u}</span>
                       <button onClick={() => onToggleFollow(u)} className="text-[11px] text-gray-500 font-bold border px-3 py-1.5 rounded-lg hover:bg-gray-50">구독 취소</button>
                     </div>
@@ -224,10 +335,10 @@ function MyPage({ onCancel, blockedUsers, setBlockedUsers, hiddenFromUsers, setH
               </div>
             )}
             {blockedUsers.length > 0 && (
-              <div className="mt-2"><p className="text-[12px] font-bold text-gray-500 mb-2">게시물 차단 목록</p><div className="flex flex-col gap-2">{blockedUsers.map(u => (<div key={u} className="flex justify-between items-center bg-white px-3 py-2 rounded-xl border"><span className="text-[14px] font-bold">{u}</span><button onClick={() => setBlockedUsers(blockedUsers.filter(b => b !== u))} className="text-[11px] text-gray-500 font-bold border px-3 py-1.5 rounded-lg">해제</button></div>))}</div></div>
+              <div className="mt-2"><p className="text-[12px] font-bold text-gray-500 mb-2">게시물 차단 목록</p><div className="flex flex-col gap-2">{blockedUsers.map(u => (<div key={`block-${u}`} className="flex justify-between items-center bg-white px-3 py-2 rounded-xl border"><span className="text-[14px] font-bold">{u}</span><button onClick={() => setBlockedUsers(blockedUsers.filter(b => b !== u))} className="text-[11px] text-gray-500 font-bold border px-3 py-1.5 rounded-lg">해제</button></div>))}</div></div>
             )}
             {hiddenFromUsers.length > 0 && (
-              <div className="mt-2"><p className="text-[12px] font-bold text-gray-500 mb-2">내 메모 숨김 목록</p><div className="flex flex-col gap-2">{hiddenFromUsers.map(u => (<div key={u} className="flex justify-between items-center bg-white px-3 py-2 rounded-xl border"><span className="text-[14px] font-bold">{u}</span><button onClick={() => setHiddenFromUsers(hiddenFromUsers.filter(b => b !== u))} className="text-[11px] text-gray-500 font-bold border px-3 py-1.5 rounded-lg">해제</button></div>))}</div></div>
+              <div className="mt-2"><p className="text-[12px] font-bold text-gray-500 mb-2">내 메모 숨김 목록</p><div className="flex flex-col gap-2">{hiddenFromUsers.map(u => (<div key={`hide-${u}`} className="flex justify-between items-center bg-white px-3 py-2 rounded-xl border"><span className="text-[14px] font-bold">{u}</span><button onClick={() => setHiddenFromUsers(hiddenFromUsers.filter(b => b !== u))} className="text-[11px] text-gray-500 font-bold border px-3 py-1.5 rounded-lg">해제</button></div>))}</div></div>
             )}
           </div>
         )}
@@ -375,7 +486,7 @@ function GlobalSearch({ memos, shotMemos, blockedUsers, onOpenDetail, onCancel, 
   const filteredShotMemos = shotMemos.filter(m => query && m.content.toLowerCase().includes(query.toLowerCase()));
 
   const renderMemo = (memo) => (
-    <div key={memo.id} onClick={() => onOpenDetail(memo)} className="bg-white rounded-[20px] p-4 shadow-sm border border-[#d1c9b8] cursor-pointer mb-3 hover:border-[#1a4314] transition-colors">
+    <div key={`s-${memo.id}`} onClick={() => onOpenDetail(memo)} className="bg-white rounded-[20px] p-4 shadow-sm border border-[#d1c9b8] cursor-pointer mb-3 hover:border-[#1a4314] transition-colors">
       <div className="flex justify-between items-center mb-2">
         <span className="text-[11px] font-bold text-[#1a4314] bg-[#e8f5e9] px-2 py-0.5 rounded-md">{memo.category}</span>
         <span className="text-[11px] text-gray-400 font-bold">{memo.date}</span>
@@ -390,7 +501,7 @@ function GlobalSearch({ memos, shotMemos, blockedUsers, onOpenDetail, onCancel, 
   );
 
   const renderShotMemo = (memo) => (
-    <div key={memo.id} className="bg-white rounded-[20px] p-4 shadow-sm border border-[#d1c9b8] mb-3">
+    <div key={`s-shot-${memo.id}`} className="bg-white rounded-[20px] p-4 shadow-sm border border-[#d1c9b8] mb-3">
        <div className="flex justify-between items-center mb-1">
          <span className="text-[11px] font-bold text-gray-500">Shot메모</span>
          <span className="text-[11px] text-gray-400 font-bold">{memo.date}</span>
@@ -723,13 +834,13 @@ function ScoreDetail({ scoreData, onSendToMemo }) {
             </button>
           </div>
           <div className="grid grid-cols-2 gap-2">
-            {scoreData.game.results.map((r,i)=><div key={i} className="bg-white p-2.5 rounded-xl flex justify-between font-bold text-[13px]"><span>{r.name}</span><span className={r.point.includes('+')?'text-blue-600':'text-red-600'}>{r.point}</span></div>)}
+            {scoreData.game.results.map((r,i)=><div key={`r-${i}`} className="bg-white p-2.5 rounded-xl flex justify-between font-bold text-[13px]"><span>{r.name}</span><span className={r.point.includes('+')?'text-blue-600':'text-red-600'}>{r.point}</span></div>)}
           </div>
           {showGameDetails && scoreData.game.details && (
             <div className="mt-4 pt-4 border-t border-orange-200/50 flex flex-col gap-2 animate-in slide-in-from-top-2">
               <span className="text-[12px] font-extrabold text-orange-800 mb-1">홀별 상세 획득 내역</span>
               {scoreData.game.details.map((d, i) => (
-                <div key={i} className="bg-white/60 p-2.5 rounded-xl flex justify-between items-center text-[12px]">
+                <div key={`d-${i}`} className="bg-white/60 p-2.5 rounded-xl flex justify-between items-center text-[12px]">
                   <span className="font-bold text-gray-600">{d.hole} <span className="font-medium text-gray-400">({d.desc})</span></span>
                   <span className="font-extrabold text-gray-900">{d.winner} <span className="text-blue-600">{d.amount} P</span></span>
                 </div>
@@ -742,7 +853,7 @@ function ScoreDetail({ scoreData, onSendToMemo }) {
       {renderHoles(myData, 0, 'OUT Course')} {renderHoles(myData, 9, 'IN Course')}
       {scoreData.players.length > 1 && (
         <div className="mt-2"><button onClick={()=>setShowComp(!showComp)} className="w-full py-4 bg-white border border-[#d1c9b8] rounded-[20px] font-extrabold flex justify-between px-6">동반자 스코어 보기 ({scoreData.players.length-1}명) {showComp ? <ChevronUp/> : <ChevronDown/>}</button>
-        {showComp && <div className="mt-4 flex flex-col gap-6">{scoreData.players.slice(1).map((p,i)=><div key={i} className="bg-gray-50/50 p-4 rounded-2xl border"><h4 className="font-black mb-2">{p.name}</h4>{renderHoles(p, 0, 'OUT')} {renderHoles(p, 9, 'IN')}</div>)}</div>}</div>
+        {showComp && <div className="mt-4 flex flex-col gap-6">{scoreData.players.slice(1).map((p,i)=><div key={`c-${i}`} className="bg-gray-50/50 p-4 rounded-2xl border"><h4 className="font-black mb-2">{p.name}</h4>{renderHoles(p, 0, 'OUT')} {renderHoles(p, 9, 'IN')}</div>)}</div>}</div>
       )}
       <button onClick={()=>onSendToMemo(scoreData)} className="w-full py-4 bg-[#1a4314] text-white font-extrabold rounded-[20px] shadow-lg flex items-center justify-center gap-2 mt-4"><Share size={18}/> 메모장으로 보내기</button>
     </div>
@@ -1398,18 +1509,18 @@ function TeamDrawGame() {
     <div className="p-6 bg-[#fdfcf9] min-h-full flex flex-col">
       <h2 className="text-[26px] font-black text-center mb-8 pt-4">랜덤 팀 뽑기</h2>
       <div className="grid grid-cols-2 gap-4 mb-8">
-        {players.map((p,i)=><input key={i} value={p} onChange={e=>{const n=[...players]; n[i]=e.target.value; setPlayers(n);}} placeholder={`이름 ${i+1}`} className="p-4 border rounded-2xl font-bold text-[16px] text-center" />)}
+        {players.map((p,i)=><input key={`player-${i}`} value={p} onChange={e=>{const n=[...players]; n[i]=e.target.value; setPlayers(n);}} placeholder={`이름 ${i+1}`} className="p-4 border rounded-2xl font-bold text-[16px] text-center" />)}
       </div>
       {teams && 
         <div className="flex gap-4 items-center justify-center text-center font-black">
           <div className="bg-red-50 p-4 rounded-xl flex-1 border border-red-100">
             <h3 className="text-red-600 mb-2">레드 팀</h3>
-            {teams.teamA.map((p, i)=><p key={i}>{p || `(미입력)`}</p>)}
+            {teams.teamA.map((p, i)=><p key={`teamA-${i}`}>{p || `(미입력)`}</p>)}
           </div>
           <div className="text-gray-300 italic text-[24px]">VS</div>
           <div className="bg-blue-50 p-4 rounded-xl flex-1 border border-blue-100">
             <h3 className="text-blue-600 mb-2">블루 팀</h3>
-            {teams.teamB.map((p, i)=><p key={i}>{p || `(미입력)`}</p>)}
+            {teams.teamB.map((p, i)=><p key={`teamB-${i}`}>{p || `(미입력)`}</p>)}
           </div>
         </div>
       }
@@ -1493,6 +1604,7 @@ function FunGolfGame() {
 }
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [defaultTab, setDefaultTab] = useState('memo');
   const [currentTab, setCurrentTab] = useState(defaultTab);
   const [view, setView] = useState('list');
@@ -1615,113 +1727,126 @@ export default function App() {
     setCurrentMemo(null); setCurrentScore(null);
   };
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setView('list');
+    setCurrentTab(defaultTab);
+  };
+
   return (
     <div className="fixed inset-0 bg-[#c8c3b7] flex justify-center sm:items-center sm:py-6 text-gray-900 w-full h-full">
       <GlobalStyle />
       <div className="w-full h-full max-w-[440px] shadow-2xl relative flex flex-col overflow-hidden kraft-bg sm:h-[85vh] sm:rounded-[40px] sm:border-[10px] sm:border-gray-800 bg-white">
-        <header className="pt-[max(env(safe-area-inset-top),2rem)] pb-4 px-5 z-10 flex-shrink-0 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <h1 className="text-[26px] font-[900] stamped-text pb-0.5">진심골프메모</h1>
-            <div className="flex flex-col border-l-[2px] border-[#1a4314]/80 pl-2.5"><span className="text-[10px] font-[900] stamped-text">GOLF MEMO</span><span className="text-[10px] font-[900] stamped-text">& PRACTICE</span></div>
-          </div>
-          {view === 'list' && (
-            <div className="relative ml-auto">
-              <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 bg-white/60 rounded-full border border-[#d1c9b8] hover:bg-white transition-colors shadow-sm">
-                <Menu size={20} strokeWidth={2.5} className="text-[#1a4314]" />
-              </button>
-              {isMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)}></div>
-                  <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-2xl shadow-xl border border-[#d1c9b8] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
-                    <button onClick={() => { setView('search'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 border-b border-gray-100 transition-colors">
-                      <Search size={18} className="text-[#1a4314]"/> 통합 검색
-                    </button>
-                    <button onClick={() => { setView('mypage'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 transition-colors">
-                      <User size={18} className="text-[#1a4314]"/> 마이페이지
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-          {view !== 'list' && view !== 'mypage' && view !== 'search' && <button onClick={() => { if(view==='score_detail')setCurrentScore(null); setView('list');}} className="flex items-center text-[#1a4314] font-extrabold ml-auto"><ChevronLeft size={28} /> 뒤로</button>}
-        </header>
-
-        <main className="flex-1 overflow-y-auto pb-[calc(100px+env(safe-area-inset-bottom))] scrollbar-hide px-2">
-          {view === 'list' && currentTab === 'memo' && <MemoList memos={filteredMyMemos} categories={categories} activeCategory={activeCategory} setActiveCategory={setActiveCategory} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedMemoIds={selectedMemoIds} setSelectedMemoIds={setSelectedMemoIds} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onManageCategories={()=>setView('categories')} baseFontSize={baseFontSize} />}
-          {view === 'search' && <GlobalSearch memos={memos} shotMemos={shotMemos} blockedUsers={blockedUsers} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onCancel={()=>setView('list')} baseFontSize={baseFontSize} />}
-          {view === 'list' && currentTab === 'shot_memo' && <ShotMemoMain shotMemos={shotMemos} setShotMemos={setShotMemos} onMerge={handleShotMemoMerge} baseFontSize={baseFontSize} />}
-          {view === 'list' && currentTab === 'feed' && <FeedList memos={feedMemos} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onToggleLike={handleToggleLike} onOpenBlockModal={setBlockModalTarget} baseFontSize={baseFontSize} followingUsers={followingUsers} />}
-          {view === 'list' && currentTab === 'score' && <ScoreMain scores={scores} onAddScore={()=>setView('score_edit')} onOpenScoreDetail={s=>{setCurrentScore(s); setView('score_detail');}} />}
-          {view === 'score_edit' && <ScoreEditor onSave={s=>{setScores([{...s, id:Date.now()}, ...scores]); setView('list');}} onCancel={()=>setView('list')} />}
-          {view === 'score_detail' && <ScoreDetail scoreData={currentScore} onSendToMemo={s=>{setCurrentMemo({id:null, author:"나", category:"필드/라운드", content:`<b>[스코어 기록] ${s.course}</b><br/>최종 타수: ${s.score}타 (${s.par})`, urls:[], checklist:[], imageUrl:s.imageUrl, isPublic:false}); setCurrentTab('memo'); setView('edit');}} />}
-          {view === 'mypage' && <MyPage onCancel={()=>setView('list')} blockedUsers={blockedUsers} setBlockedUsers={setBlockedUsers} hiddenFromUsers={hiddenFromUsers} setHiddenFromUsers={setHiddenFromUsers} defaultTab={defaultTab} setDefaultTab={setDefaultTab} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} followingUsers={followingUsers} onToggleFollow={handleToggleFollow} />}
-          {view === 'detail' && <MemoDetail memo={memos.find(m => m.id === currentMemo?.id) || currentMemo} onDelete={id=>{setMemos(memos.filter(m=>m.id!==id)); setView('list');}} onEdit={() => setView('edit')} onToggleLike={handleToggleLike} onAddComment={handleAddComment} onAddReply={handleAddReply} onTogglePublic={handleTogglePublic} onTogglePin={handleTogglePin} onToggleChecklist={handleToggleChecklist} onOpenBlockModal={setBlockModalTarget} baseFontSize={baseFontSize} followingUsers={followingUsers} onToggleFollow={handleToggleFollow} />}
-          {view === 'edit' && <MemoEditor memo={currentMemo} categories={categories} onSave={handleSaveMemo} onCancel={()=>setView(currentMemo?.id ? 'detail' : 'list')} baseFontSize={baseFontSize} />}
-          {view === 'categories' && <CategoryManager categories={categories} setCategories={setCategories} />}
-          {view === 'list' && currentTab === 'game' && <GameMain onSelectGame={id=>setView(`game_${id}`)} />}
-          {view === 'game_draw' && <TeamDrawGame />}
-          {view === 'game_fun' && <FunGolfGame />}
-          {view === 'game_tee' && <TeeSpinGame />}
-        </main>
-
-        {isSelectionMode && currentTab === 'memo' && view === 'list' && (
-          <div style={{ bottom: 'calc(68px + env(safe-area-inset-bottom))' }} className="absolute w-full max-w-[440px] bg-white/90 backdrop-blur-md border-t border-[#d1c9b8] p-4 z-[50] flex justify-between items-center shadow-[0_-10px_20px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom-full duration-200">
-            <span className="font-extrabold text-[#1a4314] text-[15px] pl-2">{selectedMemoIds.length}개 선택됨</span>
-            <div className="flex gap-2">
-              <button onClick={()=> {setIsSelectionMode(false); setSelectedMemoIds([]);}} className="px-4 py-2.5 bg-[#E2D9C8] text-[#1a4314] rounded-xl font-bold text-sm hover:bg-[#d5ccba] transition-colors border border-[#d1c9b8]">취소</button>
-              <button onClick={() => setShowMergeModal(true)} disabled={selectedMemoIds.length < 2} className="px-4 py-2.5 bg-[#1a4314] text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:bg-gray-400 shadow-md hover:bg-[#2d6a4f] transition-colors">선택 병합</button>
-            </div>
-          </div>
-        )}
-
-        {!isSelectionMode && view === 'list' && currentTab === 'memo' && (
-          <button style={{ bottom: 'calc(85px + env(safe-area-inset-bottom))' }} onClick={() => { setCurrentMemo(null); setView('edit'); }} className="absolute right-6 w-[56px] h-[56px] bg-[#1a4314] rounded-full flex items-center justify-center text-white shadow-xl z-20"><Plus size={32} /></button>
-        )}
-
-        {view === 'list' && (
-          <nav style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} className="bg-[#E8E2D2]/95 border-t border-[#d1c9b8]/60 flex justify-between absolute bottom-0 w-full z-10 text-[9px] font-bold text-[#6b7280]">
-            <div onClick={() => handleTabChange('memo')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='memo'?'text-[#1a4314]':''}`}><PenTool size={20}/><span>메모</span></div>
-            <div onClick={() => handleTabChange('shot_memo')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='shot_memo'?'text-[#1a4314]':''}`}><MessageSquare size={20}/><span>Shot메모</span></div>
-            <div onClick={() => handleTabChange('feed')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='feed'?'text-[#1a4314]':''}`}><Users size={20}/><span>커뮤니티</span></div>
-            <div onClick={() => handleTabChange('score')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='score'?'text-[#1a4314]':''}`}><LayoutList size={20}/><span>스코어</span></div>
-            <div onClick={() => handleTabChange('game')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='game'?'text-[#1a4314]':''}`}><Dices size={20}/><span>게임</span></div>
-            <div onClick={() => window.open('https://goingoingon2.github.io/golf/golf_metronome.html', '_blank')} className="p-2 flex-1 flex flex-col items-center cursor-pointer"><Timer size={20}/><span>메트로놈</span></div>
-          </nav>
-        )}
-
-        {showMergeModal && (
-          <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-5 animate-in fade-in duration-200">
-            <div className="bg-[#fcfbf9] rounded-3xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden border border-[#d1c9b8]">
-              {isMerging && (
-                <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
-                  <Loader2 size={40} className="text-[#1a4314] animate-spin mb-3" />
-                  <p className="font-bold text-[#1a4314] text-sm">AI가 메모를 합치고 있습니다...</p>
+        
+        {!isAuthenticated ? (
+          <AuthScreen onLogin={() => setIsAuthenticated(true)} />
+        ) : (
+          <>
+            <header className="pt-[max(env(safe-area-inset-top),2rem)] pb-4 px-5 z-10 flex-shrink-0 flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <h1 className="text-[26px] font-[900] stamped-text pb-0.5">진심골프메모</h1>
+                <div className="flex flex-col border-l-[2px] border-[#1a4314]/80 pl-2.5"><span className="text-[10px] font-[900] stamped-text">GOLF MEMO</span><span className="text-[10px] font-[900] stamped-text">& PRACTICE</span></div>
+              </div>
+              {view === 'list' && (
+                <div className="relative ml-auto">
+                  <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 bg-white/60 rounded-full border border-[#d1c9b8] hover:bg-white transition-colors shadow-sm">
+                    <Menu size={20} strokeWidth={2.5} className="text-[#1a4314]" />
+                  </button>
+                  {isMenuOpen && (
+                    <>
+                      <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)}></div>
+                      <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-2xl shadow-xl border border-[#d1c9b8] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                        <button onClick={() => { setView('search'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 border-b border-gray-100 transition-colors">
+                          <Search size={18} className="text-[#1a4314]"/> 통합 검색
+                        </button>
+                        <button onClick={() => { setView('mypage'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 transition-colors">
+                          <User size={18} className="text-[#1a4314]"/> 마이페이지
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
-              <h3 className="text-lg font-extrabold text-gray-900 mb-1">어떤 방식으로 합칠까요?</h3>
-              <button onClick={() => handleMergeMemos('time')} className="flex flex-col items-start p-4 border border-gray-200 rounded-xl hover:border-[#1a4314] hover:bg-[#e8f5e9] transition-all text-left bg-white">
-                <span className="font-bold text-gray-800 flex items-center gap-1.5"><Calendar size={16} className="text-[#1a4314]"/> 시간순서로 합치기</span>
-                <span className="text-[12px] text-gray-500 mt-1.5 leading-snug">선택한 메모들을 작성된 순서대로 단순하게 이어 붙입니다.</span>
-              </button>
-              <button onClick={() => handleMergeMemos('ai')} className="flex flex-col items-start p-4 border border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-left bg-white">
-                <span className="font-bold text-gray-800 flex items-center gap-1.5"><Sparkles size={16} className="text-purple-500"/> AI 유사 내용 묶기</span>
-                <span className="text-[12px] text-gray-500 mt-1.5 leading-snug">AI가 분석하여 비슷한 주제끼리 매끄럽게 재작성합니다.</span>
-              </button>
-              <button onClick={() => setShowMergeModal(false)} className="mt-2 py-3 bg-[#E2D9C8] text-[#1a4314] font-bold rounded-xl hover:bg-[#d5ccba] transition-colors">취소</button>
-            </div>
-          </div>
-        )}
+              {view !== 'list' && view !== 'mypage' && view !== 'search' && <button onClick={() => { if(view==='score_detail')setCurrentScore(null); setView('list');}} className="flex items-center text-[#1a4314] font-extrabold ml-auto"><ChevronLeft size={28} /> 뒤로</button>}
+            </header>
 
-        {blockModalTarget && (
-          <div className="absolute inset-0 bg-black/60 z-[70] flex items-end justify-center animate-in fade-in" onClick={() => setBlockModalTarget(null)}>
-            <div style={{ paddingBottom: 'calc(3rem + env(safe-area-inset-bottom))' }} className="bg-[#fdfcf9] w-full max-w-[440px] rounded-t-[32px] p-6 flex flex-col gap-2 shadow-2xl animate-in slide-in-from-bottom-full border border-[#d1c9b8]" onClick={e => e.stopPropagation()}>
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div><h3 className="text-[18px] font-black mb-4 px-2">{blockModalTarget}님 차단 설정</h3>
-              <button onClick={() => handleBlockPost(blockModalTarget)} className="w-full text-left px-5 py-4 bg-white border rounded-2xl font-bold text-red-600 hover:bg-red-50">이 유저의 게시물 숨기기</button>
-              <button onClick={() => handleBlockHide(blockModalTarget)} className="w-full text-left px-5 py-4 bg-white border rounded-2xl font-bold text-orange-600 hover:bg-orange-50 mt-2">내 메모를 보지 못하게 차단</button>
-              <button onClick={() => setBlockModalTarget(null)} className="w-full py-4 mt-4 bg-[#E2D9C8] font-extrabold rounded-2xl hover:bg-[#d5ccba]">취소</button>
-            </div>
-          </div>
+            <main className="flex-1 overflow-y-auto pb-[calc(100px+env(safe-area-inset-bottom))] scrollbar-hide px-2">
+              {view === 'list' && currentTab === 'memo' && <MemoList memos={filteredMyMemos} categories={categories} activeCategory={activeCategory} setActiveCategory={setActiveCategory} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedMemoIds={selectedMemoIds} setSelectedMemoIds={setSelectedMemoIds} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onManageCategories={()=>setView('categories')} baseFontSize={baseFontSize} />}
+              {view === 'search' && <GlobalSearch memos={memos} shotMemos={shotMemos} blockedUsers={blockedUsers} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onCancel={()=>setView('list')} baseFontSize={baseFontSize} />}
+              {view === 'list' && currentTab === 'shot_memo' && <ShotMemoMain shotMemos={shotMemos} setShotMemos={setShotMemos} onMerge={handleShotMemoMerge} baseFontSize={baseFontSize} />}
+              {view === 'list' && currentTab === 'feed' && <FeedList memos={feedMemos} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onToggleLike={handleToggleLike} onOpenBlockModal={setBlockModalTarget} baseFontSize={baseFontSize} followingUsers={followingUsers} />}
+              {view === 'list' && currentTab === 'score' && <ScoreMain scores={scores} onAddScore={()=>setView('score_edit')} onOpenScoreDetail={s=>{setCurrentScore(s); setView('score_detail');}} />}
+              {view === 'score_edit' && <ScoreEditor onSave={s=>{setScores([{...s, id:Date.now()}, ...scores]); setView('list');}} onCancel={()=>setView('list')} />}
+              {view === 'score_detail' && <ScoreDetail scoreData={currentScore} onSendToMemo={s=>{setCurrentMemo({id:null, author:"나", category:"필드/라운드", content:`<b>[스코어 기록] ${s.course}</b><br/>최종 타수: ${s.score}타 (${s.par})`, urls:[], checklist:[], imageUrl:s.imageUrl, isPublic:false}); setCurrentTab('memo'); setView('edit');}} />}
+              {view === 'mypage' && <MyPage onCancel={()=>setView('list')} blockedUsers={blockedUsers} setBlockedUsers={setBlockedUsers} hiddenFromUsers={hiddenFromUsers} setHiddenFromUsers={setHiddenFromUsers} defaultTab={defaultTab} setDefaultTab={setDefaultTab} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} followingUsers={followingUsers} onToggleFollow={handleToggleFollow} onLogout={handleLogout} />}
+              {view === 'detail' && <MemoDetail memo={memos.find(m => m.id === currentMemo?.id) || currentMemo} onDelete={id=>{setMemos(memos.filter(m=>m.id!==id)); setView('list');}} onEdit={() => setView('edit')} onToggleLike={handleToggleLike} onAddComment={handleAddComment} onAddReply={handleAddReply} onTogglePublic={handleTogglePublic} onTogglePin={handleTogglePin} onToggleChecklist={handleToggleChecklist} onOpenBlockModal={setBlockModalTarget} baseFontSize={baseFontSize} followingUsers={followingUsers} onToggleFollow={handleToggleFollow} />}
+              {view === 'edit' && <MemoEditor memo={currentMemo} categories={categories} onSave={handleSaveMemo} onCancel={()=>setView(currentMemo?.id ? 'detail' : 'list')} baseFontSize={baseFontSize} />}
+              {view === 'categories' && <CategoryManager categories={categories} setCategories={setCategories} />}
+              {view === 'list' && currentTab === 'game' && <GameMain onSelectGame={id=>setView(`game_${id}`)} />}
+              {view === 'game_draw' && <TeamDrawGame />}
+              {view === 'game_fun' && <FunGolfGame />}
+              {view === 'game_tee' && <TeeSpinGame />}
+            </main>
+
+            {isSelectionMode && currentTab === 'memo' && view === 'list' && (
+              <div style={{ bottom: 'calc(68px + env(safe-area-inset-bottom))' }} className="absolute w-full max-w-[440px] bg-white/90 backdrop-blur-md border-t border-[#d1c9b8] p-4 z-[50] flex justify-between items-center shadow-[0_-10px_20px_rgba(0,0,0,0.05)] animate-in slide-in-from-bottom-full duration-200">
+                <span className="font-extrabold text-[#1a4314] text-[15px] pl-2">{selectedMemoIds.length}개 선택됨</span>
+                <div className="flex gap-2">
+                  <button onClick={()=> {setIsSelectionMode(false); setSelectedMemoIds([]);}} className="px-4 py-2.5 bg-[#E2D9C8] text-[#1a4314] rounded-xl font-bold text-sm hover:bg-[#d5ccba] transition-colors border border-[#d1c9b8]">취소</button>
+                  <button onClick={() => setShowMergeModal(true)} disabled={selectedMemoIds.length < 2} className="px-4 py-2.5 bg-[#1a4314] text-white rounded-xl font-bold text-sm disabled:opacity-50 disabled:bg-gray-400 shadow-md hover:bg-[#2d6a4f] transition-colors">선택 병합</button>
+                </div>
+              </div>
+            )}
+
+            {!isSelectionMode && view === 'list' && currentTab === 'memo' && (
+              <button style={{ bottom: 'calc(85px + env(safe-area-inset-bottom))' }} onClick={() => { setCurrentMemo(null); setView('edit'); }} className="absolute right-6 w-[56px] h-[56px] bg-[#1a4314] rounded-full flex items-center justify-center text-white shadow-xl z-20"><Plus size={32} /></button>
+            )}
+
+            {view === 'list' && (
+              <nav style={{ paddingBottom: 'env(safe-area-inset-bottom)' }} className="bg-[#E8E2D2]/95 border-t border-[#d1c9b8]/60 flex justify-between absolute bottom-0 w-full z-10 text-[9px] font-bold text-[#6b7280]">
+                <div onClick={() => handleTabChange('memo')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='memo'?'text-[#1a4314]':''}`}><PenTool size={20}/><span>메모</span></div>
+                <div onClick={() => handleTabChange('shot_memo')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='shot_memo'?'text-[#1a4314]':''}`}><MessageSquare size={20}/><span>Shot메모</span></div>
+                <div onClick={() => handleTabChange('feed')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='feed'?'text-[#1a4314]':''}`}><Users size={20}/><span>커뮤니티</span></div>
+                <div onClick={() => handleTabChange('score')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='score'?'text-[#1a4314]':''}`}><LayoutList size={20}/><span>스코어</span></div>
+                <div onClick={() => handleTabChange('game')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='game'?'text-[#1a4314]':''}`}><Dices size={20}/><span>게임</span></div>
+                <div onClick={() => window.open('https://goingoingon2.github.io/golf/golf_metronome.html', '_blank')} className="p-2 flex-1 flex flex-col items-center cursor-pointer"><Timer size={20}/><span>메트로놈</span></div>
+              </nav>
+            )}
+
+            {showMergeModal && (
+              <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-5 animate-in fade-in duration-200">
+                <div className="bg-[#fcfbf9] rounded-3xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden border border-[#d1c9b8]">
+                  {isMerging && (
+                    <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+                      <Loader2 size={40} className="text-[#1a4314] animate-spin mb-3" />
+                      <p className="font-bold text-[#1a4314] text-sm">AI가 메모를 합치고 있습니다...</p>
+                    </div>
+                  )}
+                  <h3 className="text-lg font-extrabold text-gray-900 mb-1">어떤 방식으로 합칠까요?</h3>
+                  <button onClick={() => handleMergeMemos('time')} className="flex flex-col items-start p-4 border border-gray-200 rounded-xl hover:border-[#1a4314] hover:bg-[#e8f5e9] transition-all text-left bg-white">
+                    <span className="font-bold text-gray-800 flex items-center gap-1.5"><Calendar size={16} className="text-[#1a4314]"/> 시간순서로 합치기</span>
+                    <span className="text-[12px] text-gray-500 mt-1.5 leading-snug">선택한 메모들을 작성된 순서대로 단순하게 이어 붙입니다.</span>
+                  </button>
+                  <button onClick={() => handleMergeMemos('ai')} className="flex flex-col items-start p-4 border border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-left bg-white">
+                    <span className="font-bold text-gray-800 flex items-center gap-1.5"><Sparkles size={16} className="text-purple-500"/> AI 유사 내용 묶기</span>
+                    <span className="text-[12px] text-gray-500 mt-1.5 leading-snug">AI가 분석하여 비슷한 주제끼리 매끄럽게 재작성합니다.</span>
+                  </button>
+                  <button onClick={() => setShowMergeModal(false)} className="mt-2 py-3 bg-[#E2D9C8] text-[#1a4314] font-bold rounded-xl hover:bg-[#d5ccba] transition-colors">취소</button>
+                </div>
+              </div>
+            )}
+
+            {blockModalTarget && (
+              <div className="absolute inset-0 bg-black/60 z-[70] flex items-end justify-center animate-in fade-in" onClick={() => setBlockModalTarget(null)}>
+                <div style={{ paddingBottom: 'calc(3rem + env(safe-area-inset-bottom))' }} className="bg-[#fdfcf9] w-full max-w-[440px] rounded-t-[32px] p-6 flex flex-col gap-2 shadow-2xl animate-in slide-in-from-bottom-full border border-[#d1c9b8]" onClick={e => e.stopPropagation()}>
+                  <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div><h3 className="text-[18px] font-black mb-4 px-2">{blockModalTarget}님 차단 설정</h3>
+                  <button onClick={() => handleBlockPost(blockModalTarget)} className="w-full text-left px-5 py-4 bg-white border rounded-2xl font-bold text-red-600 hover:bg-red-50">이 유저의 게시물 숨기기</button>
+                  <button onClick={() => handleBlockHide(blockModalTarget)} className="w-full text-left px-5 py-4 bg-white border rounded-2xl font-bold text-orange-600 hover:bg-orange-50 mt-2">내 메모를 보지 못하게 차단</button>
+                  <button onClick={() => setBlockModalTarget(null)} className="w-full py-4 mt-4 bg-[#E2D9C8] font-extrabold rounded-2xl hover:bg-[#d5ccba]">취소</button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
