@@ -2,7 +2,14 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- 🚨 모바일 최적화: 노치 영역 대응(viewport-fit=cover), 줌 방지 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <!-- 🚨 모바일 최적화: '홈 화면에 추가' 시 앱처럼 보이게 하는 PWA 메타 태그 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  
   <title>골프 타당 게임(Stroke play)</title>
 
   <!-- 1. 폰트 로드 -->
@@ -33,10 +40,36 @@
 
   <style>
     * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif !important; margin: 0; padding: 0; }
-    body { background-color: #f4f6f8; color: #111827; -webkit-tap-highlight-color: transparent; margin: 0; }
+    
+    /* 🚨 모바일 최적화 핵심 스타일 */
+    body { 
+      background-color: #f4f6f8; 
+      color: #111827; 
+      -webkit-tap-highlight-color: transparent; /* 터치 음영 제거 */
+      margin: 0; 
+      overscroll-behavior-y: none; /* 당겨서 새로고침 방지 */
+      -webkit-user-select: none; /* 텍스트 선택 방지 (앱처럼) */
+      user-select: none;
+      touch-action: pan-y; /* 가로 스와이프/더블탭 줌 등 차단 */
+    }
+    
+    /* 입력창은 텍스트 선택/조작이 가능해야 함 */
+    input, textarea {
+      -webkit-user-select: auto;
+      user-select: auto;
+    }
+    
     input, button, select { outline: none; font-family: inherit; }
     button:disabled { cursor: default !important; opacity: 0.5; pointer-events: none; }
-    .app-wrapper { max-width: 480px; margin: 0 auto; min-height: 100vh; background: #f4f6f8; position: relative; overflow-x: hidden; }
+    
+    .app-wrapper { 
+      max-width: 480px; 
+      margin: 0 auto; 
+      min-height: 100dvh; /* 🚨 브라우저 주소창 나타남/사라짐 대응 동적 높이 */
+      background: #f4f6f8; 
+      position: relative; 
+      overflow-x: hidden; 
+    }
     
     /* 숫자 입력창의 업다운 스피너(화살표) 숨기기 */
     input[type="number"]::-webkit-outer-spin-button,
@@ -47,6 +80,10 @@
     input[type="number"] {
         -moz-appearance: textfield;
     }
+
+    /* 하단 Safe Area 여백 (아이폰 홈 바 등 대응) */
+    .pb-safe { padding-bottom: calc(1rem + env(safe-area-inset-bottom)); }
+    .pb-safe-sm { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
   </style>
 </head>
 <body>
@@ -1061,7 +1098,7 @@
                 )}
               </div>
 
-              <div className="space-y-3 mt-4 pt-2 border-t border-gray-100 pointer-events-auto pb-4">
+              <div className="space-y-3 mt-4 pt-2 border-t border-gray-100 pointer-events-auto pb-safe-sm">
                 {startTime ? (
                   <button onClick={() => setStep('play')} className="w-full bg-[#1e9f64] hover:bg-[#128853] text-white font-bold py-4 px-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[17px] active:scale-[0.98]">
                     게임 계속하기 <Icon name="ArrowRight" className="w-5 h-5 ml-2" />
@@ -1221,7 +1258,7 @@
               </div>
             </div>
 
-            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 z-20 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] pb-safe">
               {isAdmin ? (
                 <div className="max-w-md mx-auto flex gap-3 w-full">
                   <button onClick={() => currentHole > 0 && loadHoleData(currentHole - 1)} disabled={currentHole === 0} className={`flex-[1] py-4 rounded-[16px] font-bold flex items-center justify-center transition text-[15px] active:scale-[0.98] ${currentHole === 0 ? 'bg-gray-100 text-gray-300' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}><Icon name="ArrowLeft" className="w-5 h-5 mr-1" /> 이전 홀</button>
@@ -1363,7 +1400,7 @@
               </div>
             </div>
             
-            <div className="bg-[#fcfcfc] border-t border-gray-200 shadow-[0_-15px_20px_-5px_rgba(0,0,0,0.05)] fixed bottom-0 left-0 right-0 z-30">
+            <div className="bg-[#fcfcfc] border-t border-gray-200 shadow-[0_-15px_20px_-5px_rgba(0,0,0,0.05)] fixed bottom-0 left-0 right-0 z-30 pb-safe">
                <div className="max-w-md mx-auto p-4 pt-3">
                   <div className="flex justify-between items-center mb-2.5">
                     <div className="text-[12px] font-bold text-gray-800 flex items-center"><Icon name="Trophy" className="w-4 h-4 text-yellow-500 mr-1.5"/> 현재 합산 결과</div>
@@ -1515,7 +1552,7 @@
               )}
             </div>
             
-            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-20 flex gap-3 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 z-20 flex gap-3 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] pb-safe">
               {isAdmin ? (
                <div className="max-w-md mx-auto flex flex-col gap-2 w-full">
                  <div className="flex gap-2 w-full">
@@ -1633,7 +1670,7 @@
                 </div>
               </div>
 
-              <div className="pt-6 pb-8 pointer-events-auto">
+              <div className="pt-6 pb-8 pointer-events-auto pb-safe">
                 {isAdmin ? (
                   <button onClick={() => setShowFinalResultModal(true)} className="w-full bg-[#128853] hover:bg-[#0f7646] text-white font-bold py-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[15px] active:scale-[0.98]">
                     <Icon name="Calculator" className="w-5 h-5 mr-2" /> 정산완료 및 개평 계산하기
@@ -1649,7 +1686,7 @@
 
       // 메인 렌더 함수 통합 리턴
       return (
-        <div className="app-wrapper flex flex-col min-h-screen bg-[#f4f6f8] relative font-sans">
+        <div className="app-wrapper flex flex-col min-h-[100dvh] bg-[#f4f6f8] relative font-sans">
           <style>{`
             @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
             * { font-family: 'Pretendard', sans-serif; }
@@ -1801,7 +1838,7 @@
                 </div>
               </div>
 
-              <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 pb-8 z-30 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+              <div className="absolute bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-gray-200 p-4 z-30 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)] pb-safe">
                 <div className="max-w-md mx-auto flex gap-3">
                   <button onClick={() => setShowFinalResultModal(false)} className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-bold py-4 rounded-[20px] transition duration-200 shadow-sm flex items-center justify-center text-[15px] active:scale-[0.98]">
                     정산 내역
@@ -1817,7 +1854,7 @@
           {/* 골프장 검색 모달 */}
           {showCourseSearchModal && (
             <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end pointer-events-auto backdrop-blur-sm">
-              <div className="bg-white rounded-t-[32px] p-6 animate-in slide-in-from-bottom-4 shadow-2xl flex flex-col max-h-[85vh]">
+              <div className="bg-white rounded-t-[32px] p-6 animate-in slide-in-from-bottom-4 shadow-2xl flex flex-col max-h-[85vh] pb-safe">
                 <div className="flex justify-between items-center mb-5 shrink-0">
                   <h3 className="text-[19px] font-black text-gray-800 flex items-center">
                     <Icon name="Search" className="w-5 h-5 mr-2 text-[#128853]"/> 골프장 검색
@@ -1881,7 +1918,7 @@
           {/* 초대 코드로 입장 모달 */}
           {showJoinModal && (
             <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end pointer-events-auto backdrop-blur-sm">
-              <div className="bg-white rounded-t-[32px] p-6 animate-in slide-in-from-bottom-4 shadow-2xl">
+              <div className="bg-white rounded-t-[32px] p-6 animate-in slide-in-from-bottom-4 shadow-2xl pb-safe">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-black text-gray-800">초대 코드로 입장</h3>
                   <button onClick={() => setShowJoinModal(false)} className="p-2 bg-gray-100 rounded-full active:scale-95 transition"><Icon name="X" className="w-5 h-5 text-gray-500" /></button>
