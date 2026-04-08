@@ -90,13 +90,13 @@
     // ★ 0. Firebase 설정 (깃허브 배포 시 본인 프로젝트 정보로 변경하세요)
     // =====================================================================
     const USER_FIREBASE_CONFIG = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
 
     // =====================================================================
     // ★ 데이터 및 아이콘 컴포넌트
@@ -148,7 +148,6 @@
         par: 4,
         teams: [0, 1, 2, 3],
         scores: [4, 4, 4, 4],
-        putts: [0, 0, 0, 0], 
         multiplier: 1,
         hasManualMultiplier: false,
         autoReason: '',
@@ -201,7 +200,6 @@
       // --- 게임 설정 상태 ---
       const [players, setPlayers] = useState([...DEFAULT_PLAYERS]);
       const [initialBalances, setInitialBalances] = useState(['', '', '', '']); // 핸디캡
-      const [usePutts, setUsePutts] = useState(false); 
       
       const [scoringMethod, setScoringMethod] = useState('aggregate'); 
       const [calcMethod, setCalcMethod] = useState('difference'); 
@@ -336,7 +334,6 @@
                     
                     if (data.gaepyungRate !== undefined) setGaepyungRate(data.gaepyungRate);
                     if (data.isRoundThousand !== undefined) setIsRoundThousand(data.isRoundThousand);
-                    if (data.usePutts !== undefined) setUsePutts(data.usePutts);
 
                     isInitialLoad.current = false;
                     setIsDataLoaded(true);
@@ -351,7 +348,7 @@
 
       // --- [ Firebase 실시간 동기화 (쓰기 - 방장 전용) ] ---
       const syncData = {
-          step, players, initialBalances, usePutts,
+          step, players, initialBalances,
           scoringMethod, calcMethod, pointValueDiff, pointValueFixed,
           doubleSettings, birdieEnabled, birdieSet, eagleEnabled, eagleSet, nearEnabled, nearSet, longestEnabled, longestSet,
           gaepyungRate, isRoundThousand, holes, currentHoleIdx, segmentStarts, scoreCaddieIdx,
@@ -478,19 +475,6 @@
         });
       };
 
-      const updatePutts = (playerIdx, delta) => {
-        if (!isAdmin || !usePutts) return;
-        setHoles(prev => {
-          const newHoles = [...prev];
-          const hole = { ...newHoles[currentHoleIdx] };
-          const newPutts = [...hole.putts];
-          newPutts[playerIdx] = Math.max(0, newPutts[playerIdx] + delta);
-          hole.putts = newPutts;
-          newHoles[currentHoleIdx] = hole;
-          return newHoles;
-        });
-      };
-
       const setPar = (par) => {
         if (!isAdmin) return;
         if (isParLongPress.current) {
@@ -609,7 +593,6 @@
             ...h,
             teams: [...h.teams],
             scores: [...h.scores],
-            putts: [...h.putts],
             pointDeltas: [...h.pointDeltas]
           }));
           const hole = newHoles[currentHoleIdx];
@@ -1063,7 +1046,7 @@
               <p className="text-slate-500 mt-2 font-medium">골프장 및 플레이어 규칙을 설정하세요</p>
             </div>
 
-            {/* 골프장 및 코스 설정 (추가됨) */}
+            {/* 골프장 및 코스 설정 */}
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-4 animate-in" style={{animationDelay: '0.05s'}}>
               <label className="text-sm font-bold text-slate-700 flex items-center mb-3">
                 <Icon name="Map" size={18} className="mr-1.5 text-slate-400" /> 골프장 및 코스 설정
@@ -1085,16 +1068,12 @@
             </div>
 
             <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6 animate-in mt-6" style={{animationDelay: '0.1s'}}>
-              {/* 플레이어 설정 (개편됨) */}
+              {/* 플레이어 설정 */}
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <label className="text-sm font-bold text-slate-700 flex items-center">
                     <Icon name="Users" size={18} className="mr-1.5 text-slate-400" /> 플레이어 및 핸디캡 (P)
                   </label>
-                  <div className="flex items-center gap-2 pointer-events-auto">
-                    <span className="text-[11px] font-bold text-slate-500">퍼팅 기록</span>
-                    <button onClick={() => { if(isAdmin) setUsePutts(!usePutts); }} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 ${usePutts ? 'bg-[#10b981]' : 'bg-slate-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${usePutts ? 'translate-x-4' : 'translate-x-1'}`} /></button>
-                  </div>
                 </div>
 
                 <div className="space-y-3 pointer-events-auto">
@@ -1311,6 +1290,33 @@
       // =====================================================================
       // ★ 화면: PLAY (타수 입력)
       // =====================================================================
+      const renderPlayerCard = (playerIdx, teamType) => {
+        const score = curHole.scores[playerIdx];
+        const diff = score - curHole.par;
+        const colorClass = teamType === 'A' ? 'text-blue-600' : 'text-rose-600';
+        const bgClass = teamType === 'A' ? 'bg-blue-50 border-blue-100' : 'bg-rose-50 border-rose-100';
+
+        return (
+          <div key={playerIdx} className={`rounded-2xl border p-3 flex flex-col justify-between shadow-sm relative transition-all ${bgClass} ${!isAdmin ? 'pointer-events-none' : ''}`}>
+            <div className="flex justify-between items-center mb-2">
+              <span className="font-bold text-slate-800 text-[13px] truncate pr-1">{players[playerIdx]}</span>
+              {/* 스포일러 제거: 언더/오버파 표시 안 함 */}
+            </div>
+            <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+              <button onClick={() => updateScore(playerIdx, -1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                <Icon name="Minus" size={18} />
+              </button>
+              <div className={`text-xl font-black w-8 text-center flex flex-col items-center ${colorClass}`}>
+                {score}
+              </div>
+              <button onClick={() => updateScore(playerIdx, 1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                <Icon name="Plus" size={18} />
+              </button>
+            </div>
+          </div>
+        );
+      };
+
       if (step === 'play') {
         const curHole = holes[currentHoleIdx];
         const tA = [curHole.teams[0], curHole.teams[1]];
@@ -1386,52 +1392,18 @@
               <div className="flex gap-3 mb-4">
                 <div className="flex-1 flex flex-col gap-3">
                   <div className="bg-blue-600 text-white text-center py-1.5 rounded-xl font-black text-[13px] shadow-sm tracking-wider">TEAM A</div>
-                  {[tA[0], tA[1]].map(playerIdx => (
-                    <div key={playerIdx} className={`rounded-2xl border p-3 flex flex-col justify-between shadow-sm relative transition-all bg-blue-50 border-blue-100 ${!isAdmin ? 'pointer-events-none' : ''}`}>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-slate-800 text-[13px] truncate pr-1">{players[playerIdx]}</span>
-                      </div>
-                      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                        <button onClick={() => updateScore(playerIdx, -1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Icon name="Minus" size={18} /></button>
-                        <div className="text-xl font-black w-8 text-center flex flex-col items-center text-blue-600">{curHole.scores[playerIdx]}</div>
-                        <button onClick={() => updateScore(playerIdx, 1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Icon name="Plus" size={18} /></button>
-                      </div>
-                      {usePutts && (
-                        <div className="flex items-center justify-center gap-1.5 mt-2.5">
-                           <button onClick={() => updatePutts(playerIdx, -1)} className="w-6 h-6 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded cursor-pointer active:scale-95"><Icon name="Minus" size={12} /></button>
-                           <span className="text-[12px] font-bold text-slate-600 w-4 text-center">{curHole.putts[playerIdx]}</span>
-                           <button onClick={() => updatePutts(playerIdx, 1)} className="w-6 h-6 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded cursor-pointer active:scale-95"><Icon name="Plus" size={12} /></button>
-                           <span className="text-[10px] text-slate-400 ml-0.5">퍼트</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {renderPlayerCard(tA[0], 'A')}
+                  {renderPlayerCard(tA[1], 'A')}
                 </div>
                 
-                <div className="w-6 flex flex-col items-center justify-center font-black italic text-slate-300 text-sm">V<br/>S</div>
+                <div className="w-6 flex flex-col items-center justify-center font-black italic text-slate-300 text-sm">
+                  V<br/>S
+                </div>
 
                 <div className="flex-1 flex flex-col gap-3">
                   <div className="bg-rose-600 text-white text-center py-1.5 rounded-xl font-black text-[13px] shadow-sm tracking-wider">TEAM B</div>
-                  {[tB[0], tB[1]].map(playerIdx => (
-                    <div key={playerIdx} className={`rounded-2xl border p-3 flex flex-col justify-between shadow-sm relative transition-all bg-rose-50 border-rose-100 ${!isAdmin ? 'pointer-events-none' : ''}`}>
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="font-bold text-slate-800 text-[13px] truncate pr-1">{players[playerIdx]}</span>
-                      </div>
-                      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-                        <button onClick={() => updateScore(playerIdx, -1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Icon name="Minus" size={18} /></button>
-                        <div className="text-xl font-black w-8 text-center flex flex-col items-center text-rose-600">{curHole.scores[playerIdx]}</div>
-                        <button onClick={() => updateScore(playerIdx, 1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Icon name="Plus" size={18} /></button>
-                      </div>
-                      {usePutts && (
-                        <div className="flex items-center justify-center gap-1.5 mt-2.5">
-                           <button onClick={() => updatePutts(playerIdx, -1)} className="w-6 h-6 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded cursor-pointer active:scale-95"><Icon name="Minus" size={12} /></button>
-                           <span className="text-[12px] font-bold text-slate-600 w-4 text-center">{curHole.putts[playerIdx]}</span>
-                           <button onClick={() => updatePutts(playerIdx, 1)} className="w-6 h-6 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded cursor-pointer active:scale-95"><Icon name="Plus" size={12} /></button>
-                           <span className="text-[10px] text-slate-400 ml-0.5">퍼트</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                  {renderPlayerCard(tB[0], 'B')}
+                  {renderPlayerCard(tB[1], 'B')}
                 </div>
               </div>
 
@@ -1482,7 +1454,7 @@
                 </div>
               )}
 
-              {/* 배판 수동 설정 */}
+              {/* 배판 수동 설정 (예상 결과 제외) */}
               <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex justify-between items-center mb-4 ${!isAdmin ? 'pointer-events-none' : ''}`}>
                  <div className="font-bold text-[14px] text-slate-800">현재 홀 배판</div>
                  <div className="flex items-center gap-2">
@@ -1512,7 +1484,7 @@
       }
 
       // =====================================================================
-      // ★ 화면: HOLE RESULT (홀 결과)
+      // ★ 화면: HOLE RESULT (홀 결과 및 정산)
       // =====================================================================
       if (step === 'holeResult') {
         const curHole = holes[currentHoleIdx];
@@ -1625,7 +1597,7 @@
             {/* 하단 네비게이션 버튼 */}
             <div className="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white border-t border-slate-100 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-20 flex gap-2 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
               <button onClick={() => { setStep('play'); window.scrollTo({top:0}); }} className="flex-[1.2] py-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-[14px] flex justify-center items-center hover:bg-slate-50 active:scale-95 transition">
-                <Icon name="Edit3" size={16} className="mr-1.5" /> 수정
+                <Icon name="Edit3" size={16} className="mr-1.5" /> 수정하기
               </button>
               <button onClick={() => setStep('scoreboard')} className="flex-[1.2] bg-slate-100 text-slate-700 py-4 rounded-xl font-bold text-[14px] hover:bg-slate-200 active:scale-95 transition">
                 스코어보드
