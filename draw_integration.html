@@ -2,12 +2,15 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>골프 뽑기 게임 (Live)</title>
   
   <style>
     @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
-    body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; }
+    body { 
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif; 
+      overscroll-behavior-y: none; /* 모바일 풀투리프레시(새로고침) 방지 */
+    }
     .custom-scroll::-webkit-scrollbar { width: 4px; }
     .custom-scroll::-webkit-scrollbar-track { background: transparent; }
     .custom-scroll::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
@@ -308,6 +311,7 @@
             if (data.players) setPlayers(data.players);
             if (data.settings) {
                const updatedSettings = { ...data.settings };
+               // 설정에 권한 정보가 없다면 기본값 추가
                if (!updatedSettings.guestPermissions) {
                   updatedSettings.guestPermissions = { finishShuffle: true, autoPick: true, nextHole: true };
                }
@@ -339,6 +343,7 @@
 
       useEffect(() => {
         if (gameState === 'PLAYING') {
+          // 경고 조건: 배판일 경우 5배, 평소 3배
           const requiredPot = displayMultiplier > 1 ? settings.basePoint * 5 : settings.basePoint * 3; 
           if (commonPot <= requiredPot && warnedHole !== currentHole) {
             setShowPotWarning(true);
