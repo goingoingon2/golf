@@ -1,1 +1,1990 @@
-up_down.html
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>2:2 매치플레이</title>
+
+  <!-- 1. 폰트 로드 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css" />
+
+  <!-- 2. Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- 3. React 및 Babel 로드 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- 4. Firebase SDK (ES Module 방식 동적 로드) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    window.FirebaseSDK = {
+      initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged,
+      getFirestore, doc, setDoc, onSnapshot, collection
+    };
+    window.dispatchEvent(new Event('firebaseLoaded'));
+  </script>
+
+  <style>
+    * { box-sizing: border-box; font-family: 'Pretendard', -apple-system, sans-serif !important; margin: 0; padding: 0; }
+    body { 
+      background-color: #f8fafc; 
+      color: #0f172a; 
+      -webkit-tap-highlight-color: transparent; 
+      overscroll-behavior-y: none; /* 모바일 당겨서 새로고침 방지 */
+      user-select: none; /* 텍스트 선택 방지 */
+      -webkit-user-select: none;
+    }
+    input, textarea { 
+      user-select: auto; /* 입력창은 선택 허용 */
+      -webkit-user-select: auto;
+      outline: none; 
+      font-family: inherit; 
+    }
+    button, select { 
+      outline: none; 
+      font-family: inherit; 
+      touch-action: manipulation; /* 모바일 더블탭 줌 방지 및 빠른 터치 응답 */
+    }
+    button:disabled { cursor: default !important; opacity: 0.5; pointer-events: none; }
+    
+    .app-wrapper { 
+      max-width: 480px; 
+      margin: 0 auto; 
+      min-height: 100dvh; /* 모바일 브라우저 툴바 제외 실제 화면 높이 */
+      background: #f8fafc; 
+      position: relative; 
+      overflow-x: hidden; 
+      display: flex; 
+      flex-direction: column; 
+    }
+    
+    /* 숫자 입력창 스피너 숨기기 */
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    
+    /* 모바일 앱 같은 스크롤바 숨김 처리 */
+    ::-webkit-scrollbar { display: none; }
+    * { -ms-overflow-style: none; scrollbar-width: none; }
+    
+    .animate-in { animation: fadeIn 0.2s ease-out; }
+    .slide-in-from-bottom-4 { animation: slideInBottom 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes slideInBottom { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useRef, Fragment, useEffect } = React;
+
+    // =====================================================================
+    // ★ 0. Firebase 설정 (깃허브 배포 시 본인 프로젝트 정보로 변경하세요)
+    // =====================================================================
+    const USER_FIREBASE_CONFIG = {
+  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+  authDomain: "left-right-6da31.firebaseapp.com",
+  projectId: "left-right-6da31",
+  storageBucket: "left-right-6da31.firebasestorage.app",
+  messagingSenderId: "128347797181",
+  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+};
+
+    // =====================================================================
+    // ★ 데이터 및 아이콘 컴포넌트
+    // =====================================================================
+    const GOLF_COURSES = [
+      { id: 'custom', name: '직접 설정 (자유 입력)', nineHoles: { '전반': [4,4,4,4,4,4,4,4,4], '후반': [4,4,4,4,4,4,4,4,4] } },
+      { id: 'standard_72', name: '표준 파72 (일반 코스)', nineHoles: { 'OUT': [4,4,3,5,4,4,3,5,4], 'IN':  [4,4,3,5,4,4,3,5,4] } },
+      { id: 'club72_hanul', name: '클럽72 - 하늘코스', nineHoles: { 'OUT': [4,4,3,4,5,4,3,4,5], 'IN':  [4,4,3,5,4,4,3,5,4] } },
+      { id: 'club72_ocean', name: '클럽72 - 오션코스', nineHoles: { 'OUT': [4,3,4,4,5,3,4,4,5], 'IN':  [4,4,3,4,5,4,3,5,4] } },
+      { id: 'seowon_valley', name: '서원밸리CC', nineHoles: { '서원': [4,4,5,3,4,4,3,5,4], '밸리': [4,4,3,4,5,4,3,5,4] } },
+      { id: 'southcape', name: '사우스케이프', nineHoles: { '선라이즈': [4,4,3,5,4,5,3,4,4], '선셋': [4,3,4,4,5,3,4,5,4] } }
+    ];
+
+    const Icons = {
+      Users: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+      User: '<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+      Settings: '<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>',
+      Plus: '<line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>',
+      Minus: '<line x1="5" y1="12" x2="19" y2="12"/>',
+      ChevronLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+      ChevronRight: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+      ArrowLeft: '<line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>',
+      ArrowRight: '<line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>',
+      Trophy: '<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>',
+      List: '<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>',
+      Refresh: '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
+      Shuffle: '<polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/>',
+      Check: '<polyline points="20 6 9 17 4 12"/>',
+      X: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+      Target: '<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+      Flag: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+      Edit3: '<path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>',
+      Map: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
+      Search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
+      Wallet: '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
+      QrCode: '<rect x="3" y="3" width="5" height="5" rx="1" ry="1"/><rect x="16" y="3" width="5" height="5" rx="1" ry="1"/><rect x="3" y="16" width="5" height="5" rx="1" ry="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>'
+    };
+
+    const Icon = ({ name, className = "", size = 24, onClick }) => (
+      <svg onClick={onClick} xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: Icons[name] }} className={className} style={{ display: 'inline-block' }} />
+    );
+
+    // =====================================================================
+    // ★ 유틸 함수
+    // =====================================================================
+    const generateInitialHoles = () => {
+      return Array.from({ length: 18 }, (_, i) => ({
+        number: i + 1,
+        par: 4,
+        teams: [0, 1, 2, 3],
+        scores: [4, 4, 4, 4],
+        putts: [0, 0, 0, 0], 
+        multiplier: 1,
+        hasManualMultiplier: false,
+        autoReason: '',
+        isDraw: false,
+        isCompleted: false,
+        pointDeltas: [0, 0, 0, 0],
+        near: null,
+        isReverseNear: false,
+        longest: null,
+        isReverseLongest: false
+      }));
+    };
+
+    const DEFAULT_PLAYERS = ['타이어 우즈', '로리 맥일로이', '스코티 셔플러', '필 미친손'];
+
+    const TEAM_COMBOS = [
+      { id: 'leftRight', label: '1·2 vs 3·4 (좌우)', value: [0, 1, 2, 3] },
+      { id: 'alternate', label: '1·3 vs 2·4 (징검)', value: [0, 2, 1, 3] },
+      { id: 'highLow', label: '1·4 vs 2·3 (하이로우)', value: [0, 3, 1, 2] }
+    ];
+
+    // =====================================================================
+    // ★ 메인 App
+    // =====================================================================
+    function App() {
+      // --- Firebase 시스템 ---
+      const [db, setDb] = useState(null);
+      const [user, setUser] = useState(null);
+      const [roomId, setRoomId] = useState('');
+      const [isAdmin, setIsAdmin] = useState(false); // 로컬 권한 (방장 여부)
+      const [isDataLoaded, setIsDataLoaded] = useState(false); // 초기 동기화 대기
+      const isInitialLoad = useRef(true);
+
+      // --- 화면 상태 ---
+      const [step, setStep] = useState('setup'); 
+      const [toastMsg, setToastMsg] = useState('');
+      const [settingTab, setSettingTab] = useState(null); 
+      const [showQrModal, setShowQrModal] = useState(false); // 초대 모달
+
+      // --- 골프장/코스 설정 상태 ---
+      const [selectedCourseId, setSelectedCourseId] = useState('standard_72');
+      const [frontNineId, setFrontNineId] = useState('OUT');
+      const [backNineId, setBackNineId] = useState('IN');
+      const [customCourseName, setCustomCourseName] = useState('직접 설정 골프장');
+      const [customFrontName, setCustomFrontName] = useState('전반');
+      const [customBackName, setCustomBackName] = useState('후반');
+      const [showCourseSearchModal, setShowCourseSearchModal] = useState(false);
+      const [courseSearchQuery, setCourseSearchQuery] = useState('');
+
+      // --- 게임 설정 상태 ---
+      const [players, setPlayers] = useState([...DEFAULT_PLAYERS]);
+      const [initialBalances, setInitialBalances] = useState(['', '', '', '']); // 핸디캡
+      const [usePutts, setUsePutts] = useState(false); 
+      
+      const [scoringMethod, setScoringMethod] = useState('aggregate'); 
+      const [calcMethod, setCalcMethod] = useState('difference'); 
+      
+      const [pointValueDiff, setPointValueDiff] = useState(5000); 
+      const [pointValueFixed, setPointValueFixed] = useState(10000); 
+      
+      const [doubleSettings, setDoubleSettings] = useState({ timing: 'current', birdie: true, threeTie: true, prevTie: true, triple: true, doublePar3: true });
+      const [birdieEnabled, setBirdieEnabled] = useState(true);
+      const [birdieSet, setBirdieSet] = useState({ type: 'individual', ind: 10000, team: 1, excludeTeam: true });
+      const [eagleEnabled, setEagleEnabled] = useState(true);
+      const [eagleSet, setEagleSet] = useState({ type: 'individual', ind: 30000, team: 3, excludeTeam: true });
+      const [nearEnabled, setNearEnabled] = useState(true);
+      const [nearSet, setNearSet] = useState({ type: 'individual', ind: 10000, team: 1, excludeTeam: true }); 
+      const [longestEnabled, setLongestEnabled] = useState(false);
+      const [longestSet, setLongestSet] = useState({ type: 'individual', ind: 10000, team: 1, excludeTeam: true }); 
+
+      // --- 개평 상태 ---
+      const [gaepyungRate, setGaepyungRate] = useState(0);
+      const [isCustomGaepyung, setIsCustomGaepyung] = useState(false);
+      const [isRoundThousand, setIsRoundThousand] = useState(true);
+
+      // --- 진행 상태 ---
+      const [holes, setHoles] = useState(generateInitialHoles());
+      const [currentHoleIdx, setCurrentHoleIdx] = useState(0);
+      const [segmentStarts, setSegmentStarts] = useState([0]);
+      const [scorecardTab, setScorecardTab] = useState('OUT'); 
+      
+      const [scoreCaddieIdx, setScoreCaddieIdx] = useState(0);
+      const [showCaddieModal, setShowCaddieModal] = useState(false);
+
+      const parPressTimer = useRef(null);
+      const isParLongPress = useRef(false);
+
+      // --- [ Firebase 초기화 ] ---
+      useEffect(() => {
+        const initFb = async () => {
+          if (!window.FirebaseSDK) return;
+          const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.FirebaseSDK;
+          
+          let config = USER_FIREBASE_CONFIG;
+          if (typeof __firebase_config !== 'undefined') {
+              config = JSON.parse(__firebase_config);
+          }
+          
+          if (!config.apiKey || config.apiKey === "YOUR_API_KEY") {
+              setIsDataLoaded(true); // Firebase 설정이 없으면 로컬 모드로 동작
+              setIsAdmin(true);
+              return;
+          }
+
+          try {
+              const app = initializeApp(config);
+              const auth = getAuth(app);
+              const firestore = getFirestore(app);
+              setDb(firestore);
+
+              if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                  await signInWithCustomToken(auth, __initial_auth_token);
+              } else {
+                  await signInAnonymously(auth);
+              }
+
+              onAuthStateChanged(auth, (u) => {
+                  setUser(u);
+              });
+          } catch (e) {
+              console.error("Firebase init failed", e);
+              setIsDataLoaded(true);
+              setIsAdmin(true);
+          }
+        };
+
+        if (window.FirebaseSDK) initFb();
+        else window.addEventListener('firebaseLoaded', initFb);
+        return () => window.removeEventListener('firebaseLoaded', initFb);
+      }, []);
+
+      // --- [ URL Room ID 확인 및 호스트/게스트 권한 설정 ] ---
+      useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const rId = urlParams.get('roomId');
+        if (rId) {
+            setRoomId(rId);
+            setIsAdmin(localStorage.getItem(`golf_admin_${rId}`) === 'true');
+        } else {
+            setIsAdmin(true); // URL에 Room ID가 없으면 무조건 방장
+            setIsDataLoaded(true);
+        }
+      }, []);
+
+      // --- [ Firebase 실시간 동기화 (읽기) ] ---
+      useEffect(() => {
+        if (!db || !user || !roomId) return;
+        const { doc, onSnapshot } = window.FirebaseSDK;
+        const appPrefix = typeof __app_id !== 'undefined' ? __app_id : 'golf-match-app';
+        const docRef = doc(db, 'artifacts', appPrefix, 'public', 'data', 'rooms', roomId);
+
+        const unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                
+                // 방장은 자신이 쓰고 있으므로 첫 로드시에만 덮어씀, 게스트는 무조건 덮어씀(Live Sync)
+                if (!isAdmin || isInitialLoad.current) {
+                    if (data.step) setStep(data.step);
+                    if (data.players) setPlayers(data.players);
+                    if (data.initialBalances) setInitialBalances(data.initialBalances);
+                    if (data.holes) setHoles(data.holes);
+                    if (data.currentHoleIdx !== undefined) setCurrentHoleIdx(data.currentHoleIdx);
+                    if (data.segmentStarts) setSegmentStarts(data.segmentStarts);
+                    if (data.scoreCaddieIdx !== undefined) setScoreCaddieIdx(data.scoreCaddieIdx);
+                    
+                    if (data.selectedCourseId) setSelectedCourseId(data.selectedCourseId);
+                    if (data.frontNineId) setFrontNineId(data.frontNineId);
+                    if (data.backNineId) setBackNineId(data.backNineId);
+                    if (data.customCourseName) setCustomCourseName(data.customCourseName);
+                    
+                    if (data.scoringMethod) setScoringMethod(data.scoringMethod);
+                    if (data.calcMethod) setCalcMethod(data.calcMethod);
+                    if (data.pointValueDiff !== undefined) setPointValueDiff(data.pointValueDiff);
+                    if (data.pointValueFixed !== undefined) setPointValueFixed(data.pointValueFixed);
+                    
+                    if (data.doubleSettings) setDoubleSettings(data.doubleSettings);
+                    if (data.birdieSet) setBirdieSet(data.birdieSet);
+                    if (data.birdieEnabled !== undefined) setBirdieEnabled(data.birdieEnabled);
+                    if (data.eagleSet) setEagleSet(data.eagleSet);
+                    if (data.eagleEnabled !== undefined) setEagleEnabled(data.eagleEnabled);
+                    if (data.nearSet) setNearSet(data.nearSet);
+                    if (data.nearEnabled !== undefined) setNearEnabled(data.nearEnabled);
+                    if (data.longestSet) setLongestSet(data.longestSet);
+                    if (data.longestEnabled !== undefined) setLongestEnabled(data.longestEnabled);
+                    
+                    if (data.gaepyungRate !== undefined) setGaepyungRate(data.gaepyungRate);
+                    if (data.isRoundThousand !== undefined) setIsRoundThousand(data.isRoundThousand);
+                    if (data.usePutts !== undefined) setUsePutts(data.usePutts);
+
+                    isInitialLoad.current = false;
+                    setIsDataLoaded(true);
+                }
+            } else {
+                isInitialLoad.current = false;
+                setIsDataLoaded(true);
+            }
+        });
+        return () => unsubscribe();
+      }, [db, user, roomId, isAdmin]);
+
+      // --- [ Firebase 실시간 동기화 (쓰기 - 방장 전용) ] ---
+      const syncData = {
+          step, players, initialBalances, usePutts,
+          scoringMethod, calcMethod, pointValueDiff, pointValueFixed,
+          doubleSettings, birdieEnabled, birdieSet, eagleEnabled, eagleSet, nearEnabled, nearSet, longestEnabled, longestSet,
+          gaepyungRate, isRoundThousand, holes, currentHoleIdx, segmentStarts, scoreCaddieIdx,
+          selectedCourseId, frontNineId, backNineId, customCourseName, customFrontName, customBackName
+      };
+
+      const syncDataRef = useRef(syncData);
+      useEffect(() => { syncDataRef.current = syncData; }, Object.values(syncData));
+
+      useEffect(() => {
+        if (!isAdmin || !isDataLoaded || !roomId || !db || !user) return;
+        
+        const timer = setTimeout(() => {
+            const { doc, setDoc } = window.FirebaseSDK;
+            const appPrefix = typeof __app_id !== 'undefined' ? __app_id : 'golf-match-app';
+            const docRef = doc(db, 'artifacts', appPrefix, 'public', 'data', 'rooms', roomId);
+            
+            // 모든 상태를 덮어쓰지 않고 최신 상태(syncDataRef)를 동기화
+            setDoc(docRef, { ...syncDataRef.current, updatedAt: Date.now() }, { merge: true }).catch(console.error);
+        }, 500); // 디바운스 적용
+        
+        return () => clearTimeout(timer);
+      }, [JSON.stringify(syncData), isAdmin, isDataLoaded, roomId, db, user]);
+
+      const showToast = (msg) => {
+        setToastMsg(msg);
+        setTimeout(() => setToastMsg(''), 2500);
+      };
+
+      // 코스명 파생 변수
+      const actualCourseName = selectedCourseId === 'custom' ? customCourseName : (GOLF_COURSES.find(c => c.id === selectedCourseId)?.name || '');
+      const actualFrontName = selectedCourseId === 'custom' ? customFrontName : frontNineId;
+      const actualBackName = selectedCourseId === 'custom' ? customBackName : backNineId;
+      const coursePars = useMemo(() => {
+        if (selectedCourseId === 'custom') return Array(18).fill(4); 
+        const course = GOLF_COURSES.find(c => c.id === selectedCourseId) || GOLF_COURSES[0];
+        const front = course.nineHoles[frontNineId] || Object.values(course.nineHoles)[0];
+        const back = course.nineHoles[backNineId] || Object.values(course.nineHoles)[0];
+        return [...front, ...back];
+      }, [selectedCourseId, frontNineId, backNineId]);
+
+      useEffect(() => {
+         if (step === 'play' && currentHoleIdx === 0 && !holes[0].isCompleted && isAdmin) {
+             setHoles(prev => {
+                 return prev.map((h, i) => ({ ...h, par: coursePars[i] || 4, scores: [coursePars[i]||4, coursePars[i]||4, coursePars[i]||4, coursePars[i]||4] }));
+             });
+         }
+      }, [step, coursePars, isAdmin]);
+
+      // 매치 시작 시 방 생성 (URL 업데이트 안전처리 적용)
+      const handleStartMatch = () => {
+         if (!isAdmin) return;
+         let targetRoomId = roomId;
+         if (!targetRoomId) {
+             targetRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+             setRoomId(targetRoomId);
+             localStorage.setItem(`golf_admin_${targetRoomId}`, 'true');
+             setIsAdmin(true);
+             
+             try {
+               // 샌드박스(blob:) 환경에서 SecurityError 방지
+               if (!window.location.href.startsWith('blob:')) {
+                   const newUrl = new URL(window.location.href);
+                   newUrl.searchParams.set('roomId', targetRoomId);
+                   window.history.replaceState(null, '', newUrl.toString());
+               }
+             } catch (e) {
+               console.warn("현재 환경에서는 URL을 갱신할 수 없습니다.", e);
+             }
+         }
+         setStep('play');
+      };
+
+      // =====================================================================
+      // ★ 로직: 배판 자동 계산
+      // =====================================================================
+      const recalcAutoDouble = (hIdx, scores, par, currentHoles, rules) => {
+          let isDbl = false;
+          let reasons = [];
+
+          if (rules.timing !== 'none') {
+              const targetScores = rules.timing === 'current' ? scores : (hIdx > 0 ? currentHoles[hIdx - 1].scores : null);
+              const targetPar = rules.timing === 'current' ? par : (hIdx > 0 ? currentHoles[hIdx - 1].par : null);
+
+              if (targetScores && targetPar) {
+                  if (rules.birdie && targetScores.some(s => s <= targetPar - 1)) { isDbl = true; reasons.push('버디 이상'); }
+                  if (rules.threeTie) {
+                      const counts = {};
+                      targetScores.forEach(s => counts[s] = (counts[s] || 0) + 1);
+                      if (Object.values(counts).includes(3)) { isDbl = true; reasons.push('3인 동타'); }
+                  }
+                  if (rules.triple && targetPar >= 4 && targetScores.some(s => s >= targetPar + 3)) { isDbl = true; reasons.push('트리플 이상'); }
+                  if (rules.doublePar3 && targetPar === 3 && targetScores.some(s => s >= targetPar + 2)) { isDbl = true; reasons.push('파3 더블'); }
+              }
+          }
+          
+          if (rules.timing !== 'none' && rules.prevTie && hIdx > 0 && currentHoles[hIdx - 1].isDraw) {
+              isDbl = true; reasons.push('이전 홀 무승부');
+          }
+
+          return { mult: isDbl ? 2 : 1, reasonStr: reasons.join(', ') };
+      };
+
+      // =====================================================================
+      // ★ 로직: 타수 및 특수 옵션 입력
+      // =====================================================================
+      const updateScore = (playerIdx, delta) => {
+        if (!isAdmin) return;
+        setHoles(prev => {
+          const newHoles = [...prev];
+          const hole = { ...newHoles[currentHoleIdx] };
+          const newScores = [...hole.scores];
+          newScores[playerIdx] = Math.max(1, newScores[playerIdx] + delta);
+          hole.scores = newScores;
+          
+          if (!hole.hasManualMultiplier) {
+              const auto = recalcAutoDouble(currentHoleIdx, newScores, hole.par, prev, doubleSettings);
+              hole.multiplier = auto.mult;
+              hole.autoReason = auto.reasonStr;
+          }
+
+          newHoles[currentHoleIdx] = hole;
+          return newHoles;
+        });
+      };
+
+      const updatePutts = (playerIdx, delta) => {
+        if (!isAdmin || !usePutts) return;
+        setHoles(prev => {
+          const newHoles = [...prev];
+          const hole = { ...newHoles[currentHoleIdx] };
+          const newPutts = [...hole.putts];
+          newPutts[playerIdx] = Math.max(0, newPutts[playerIdx] + delta);
+          hole.putts = newPutts;
+          newHoles[currentHoleIdx] = hole;
+          return newHoles;
+        });
+      };
+
+      const setPar = (par) => {
+        if (!isAdmin) return;
+        if (isParLongPress.current) {
+          isParLongPress.current = false;
+          return;
+        }
+        setHoles(prev => {
+          const newHoles = [...prev];
+          const hole = { ...newHoles[currentHoleIdx] };
+          const diff = par - hole.par;
+          hole.par = par;
+          hole.scores = hole.scores.map(s => Math.max(1, s + diff));
+          hole.near = null;
+          hole.longest = null;
+          
+          if (!hole.hasManualMultiplier) {
+              const auto = recalcAutoDouble(currentHoleIdx, hole.scores, hole.par, prev, doubleSettings);
+              hole.multiplier = auto.mult;
+              hole.autoReason = auto.reasonStr;
+          }
+
+          newHoles[currentHoleIdx] = hole;
+          return newHoles;
+        });
+      };
+
+      const startParPress = () => {
+        if (!isAdmin) return;
+        if (parPressTimer.current) clearTimeout(parPressTimer.current);
+        parPressTimer.current = setTimeout(() => {
+          isParLongPress.current = true;
+          setHoles(prev => {
+            const newHoles = [...prev];
+            const hole = { ...newHoles[currentHoleIdx] };
+            const newPar = hole.par >= 5 ? hole.par + 1 : 6;
+            const diff = newPar - hole.par;
+            hole.par = newPar;
+            hole.scores = hole.scores.map(s => Math.max(1, s + diff));
+            hole.near = null;
+            hole.longest = null;
+            
+            if (!hole.hasManualMultiplier) {
+                const auto = recalcAutoDouble(currentHoleIdx, hole.scores, hole.par, prev, doubleSettings);
+                hole.multiplier = auto.mult;
+                hole.autoReason = auto.reasonStr;
+            }
+
+            newHoles[currentHoleIdx] = hole;
+            return newHoles;
+          });
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, 500); 
+      };
+
+      const cancelParPress = () => {
+        if (parPressTimer.current) clearTimeout(parPressTimer.current);
+      };
+
+      const setSpecial = (type, playerIdx, isReverse) => {
+        if (!isAdmin) return;
+        setHoles(prev => {
+          const newHoles = [...prev];
+          const hole = { ...newHoles[currentHoleIdx] };
+          if (type === 'near') {
+            hole.near = playerIdx;
+            hole.isReverseNear = isReverse;
+          } else {
+            hole.longest = playerIdx;
+            hole.isReverseLongest = isReverse;
+          }
+          newHoles[currentHoleIdx] = hole;
+          return newHoles;
+        });
+      };
+
+      const changeTeam = (comboValue) => {
+        if (!isAdmin) return;
+        setHoles(prev => {
+          const newHoles = [...prev];
+          newHoles[currentHoleIdx] = { ...newHoles[currentHoleIdx], teams: comboValue };
+          return newHoles;
+        });
+      };
+
+      const shuffleTeam = () => {
+        if (!isAdmin) return;
+        const arr = [0, 1, 2, 3];
+        for (let i = arr.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        changeTeam(arr);
+        showToast('팀이 랜덤으로 뽑혔습니다!');
+      };
+
+      const setMultiplier = (delta) => {
+        if (!isAdmin) return;
+        setHoles(prev => {
+          const newHoles = [...prev];
+          const hole = { ...newHoles[currentHoleIdx] };
+          hole.hasManualMultiplier = true;
+          hole.multiplier = Math.max(1, hole.multiplier + delta);
+          if (hole.multiplier === 1) hole.autoReason = ''; 
+          newHoles[currentHoleIdx] = hole;
+          return newHoles;
+        });
+      };
+
+      // =====================================================================
+      // ★ 로직: 홀 결과 계산
+      // =====================================================================
+      const calculateHoleResult = () => {
+        if (!isAdmin) return;
+        setHoles(prev => {
+          const newHoles = prev.map(h => ({
+            ...h,
+            teams: [...h.teams],
+            scores: [...h.scores],
+            putts: [...h.putts],
+            pointDeltas: [...h.pointDeltas]
+          }));
+          const hole = newHoles[currentHoleIdx];
+          
+          const tA = [hole.teams[0], hole.teams[1]];
+          const tB = [hole.teams[2], hole.teams[3]];
+          
+          const scoreA = scoringMethod === 'bestBall' ? Math.min(hole.scores[tA[0]], hole.scores[tA[1]]) : hole.scores[tA[0]] + hole.scores[tA[1]];
+          const scoreB = scoringMethod === 'bestBall' ? Math.min(hole.scores[tB[0]], hole.scores[tB[1]]) : hole.scores[tB[0]] + hole.scores[tB[1]];
+          
+          const activeBaseMoney = calcMethod === 'difference' ? pointValueDiff : pointValueFixed;
+          let deltas = [0, 0, 0, 0]; 
+          
+          if (scoreA < scoreB) {
+            hole.isDraw = false;
+            const diff = calcMethod === 'difference' ? (scoreB - scoreA) : 1;
+            const money = diff * hole.multiplier * activeBaseMoney;
+            tA.forEach(idx => deltas[idx] += money);
+            tB.forEach(idx => deltas[idx] -= money);
+          } else if (scoreB < scoreA) {
+            hole.isDraw = false;
+            const diff = calcMethod === 'difference' ? (scoreA - scoreB) : 1;
+            const money = diff * hole.multiplier * activeBaseMoney;
+            tB.forEach(idx => deltas[idx] += money);
+            tA.forEach(idx => deltas[idx] -= money);
+          } else {
+            hole.isDraw = true;
+          }
+
+          let teamABonusPts = 0;
+          let teamBBonusPts = 0;
+
+          const applyIndividual = (achieverIdx, amount, isReverse, excludeTeam) => {
+            if (amount <= 0 || achieverIdx === null) return;
+            const isTeamA = tA.includes(achieverIdx);
+            const myTeam = isTeamA ? tA : tB;
+            const opponents = isTeamA ? tB : tA;
+            
+            let targets = [...opponents];
+            if (!excludeTeam) {
+              const partner = myTeam.find(id => id !== achieverIdx);
+              if (partner !== undefined) targets.push(partner);
+            }
+            
+            targets.forEach(targetIdx => {
+              if (isReverse) {
+                deltas[achieverIdx] -= amount;
+                deltas[targetIdx] += amount;
+              } else {
+                deltas[achieverIdx] += amount;
+                deltas[targetIdx] -= amount;
+              }
+            });
+          };
+
+          [0, 1, 2, 3].forEach(p => {
+            const diff = hole.scores[p] - hole.par;
+            const isTeamA = tA.includes(p);
+
+            if (diff === -1 && birdieEnabled) { 
+              if (birdieSet.type === 'team') {
+                if (isTeamA) teamABonusPts += birdieSet.team; else teamBBonusPts += birdieSet.team;
+              } else {
+                applyIndividual(p, birdieSet.ind, false, birdieSet.excludeTeam);
+              }
+            }
+            if (diff <= -2 && eagleEnabled) { 
+              if (eagleSet.type === 'team') {
+                if (isTeamA) teamABonusPts += eagleSet.team; else teamBBonusPts += eagleSet.team;
+              } else {
+                applyIndividual(p, eagleSet.ind, false, eagleSet.excludeTeam);
+              }
+            }
+          });
+
+          if (hole.par === 3 && nearEnabled && hole.near !== null) {
+            if (nearSet.type === 'team') {
+              if (tA.includes(hole.near)) {
+                if (hole.isReverseNear) teamBBonusPts += nearSet.team; else teamABonusPts += nearSet.team;
+              } else {
+                if (hole.isReverseNear) teamABonusPts += nearSet.team; else teamBBonusPts += nearSet.team;
+              }
+            } else {
+              applyIndividual(hole.near, nearSet.ind, hole.isReverseNear, nearSet.excludeTeam);
+            }
+          }
+          if (hole.par >= 5 && longestEnabled && hole.longest !== null) {
+            if (longestSet.type === 'team') {
+              if (tA.includes(hole.longest)) {
+                if (hole.isReverseLongest) teamBBonusPts += longestSet.team; else teamABonusPts += longestSet.team;
+              } else {
+                if (hole.isReverseLongest) teamABonusPts += longestSet.team; else teamBBonusPts += longestSet.team;
+              }
+            } else {
+              applyIndividual(hole.longest, longestSet.ind, hole.isReverseLongest, longestSet.excludeTeam);
+            }
+          }
+
+          if (teamABonusPts > 0) {
+            const money = teamABonusPts * hole.multiplier * activeBaseMoney;
+            tA.forEach(idx => deltas[idx] += money);
+            tB.forEach(idx => deltas[idx] -= money);
+          }
+          if (teamBBonusPts > 0) {
+            const money = teamBBonusPts * hole.multiplier * activeBaseMoney;
+            tB.forEach(idx => deltas[idx] += money);
+            tA.forEach(idx => deltas[idx] -= money);
+          }
+          
+          hole.pointDeltas = deltas;
+          hole.isCompleted = true;
+          
+          return newHoles;
+        });
+
+        setStep('holeResult');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      };
+
+      const goToNextHole = () => {
+        if (!isAdmin) return;
+        if (currentHoleIdx < 17) {
+          setHoles(prev => {
+            const newHoles = prev.map(h => ({ ...h }));
+            const nextHole = newHoles[currentHoleIdx + 1];
+            const curHole = newHoles[currentHoleIdx];
+            
+            nextHole.teams = [...curHole.teams]; 
+            const auto = recalcAutoDouble(currentHoleIdx + 1, nextHole.scores, nextHole.par, newHoles, doubleSettings);
+            nextHole.multiplier = auto.mult;
+            nextHole.autoReason = auto.reasonStr;
+            return newHoles;
+          });
+          setCurrentHoleIdx(prev => prev + 1);
+          setStep('play');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          setStep('scoreboard');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      };
+
+      // =====================================================================
+      // ★ 이체 로직 (포인트 이동 계산)
+      // =====================================================================
+      const getTransfers = (balances) => {
+        let debtors = balances.map((amt, idx) => ({ idx, amt: -amt })).filter(d => d.amt > 0);
+        let creditors = balances.map((amt, idx) => ({ idx, amt })).filter(c => c.amt > 0);
+        
+        let transfers = [];
+        let i = 0, j = 0;
+        
+        while (i < debtors.length && j < creditors.length) {
+            let debtor = debtors[i];
+            let creditor = creditors[j];
+            let amount = Math.min(debtor.amt, creditor.amt);
+            
+            transfers.push({
+                from: debtor.idx,
+                to: creditor.idx,
+                amount: amount
+            });
+            
+            debtor.amt -= amount;
+            creditor.amt -= amount;
+            
+            if (debtor.amt === 0) i++;
+            if (creditor.amt === 0) j++;
+        }
+        
+        const grouped = {};
+        transfers.forEach(t => {
+            if (!grouped[t.from]) grouped[t.from] = { total: 0, details: [] };
+            grouped[t.from].total += t.amount;
+            grouped[t.from].details.push({ to: t.to, amount: t.amount });
+        });
+        
+        return grouped;
+      };
+
+      // =====================================================================
+      // ★ 공통 누적 데이터 계산 (핸디캡, 개평 포함)
+      // =====================================================================
+      const currentSegmentStartIdx = segmentStarts[segmentStarts.length - 1];
+
+      const currentSegmentMoney = useMemo(() => {
+        let money = [0, 0, 0, 0];
+        for (let i = currentSegmentStartIdx; i < 18; i++) {
+          if (holes[i].isCompleted) holes[i].pointDeltas.forEach((d, idx) => money[idx] += d);
+        }
+        return money;
+      }, [holes, currentSegmentStartIdx]);
+
+      const grandTotalMoney = useMemo(() => {
+        let money = [0, 0, 0, 0];
+        holes.forEach(hole => {
+          if (hole.isCompleted) hole.pointDeltas.forEach((d, idx) => money[idx] += d);
+        });
+        // 핸디캡 합산 (1홀부터 전체 누적일 경우만 합산 표시)
+        initialBalances.forEach((bal, idx) => {
+            if (bal && !isNaN(bal)) money[idx] += parseInt(bal, 10);
+        });
+        return money;
+      }, [holes, initialBalances]);
+
+      const totalScoreVsPar = useMemo(() => {
+        let totals = [0, 0, 0, 0];
+        holes.forEach(h => {
+          if (h.isCompleted) {
+            h.scores.forEach((s, i) => totals[i] += (s - h.par));
+          }
+        });
+        return totals;
+      }, [holes]);
+
+      const totalPot = useMemo(() => {
+        return currentSegmentMoney.reduce((sum, m) => m > 0 ? sum + m : sum, 0);
+      }, [currentSegmentMoney]);
+      
+      const handicapSum = useMemo(() => {
+          return initialBalances.reduce((sum, val) => sum + (parseInt(val) || 0), 0);
+      }, [initialBalances]);
+
+      // 개평(위로금) 정산 로직
+      const settlementDetails = useMemo(() => {
+        const safeGaepyungRate = isNaN(gaepyungRate) || gaepyungRate === '' ? 0 : Number(gaepyungRate);
+        let totalGiven = 0;
+        
+        const details = players.map((p, i) => {
+            const bal = currentSegmentMoney[i];
+            let cut = 0;
+            if (bal > 0) {
+                const rawCut = bal * (safeGaepyungRate / 100);
+                cut = isRoundThousand ? Math.floor(rawCut / 1000) * 1000 : Math.floor(rawCut);
+                totalGiven += cut;
+            }
+            return { name: p, original: bal, cut, receive: 0, final: 0 };
+        });
+
+        let losers = details.map((d, i) => ({ index: i, amount: d.original < 0 ? Math.abs(d.original) : 0 })).filter(l => l.amount > 0);
+
+        if (losers.length > 0) {
+            let totalReceived = 0;
+            losers.forEach(loser => {
+                const rawReceive = loser.amount * (safeGaepyungRate / 100);
+                const receive = isRoundThousand ? Math.floor(rawReceive / 1000) * 1000 : Math.floor(rawReceive);
+                details[loser.index].receive = receive;
+                totalReceived += receive;
+            });
+            
+            const leftover = totalGiven - totalReceived;
+            if (leftover !== 0) {
+                const maxLoss = Math.max(...losers.map(l => l.amount));
+                const biggestLosers = losers.filter(l => l.amount === maxLoss);
+                biggestLosers.sort((a, b) => b.index - a.index);
+                if (biggestLosers.length > 0) {
+                  details[biggestLosers[0].index].receive += leftover;
+                }
+            }
+        }
+        
+        details.forEach(d => { d.final = d.original > 0 ? d.original - d.cut : d.original + d.receive; });
+        return details;
+      }, [players, currentSegmentMoney, gaepyungRate, isRoundThousand]);
+
+      const handleCutAndReset = () => {
+        if (!isAdmin) return;
+        if (!holes[currentHoleIdx].isCompleted && currentHoleIdx > 0 && currentHoleIdx === currentSegmentStartIdx) {
+            showToast("아직 기록된 홀이 없습니다."); return;
+        }
+        const nextHoleToStart = holes[currentHoleIdx].isCompleted ? currentHoleIdx + 1 : currentHoleIdx;
+        if (nextHoleToStart > 17) {
+            showToast("이미 18홀을 모두 마쳤습니다."); return;
+        }
+        if (confirm(`${nextHoleToStart + 1}홀부터 포인트를 0으로 리셋하고 새롭게 시작합니다. 계속하시겠습니까?`)) {
+          setSegmentStarts(prev => [...prev, nextHoleToStart]);
+          setStep('play');
+          setCurrentHoleIdx(nextHoleToStart);
+          showToast(`금액이 리셋되었습니다. ${nextHoleToStart + 1}홀 시작!`);
+        }
+      };
+
+      // =====================================================================
+      // ★ 모달 렌더링
+      // =====================================================================
+      const renderCaddieModal = () => {
+        if (!showCaddieModal) return null;
+        return (
+          <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm pointer-events-auto">
+            <div className="bg-white rounded-3xl w-full max-w-sm p-6 space-y-5 shadow-xl">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                <h3 className="font-bold text-[17px] text-slate-800 flex items-center"><Icon name="Edit3" size={20} className="mr-2 text-[#10b981]"/> 스코어캐디 변경</h3>
+                <button onClick={() => setShowCaddieModal(false)} className="p-1 hover:bg-slate-100 rounded-full transition active:scale-95"><Icon name="X" size={20} className="text-slate-500"/></button>
+              </div>
+              <p className="text-[13px] text-slate-500 font-medium">현재 라운드의 스코어를 입력할 담당자(방장)를 선택해 주세요.</p>
+              <div className="grid grid-cols-2 gap-3 mt-2">
+                {players.map((p, idx) => (
+                  <button key={`change-caddie-${idx}`} onClick={() => { setScoreCaddieIdx(idx); setShowCaddieModal(false); showToast(`${p} 님으로 스코어캐디가 변경되었습니다.`); }} className={`py-3.5 px-2 flex flex-col items-center justify-center gap-2 rounded-[16px] transition border active:scale-95 ${scoreCaddieIdx === idx ? 'bg-emerald-50 border-[#10b981] text-[#10b981] shadow-sm' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
+                    <span className="text-[14px] font-bold w-full truncate px-1">{p}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const renderCourseSearchModal = () => {
+        if (!showCourseSearchModal) return null;
+        return (
+          <div className="fixed inset-0 bg-black/60 z-[100] flex flex-col justify-end pointer-events-auto backdrop-blur-sm">
+            <div className="bg-white rounded-t-[32px] p-6 animate-in slide-in-from-bottom-4 shadow-2xl flex flex-col max-h-[85vh]">
+              <div className="flex justify-between items-center mb-5 shrink-0">
+                <h3 className="text-[19px] font-black text-slate-800 flex items-center">
+                  <Icon name="Search" size={20} className="mr-2 text-[#10b981]"/> 골프장 검색
+                </h3>
+                <button onClick={() => setShowCourseSearchModal(false)} className="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition active:scale-95"><Icon name="X" size={20} className="text-slate-500" /></button>
+              </div>
+              
+              <div className="relative mb-4 shrink-0">
+                <Icon name="Search" size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input 
+                  type="text" value={courseSearchQuery} onChange={(e) => setCourseSearchQuery(e.target.value)} 
+                  placeholder="골프장 이름 검색" 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-[16px] pl-12 pr-4 py-3.5 font-bold text-[15px] outline-none focus:border-[#10b981] focus:ring-1 focus:ring-[#10b981] transition-all"
+                />
+              </div>
+
+              <div className="flex-1 overflow-y-auto -mx-2 px-2 space-y-2 pb-6">
+                {GOLF_COURSES.filter(c => c.id !== 'custom' && c.name.toLowerCase().includes(courseSearchQuery.toLowerCase())).map(course => (
+                  <button key={course.id} onClick={() => { setSelectedCourseId(course.id); setFrontNineId(Object.keys(course.nineHoles)[0]); setBackNineId(Object.keys(course.nineHoles)[1] || Object.keys(course.nineHoles)[0]); setShowCourseSearchModal(false); setCourseSearchQuery(''); }} 
+                    className="w-full bg-white border border-slate-100 hover:border-[#10b981] hover:bg-emerald-50 text-left p-4 rounded-[16px] transition flex items-center justify-between active:scale-[0.98]">
+                    <span className="font-bold text-[15px] text-slate-800">{course.name}</span>
+                    <Icon name="ChevronRight" size={16} className="text-slate-400" />
+                  </button>
+                ))}
+                {GOLF_COURSES.filter(c => c.id !== 'custom' && c.name.toLowerCase().includes(courseSearchQuery.toLowerCase())).length === 0 && (
+                  <div className="text-center py-10 text-slate-400 font-bold text-[14px]">검색 결과가 없습니다.<br/><span className="text-[12px] font-normal mt-1 block">직접 설정을 이용해주세요.</span></div>
+                )}
+                <div className="pt-2">
+                  <button onClick={() => { setSelectedCourseId('custom'); setShowCourseSearchModal(false); setCourseSearchQuery(''); }} className="w-full bg-slate-50 border border-slate-200 hover:bg-slate-100 text-left p-4 rounded-[16px] transition flex items-center justify-between mt-2 active:scale-[0.98]">
+                    <span className="font-bold text-[15px] text-slate-700">직접 설정 (자유 입력)</span>
+                    <Icon name="Edit3" size={16} className="text-slate-500" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
+      const renderQrModal = () => {
+        if (!showQrModal) return null;
+        let shareUrl = window.location.origin + window.location.pathname + '?roomId=' + roomId;
+        
+        // Blob 프리뷰 환경 대응 (로컬 테스트용 더미 URL 생성)
+        if (shareUrl.startsWith('blob:')) {
+           shareUrl = "https://golf-match.app/?roomId=" + roomId; 
+        }
+
+        return (
+          <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm pointer-events-auto">
+            <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-xl text-center flex flex-col items-center relative">
+              <button onClick={() => setShowQrModal(false)} className="absolute top-4 right-4 p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full transition active:scale-95"><Icon name="X" size={18} className="text-slate-500"/></button>
+              <h3 className="font-black text-[18px] text-slate-800 mb-2">방 초대하기</h3>
+              <p className="text-[13px] text-slate-500 font-medium mb-5">아래 QR코드를 스캔하거나<br/>초대 링크를 복사하여 공유하세요.</p>
+              
+              <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 mb-5">
+                <img src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(shareUrl)}`} alt="QR Code" className="w-36 h-36 mix-blend-multiply"/>
+              </div>
+
+              <div className="w-full text-left mb-5">
+                <div className="text-[11px] font-bold text-slate-400 mb-1 ml-1">초대 링크</div>
+                <div className="bg-slate-100 text-slate-600 text-[12px] font-bold px-3 py-2.5 rounded-xl truncate border border-slate-200 select-all">
+                  {shareUrl}
+                </div>
+              </div>
+
+              <div className="flex gap-2 w-full">
+                <button onClick={() => {
+                    const textArea = document.createElement("textarea");
+                    textArea.value = shareUrl;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    try { document.execCommand('copy'); showToast('초대 링크가 복사되었습니다!'); } catch(e){}
+                    document.body.removeChild(textArea);
+                    setShowQrModal(false);
+                }} className="flex-1 bg-white border border-[#10b981] text-[#10b981] font-bold py-3.5 rounded-xl active:scale-95 transition text-[14px]">
+                  링크 복사
+                </button>
+                <button onClick={async () => {
+                    if (navigator.share) {
+                      try {
+                        await navigator.share({ title: '2:2 매치플레이', text: '매치플레이 실시간 스코어보드에 참여하세요!', url: shareUrl });
+                        setShowQrModal(false);
+                      } catch(e) {}
+                    } else {
+                      const textArea = document.createElement("textarea");
+                      textArea.value = shareUrl;
+                      document.body.appendChild(textArea);
+                      textArea.select();
+                      try { document.execCommand('copy'); showToast('초대 링크가 복사되었습니다!'); } catch(e){}
+                      document.body.removeChild(textArea);
+                      setShowQrModal(false);
+                    }
+                }} className="flex-1 bg-[#10b981] text-white font-bold py-3.5 rounded-xl shadow-sm active:scale-95 transition text-[14px]">
+                  공유하기
+                </button>
+              </div>
+            </div>
+          </div>
+        )
+      };
+
+      if (!isDataLoaded) {
+          return (
+              <div className="app-wrapper items-center justify-center bg-slate-900 text-white">
+                  <div className="w-12 h-12 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+                  <p className="font-bold text-sm text-slate-300">데이터를 불러오는 중입니다...</p>
+              </div>
+          )
+      }
+
+      // =====================================================================
+      // ★ 화면: SETUP
+      // =====================================================================
+      if (step === 'setup') {
+        const isAnyBonusEnabled = birdieEnabled || eagleEnabled || nearEnabled || longestEnabled;
+
+        const toggleAllBonus = () => {
+          if (isAnyBonusEnabled) {
+            setBirdieEnabled(false); setEagleEnabled(false); setNearEnabled(false); setLongestEnabled(false);
+          } else {
+            setBirdieEnabled(true); setEagleEnabled(true); setNearEnabled(true); setLongestEnabled(true);
+          }
+        };
+
+        return (
+          <div className={`app-wrapper px-5 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] ${!isAdmin ? 'pointer-events-none opacity-90' : ''}`}>
+            {toastMsg && (
+              <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[12px] font-bold animate-in whitespace-nowrap pointer-events-none">
+                {toastMsg}
+              </div>
+            )}
+            
+            <div className="text-center mb-8 animate-in">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-[#10b981] text-white rounded-2xl shadow-lg mb-4">
+                <Icon name="Trophy" size={32} />
+              </div>
+              <h1 className="text-3xl font-black text-slate-800 tracking-tight">2:2 매치플레이</h1>
+              <p className="text-slate-500 mt-2 font-medium">골프장 및 플레이어 규칙을 설정하세요</p>
+            </div>
+
+            {/* 골프장 및 코스 설정 (추가됨) */}
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-4 animate-in" style={{animationDelay: '0.05s'}}>
+              <label className="text-sm font-bold text-slate-700 flex items-center mb-3">
+                <Icon name="Map" size={18} className="mr-1.5 text-slate-400" /> 골프장 및 코스 설정
+              </label>
+              <div className="flex gap-2">
+                {selectedCourseId === 'custom' ? (
+                  <input type="text" value={customCourseName} onChange={(e) => setCustomCourseName(e.target.value)} className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 outline-none focus:ring-2 focus:ring-[#10b981] transition" placeholder="골프장 이름 입력" />
+                ) : (<div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 flex items-center text-sm font-bold text-slate-800 truncate">{actualCourseName}</div>)}
+                <button onClick={() => setShowCourseSearchModal(true)} className="bg-[#10b981] hover:bg-[#0f7646] text-white px-4 rounded-xl font-bold text-sm transition flex items-center shrink-0 shadow-sm active:scale-95"><Icon name="Search" size={16} className="mr-1.5" /> 검색</button>
+              </div>
+              <div className="flex gap-2">
+                <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-1.5 flex items-center"><span className="text-[11px] text-slate-500 font-bold px-2 whitespace-nowrap">전반</span>
+                  {selectedCourseId === 'custom' ? ( <input type="text" value={customFrontName} onChange={(e) => setCustomFrontName(e.target.value)} className="w-full bg-transparent px-2 py-1.5 outline-none text-sm font-bold text-slate-800" placeholder="이름" /> ) : ( <select value={frontNineId} onChange={(e) => setFrontNineId(e.target.value)} className="w-full bg-transparent px-1 py-1.5 outline-none text-sm font-bold text-slate-800">{Object.keys(GOLF_COURSES.find(c => c.id === selectedCourseId)?.nineHoles || {}).map(k => <option key={k} value={k}>{k}</option>)}</select> )}
+                </div>
+                <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl p-1.5 flex items-center"><span className="text-[11px] text-slate-500 font-bold px-2 whitespace-nowrap">후반</span>
+                  {selectedCourseId === 'custom' ? ( <input type="text" value={customBackName} onChange={(e) => setCustomBackName(e.target.value)} className="w-full bg-transparent px-2 py-1.5 outline-none text-sm font-bold text-slate-800" placeholder="이름" /> ) : ( <select value={backNineId} onChange={(e) => setBackNineId(e.target.value)} className="w-full bg-transparent px-1 py-1.5 outline-none text-sm font-bold text-slate-800">{Object.keys(GOLF_COURSES.find(c => c.id === selectedCourseId)?.nineHoles || {}).map(k => <option key={k} value={k}>{k}</option>)}</select> )}
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 space-y-6 animate-in mt-6" style={{animationDelay: '0.1s'}}>
+              {/* 플레이어 설정 (개편됨) */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <label className="text-sm font-bold text-slate-700 flex items-center">
+                    <Icon name="Users" size={18} className="mr-1.5 text-slate-400" /> 플레이어 및 핸디캡 (P)
+                  </label>
+                  <div className="flex items-center gap-2 pointer-events-auto">
+                    <span className="text-[11px] font-bold text-slate-500">퍼팅 기록</span>
+                    <button onClick={() => { if(isAdmin) setUsePutts(!usePutts); }} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors shrink-0 ${usePutts ? 'bg-[#10b981]' : 'bg-slate-200'}`}><span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm ${usePutts ? 'translate-x-4' : 'translate-x-1'}`} /></button>
+                  </div>
+                </div>
+
+                <div className="space-y-3 pointer-events-auto">
+                  {players.map((p, i) => (
+                    <div key={i} className="flex items-center gap-3 p-2.5 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                      <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 shrink-0">
+                        <Icon name="User" size={18} />
+                      </div>
+                      <div className="flex-1 flex items-center gap-2 min-w-0">
+                        <input type="text" 
+                          disabled={!isAdmin}
+                          value={p === DEFAULT_PLAYERS[i] ? '' : p} 
+                          placeholder={DEFAULT_PLAYERS[i]}
+                          onChange={e => { const newP = [...players]; newP[i] = e.target.value; setPlayers(newP); }}
+                          onBlur={e => { if(e.target.value.trim()==='') { const newP = [...players]; newP[i] = DEFAULT_PLAYERS[i]; setPlayers(newP); } }}
+                          className="w-full bg-transparent py-2 outline-none text-[14px] font-bold text-slate-700 placeholder:text-slate-400 truncate disabled:bg-transparent" 
+                        />
+                        {scoreCaddieIdx === i ? (
+                          <div onClick={() => { if(isAdmin) setShowCaddieModal(true); }} className="shrink-0 text-[#10b981] bg-emerald-50 rounded-full p-1 cursor-pointer border border-emerald-100" title="스코어캐디 변경">
+                            <Icon name="Edit3" size={14} />
+                          </div>
+                        ) : (
+                          <div onClick={() => { if(isAdmin) setShowCaddieModal(true); }} className="shrink-0 text-transparent hover:text-slate-300 rounded-full p-1 cursor-pointer transition-colors" title="스코어캐디 변경">
+                            <Icon name="Edit3" size={14} />
+                          </div>
+                        )}
+                      </div>
+                      <div className="relative w-24 shrink-0 bg-slate-50 rounded-xl overflow-hidden border border-slate-200 focus-within:border-[#10b981] focus-within:ring-1 focus-within:ring-[#10b981] transition-all">
+                        <input type="text" inputMode="numeric"
+                          disabled={!isAdmin}
+                          value={initialBalances[i] === 0 || initialBalances[i] === '' ? '' : (initialBalances[i] === '-' ? '-' : Number(initialBalances[i]).toLocaleString())} 
+                          onChange={e => {
+                              const val = e.target.value.replace(/,/g, '');
+                              const newBal = [...initialBalances];
+                              if (val === '-' || val === '') newBal[i] = val;
+                              else newBal[i] = isNaN(parseInt(val, 10)) ? 0 : parseInt(val, 10);
+                              setInitialBalances(newBal);
+                          }}
+                          placeholder="0"
+                          className="w-full bg-transparent px-3 py-2.5 outline-none text-right pr-6 text-sm font-bold text-slate-700 disabled:bg-transparent" 
+                        />
+                        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px] pointer-events-none">P</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-50 px-1">
+                  <span className="text-[12px] font-bold text-slate-800">핸디캡 합계</span>
+                  <span className={`text-[14px] font-black ${handicapSum === 0 ? 'text-[#10b981]' : 'text-rose-500'}`}>{handicapSum > 0 ? '+' : ''}{handicapSum.toLocaleString()}P</span>
+                </div>
+              </div>
+
+              <div className="h-px bg-slate-100"></div>
+
+              {/* 기본 게임 룰 설정 */}
+              <div className="space-y-4">
+                <div>
+                  <label className="text-[13px] font-bold text-slate-700 block mb-2">팀별 스코어 산출 방식</label>
+                  <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+                    <button onClick={() => setScoringMethod('aggregate')} className={`flex-1 py-3 rounded-xl font-bold text-[13px] transition-all ${scoringMethod === 'aggregate' ? 'bg-[#10b981] text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>합산 (Aggregate)</button>
+                    <button onClick={() => setScoringMethod('bestBall')} className={`flex-1 py-3 rounded-xl font-bold text-[13px] transition-all ${scoringMethod === 'bestBall' ? 'bg-[#10b981] text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>베스트볼 (Best)</button>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-[13px] font-bold text-slate-700 block mb-2">승리 포인트 산정 방식 (기본 금액)</label>
+                  <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-3">
+                    <button onClick={() => setCalcMethod('difference')} className={`flex-1 py-3 rounded-xl font-bold text-[13px] transition-all ${calcMethod === 'difference' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>타수 차이만큼</button>
+                    <button onClick={() => setCalcMethod('fixed')} className={`flex-1 py-3 rounded-xl font-bold text-[13px] transition-all ${calcMethod === 'fixed' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>승리팀 고정 획득</button>
+                  </div>
+                  
+                  <div className="relative">
+                    <input type="text" 
+                      disabled={!isAdmin}
+                      value={calcMethod === 'difference' ? (pointValueDiff ? pointValueDiff.toLocaleString() : '') : (pointValueFixed ? pointValueFixed.toLocaleString() : '')} 
+                      onChange={e => {
+                        const val = Number(e.target.value.replace(/,/g, ''));
+                        if(calcMethod === 'difference') setPointValueDiff(val);
+                        else setPointValueFixed(val);
+                      }}
+                      className="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-right font-black text-lg text-amber-500 outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all pr-10 disabled:bg-slate-50" />
+                    <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">P</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 탭 컨트롤: 배판 조건 / 보너스 설정 */}
+              <div className="flex gap-2 pt-2 border-t border-slate-100 pointer-events-auto">
+                  <button disabled={!isAdmin} onClick={() => setSettingTab(settingTab === 'double' ? null : 'double')} className={`flex-1 py-3.5 rounded-xl font-bold text-[14px] transition-all border ${settingTab === 'double' ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 disabled:opacity-100'}`}>
+                     <Icon name="Settings" size={16} className="inline mr-1" /> 배판 조건
+                  </button>
+                  <button disabled={!isAdmin} onClick={() => setSettingTab(settingTab === 'bonus' ? null : 'bonus')} className={`flex-1 py-3.5 rounded-xl font-bold text-[14px] transition-all border ${settingTab === 'bonus' ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 disabled:opacity-100'}`}>
+                     <Icon name="Trophy" size={16} className="inline mr-1" /> 보너스 설정
+                  </button>
+              </div>
+
+              {/* 배판 조건 (Multiplier) 탭 */}
+              {settingTab === 'double' && (
+                  <div className="bg-slate-50 border border-slate-100 rounded-2xl p-5 animate-in pointer-events-auto">
+                      <div className="mb-6">
+                          <label className="text-[13px] font-bold text-slate-700 block mb-2">배판 적용 기준 시점</label>
+                          <div className="flex bg-white border border-slate-200 p-1.5 rounded-xl shadow-sm">
+                              {['none', 'current', 'prev'].map(t => (
+                                  <button key={t} disabled={!isAdmin} onClick={() => setDoubleSettings({...doubleSettings, timing: t})} className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-all disabled:opacity-100 ${doubleSettings.timing === t ? 'bg-slate-100 text-[#10b981] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                      {t === 'none' ? '미적용' : t === 'current' ? '당홀' : '전홀'}
+                                  </button>
+                              ))}
+                          </div>
+                      </div>
+                      
+                      <div>
+                          <label className="text-[13px] font-bold text-slate-700 block mb-2">자동 배판 조건</label>
+                          <div className="space-y-2">
+                              {[
+                                  { id: 'birdie', label: '버디 이상' },
+                                  { id: 'threeTie', label: '3인 동타 (정확히 3명 동타시)' },
+                                  { id: 'prevTie', label: '이전 홀 무승부 (모두 동타)' },
+                                  { id: 'triple', label: '파4/파5 트리플 보기 이상' },
+                                  { id: 'doublePar3', label: '파3 더블 보기 이상' }
+                              ].map(cond => (
+                                  <label key={cond.id} className="flex items-center p-3.5 bg-white border border-slate-200 rounded-xl cursor-pointer active:scale-[0.99] transition-all">
+                                      <div className={`w-5 h-5 rounded flex items-center justify-center mr-3 transition-colors ${doubleSettings[cond.id] ? 'bg-[#10b981]' : 'bg-slate-200'}`}>
+                                          {doubleSettings[cond.id] && <Icon name="Check" size={14} className="text-white" />}
+                                      </div>
+                                      <input type="checkbox" disabled={!isAdmin} className="hidden" checked={doubleSettings[cond.id]} onChange={e => setDoubleSettings({...doubleSettings, [cond.id]: e.target.checked})} />
+                                      <span className="text-[14px] font-bold text-slate-700">{cond.label}</span>
+                                  </label>
+                              ))}
+                          </div>
+                      </div>
+                  </div>
+              )}
+
+              {/* 보너스 설정 (Bonus) 탭 */}
+              {settingTab === 'bonus' && (
+                  <div className="space-y-2 animate-in pointer-events-auto">
+                    <div className="flex justify-between items-center mb-2 px-1">
+                      <span className="text-[14px] font-bold text-slate-800">보너스 상세 설정</span>
+                      <button disabled={!isAdmin} onClick={toggleAllBonus} className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-colors active:scale-95 disabled:opacity-100 ${isAnyBonusEnabled ? 'text-slate-500 bg-slate-200 hover:bg-slate-300' : 'text-[#10b981] bg-emerald-100 hover:bg-emerald-200'}`}>
+                          {isAnyBonusEnabled ? '전체 사용안함' : '전체 사용함'}
+                      </button>
+                    </div>
+
+                    {[
+                      { id: 'birdie', title: '버디 (Birdie)', tColor: 'text-emerald-600', bg: 'bg-emerald-500', check: 'text-emerald-500 focus:ring-emerald-500', border: 'focus:border-emerald-500', state: birdieSet, set: setBirdieSet, hasEnable: true, en: birdieEnabled, setEn: setBirdieEnabled },
+                      { id: 'eagle', title: '이글 (Eagle)', tColor: 'text-purple-600', bg: 'bg-purple-500', check: 'text-purple-500 focus:ring-purple-500', border: 'focus:border-purple-500', state: eagleSet, set: setEagleSet, hasEnable: true, en: eagleEnabled, setEn: setEagleEnabled },
+                      { id: 'near', title: '니어 (Near)', tColor: 'text-blue-600', bg: 'bg-blue-500', check: 'text-blue-500 focus:ring-blue-500', border: 'focus:border-blue-500', state: nearSet, set: setNearSet, hasEnable: true, en: nearEnabled, setEn: setNearEnabled },
+                      { id: 'longest', title: '롱기 (Longest)', tColor: 'text-rose-600', bg: 'bg-rose-500', check: 'text-rose-500 focus:ring-rose-500', border: 'focus:border-rose-500', state: longestSet, set: setLongestSet, hasEnable: true, en: longestEnabled, setEn: setLongestEnabled }
+                    ].map(cfg => (
+                       <div key={cfg.id} className={`bg-slate-50 border border-slate-100 rounded-xl p-3 transition-opacity ${cfg.hasEnable && !cfg.en ? 'opacity-60' : ''}`}>
+                          <div className="flex justify-between items-center mb-1.5">
+                             <label className="flex items-center gap-2 cursor-pointer">
+                                {cfg.hasEnable && <input type="checkbox" disabled={!isAdmin} checked={cfg.en} onChange={e => cfg.setEn(e.target.checked)} className={`w-4 h-4 rounded border-slate-300 ${cfg.check} disabled:opacity-100`} />}
+                                <span className={`text-[14px] font-bold ${cfg.hasEnable && !cfg.en ? 'text-slate-400' : cfg.tColor}`}>{cfg.title}</span>
+                             </label>
+                             <div className="flex gap-2 items-center">
+                               <div className="flex bg-white rounded-md p-0.5 border border-slate-200 shadow-sm shrink-0">
+                                 <button disabled={!isAdmin || (cfg.hasEnable && !cfg.en)} onClick={()=>cfg.set({...cfg.state, type:'individual'})} className={`px-2 py-1.5 text-[11px] font-bold rounded transition-colors disabled:opacity-100 ${cfg.state.type==='individual'?`${cfg.bg} text-white`:'text-slate-500'}`}>개인</button>
+                                 <button disabled={!isAdmin || (cfg.hasEnable && !cfg.en)} onClick={()=>cfg.set({...cfg.state, type:'team'})} className={`px-2 py-1.5 text-[11px] font-bold rounded transition-colors disabled:opacity-100 ${cfg.state.type==='team'?`${cfg.bg} text-white`:'text-slate-500'}`}>팀</button>
+                               </div>
+                               <div className="relative w-24 shrink-0">
+                                 <input type="text" disabled={!isAdmin || (cfg.hasEnable && !cfg.en)} value={cfg.state.type === 'individual' ? (cfg.state.ind ? cfg.state.ind.toLocaleString() : '') : cfg.state.team} 
+                                   onChange={e => {
+                                     const val = Number(e.target.value.replace(/,/g, ''));
+                                     if(cfg.state.type === 'individual') cfg.set({...cfg.state, ind: val});
+                                     else cfg.set({...cfg.state, team: val});
+                                   }}
+                                   className={`w-full text-right bg-white border border-slate-200 rounded-lg py-1.5 pr-6 font-black text-[13px] outline-none ${cfg.border} shadow-sm disabled:bg-white disabled:opacity-100 disabled:text-slate-700`} />
+                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-400">{cfg.state.type === 'individual' ? 'P' : 'p'}</span>
+                               </div>
+                             </div>
+                          </div>
+                          {cfg.state.type === 'individual' && (
+                            <div className="flex justify-end">
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input type="checkbox" disabled={!isAdmin || (cfg.hasEnable && !cfg.en)} checked={cfg.state.excludeTeam} onChange={e => cfg.set({...cfg.state, excludeTeam: e.target.checked})} className={`w-3.5 h-3.5 rounded border-slate-300 disabled:opacity-50 ${cfg.check}`} />
+                                <span className={`text-[11px] font-bold ${cfg.hasEnable && !cfg.en ? 'text-slate-400' : 'text-slate-500'}`}>같은 팀 제외 (상대팀에게만 받기)</span>
+                              </label>
+                            </div>
+                          )}
+                       </div>
+                    ))}
+                    
+                    <div className="bg-slate-50 rounded-xl p-3 mt-2 border border-slate-100">
+                        <p className="text-[11px] text-slate-500 leading-relaxed font-medium">
+                          <span className="font-bold text-slate-700">개인지급(P):</span> 획득자가 대상자에게 각각 해당 포인트를 받습니다.<br/>
+                          <span className="font-bold text-slate-700">팀포인트(p):</span> 해당 홀의 배판(x)과 기본 금액이 곱해져 적용됩니다.<br/>
+                          * 역니어/역롱기 발생 시 획득자가 대상자들에게 지불합니다.
+                        </p>
+                    </div>
+                  </div>
+              )}
+
+              {/* 매치 시작 버튼 및 관전자 안내 */}
+              <div className="pt-4 pointer-events-auto">
+                {isAdmin ? (
+                  <button onClick={handleStartMatch} className="w-full py-4 rounded-2xl bg-[#10b981] text-white font-black text-lg shadow-[0_8px_20px_rgba(16,185,129,0.25)] active:scale-95 transition-transform mt-2">
+                    매치 시작하기
+                  </button>
+                ) : (
+                  <div className="w-full text-center text-slate-500 font-bold text-[14px] bg-slate-100 py-4 rounded-2xl">
+                    현재 관전 모드입니다. (수정 불가)
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {renderCourseSearchModal()}
+            {renderCaddieModal()}
+          </div>
+        );
+      }
+
+      // =====================================================================
+      // ★ 화면: PLAY (타수 입력)
+      // =====================================================================
+      if (step === 'play') {
+        const curHole = holes[currentHoleIdx];
+        const tA = [curHole.teams[0], curHole.teams[1]];
+        const tB = [curHole.teams[2], curHole.teams[3]];
+        
+        return (
+          <div className="app-wrapper flex-col pb-[calc(2rem+env(safe-area-inset-bottom))]">
+            {toastMsg && (
+              <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[12px] font-bold animate-in whitespace-nowrap">
+                {toastMsg}
+              </div>
+            )}
+
+            {/* 헤더 */}
+            <div className="bg-white px-5 py-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center justify-between shadow-sm z-10 sticky top-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-slate-800 text-white rounded-full flex items-center justify-center font-black italic text-lg shadow-sm">
+                  {currentHoleIdx + 1}
+                </div>
+                <div>
+                  <h2 className="font-bold text-slate-800 text-sm">Hole {currentHoleIdx + 1}</h2>
+                  <div className={`flex items-center gap-1 mt-0.5 ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                    <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">PAR</span>
+                    {[3, 4].map(p => (
+                      <button key={p} onClick={() => setPar(p)} className={`w-6 h-6 rounded-full text-[12px] font-bold flex items-center justify-center transition-colors ${curHole.par === p ? 'bg-[#10b981] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
+                        {p}
+                      </button>
+                    ))}
+                    <button 
+                      onMouseDown={startParPress} 
+                      onTouchStart={startParPress} 
+                      onMouseUp={cancelParPress} 
+                      onTouchEnd={cancelParPress} 
+                      onMouseLeave={cancelParPress} 
+                      onClick={() => { const newPar = curHole.par >= 5 ? curHole.par : 5; setPar(newPar); }}
+                      className={`w-6 h-6 rounded-full text-[12px] font-bold flex items-center justify-center transition-colors select-none ${curHole.par >= 5 ? 'bg-[#10b981] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}
+                    >
+                      {curHole.par >= 5 ? curHole.par : 5}
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                 <button onClick={() => setStep('scoreboard')} className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition border border-slate-200">
+                  <Icon name="List" size={18} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 pb-32">
+              
+              {/* 팀 선택기 */}
+              <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="font-bold text-sm text-slate-700 flex items-center"><Icon name="Users" size={16} className="mr-1.5 text-[#10b981]"/> 팀 교체</h3>
+                  <button onClick={shuffleTeam} className="text-[11px] font-bold bg-slate-800 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition">
+                    <Icon name="Shuffle" size={12}/> 뽑기
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {TEAM_COMBOS.map(combo => {
+                    const isSelected = curHole.teams.join(',') === combo.value.join(',');
+                    return (
+                      <button key={combo.id} onClick={() => changeTeam(combo.value)} className={`py-2 rounded-xl text-[11px] font-bold border transition-colors ${isSelected ? 'bg-[#10b981] text-white border-[#10b981] shadow-sm' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
+                        {combo.label}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* 대진표 및 타수 입력 */}
+              <div className="flex gap-3 mb-4">
+                <div className="flex-1 flex flex-col gap-3">
+                  <div className="bg-blue-600 text-white text-center py-1.5 rounded-xl font-black text-[13px] shadow-sm tracking-wider">TEAM A</div>
+                  {[tA[0], tA[1]].map(playerIdx => (
+                    <div key={playerIdx} className={`rounded-2xl border p-3 flex flex-col justify-between shadow-sm relative transition-all bg-blue-50 border-blue-100 ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-slate-800 text-[13px] truncate pr-1">{players[playerIdx]}</span>
+                      </div>
+                      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                        <button onClick={() => updateScore(playerIdx, -1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Icon name="Minus" size={18} /></button>
+                        <div className="text-xl font-black w-8 text-center flex flex-col items-center text-blue-600">{curHole.scores[playerIdx]}</div>
+                        <button onClick={() => updateScore(playerIdx, 1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Icon name="Plus" size={18} /></button>
+                      </div>
+                      {usePutts && (
+                        <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                           <button onClick={() => updatePutts(playerIdx, -1)} className="w-6 h-6 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded cursor-pointer active:scale-95"><Icon name="Minus" size={12} /></button>
+                           <span className="text-[12px] font-bold text-slate-600 w-4 text-center">{curHole.putts[playerIdx]}</span>
+                           <button onClick={() => updatePutts(playerIdx, 1)} className="w-6 h-6 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded cursor-pointer active:scale-95"><Icon name="Plus" size={12} /></button>
+                           <span className="text-[10px] text-slate-400 ml-0.5">퍼트</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="w-6 flex flex-col items-center justify-center font-black italic text-slate-300 text-sm">V<br/>S</div>
+
+                <div className="flex-1 flex flex-col gap-3">
+                  <div className="bg-rose-600 text-white text-center py-1.5 rounded-xl font-black text-[13px] shadow-sm tracking-wider">TEAM B</div>
+                  {[tB[0], tB[1]].map(playerIdx => (
+                    <div key={playerIdx} className={`rounded-2xl border p-3 flex flex-col justify-between shadow-sm relative transition-all bg-rose-50 border-rose-100 ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-slate-800 text-[13px] truncate pr-1">{players[playerIdx]}</span>
+                      </div>
+                      <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                        <button onClick={() => updateScore(playerIdx, -1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Icon name="Minus" size={18} /></button>
+                        <div className="text-xl font-black w-8 text-center flex flex-col items-center text-rose-600">{curHole.scores[playerIdx]}</div>
+                        <button onClick={() => updateScore(playerIdx, 1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors"><Icon name="Plus" size={18} /></button>
+                      </div>
+                      {usePutts && (
+                        <div className="flex items-center justify-center gap-1.5 mt-2.5">
+                           <button onClick={() => updatePutts(playerIdx, -1)} className="w-6 h-6 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded cursor-pointer active:scale-95"><Icon name="Minus" size={12} /></button>
+                           <span className="text-[12px] font-bold text-slate-600 w-4 text-center">{curHole.putts[playerIdx]}</span>
+                           <button onClick={() => updatePutts(playerIdx, 1)} className="w-6 h-6 flex items-center justify-center bg-white border border-slate-200 text-slate-400 rounded cursor-pointer active:scale-95"><Icon name="Plus" size={12} /></button>
+                           <span className="text-[10px] text-slate-400 ml-0.5">퍼트</span>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 특수 보너스 (니어/롱기) 패널 */}
+              {curHole.par === 3 && nearEnabled && (
+                <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 animate-in ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-sm text-slate-700 flex items-center"><Icon name="Target" size={16} className="mr-1.5 text-blue-500"/> 니어리스트</h3>
+                    <label className="flex items-center gap-1.5 cursor-pointer text-[12px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
+                      <input type="checkbox" checked={curHole.isReverseNear} onChange={e => setSpecial('near', curHole.near, e.target.checked)} className="rounded text-rose-500 w-3.5 h-3.5" />
+                      역니어 발생 (벌금)
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {players.map((p, idx) => {
+                      const isSelected = curHole.near === idx;
+                      const btnClass = isSelected ? (curHole.isReverseNear ? 'bg-rose-500 text-white border-rose-500 shadow-sm' : 'bg-blue-500 text-white border-blue-500 shadow-sm') : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100';
+                      return (
+                        <button key={idx} onClick={() => setSpecial('near', isSelected ? null : idx, curHole.isReverseNear)} className={`py-2.5 rounded-xl text-[11px] font-bold border transition-colors ${btnClass}`}>
+                          {p}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {curHole.par >= 5 && longestEnabled && (
+                <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 animate-in ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="font-bold text-sm text-slate-700 flex items-center"><Icon name="Flag" size={16} className="mr-1.5 text-rose-500"/> 롱기스트</h3>
+                    <label className="flex items-center gap-1.5 cursor-pointer text-[12px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
+                      <input type="checkbox" checked={curHole.isReverseLongest} onChange={e => setSpecial('longest', curHole.longest, e.target.checked)} className="rounded text-rose-500 w-3.5 h-3.5" />
+                      역롱기 발생 (벌금)
+                    </label>
+                  </div>
+                  <div className="grid grid-cols-4 gap-2">
+                    {players.map((p, idx) => {
+                      const isSelected = curHole.longest === idx;
+                      const btnClass = isSelected ? (curHole.isReverseLongest ? 'bg-rose-500 text-white border-rose-500 shadow-sm' : 'bg-rose-500 text-white border-rose-500 shadow-sm') : 'bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100';
+                      return (
+                        <button key={idx} onClick={() => setSpecial('longest', isSelected ? null : idx, curHole.isReverseLongest)} className={`py-2.5 rounded-xl text-[11px] font-bold border transition-colors ${btnClass}`}>
+                          {p}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* 배판 수동 설정 */}
+              <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex justify-between items-center mb-4 ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                 <div className="font-bold text-[14px] text-slate-800">현재 홀 배판</div>
+                 <div className="flex items-center gap-2">
+                     {curHole.autoReason && !curHole.hasManualMultiplier && curHole.multiplier > 1 && (
+                         <span className="text-[10px] bg-amber-100 text-amber-600 px-2 py-0.5 rounded font-bold">{curHole.autoReason}</span>
+                     )}
+                     <div className="flex items-center bg-slate-100 rounded-lg p-1">
+                         <button onClick={() => setMultiplier(-1)} className="w-8 h-8 flex justify-center items-center rounded hover:bg-slate-200 text-slate-500"><Icon name="Minus" size={16}/></button>
+                         <span className={`w-10 text-center font-black text-slate-700 ${curHole.multiplier > 1 ? 'text-rose-500' : ''}`}>x{curHole.multiplier}</span>
+                         <button onClick={() => setMultiplier(1)} className="w-8 h-8 flex justify-center items-center rounded hover:bg-slate-200 text-slate-500"><Icon name="Plus" size={16}/></button>
+                     </div>
+                 </div>
+              </div>
+            </div>
+
+            {/* 하단 버튼 (이전 홀 / 결과 및 정산) */}
+            <div className="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-slate-50 border-t border-slate-200 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-20 flex gap-3">
+              <button onClick={() => currentHoleIdx > 0 && setCurrentHoleIdx(currentHoleIdx - 1)} disabled={currentHoleIdx === 0} className={`w-[35%] py-4 rounded-xl font-bold flex items-center justify-center transition-colors ${currentHoleIdx === 0 ? 'bg-slate-100 text-slate-300' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95'}`}>
+                <Icon name="ArrowLeft" size={20} className="mr-1.5" /> 이전 홀
+              </button>
+              <button onClick={calculateHoleResult} className="flex-1 bg-[#10b981] hover:bg-[#0ea5e9] text-white font-black py-4 rounded-xl shadow-md transition-all active:scale-[0.98] text-[15px] flex items-center justify-center">
+                결과 및 정산 <Icon name="ArrowRight" size={20} className="ml-1.5" />
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // =====================================================================
+      // ★ 화면: HOLE RESULT (홀 결과)
+      // =====================================================================
+      if (step === 'holeResult') {
+        const curHole = holes[currentHoleIdx];
+        const transfers = getTransfers(curHole.pointDeltas);
+
+        return (
+          <div className="app-wrapper bg-[#f8fafc] pb-[calc(2rem+env(safe-area-inset-bottom))]">
+            {/* 상단 그린 배경 영역 */}
+            <div className="bg-[#10b981] rounded-b-[40px] pt-[calc(3rem+env(safe-area-inset-top))] pb-20 px-6 relative text-center">
+              <div className="absolute top-[calc(1.5rem+env(safe-area-inset-top))] left-6 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white font-black text-[15px]">
+                {currentHoleIdx + 1}H
+              </div>
+              <div className="absolute top-[calc(2rem+env(safe-area-inset-top))] right-6 bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded animate-pulse" onClick={() => setShowQrModal(true)}>
+                LIVE
+              </div>
+              
+              <div className="flex flex-col items-center justify-center mt-4">
+                 <h2 className="text-[32px] font-black italic text-white tracking-tighter flex items-center gap-2">
+                   HOLE RESULT
+                 </h2>
+                 {curHole.multiplier > 1 && (
+                   <div className="bg-amber-400 text-amber-900 px-2 py-0.5 rounded-md font-black text-[13px] mt-1.5 shadow-sm inline-block">
+                     x{curHole.multiplier} 배판
+                   </div>
+                 )}
+              </div>
+            </div>
+
+            {/* 결과 콘텐츠 영역 */}
+            <div className="-mt-12 px-4 space-y-4 pb-32 relative z-10">
+              
+              {/* 플레이어별 타수 및 금액 요약 */}
+              <div className="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+                <div className="grid grid-cols-4 divide-x divide-slate-100">
+                  {players.map((p, i) => {
+                    const score = curHole.scores[i];
+                    const money = curHole.pointDeltas[i];
+                    const diff = score - curHole.par;
+                    
+                    return (
+                      <div key={i} className="flex flex-col items-center justify-center px-1">
+                        <div className="w-10 h-10 bg-slate-100 rounded-full mb-1.5 flex items-center justify-center text-slate-400">
+                           <Icon name="User" size={20} />
+                        </div>
+                        <div className="text-[10px] font-bold text-slate-600 truncate w-full text-center mb-1">{p}</div>
+                        <div className="text-[15px] font-black text-slate-800 mb-1">{score}타</div>
+                        
+                        {diff === -1 && birdieEnabled && <div className="text-[9px] bg-emerald-100 text-emerald-600 px-1.5 rounded-sm font-black mb-1">버디</div>}
+                        {diff <= -2 && eagleEnabled && <div className="text-[9px] bg-purple-100 text-purple-600 px-1.5 rounded-sm font-black mb-1">이글</div>}
+                        
+                        <div className={`text-[11px] font-bold mt-1 ${money > 0 ? 'text-emerald-500' : money < 0 ? 'text-rose-500' : 'text-slate-400'}`}>
+                          {money > 0 ? `+${money.toLocaleString()}` : money < 0 ? money.toLocaleString() : '0'}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {/* 포인트 이동 내역 */}
+              <div className="text-center text-[12px] font-bold text-slate-500 my-4 flex items-center justify-center">
+                <span className="w-5 h-5 bg-[#10b981] text-white rounded-full flex items-center justify-center text-[10px] mr-1.5">P</span> 포인트 이동 (주는 사람 기준)
+              </div>
+
+              {curHole.isDraw ? (
+                <div className="bg-white rounded-3xl p-8 text-center text-slate-400 font-bold border border-slate-100 shadow-sm flex flex-col items-center justify-center">
+                   <div className="text-xl mb-1">무승부 (DRAW)</div>
+                   <div className="text-sm">변동된 포인트가 없습니다.</div>
+                </div>
+              ) : Object.keys(transfers).length === 0 ? (
+                <div className="bg-white rounded-3xl p-8 text-center text-slate-400 font-bold border border-slate-100 shadow-sm">
+                   변동된 포인트가 없습니다.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {Object.entries(transfers).map(([fromIdx, data]) => (
+                    <div key={fromIdx} className="bg-white rounded-3xl p-5 border border-slate-100 shadow-sm">
+                      <div className="flex justify-between items-center mb-4">
+                        <div className="flex items-center gap-3">
+                           <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                             <Icon name="User" size={20} />
+                           </div>
+                           <div>
+                             <div className="text-[10px] text-slate-400 font-bold">주는 사람</div>
+                             <div className="text-[15px] font-black text-slate-800">{players[fromIdx]}</div>
+                           </div>
+                        </div>
+                        <div className="text-right">
+                           <div className="text-[10px] text-slate-400 font-bold">총 이동 포인트</div>
+                           <div className="text-[18px] font-black text-rose-500">{data.total.toLocaleString()}P</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-slate-50 rounded-2xl p-3 space-y-2 border border-slate-100">
+                         {data.details.map((detail, dIdx) => (
+                            <div key={dIdx} className="flex justify-between items-center text-[13px]">
+                               <div className="flex items-center text-slate-600 font-semibold">
+                                  <Icon name="ChevronRight" size={14} className="mr-2 text-slate-400" /> {players[detail.to]}
+                               </div>
+                               <div className="font-bold text-blue-600">{detail.amount.toLocaleString()}P</div>
+                            </div>
+                         ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* 하단 네비게이션 버튼 */}
+            <div className="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white border-t border-slate-100 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-20 flex gap-2 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
+              <button onClick={() => { setStep('play'); window.scrollTo({top:0}); }} className="flex-[1.2] py-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-[14px] flex justify-center items-center hover:bg-slate-50 active:scale-95 transition">
+                <Icon name="Edit3" size={16} className="mr-1.5" /> 수정
+              </button>
+              <button onClick={() => setStep('scoreboard')} className="flex-[1.2] bg-slate-100 text-slate-700 py-4 rounded-xl font-bold text-[14px] hover:bg-slate-200 active:scale-95 transition">
+                스코어보드
+              </button>
+              <button onClick={goToNextHole} className="flex-[1.6] bg-[#10b981] hover:bg-[#0ea5e9] text-white py-4 rounded-xl font-bold text-[14px] flex justify-center items-center shadow-md active:scale-95 transition">
+                {currentHoleIdx < 17 ? '다음 홀 ' : '최종 완료 '}
+                <Icon name="ChevronRight" size={18} className="ml-0.5" />
+              </button>
+            </div>
+            
+            {renderQrModal()}
+          </div>
+        );
+      }
+
+      // =====================================================================
+      // ★ 화면: SCOREBOARD
+      // =====================================================================
+      if (step === 'scoreboard') {
+        const displayHoles = scorecardTab === 'OUT' ? holes.slice(0, 9) : holes.slice(9, 18);
+
+        return (
+          <div className="app-wrapper flex-col bg-slate-50 text-slate-800 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+             {toastMsg && (
+              <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[12px] font-bold animate-in whitespace-nowrap">
+                {toastMsg}
+              </div>
+            )}
+            
+            {/* 1. 헤더 */}
+            <div className="px-5 py-4 pt-[calc(1rem+env(safe-area-inset-top))] flex items-center justify-between sticky top-0 bg-[#0f172a] text-white z-20 shadow-md">
+              <button onClick={() => setStep('play')} className="p-1.5 hover:bg-slate-700 rounded-full transition active:scale-95">
+                <Icon name="ChevronLeft" size={24} />
+              </button>
+              <div className="flex items-center gap-2">
+                <h1 className="font-black text-lg">전체 스코어보드</h1>
+                <span className="bg-rose-500 text-white text-[10px] font-black px-1.5 py-0.5 rounded animate-pulse cursor-pointer" onClick={() => setShowQrModal(true)}>LIVE</span>
+              </div>
+              <div className="w-8"></div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto pb-48">
+              
+              {/* 2. 플레이어별 누적 타수 (오버/언더파) */}
+              <div className="bg-white m-4 rounded-3xl shadow-sm border border-slate-100 p-4 flex justify-between">
+                {players.map((p, i) => {
+                  const relScore = totalScoreVsPar[i];
+                  const sign = relScore > 0 ? '+' : '';
+                  const colorClass = relScore > 0 ? 'text-rose-500' : relScore < 0 ? 'text-blue-500' : 'text-slate-800';
+                  
+                  return (
+                    <div key={i} className="flex flex-col items-center justify-center w-full">
+                      <div className="w-9 h-9 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-1.5">
+                        <Icon name="User" size={18} />
+                      </div>
+                      <span className="text-[11px] font-bold text-slate-600 truncate w-16 text-center">{p}</span>
+                      <span className={`text-[18px] font-black mt-0.5 ${colorClass}`}>
+                        {sign}{relScore === 0 ? 'E' : relScore}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 3. 코스 탭 (OUT / IN) */}
+              <div className="flex mx-4 mb-4 bg-slate-200/60 rounded-full p-1">
+                <button onClick={() => setScorecardTab('OUT')} className={`flex-1 py-3 rounded-full text-[14px] font-bold transition-all ${scorecardTab === 'OUT' ? 'bg-white text-emerald-600 shadow-sm border border-slate-200' : 'text-slate-500'}`}>OUT 코스</button>
+                <button onClick={() => setScorecardTab('IN')} className={`flex-1 py-3 rounded-full text-[14px] font-bold transition-all ${scorecardTab === 'IN' ? 'bg-white text-emerald-600 shadow-sm border border-slate-200' : 'text-slate-500'}`}>IN 코스</button>
+              </div>
+
+              {/* 4. 홀별 기록 리스트 */}
+              <div className="mx-4 space-y-2">
+                {displayHoles.map((h) => {
+                  const isSegmentStart = segmentStarts.includes(h.number - 1);
+                  
+                  return (
+                    <Fragment key={h.number}>
+                      {isSegmentStart && h.number > 1 && (
+                        <div className="py-2 flex items-center justify-center gap-2">
+                          <div className="h-px bg-slate-300 w-12"></div>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">정산 기점</span>
+                          <div className="h-px bg-slate-300 w-12"></div>
+                        </div>
+                      )}
+                      
+                      <div onClick={() => { setCurrentHoleIdx(h.number - 1); setStep('play'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-white rounded-2xl p-3 flex shadow-sm border border-slate-100 cursor-pointer hover:bg-slate-50 active:scale-[0.99] transition-all">
+                        {/* 왼쪽: 홀 정보 */}
+                        <div className="w-12 flex flex-col items-center justify-center shrink-0 border-r border-slate-100 pr-2 mr-2">
+                          <div className="relative mb-0.5">
+                            <span className="text-[16px] font-black text-slate-800">{h.number}H</span>
+                            {h.multiplier > 1 && (
+                              <span className="absolute -top-2 -right-4 bg-rose-500 text-white text-[10px] font-black px-1 rounded-full z-10 shadow-sm">
+                                x{h.multiplier}
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-400">P {h.par}</span>
+                        </div>
+                        
+                        {/* 오른쪽: 결과 */}
+                        <div className="flex-1 grid grid-cols-4 gap-1.5">
+                          {!h.isCompleted ? (
+                             [0, 1, 2, 3].map(i => (
+                               <div key={i} className="bg-slate-50 rounded-xl flex items-center justify-center text-[12px] font-bold text-slate-400 h-16">대기</div>
+                             ))
+                          ) : h.isDraw ? (
+                             <div className="col-span-4 bg-slate-50 rounded-xl flex items-center justify-center text-[13px] font-black text-slate-400 tracking-widest h-16">DRAW</div>
+                          ) : (
+                             players.map((_, i) => {
+                               const money = h.pointDeltas[i];
+                               const score = h.scores[i];
+                               const isWinner = money > 0;
+                               
+                               return (
+                                 <div key={i} className={`rounded-xl flex flex-col items-center justify-center h-16 transition-colors ${isWinner ? 'bg-emerald-50 border border-emerald-100' : 'bg-white border border-slate-100'}`}>
+                                    <span className="text-[16px] font-black text-slate-800 leading-none mb-1.5">{score}</span>
+                                    <span className={`text-[10px] font-bold leading-none ${money > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
+                                       {money > 0 ? `+${money.toLocaleString()}` : money < 0 ? money.toLocaleString() : '-'}
+                                    </span>
+                                 </div>
+                               )
+                             })
+                          )}
+                        </div>
+                      </div>
+                    </Fragment>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 5. 하단 정산 결과 고정 바 */}
+            <div className="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white rounded-t-3xl shadow-[0_-10px_20px_rgba(0,0,0,0.06)] border-t border-slate-100 z-30 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <div className="flex justify-between items-center mb-4 px-1">
+                 <div className="flex items-center gap-2">
+                    <Icon name="Trophy" size={18} className="text-amber-500" />
+                    <span className="font-black text-[15px] text-slate-800">현재 합산 결과</span>
+                 </div>
+                 <button onClick={() => setStep('settlement')} className="bg-slate-900 text-white text-[12px] font-bold px-4 py-2.5 rounded-xl active:scale-95 transition shadow-md">
+                    정산하기
+                 </button>
+              </div>
+              
+              <div className="grid grid-cols-4 gap-1.5">
+                 {players.map((p, i) => {
+                    const segM = currentSegmentMoney[i];
+                    const grandM = grandTotalMoney[i];
+                    return (
+                       <div key={i} className="flex flex-col items-center justify-center p-2.5 bg-slate-50 rounded-2xl border border-slate-100">
+                          <span className="text-[10px] font-bold text-slate-500 mb-1.5 truncate w-full text-center">{p}</span>
+                          <span className={`text-[14px] font-black leading-none mb-1.5 ${segM > 0 ? 'text-emerald-600' : segM < 0 ? 'text-rose-500' : 'text-slate-800'}`}>
+                             {segM > 0 ? `+${segM.toLocaleString()}` : segM.toLocaleString()}
+                          </span>
+                          <span className={`text-[10px] font-bold ${grandM > 0 ? 'text-emerald-400' : grandM < 0 ? 'text-rose-400' : 'text-slate-400'}`}>
+                             {grandM > 0 ? `+${grandM.toLocaleString()}` : grandM.toLocaleString()}
+                          </span>
+                       </div>
+                    )
+                 })}
+              </div>
+            </div>
+            
+            {renderQrModal()}
+          </div>
+        );
+      }
+
+      // =====================================================================
+      // ★ 화면: SETTLEMENT (개평 비율 설정 및 최종 정산 요약)
+      // =====================================================================
+      if (step === 'settlement') {
+        return (
+          <div className="app-wrapper flex-col bg-[#f4f6f8] min-h-screen pb-[calc(2rem+env(safe-area-inset-bottom))]">
+             {/* 1. 헤더 */}
+            <div className="bg-[#10b981] text-white p-4 pt-[calc(1rem+env(safe-area-inset-top))] shadow-sm flex items-center justify-between sticky top-0 z-20 shrink-0">
+              <button onClick={() => setStep('scoreboard')} className="p-2 hover:bg-white/10 rounded-full transition active:scale-95">
+                <Icon name="ChevronLeft" size={24} />
+              </button>
+              <h1 className="text-[17px] font-bold flex items-center">개평 정산</h1>
+              <div className="w-9"></div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 pb-28 space-y-4">
+
+              {/* 개평 계산기 UI */}
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                <h2 className="text-[15px] font-bold text-slate-800 mb-4 flex items-center">
+                  <Icon name="Wallet" size={20} className="mr-2 text-[#10b981]"/> 개평 비율 설정 (위로금)
+                </h2>
+                
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  <button onClick={() => { setGaepyungRate(0); setIsCustomGaepyung(false); }} className={`col-span-2 py-3 rounded-xl text-[13px] font-bold transition active:scale-[0.98] ${gaepyungRate === 0 && !isCustomGaepyung ? 'bg-[#10b981] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>개평 없음 (0%)</button>
+                  <button onClick={() => { setGaepyungRate(10); setIsCustomGaepyung(false); }} className={`col-span-1 py-3 rounded-xl text-[13px] font-bold transition active:scale-[0.98] ${gaepyungRate === 10 && !isCustomGaepyung ? 'bg-[#10b981] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>10%</button>
+                  <button onClick={() => { setGaepyungRate(20); setIsCustomGaepyung(false); }} className={`col-span-1 py-3 rounded-xl text-[13px] font-bold transition active:scale-[0.98] ${gaepyungRate === 20 && !isCustomGaepyung ? 'bg-[#10b981] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>20%</button>
+                  <button onClick={() => { setGaepyungRate(30); setIsCustomGaepyung(false); }} className={`col-span-1 py-3 rounded-xl text-[13px] font-bold transition active:scale-[0.98] ${gaepyungRate === 30 && !isCustomGaepyung ? 'bg-[#10b981] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>30%</button>
+                  <button onClick={() => { setGaepyungRate(50); setIsCustomGaepyung(false); }} className={`col-span-1 py-3 rounded-xl text-[13px] font-bold transition active:scale-[0.98] ${gaepyungRate === 50 && !isCustomGaepyung ? 'bg-[#10b981] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>50%</button>
+                  <button onClick={() => { setGaepyungRate(70); setIsCustomGaepyung(false); }} className={`col-span-1 py-3 rounded-xl text-[13px] font-bold transition active:scale-[0.98] ${gaepyungRate === 70 && !isCustomGaepyung ? 'bg-[#10b981] text-white shadow-sm' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>70%</button>
+                  {!isCustomGaepyung ? (
+                    <button onClick={() => { setIsCustomGaepyung(true); setGaepyungRate(''); }} className="col-span-1 py-3 rounded-xl text-[13px] font-bold transition active:scale-[0.98] bg-slate-100 text-slate-600 hover:bg-slate-200">직접입력</button>
+                  ) : (
+                    <div className="col-span-1 relative bg-[#10b981] rounded-xl shadow-sm transition-all flex items-center overflow-hidden cursor-pointer focus-within:ring-2 focus-within:ring-emerald-300">
+                      <input 
+                        type="number" inputMode="numeric" value={gaepyungRate} 
+                        onChange={(e) => setGaepyungRate(e.target.value === '' ? '' : Number(e.target.value))} 
+                        className="w-full h-full py-3 bg-transparent text-white text-right font-bold text-[14px] outline-none pr-6 pl-1 placeholder-white/60 cursor-pointer focus:cursor-text" 
+                        placeholder="0" autoFocus
+                      />
+                      <span className="absolute right-2 text-white/90 text-[12px] font-bold pointer-events-none">%</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-between py-2 border-t border-slate-100 mt-2 pt-4">
+                  <div className="flex flex-col"><span className="text-[13px] font-bold text-slate-800">1,000P 단위 절사</span><span className="text-[10px] text-slate-500 mt-0.5">1,000P 미만 금액 버림</span></div>
+                  <button onClick={() => setIsRoundThousand(!isRoundThousand)} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${isRoundThousand ? 'bg-[#10b981]' : 'bg-slate-200'}`}>
+                     <span className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform shadow-sm ${isRoundThousand ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* 개평 적용 결과 상세 요약 */}
+              <div className="space-y-3">
+                {settlementDetails.map((d, i) => (
+                  <div key={i} className="bg-white rounded-3xl p-0 shadow-sm border border-slate-100 overflow-hidden flex flex-col">
+                    <div className="flex justify-between items-center p-4 border-b border-slate-50">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
+                           <Icon name="User" size={18} />
+                        </div>
+                        <span className="font-bold text-slate-800 text-[14px]">{d.name}</span>
+                      </div>
+                      <span className={`font-black text-[15px] ${d.original > 0 ? 'text-emerald-600' : d.original < 0 ? 'text-rose-500' : 'text-slate-500'}`}>
+                        기존: {d.original > 0 ? '+' : ''}{d.original.toLocaleString()}P
+                      </span>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      <div className="flex justify-between items-center text-[12px]">
+                        <span className="text-slate-500 font-medium">개평 ({d.original > 0 ? '지급할 포인트' : d.original < 0 ? '받을 포인트' : '해당 없음'})</span>
+                        <span className={`font-black ${d.original > 0 ? 'text-rose-500' : d.original < 0 ? 'text-blue-500' : 'text-slate-400'}`}>
+                           {d.original > 0 ? '-' + d.cut.toLocaleString() : d.original < 0 ? '+' + d.receive.toLocaleString() : '0'}P
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex justify-between items-center bg-slate-50 p-4 border-t border-slate-100">
+                      <span className="text-[13px] font-bold text-slate-800">최종 수령(지불) 포인트</span>
+                      <span className={`text-[18px] tracking-tight font-black ${d.final > 0 ? 'text-emerald-600' : d.final < 0 ? 'text-rose-600' : 'text-slate-600'}`}>
+                        {d.final > 0 ? '+' : ''}{d.final === 0 ? '0' : d.final.toLocaleString()}P
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="absolute bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white/80 backdrop-blur-md border-t border-slate-200 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-30 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+              <div className="max-w-md mx-auto flex gap-3">
+                <button onClick={() => setStep('scoreboard')} className="flex-[1] bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-4 rounded-[20px] transition duration-200 shadow-sm flex items-center justify-center text-[15px] active:scale-[0.98]">
+                  이전
+                </button>
+                <button onClick={() => setStep('transfer')} className="flex-[2] bg-[#10b981] hover:bg-[#0ea5e9] text-white font-bold py-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[15px] active:scale-[0.98]">
+                  이체 내역 확인 <Icon name="ChevronRight" size={20} className="ml-1" />
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // =====================================================================
+      // ★ 화면: TRANSFER (최종 이체 내역 확인 페이지)
+      // =====================================================================
+      if (step === 'transfer') {
+        const transfers = getTransfers(settlementDetails.map(d => d.final)); 
+
+        return (
+          <div className="app-wrapper flex-col bg-[#f4f6f8] min-h-screen pb-[calc(2rem+env(safe-area-inset-bottom))]">
+             {/* 1. 헤더 */}
+            <div className="bg-[#10b981] text-white p-4 pt-[calc(1rem+env(safe-area-inset-top))] shadow-sm flex items-center justify-between sticky top-0 z-20 shrink-0">
+              <button onClick={() => setStep('settlement')} className="p-2 hover:bg-white/10 rounded-full transition active:scale-95">
+                <Icon name="ChevronLeft" size={24} />
+              </button>
+              <h1 className="text-[17px] font-bold flex items-center">최종 이체 내역</h1>
+              <div className="w-9"></div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-4 pb-28 space-y-4">
+              <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 text-center">
+                <div className="w-16 h-16 bg-[#e5f5ec] text-[#10b981] rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Icon name="Check" size={32} />
+                </div>
+                <h2 className="text-[20px] font-black text-slate-800 mb-1">모든 정산이 완료되었습니다!</h2>
+                <p className="text-[14px] text-slate-500 font-medium mt-2">최종적으로 아래의 내역대로 송금해 주세요.</p>
+              </div>
+
+              {/* 포인트 이체 상세 내역 */}
+              <div className="mt-4">
+                <div className="text-center text-[15px] font-bold text-slate-800 mb-4 flex items-center justify-center">
+                  누가 누구에게 줘야 하나요?
+                </div>
+                
+                {Object.keys(transfers).length === 0 || !Object.values(transfers).some(g => g.total > 0) ? (
+                  <div className="bg-white rounded-[24px] shadow-sm p-8 text-center text-slate-400 font-semibold border border-slate-100">
+                    지불할 내역이 없습니다.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {Object.entries(transfers).map(([fromId, data]) => {
+                      if (data.total === 0) return null;
+                      return (
+                        <div key={fromId} className="bg-rose-50/40 rounded-[20px] border border-rose-100 p-4 shadow-sm">
+                          <div className="flex justify-between items-center mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 bg-white rounded-full overflow-hidden shrink-0 border border-rose-100 flex items-center justify-center text-slate-400">
+                                <Icon name="User" size={20} />
+                              </div>
+                              <div>
+                                <div className="text-[10px] text-rose-400 font-bold mb-0.5">보내는 사람 (패자)</div>
+                                <div className="font-black text-[15px] text-slate-800">{players[fromId]}</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-[10px] text-rose-400 font-bold mb-0.5">총 이체 포인트</div>
+                              <div className="font-black text-[17px] text-rose-500">{data.total.toLocaleString()}P</div>
+                            </div>
+                          </div>
+                          <div className="bg-white rounded-[12px] p-3 space-y-2 border border-rose-50">
+                            {data.details.map((detail, idx) => (
+                              <div key={idx} className="flex justify-between items-center text-[13px]">
+                                <span className="text-slate-600 font-semibold flex items-center">
+                                  <Icon name="ChevronRight" size={14} className="mx-1.5 text-rose-300" /> 
+                                  {players[detail.to]} (승자)
+                                </span>
+                                <span className="font-bold text-blue-500">{detail.amount.toLocaleString()}P</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="absolute bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white/80 backdrop-blur-md border-t border-slate-200 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-30 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+              <div className="max-w-md mx-auto flex gap-3">
+                <button onClick={handleCutAndReset} className="flex-1 bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold py-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[15px] active:scale-[0.98]">
+                  <Icon name="Refresh" size={20} className="mr-2" /> 새 게임 시작 (리셋)
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      return null;
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
