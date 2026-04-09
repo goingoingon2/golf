@@ -149,7 +149,8 @@
       oecdConditions: { ob: true, hazard: true, bunker: true, threePutt: true, triple: true, tree: false, road: false },
       doubleConditions: { birdie: true, tie: true, triple: false, threeTieCurrent: false, threeTiePrev: false },
       zeroOutLastHole: false,
-      guestPermissions: { finishShuffle: true, autoPick: true, nextHole: true }
+      guestPermissions: { finishShuffle: true, autoPick: true, nextHole: true },
+      drawMethod: 'FUN' // 'FUN' | 'SIMPLE'
     };
 
     function App() {
@@ -310,11 +311,10 @@
             if (data.gameState) setGameState(data.gameState);
             if (data.players) setPlayers(data.players);
             if (data.settings) {
-               const updatedSettings = { ...data.settings };
-               // 설정에 권한 정보가 없다면 기본값 추가
-               if (!updatedSettings.guestPermissions) {
-                  updatedSettings.guestPermissions = { finishShuffle: true, autoPick: true, nextHole: true };
-               }
+               const updatedSettings = { ...DEFAULT_SETTINGS, ...data.settings };
+               // 기본 설정 객체 병합 보완
+               if (!updatedSettings.guestPermissions) updatedSettings.guestPermissions = { finishShuffle: true, autoPick: true, nextHole: true };
+               if (!updatedSettings.drawMethod) updatedSettings.drawMethod = 'FUN';
                setSettings(updatedSettings);
             }
             if (data.holeData) setHoleData(data.holeData);
@@ -623,20 +623,50 @@
           }
         }
 
-        syncState({ 
-          gameState: 'SHUFFLE', 
-          matchState: { 
-            assignedTeams: {}, 
-            isJokerRevealed: settings.jokerValue !== 'RANDOM', 
-            actualJokerValue,
-            actualRoles: roles,
-            selectedCards: {},
-            finalJokerStroke,
-            isSpinningJoker: false,
-            shuffleTrigger: 0,
-            shuffleDirection: 'left'
-          } 
-        });
+        if (settings.drawMethod === 'SIMPLE') {
+          // 단순하게(자동 매칭) 모드일 때는 패 섞기/뽑기 단계를 생략하고 바로 결과/조커확인 창으로 넘어갑니다.
+          const assignedTeams = {};
+          const newSelectedCards = {};
+          players.forEach((p, idx) => {
+            assignedTeams[p.id] = roles[idx];
+            newSelectedCards[idx] = {
+              playerId: p.id,
+              playerName: p.name || '알수없음',
+              role: roles[idx]
+            };
+          });
+
+          syncState({ 
+            gameState: 'TEAM_MATCHING_RESULT', 
+            matchState: { 
+              assignedTeams, 
+              isJokerRevealed: settings.jokerValue !== 'RANDOM', 
+              actualJokerValue,
+              actualRoles: roles,
+              selectedCards: newSelectedCards,
+              finalJokerStroke,
+              isSpinningJoker: false,
+              shuffleTrigger: 0,
+              shuffleDirection: 'left'
+            } 
+          });
+        } else {
+          // 재미있게(직접 뽑기) 모드일 때는 패 섞기 화면으로 넘어갑니다.
+          syncState({ 
+            gameState: 'SHUFFLE', 
+            matchState: { 
+              assignedTeams: {}, 
+              isJokerRevealed: settings.jokerValue !== 'RANDOM', 
+              actualJokerValue,
+              actualRoles: roles,
+              selectedCards: {},
+              finalJokerStroke,
+              isSpinningJoker: false,
+              shuffleTrigger: 0,
+              shuffleDirection: 'left'
+            } 
+          });
+        }
       };
 
       const shuffleDeck = (dir) => syncState({ matchState: { ...matchState, shuffleTrigger: Date.now(), shuffleDirection: dir } });
@@ -1215,7 +1245,7 @@
                     {activeMoneyTab === 'POINTS' ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1 opacity-50" />}
                   </button>
                   <button onClick={() => setActiveMoneyTab(prev => prev === 'JOKER' ? null : 'JOKER')} className={`flex-1 py-4 px-2 text-[13px] md:text-sm font-bold flex items-center justify-center gap-1.5 transition-colors border-l border-gray-100 ${activeMoneyTab === 'JOKER' ? 'text-purple-600 border-b-2 border-purple-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}>
-                    <span className="text-base leading-none pr-1">🃏</span> 조커(Joker) 설정
+                    <span className="text-base leading-none pr-1">🃏</span> 매칭 및 조커 설정
                     {activeMoneyTab === 'JOKER' ? <ChevronUp className="w-4 h-4 ml-1" /> : <ChevronDown className="w-4 h-4 ml-1 opacity-50" />}
                   </button>
                 </div>
@@ -1310,6 +1340,14 @@
                 {/* Joker Settings Content */}
                 {activeMoneyTab === 'JOKER' && (
                   <div className="p-5 bg-white animate-in slide-in-from-top-2 duration-200 border-t border-gray-50">
+                    <div className="mb-5 border-b border-gray-100 pb-5">
+                      <label className="block text-xs font-bold text-gray-700 mb-3">팀 매칭(뽑기) 방식</label>
+                      <div className="flex bg-gray-100 rounded-lg p-1">
+                        <button onClick={() => setSettings({...settings, drawMethod: 'FUN'})} className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${settings.drawMethod !== 'SIMPLE' ? 'bg-white shadow text-purple-600' : 'text-gray-500'}`}>재미있게 (직접 뽑기)</button>
+                        <button onClick={() => setSettings({...settings, drawMethod: 'SIMPLE'})} className={`flex-1 py-2 text-xs font-bold rounded-md transition-colors ${settings.drawMethod === 'SIMPLE' ? 'bg-white shadow text-purple-600' : 'text-gray-500'}`}>단순하게 (자동 매칭)</button>
+                      </div>
+                    </div>
+                  
                     <label className="block text-xs font-bold text-gray-700 mb-3">기본 적용 타수 선택</label>
                     <div className="grid grid-cols-4 gap-2 mb-4">
                       {['NONE', 'RANDOM', '-2', '-1', '0', '1', '2', '3'].map(val => (
@@ -1648,7 +1686,7 @@
                 <div className="text-sm font-black text-gray-800 pb-1 flex items-center justify-between"><span>{getJokerLabel(settings.jokerValue)}</span><ChevronDown className="w-3 h-3 text-purple-400" /></div>
               </div>
               <button onClick={startTeamMatching} className="flex-[2] bg-gray-800 text-white font-bold rounded-xl shadow-lg hover:bg-gray-900 active:scale-[0.98] transition-all flex justify-center items-center gap-2 text-lg">
-                <Users className="w-5 h-5" /> 팀 매칭(패 뽑기)
+                <Users className="w-5 h-5" /> {settings.drawMethod === 'SIMPLE' ? '팀 매칭 (자동 배정)' : '팀 매칭 (패 뽑기)'}
               </button>
             </div>
 
@@ -1659,6 +1697,15 @@
                     <h3 className="text-lg font-bold text-purple-700 flex items-center gap-2"><span className="text-xl leading-none">🃏</span> 당홀 조커 타수 변경</h3>
                     <button onClick={() => setIsJokerModalOpen(false)} className="text-gray-400 hover:text-gray-600 p-1"><X className="w-5 h-5" /></button>
                   </div>
+                  
+                  <div className="mb-5 border-b border-gray-100 pb-5">
+                      <label className="block text-xs font-bold text-gray-700 mb-3">팀 매칭(뽑기) 방식</label>
+                      <div className="flex bg-gray-100 rounded-lg p-1">
+                        <button onClick={() => setSettings({...settings, drawMethod: 'FUN'})} className={`flex-1 py-2.5 text-xs font-bold rounded-md transition-colors ${settings.drawMethod !== 'SIMPLE' ? 'bg-white shadow text-purple-600' : 'text-gray-500'}`}>재미있게 (직접 뽑기)</button>
+                        <button onClick={() => setSettings({...settings, drawMethod: 'SIMPLE'})} className={`flex-1 py-2.5 text-xs font-bold rounded-md transition-colors ${settings.drawMethod === 'SIMPLE' ? 'bg-white shadow text-purple-600' : 'text-gray-500'}`}>단순하게 (자동 매칭)</button>
+                      </div>
+                  </div>
+
                   <div className="grid grid-cols-4 gap-2 mb-4">
                     {['NONE', 'RANDOM', '-2', '-1', '0', '1', '2', '3'].map(val => (
                       <button key={val} onClick={() => { setSettings({...settings, jokerValue: val}); setIsJokerModalOpen(false); }} className={`py-3 text-[11px] font-bold rounded-xl border transition-all ${settings.jokerValue === val ? 'bg-purple-500 border-purple-600 text-white shadow-md' : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'}`}>{getJokerLabel(val)}</button>
