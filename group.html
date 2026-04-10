@@ -1,0 +1,1348 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  AlertCircle, ArrowLeft, ArrowRight, Award, Check, ChevronDown, ChevronRight,
+  Flag, Info, List, Lock, MapPin, Minus, Plus, Search, Settings, Share2, Star, Target,
+  Trash2, TrendingUp, TrendingDown, User as UserIcon, Users, X, Zap, Coffee, HelpCircle, Unlock
+} from 'lucide-react';
+
+// 샘플 골프장 데이터
+const GOLF_COURSES_DATA = [
+  { name: "표준 파72 (일반 코스)", courses: { "OUT 코스": [4, 4, 3, 5, 4, 4, 3, 5, 4], "IN 코스":  [4, 5, 3, 4, 4, 4, 5, 3, 4] } },
+  { name: "포천 베어크리크", courses: { "베어 코스": [4, 4, 3, 5, 4, 4, 3, 5, 4], "크리크 코스": [5, 4, 3, 4, 4, 4, 5, 3, 4] } },
+  { name: "춘천 베어크리크", courses: { "OUT 코스": [4, 5, 4, 3, 4, 4, 5, 3, 4], "IN 코스": [4, 4, 3, 5, 4, 3, 4, 5, 4] } },
+  { name: "양평TPC", courses: { "루나 코스": [4, 4, 5, 3, 4, 4, 3, 5, 4], "솔라 코스": [5, 4, 3, 4, 4, 4, 5, 3, 4], "스텔라 코스": [4, 3, 5, 4, 4, 3, 5, 4, 4] } },
+  { name: "비콘힐스", courses: { "하늘 코스": [4, 5, 3, 4, 4, 5, 3, 4, 4], "누리 코스": [4, 4, 3, 5, 4, 4, 3, 5, 4] } },
+  { name: "포천 푸른솔", courses: { "마운틴 코스": [4, 5, 4, 3, 4, 5, 3, 4, 4], "밸리 코스": [4, 3, 5, 4, 4, 4, 3, 5, 4], "레이크 코스": [5, 4, 3, 4, 4, 3, 5, 4, 4] } }
+];
+
+// --- 랜덤 이름 풀 (16명 구성) ---
+const RANDOM_NAMES_POOL = [
+  "박핀비", "고지능영", "김쎄영", "박쾅현", "전온지", 
+  "김효핀", "이정확", "유해롱란", "박민집중", "이글원", 
+  "박핀경", "임정타", "홍조준", "방롱실", "성핀진", "황집중민"
+];
+
+const getRandomHandicap = () => String(Math.floor(Math.random() * 31) + 80);
+
+const getRandomInitialTeams = () => {
+  const shuffled = [...RANDOM_NAMES_POOL].sort(() => 0.5 - Math.random());
+  return [
+    [
+      { name: shuffled[0], handicap: getRandomHandicap() },
+      { name: shuffled[1], handicap: getRandomHandicap() },
+      { name: shuffled[2], handicap: getRandomHandicap() },
+      { name: shuffled[3], handicap: getRandomHandicap() }
+    ],
+    [
+      { name: shuffled[4], handicap: getRandomHandicap() },
+      { name: shuffled[5], handicap: getRandomHandicap() },
+      { name: shuffled[6], handicap: getRandomHandicap() },
+      { name: shuffled[7], handicap: getRandomHandicap() }
+    ]
+  ];
+};
+
+// --- 그룹 고유 색상 테마 정의 ---
+const GROUP_STYLES = [
+  { badge: 'bg-purple-100 text-purple-700 border-purple-200', card: 'bg-purple-50/50 border-purple-100', input: 'text-purple-800 border-purple-200 focus:border-purple-500', btnActive: 'bg-purple-600 text-white border-purple-600' },
+  { badge: 'bg-blue-100 text-blue-700 border-blue-200', card: 'bg-blue-50/50 border-blue-100', input: 'text-blue-800 border-blue-200 focus:border-blue-500', btnActive: 'bg-blue-600 text-white border-blue-600' },
+  { badge: 'bg-rose-100 text-rose-700 border-rose-200', card: 'bg-rose-50/50 border-rose-100', input: 'text-rose-800 border-rose-200 focus:border-rose-500', btnActive: 'bg-rose-600 text-white border-rose-600' },
+  { badge: 'bg-amber-100 text-amber-700 border-amber-200', card: 'bg-amber-50/50 border-amber-100', input: 'text-amber-800 border-amber-200 focus:border-amber-500', btnActive: 'bg-amber-600 text-white border-amber-600' },
+  { badge: 'bg-teal-100 text-teal-700 border-teal-200', card: 'bg-teal-50/50 border-teal-100', input: 'text-teal-800 border-teal-200 focus:border-teal-500', btnActive: 'bg-teal-600 text-white border-teal-600' },
+  { badge: 'bg-indigo-100 text-indigo-700 border-indigo-200', card: 'bg-indigo-50/50 border-indigo-100', input: 'text-indigo-800 border-indigo-200 focus:border-indigo-500', btnActive: 'bg-indigo-600 text-white border-indigo-600' },
+];
+
+const safeDisplayDiff = (diff) => {
+  if (diff == null || isNaN(diff)) return '-';
+  if (diff === 0) return 'E';
+  return diff > 0 ? `+${diff}` : diff.toString();
+};
+
+const safeDisplayNet = (netDiff) => {
+  if (netDiff == null || isNaN(netDiff)) return '-';
+  const val = parseFloat(netDiff).toFixed(1);
+  if (val === "0.0" || val === "-0.0") return 'E';
+  return netDiff > 0 ? `+${val}` : val;
+};
+
+const RankBadge = ({ rank }) => {
+  if (rank === 0) return <span className="text-[22px]">🥇</span>;
+  if (rank === 1) return <span className="text-[22px]">🥈</span>;
+  if (rank === 2) return <span className="text-[22px]">🥉</span>;
+  return <span className="font-black text-lg text-slate-400 w-8 text-center">{rank + 1}</span>;
+};
+
+function GroupBadges({ tIdx, pIdx, customGroups }) {
+  if (!customGroups || customGroups.length === 0) return null;
+  const pKey = `${tIdx}-${pIdx}`;
+  const myGroups = customGroups.map((g, idx) => ({ ...g, style: GROUP_STYLES[idx % GROUP_STYLES.length] })).filter(g => g.members.includes(pKey));
+  if (myGroups.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1 items-center shrink-0 ml-1">
+      {myGroups.map(g => (
+        <span key={g.id} className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded border shadow-sm max-w-[50px] truncate ${g.style.badge}`}>{g.name}</span>
+      ))}
+    </div>
+  );
+}
+
+function ShareModal({ isOpen, onClose }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
+      <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" onClick={onClose} />
+      <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2 text-slate-800 font-bold text-lg"><Share2 className="w-5 h-5 text-[#0D8A5E]" /> 방 초대하기</div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-50 transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+        <div className="bg-[#F8F9FA] rounded-3xl p-6 flex items-center justify-center mb-6 border border-slate-100">
+          <Share2 className="w-20 h-20 text-slate-300" strokeWidth={1.5} />
+        </div>
+        <div className="mb-6">
+          <label className="block text-slate-500 text-xs font-bold mb-2 pl-1">초대 URL</label>
+          <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-600 text-sm truncate font-medium">https://golf-live.app/invite/BearCreek-123</div>
+        </div>
+        <div className="flex gap-3">
+          <button onClick={onClose} className="flex-1 bg-white border border-[#0D8A5E] text-[#0D8A5E] font-bold py-3.5 rounded-xl transition-colors">URL 복사</button>
+          <button onClick={onClose} className="flex-1 bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl transition-colors shadow-md">공유하기</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DetailModal({ isOpen, onClose, config }) {
+  const [specialTab, setSpecialTab] = useState('group');
+  const [overallTab, setOverallTab] = useState('realtime');
+
+  useEffect(() => { 
+    if (config) {
+      if (config.isSpecial) setSpecialTab(config.enableGroupComp ? 'group' : 'team'); 
+      if (config.isOverall) setOverallTab('realtime');
+    }
+  }, [config]);
+
+  if (!isOpen || !config) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:px-4 sm:max-w-md sm:mx-auto">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
+      <div className="bg-white w-full sm:rounded-[32px] rounded-t-[32px] max-h-[85vh] p-6 relative z-10 shadow-2xl flex flex-col animate-fade-in-up">
+        <div className="flex items-center justify-between mb-4 shrink-0">
+          <h3 className="text-slate-800 font-black text-lg flex items-center gap-2">
+            <Award className="w-5 h-5 text-[#0D8A5E]" /> {String(config.title || '')}
+          </h3>
+          <button onClick={onClose} className="p-1.5 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+        </div>
+        
+        {config.isOverall ? (
+          <>
+            <div className="flex bg-slate-100 p-1 rounded-xl mb-3 shrink-0">
+              <button onClick={() => setOverallTab('realtime')} className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-colors ${overallTab === 'realtime' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>실시간</button>
+              <button onClick={() => setOverallTab('sync')} className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-colors ${overallTab === 'sync' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>가장 느린조</button>
+              <button onClick={() => setOverallTab('prediction')} className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-colors ${overallTab === 'prediction' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>예상 기준</button>
+            </div>
+            <div className="bg-slate-50 rounded-xl flex items-center text-xs font-bold text-slate-500 py-2 px-4 mb-2 shrink-0">
+              <div className="w-10 text-center">순위</div>
+              <div className="flex-1 px-2">플레이어</div>
+              <div className="flex items-center justify-end gap-3 shrink-0">
+                <span className="w-12 text-right">기록</span>
+                <span className="w-10 text-right">진행</span>
+              </div>
+            </div>
+            <div className="overflow-y-auto flex-1 pr-1 space-y-2 pb-4">
+              {(config.lists?.[overallTab] || []).map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 shadow-sm rounded-xl">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <RankBadge rank={idx} />
+                    <div className="flex flex-col gap-0.5 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                        <span className={`font-bold text-[15px] truncate ${item.isInvalid ? 'line-through text-slate-400' : 'text-slate-700'}`}>{String(item.name || '-')}</span>
+                        {item.tIdx != null && <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{config.teamNames?.[item.tIdx] || `${item.tIdx + 1}조`}</span>}
+                        {config.customGroups && item.tIdx != null && item.pIdx != null && <GroupBadges tIdx={item.tIdx} pIdx={item.pIdx} customGroups={config.customGroups} />}
+                        {item.isInvalid && <span className="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded shadow-sm shrink-0 ml-1">파 오버</span>}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-3 shrink-0">
+                    <span className={`font-black text-xl text-right min-w-[3rem] ${item.isInvalid ? 'text-slate-400' : (overallTab === 'prediction' ? 'text-slate-800' : (item.diff > 0 ? 'text-[#0D8A5E]' : item.diff < 0 ? 'text-red-500' : 'text-slate-700'))}`}>
+                      {config.formatFn ? config.formatFn(item.diff, overallTab) : safeDisplayDiff(item.diff)}
+                    </span>
+                    <span className="font-black text-slate-300 text-xl text-right min-w-[2.5rem]">{item.playedHoles || 0}H</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : config.isSpecial ? (
+          <>
+            <div className="flex bg-slate-100 p-1 rounded-xl mb-3 shrink-0">
+              {config.enableGroupComp && <button onClick={() => setSpecialTab('group')} className={`flex-1 py-2 text-[11px] font-bold rounded-lg ${specialTab === 'group' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>그룹별</button>}
+              {config.enableTeamComp && <button onClick={() => setSpecialTab('team')} className={`flex-1 py-2 text-[11px] font-bold rounded-lg ${specialTab === 'team' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>조별</button>}
+            </div>
+            <div className="overflow-y-auto flex-1 pr-1 space-y-2 pb-4">
+              {(specialTab === 'team' ? (config.teamList || []) : (config.groupList || [])).map((st, idx) => (
+                <div key={idx} className="flex flex-col p-3 bg-white border border-slate-100 shadow-sm rounded-xl gap-2">
+                  <span className="font-bold text-[13px] text-slate-800 shrink-0 truncate">{String(st.teamName || st.name || '-')}</span>
+                  <div className="flex items-center gap-2 text-[11px] text-slate-600 min-w-0">
+                    <span className="flex items-center gap-0.5 truncate min-w-0"><Zap className="w-3 h-3 text-emerald-500 shrink-0"/> 하드캐리: <span className="truncate font-bold">{String(st.hardCarry?.name || '-')}</span>(<b className="text-[#0D8A5E]">{safeDisplayDiff(st.hardCarry?.diff)}</b>)</span>
+                    <span className="text-slate-300 shrink-0">|</span>
+                    <span className="flex items-center gap-0.5 truncate min-w-0"><Coffee className="w-3 h-3 text-amber-600 shrink-0"/> 국밥: <span className="truncate font-bold">{String(st.bomb?.name || '-')}</span>(<b className="text-red-500">{safeDisplayDiff(st.bomb?.diff)}</b>)</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="bg-slate-50 rounded-xl flex items-center text-xs font-bold text-slate-500 py-2 px-4 mb-2 shrink-0">
+              <div className="w-10 text-center">순위</div>
+              <div className="flex-1 px-2">{config.isTeamRanking ? (config.isGroupRanking ? '그룹명' : '조명') : '플레이어'}</div>
+              <div className="flex items-center justify-end gap-3 shrink-0">
+                <span className="w-12 text-right">기록</span>
+                <span className="w-10 text-right">{config.detailKey === 'hIdx' ? '기록 홀' : '진행'}</span>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto flex-1 pr-1 space-y-2 pb-4">
+              {(config.list || []).map((item, idx) => {
+                const gIdx = config.isGroupRanking && config.customGroups ? config.customGroups.findIndex(cg => cg.id === item.id) : -1;
+                const gStyle = gIdx >= 0 ? GROUP_STYLES[gIdx % GROUP_STYLES.length] : null;
+                return (
+                  <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 shadow-sm rounded-xl">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <RankBadge rank={idx} />
+                      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                          {config.isGroupRanking ? (
+                            <span className={`font-bold text-[15px] px-2 py-0.5 rounded-md border truncate ${gStyle?.badge || ''} ${item.isInvalid ? 'line-through text-slate-400 opacity-70' : ''}`}>{String(item.name || '-')}</span>
+                          ) : (
+                            <>
+                              <span className={`font-bold text-[15px] truncate ${item.isInvalid ? 'line-through text-slate-400' : 'text-slate-700'}`}>{String(config.isTeamRanking ? (item.teamName || '-') : (item.name || '-'))}</span>
+                              {!config.isTeamRanking && item.tIdx != null && (
+                                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{config.teamNames?.[item.tIdx] || `${item.tIdx + 1}조`}</span>
+                              )}
+                              {!config.isTeamRanking && config.customGroups && item.tIdx != null && item.pIdx != null && (
+                                <GroupBadges tIdx={item.tIdx} pIdx={item.pIdx} customGroups={config.customGroups} />
+                              )}
+                              {item.isInvalid && <span className="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded shadow-sm shrink-0 ml-1">파 오버</span>}
+                            </>
+                          )}
+                        </div>
+                        {/* 상세 내역 표시 (다파, 다보기 등) */}
+                        {config.detailKey && item.details && item.details[config.detailKey] && item.details[config.detailKey].length > 0 && (
+                          <div className="text-[10px] text-slate-400 break-words w-full pr-2 mt-1 leading-snug">
+                            {item.details[config.detailKey].join(', ')}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-end gap-3 shrink-0">
+                      <span className={`font-black text-xl text-right min-w-[3rem] ${item.isInvalid ? 'text-slate-400' : (config.valueKey && item[config.valueKey] > 0 ? 'text-[#0D8A5E]' : config.valueKey && item[config.valueKey] < 0 ? 'text-red-500' : 'text-slate-700')}`}>
+                        {String(config.formatFn ? config.formatFn(item[config.valueKey]) : item[config.valueKey])}
+                      </span>
+                      <span className={`font-black text-slate-300 text-xl text-right min-w-[2.5rem] ${!config.isTeamRanking && !config.detailKey ? '' : 'text-slate-400 text-sm'}`}>
+                        {config.detailKey === 'hIdx' ? `${item.hIdx + 1}H` : (config.isTeamRanking ? '-H' : `${item.playedHoles || 0}H`)}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+              {(!config.list || config.list.length === 0) && (
+                <div className="text-center py-10 text-slate-400 text-sm font-bold">기록이 없습니다.</div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function WaitingRoomView({ teamData, currentUserRole, myPlayerInfo, setMyPlayerInfo, joinedStatus, setJoinedStatus, isRoundStarted, onBack, eventName, onStartRound, customGroups }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  if (!joinedStatus || joinedStatus.length === 0) return null;
+  const joinedCount = joinedStatus.flat().filter(Boolean).length;
+  const totalPlayers = teamData.flat().length;
+
+  const toggleJoinStatus = (tIdx, pIdx) => {
+    if (tIdx === 0 && pIdx === 0 && currentUserRole !== 'host') return; 
+
+    if (currentUserRole === 'guest') {
+      if (!joinedStatus[tIdx][pIdx]) {
+        const newStatus = [...joinedStatus];
+        newStatus[tIdx] = [...newStatus[tIdx]];
+        newStatus[tIdx][pIdx] = true;
+        setJoinedStatus(newStatus);
+        setMyPlayerInfo({ tIdx, pIdx });
+        if (isRoundStarted) onStartRound();
+      }
+    } else {
+      const newStatus = [...joinedStatus];
+      newStatus[tIdx] = [...newStatus[tIdx]];
+      newStatus[tIdx][pIdx] = !newStatus[tIdx][pIdx];
+      setJoinedStatus(newStatus);
+    }
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] overflow-x-hidden">
+      <div className="bg-[#0D8A5E] pt-12 pb-10 px-5 text-center rounded-b-[30px] shadow-sm shrink-0">
+        <h1 className="text-2xl font-black text-white tracking-tight truncate px-10">{eventName}</h1>
+        <p className="text-emerald-100 text-sm font-medium mt-1">라운드 대기실</p>
+      </div>
+
+      <div className="px-4 pt-6 flex-1 overflow-y-auto">
+        {isRoundStarted && currentUserRole === 'guest' && (
+          <div className="mb-6 bg-amber-50 text-amber-800 p-4 rounded-2xl text-sm text-center border border-amber-200 shadow-sm font-bold animate-pulse">
+            방장이 이미 라운드를 시작했습니다! 🏌️‍♂️<br/>자신의 이름을 클릭하여 입장하세요.
+          </div>
+        )}
+
+        <button onClick={() => setIsModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-white border border-[#A7F3D0] text-[#0D8A5E] font-bold py-4 rounded-2xl mb-6 shadow-sm">
+          <List className="w-5 h-5" /> 방 초대 코드 / URL 열기
+        </button>
+        
+        {teamData.map((team, tIdx) => (
+          <div key={tIdx} className="mb-8">
+            <h3 className="text-slate-500 font-bold text-sm mb-3 pl-2 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>{tIdx + 1}조</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {team.map((player, pIdx) => {
+                const isJoined = joinedStatus[tIdx]?.[pIdx];
+                const isMe = currentUserRole === 'guest' && myPlayerInfo && tIdx === myPlayerInfo.tIdx && pIdx === myPlayerInfo.pIdx;
+                return (
+                  <div key={pIdx} onClick={() => toggleJoinStatus(tIdx, pIdx)} className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer border-2 ${isJoined ? 'bg-[#F0FDF4] border-[#0D8A5E] shadow-sm' : 'bg-white border-dashed border-slate-200'} ${isMe ? 'ring-2 ring-emerald-400' : ''}`}>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isJoined ? 'bg-[#D1FAE5] text-[#0D8A5E]' : 'bg-slate-100 text-slate-400'}`}>{isJoined ? <Check className="w-5 h-5 stroke-[3]" /> : <UserIcon className="w-5 h-5" />}</div>
+                    <span className={`font-bold text-sm text-center ${isJoined ? 'text-[#0D8A5E]' : 'text-slate-600'}`}>{player.name}</span>
+                    <GroupBadges tIdx={tIdx} pIdx={pIdx} customGroups={customGroups} />
+                    {tIdx === 0 && pIdx === 0 ? <span className="bg-[#0D8A5E] text-white text-[10px] font-bold px-2 py-0.5 rounded-full mt-1">방장</span> : <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 ${isJoined ? 'bg-[#D1FAE5] text-[#0D8A5E]' : 'bg-slate-100 text-slate-500'}`}>{isJoined ? '입장 완료' : '대기 중...'}</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 flex gap-3 z-10 shadow-up">
+        <button onClick={onBack} className="flex-1 bg-[#F1F3F5] text-slate-600 font-bold py-4 rounded-2xl transition-colors">설정으로</button>
+        <button onClick={onStartRound} className="flex-[2] bg-[#0D8A5E] text-white shadow-lg shadow-emerald-600/20 font-bold py-4 rounded-2xl transition-colors">
+          {joinedCount}/{totalPlayers} 명 라운드 시작
+        </button>
+      </div>
+      <ShareModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+    </div>
+  );
+}
+
+function ScoreInputView({ teamNames, teamData, currentUserRole, myPlayerInfo, hostSelectedTeam, setHostSelectedTeam, allPars, setAllPars, allScores, setAllScores, specialHoles, specialRecords, setSpecialRecords, eventName, scoreInputPermission, lastEditors, setLastEditors, customGroups, onGoToSettings, onOpenScoreboard, onOpenAwards, currentHole, setCurrentHole }) {
+  const isHost = currentUserRole === 'host';
+  const teamIndex = isHost ? hostSelectedTeam : (myPlayerInfo?.tIdx || 0);
+  const myTeam = teamData[teamIndex] || [];
+  const canEdit = isHost || scoreInputPermission === 'all' || (scoreInputPermission === 'leader' && myPlayerInfo?.pIdx === 0);
+  const editor = isHost ? `${teamData[0]?.[0]?.name || '방장'}(방장)` : myTeam[myPlayerInfo?.pIdx || 0]?.name || '알 수 없음';
+  
+  const timerRef = useRef(null);
+  const [isLongPress, setIsLongPress] = useState(false);
+
+  useEffect(() => {
+    if (allScores[currentHole-1] && allScores[currentHole-1][teamIndex] && allScores[currentHole-1][teamIndex][0] === null) {
+      const ns = [...allScores];
+      ns[currentHole-1] = ns[currentHole-1].map((ts, tI) => (tI === teamIndex && ts[0] === null) ? Array(ts.length).fill(allPars[currentHole-1]) : ts);
+      setAllScores(ns);
+    }
+  }, [currentHole, allScores, allPars, teamIndex]);
+
+  if (allPars.length === 0 || !allScores[currentHole-1]) return <div className="p-10 text-center text-slate-500 font-bold">동기화 중...</div>;
+
+  const scores = allScores[currentHole-1][teamIndex] || [];
+  const par = allPars[currentHole-1] || 4;
+
+  const updateScore = (pI, d) => { 
+    if(!canEdit) return; 
+    const ns = [...allScores]; 
+    ns[currentHole-1] = [...ns[currentHole-1]]; 
+    ns[currentHole-1][teamIndex] = [...ns[currentHole-1][teamIndex]]; 
+    ns[currentHole-1][teamIndex][pI] += d; 
+    setAllScores(ns); 
+    setLastEditors(prev => ({...prev, [`${currentHole}-${teamIndex}`]: editor})); 
+  };
+  
+  const updatePar = (np) => { 
+    if (np === par) return;
+    const diff = np - par;
+    const nps = [...allPars]; 
+    nps[currentHole-1] = np; 
+    setAllPars(nps); 
+    const ns = [...allScores]; 
+    ns[currentHole-1] = ns[currentHole-1].map(ts => ts.map(s => s !== null ? s + diff : null)); 
+    setAllScores(ns); 
+    setLastEditors(prev => ({...prev, [`${currentHole}-${teamIndex}`]: editor})); 
+  };
+  
+  const handleS = (v) => { 
+    setIsLongPress(false); 
+    if(v >= 5) {
+      timerRef.current = setTimeout(()=>{ setIsLongPress(true); updatePar(v === 5 ? 6 : v === 6 ? 7 : 5); }, 500); 
+    }
+  };
+  const handleE = (v) => { clearTimeout(timerRef.current); if(!isLongPress) updatePar(v); };
+  const handleCancel = () => { clearTimeout(timerRef.current); };
+
+  const updateSpecial = (type, field, val) => {
+    const nr = [...specialRecords];
+    if (!nr[currentHole-1][teamIndex]) {
+      nr[currentHole-1][teamIndex] = { nearest: {pIdx: null, distance: ''}, longest: {pIdx: null, distance: ''} };
+    }
+    nr[currentHole-1][teamIndex][type][field] = val;
+    setSpecialRecords(nr);
+  };
+
+  const teamSpecials = specialRecords[currentHole-1]?.[teamIndex] || { nearest: {pIdx: null, distance: ''}, longest: {pIdx: null, distance: ''} };
+  
+  const nRec = teamSpecials.nearest;
+  const nScoreDiff = nRec?.pIdx != null && scores[nRec.pIdx] !== null ? scores[nRec.pIdx] - par : null;
+  const nIsInvalid = specialHoles.requirePar && nScoreDiff > 0;
+
+  const lRec = teamSpecials.longest;
+  const lScoreDiff = lRec?.pIdx != null && scores[lRec.pIdx] !== null ? scores[lRec.pIdx] - par : null;
+  const lIsInvalid = specialHoles.requirePar && lScoreDiff > 0;
+
+  return (
+    <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] overflow-x-hidden">
+      <div className="bg-[#0D8A5E] pt-12 pb-16 px-5 text-center rounded-b-[30px] shrink-0 relative flex items-start justify-between">
+        <button onClick={onOpenAwards} className="p-2 -ml-1 mt-1 hover:bg-black/10 rounded-lg relative z-20"><Award className="w-6 h-6 text-white"/></button>
+        <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11">
+          <span className="text-emerald-100/90 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{eventName}</span>
+          <span className="text-3xl font-black text-white">{currentHole}H</span>
+        </div>
+        <div className="flex items-center gap-1.5 mt-1 relative z-20">
+          {isHost && (<button onClick={onGoToSettings} className="p-1.5 hover:bg-black/10 rounded-lg"><Settings className="w-5 h-5 text-white/90" /></button>)}
+          <button onClick={onOpenScoreboard} className="p-1.5 hover:bg-black/10 rounded-lg"><List className="w-6 h-6 text-white" /></button>
+        </div>
+      </div>
+      
+      <div className="px-4 -mt-8 relative z-10 flex-1 overflow-y-auto">
+        <div className="flex gap-2 mb-4 h-[56px]">
+          <div className={`bg-white rounded-[20px] p-1.5 shadow-sm flex items-center ${isHost ? 'shrink-0' : 'w-full'}`}>
+            <div className="px-1.5 hidden sm:flex text-slate-400"><Flag className="w-4 h-4"/></div>
+            <div className="flex gap-1 w-full h-full">
+              {[3, 4, par>=5?par:5].map(v=>(
+                <button key={v} onPointerDown={()=>handleS(v)} onPointerUp={()=>handleE(v)} onPointerLeave={handleCancel} onContextMenu={e=>e.preventDefault()} style={{ WebkitTouchCallout: 'none' }} className={`h-full ${isHost?'w-11':'flex-1'} rounded-xl font-black text-lg select-none flex items-center justify-center transition-all ${par===v?'bg-[#0D8A5E] text-white shadow-md':'bg-transparent text-slate-500 hover:bg-slate-100'}`}>
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+          {isHost && (
+            <div className="bg-white rounded-[20px] p-1.5 shadow-sm flex flex-1 min-w-0 overflow-hidden">
+              <div className="flex justify-start gap-1 overflow-x-auto no-scrollbar w-full h-full pr-1">
+                {teamData.map((_, idx) => (
+                  <button key={idx} onClick={() => setHostSelectedTeam(idx)} className={`h-full px-3.5 rounded-xl font-bold text-sm whitespace-nowrap flex items-center justify-center transition-all shrink-0 ${hostSelectedTeam === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-transparent text-slate-500 hover:bg-slate-100'}`}>
+                    {teamNames[idx] || `${idx + 1}조`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <div className="bg-white rounded-3xl px-5 py-2 shadow-sm">
+          {myTeam.map((p, pI) => {
+            const sVal = scores[pI];
+            const diff = sVal !== null ? sVal - par : null;
+            return (
+            <div key={pI} className="flex items-center justify-between py-4 border-b last:border-0 border-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><UserIcon className="w-5 h-5"/></div>
+                <div className="flex flex-col"><div className="flex items-center gap-1"><span className="font-bold text-slate-800">{p.name}</span><GroupBadges tIdx={teamIndex} pIdx={pI} customGroups={customGroups}/></div></div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className={`font-black text-sm w-6 text-center ${diff===0?'text-[#0D8A5E]':diff>0?'text-slate-600':'text-red-500'}`}>{safeDisplayDiff(diff)}</span>
+                <div className="flex items-center gap-4 ml-1">
+                  <button onClick={()=>updateScore(pI,-1)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 active:bg-slate-200"><Minus className="w-5 h-5"/></button>
+                  <span className="font-black text-2xl w-5 text-center text-slate-800">{sVal}</span>
+                  <button onClick={()=>updateScore(pI,1)} className="w-10 h-10 rounded-full bg-[#0D8A5E] flex items-center justify-center text-white shadow-md active:bg-[#0A704C]"><Plus className="w-5 h-5"/></button>
+                </div>
+              </div>
+            </div>
+            );
+          })}
+        </div>
+        
+        {(currentHole===specialHoles.nearest||currentHole===specialHoles.longest) && (
+          <div className="bg-white rounded-3xl p-5 shadow-sm mt-4 border border-slate-100">
+            <h3 className="text-slate-800 font-black text-sm mb-4">⛳ 팀별 이벤트 기록</h3>
+            {currentHole===specialHoles.nearest && (
+              <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
+                <div className="flex justify-between items-center mb-3 text-purple-800 font-bold text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>니어리스트 (Nearest)</span>
+                    {nIsInvalid && <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded whitespace-nowrap">파 오버 무효</span>}
+                  </div>
+                  <div className="relative w-24">
+                    <input type="number" inputMode="decimal" value={nRec?.distance || ''} onChange={e=>updateSpecial('nearest', 'distance', e.target.value)} className="w-full p-1.5 border border-purple-200 rounded-lg text-right pr-6 focus:outline-none focus:ring-2 focus:ring-purple-400 [&::-webkit-inner-spin-button]:appearance-none" placeholder="0.0"/>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-400 font-bold text-xs">m</span>
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  {myTeam.map((p,i)=>(<button key={i} onClick={()=>updateSpecial('nearest', 'pIdx', nRec?.pIdx === i ? null : i)} className={`flex-1 py-2 text-[10px] font-bold rounded-xl border ${nRec?.pIdx === i ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-white text-purple-700 hover:bg-purple-100'}`}>{p.name}</button>))}
+                </div>
+              </div>
+            )}
+            {currentHole===specialHoles.longest && (
+              <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 mt-3">
+                <div className="flex justify-between items-center mb-3 text-blue-800 font-bold text-sm">
+                  <div className="flex items-center gap-2">
+                    <span>롱기스트 (Longest)</span>
+                    {lIsInvalid && <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded whitespace-nowrap">파 오버 무효</span>}
+                  </div>
+                  <div className="relative w-24">
+                    <input type="number" inputMode="decimal" value={lRec?.distance || ''} onChange={e=>updateSpecial('longest', 'distance', e.target.value)} className="w-full p-1.5 border border-blue-200 rounded-lg text-right pr-6 focus:outline-none focus:ring-2 focus:ring-blue-400 [&::-webkit-inner-spin-button]:appearance-none" placeholder="0.0"/>
+                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400 font-bold text-xs">m</span>
+                  </div>
+                </div>
+                <div className="flex gap-1.5">
+                  {myTeam.map((p,i)=>(<button key={i} onClick={()=>updateSpecial('longest', 'pIdx', lRec?.pIdx === i ? null : i)} className={`flex-1 py-2 text-[10px] font-bold rounded-xl border ${lRec?.pIdx === i ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-blue-700 hover:bg-blue-100'}`}>{p.name}</button>))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        <div className="pb-6 pt-4 text-center"><span className="text-[10px] text-slate-400 font-medium bg-white px-3 py-1.5 rounded-lg border shadow-sm">마지막 입력: <b className="text-slate-600">{lastEditors[`${currentHole}-${teamIndex}`] || '-'}</b></span></div>
+      </div>
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-white flex gap-3 z-10 border-t shadow-up">
+        <button onClick={()=>{if(currentHole>1)setCurrentHole(currentHole-1)}} className={`flex-1 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 ${currentHole>1?'bg-[#F1F3F5] text-slate-600 hover:bg-slate-200':'bg-slate-50 text-slate-300'}`}><ArrowLeft className="w-4 h-4"/> 이전 홀</button>
+        <button onClick={()=>{if(currentHole<18)setCurrentHole(currentHole+1); else onOpenScoreboard();}} className="flex-[2] font-bold py-4 rounded-2xl bg-[#0D8A5E] text-white shadow-lg flex items-center justify-center gap-2">{currentHole<18?'다음 홀':'결과 확인'} <ArrowRight className="w-4 h-4" /></button>
+      </div>
+    </div>
+  );
+}
+
+function ScoreboardView({ teamNames, teamData, currentUserRole, myPlayerInfo, hostSelectedTeam, courseInfo, allPars, allScores, handicapType, eventName, customGroups, onGoToSettings, onBack, onGoToInput, onOpenAwards }) {
+  const isHost = currentUserRole === 'host';
+  const [vTeamIdx, setVTeamIdx] = useState(isHost ? hostSelectedTeam : (myPlayerInfo?.tIdx || 0));
+  const myTeam = teamData[vTeamIdx] || [];
+  const [activeTab, setActiveTab] = useState('front');
+
+  const getStats = (pIdx) => {
+    let score = 0, diff = 0, holes = 0;
+    allScores.forEach((hs, hIdx) => { if (hs[vTeamIdx] && hs[vTeamIdx][pIdx] != null) { score += hs[vTeamIdx][pIdx]; diff += (hs[vTeamIdx][pIdx] - allPars[hIdx]); holes++; } });
+    const handi = parseInt(String(myTeam[pIdx]?.handicap || "").replace(/[^0-9-]/g, '')) || 0;
+    const expOver = (handicapType === 'strokes' ? handi - 72 : handi) * (holes / 18);
+    return { score, diff, holes, net: holes > 0 ? (diff - expOver) : 0 };
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] relative">
+      <div className="bg-[#1E293B] pt-12 pb-6 px-4 shrink-0 flex items-start justify-between shadow-sm relative z-20">
+        <button onClick={onBack} className="p-2 -ml-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors"><ArrowLeft className="w-6 h-6" /></button>
+        <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11"><span className="text-slate-400 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{eventName}</span><h1 className="text-lg font-black text-white">전체 스코어보드</h1></div>
+        <div className="flex items-center gap-1 mt-1.5 relative z-20"><button onClick={onOpenAwards} className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><Award className="w-5 h-5 text-amber-400" /></button>{isHost && (<button onClick={onGoToSettings} className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><Settings className="w-5 h-5 text-slate-300" /></button>)}</div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto pb-48 mt-4">
+        <div className="px-4 mb-4"><div className="flex justify-start overflow-x-auto gap-2 no-scrollbar">{teamData.map((_, idx) => (<button key={idx} onClick={() => setVTeamIdx(idx)} className={`px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap border transition-all ${vTeamIdx === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-400'}`}>{teamNames[idx] || `${idx + 1}조`} {myPlayerInfo?.tIdx === idx && '(MY)'}</button>))}</div></div>
+        <div className="bg-white rounded-3xl px-2 py-4 shadow-sm mb-4 flex justify-between mx-4">
+          {myTeam.map((p, i) => { const s = getStats(i); return (<div key={i} className="flex flex-col items-center flex-1 min-w-0 border-r last:border-0 border-slate-100"><div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 mb-1.5 shadow-inner"><UserIcon className="w-5 h-5" /></div><span className="font-bold text-slate-700 text-[11px] text-center truncate w-full px-1 mb-0.5">{p.name}</span><GroupBadges tIdx={vTeamIdx} pIdx={i} customGroups={customGroups} /><span className={`font-black text-sm mt-1 ${s.diff > 0 ? 'text-[#0D8A5E]' : s.diff < 0 ? 'text-red-500' : 'text-slate-400'}`}>{safeDisplayDiff(s.diff)}</span></div>); })}
+        </div>
+        <div className="px-4 mb-3 flex bg-white rounded-xl p-1 shadow-sm mx-4"><button onClick={() => setActiveTab('front')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'front' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400'}`}>전반 ({courseInfo.front})</button><button onClick={() => setActiveTab('back')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'back' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400'}`}>후반 ({courseInfo.back})</button></div>
+        <div className="px-4 pb-4">
+          <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
+            {Array.from({length: 9}).map((_, idx) => {
+              const hIdx = activeTab === 'front' ? idx : idx + 9, par = allPars[hIdx], scores = allScores[hIdx]?.[vTeamIdx] || Array(myTeam.length).fill(null);
+              return (<div key={hIdx} onClick={() => onGoToInput(hIdx, vTeamIdx)} className="flex border-b last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"><div className="w-12 bg-slate-50 py-3 flex flex-col items-center justify-center border-r shrink-0"><span className="text-xs font-black text-slate-800">{hIdx + 1}H</span><span className="text-[9px] font-bold text-slate-400">P{par}</span></div><div className="flex-1 flex">{scores.map((sVal, i) => (<div key={i} className="flex-1 flex flex-col items-center justify-center py-2 border-r last:border-0">{sVal == null ? <span className="text-[10px] text-slate-300">대기</span> : <><span className={`font-black text-sm ${sVal - par > 0 ? 'text-[#0D8A5E]' : sVal - par < 0 ? 'text-red-500' : 'text-slate-800'}`}>{safeDisplayDiff(sVal - par)}</span></>}</div>))}</div></div>);
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 sm:max-w-md sm:mx-auto bg-white p-4 shadow-up rounded-t-3xl border-t z-50">
+        <div className="flex justify-between items-center mb-4 px-1"><h2 className="font-bold text-sm flex items-center gap-1.5"><Star className="w-4 h-4 text-[#0D8A5E]" /> 실시간 합산 & NET 스코어</h2></div>
+        <div className="flex gap-2">
+          {myTeam.map((_, i) => { const s = getStats(i); return (<div key={i} className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl py-2 flex flex-col items-center shadow-sm relative overflow-hidden"><span className="text-[10px] font-bold text-slate-600 truncate w-full text-center px-1 mb-0.5">{myTeam[i].name}</span><span className="text-xl font-black text-slate-800 mb-1 leading-none">{s.score}</span><div className="w-full bg-[#0D8A5E]/10 py-1 text-center mt-1 border-t border-[#0D8A5E]/20"><span className="text-[10px] font-bold text-[#0D8A5E]">NET {safeDisplayNet(s.net)}</span></div></div>); })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AwardsView({ teamNames, teamData, allScores, allPars, stablefordTitle, stablefordConfig, specialHoles, selectedAwards, specialRecords, eventName, isAwardsManuallyOpened, setIsAwardsManuallyOpened, awardRevealMode, teamBalanceMode, customGroups, groupBalanceMode, enableTeamComp, enableGroupComp, handicapType, currentUserRole, onBack }) {
+  const [detailModal, setDetailModal] = useState(null);
+  const [overallTab, setOverallTab] = useState('realtime'); 
+  const [isAwardInfoOpen, setIsAwardInfoOpen] = useState(false);
+
+  const getAwardStats = (basis = 'realtime') => {
+    let limitHole = 18;
+    if (basis === 'min_hole_sync') {
+      const holesPlayedPerTeam = teamData.map((team, tIdx) => Math.max(...team.map((_, pIdx) => allScores.filter(hole => hole[tIdx] && hole[tIdx][pIdx] != null).length)));
+      limitHole = Math.min(...holesPlayedPerTeam);
+      if (limitHole === 0) limitHole = 18;
+    }
+
+    let allStats = [];
+    teamData.forEach((team, tIdx) => {
+      team.forEach((player, pIdx) => {
+        let score = 0, actualDiff = 0, birds = 0, pars = 0, bogeys = 0, sfScore = 0, holes = 0, vari = 0, prevD = null;
+        let daPa = 0, daBogey = 0, realPars = 0, realBogeys = 0, realDoublePars = 0;
+        let details = { birdies: [], daPa: [], daBogey: [], realPars: [], realBogeys: [], realDoublePars: [] };
+        
+        allScores.slice(0, limitHole).forEach((holeScores, hIdx) => {
+          if (holeScores[tIdx] && holeScores[tIdx][pIdx] != null) {
+            holes++;
+            const s = holeScores[tIdx][pIdx], par = allPars[hIdx], d = s - par;
+            const hName = `${hIdx+1}H`;
+            score += s; actualDiff += d;
+            
+            if (d <= -1) { birds++; details.birdies.push(`${hName}(${s}타)`); }
+            else if (d === 0) pars++; 
+            else if (d >= 1) bogeys++;
+            
+            if (d === 0) { realPars++; details.realPars.push(hName); daPa += 1; details.daPa.push(`${hName}(파:1점)`); }
+            if (d === 1) { realBogeys++; details.realBogeys.push(hName); daBogey += 1; details.daBogey.push(`${hName}(보기:1점)`); }
+            if (d === 2) { daBogey += 2; details.daBogey.push(`${hName}(더블:2점)`); }
+            if (d === 3) { daBogey += 3; details.daBogey.push(`${hName}(트리플:3점)`); }
+            if (d >= 4) { daBogey += 4; details.daBogey.push(`${hName}(쿼드이상:4점)`); }
+            if (d > 0 && d >= par) { realDoublePars++; details.realDoublePars.push(`${hName}(+${d})`); daPa += 2; details.daPa.push(`${hName}(양파:2점)`); }
+
+            if (prevD !== null) vari += Math.abs(d - prevD);
+            prevD = d;
+            
+            const sfConf = (id) => stablefordConfig.find(c => c.id === id)?.score || 0;
+            if (d <= -3) sfScore += sfConf('albatross');
+            else if (d === -2) sfScore += sfConf('eagle');
+            else if (d === -1) sfScore += sfConf('birdie');
+            else if (d === 0) sfScore += sfConf('par');
+            else if (d === 1) sfScore += sfConf('bogey');
+            else if (d >= 2) sfScore += sfConf('doubleBogey');
+          }
+        });
+        
+        const handi = parseInt(String(player.handicap).replace(/[^0-9-]/g, '')) || 0;
+        const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi;
+        const expectedOver = handicapOverPar * (holes / 18);
+        const netDiff = holes > 0 ? (actualDiff - expectedOver) : 0;
+        
+        let predictedDiff = actualDiff;
+        if (basis === 'prediction') {
+          const holeDiffs = allPars.map((p, hI) => {
+            const holeScores = allScores[hI]?.flat().filter(sc => sc !== null) || [];
+            return holeScores.length === 0 ? 0 : (holeScores.reduce((a, b) => a + b, 0) / holeScores.length) - p;
+          });
+          const handiTrend = handicapOverPar / 18;
+          const currentTrend = holes > 0 ? actualDiff / holes : handiTrend;
+          for (let i = 0; i < 18; i++) {
+            if (allScores[i] && allScores[i][tIdx] && allScores[i][tIdx][pIdx] == null) {
+              predictedDiff += (currentTrend * 0.5) + (holeDiffs[i] * 0.3) + (handiTrend * 0.2);
+            }
+          }
+        }
+        
+        allStats.push({ 
+          ...player, tIdx, pIdx, score, 
+          diff: basis === 'prediction' ? predictedDiff : actualDiff, 
+          actualDiff, netDiff, birdies: birds, pars, bogeys, 
+          daPaScore: daPa, daBogeyScore: daBogey, realPars, realBogeys, realDoublePars, details,
+          ilchiScore: netDiff, nakchaScore: netDiff, // 일취월장은 낮을수록(-), 낙차는 높을수록(+)
+          stablefordScore: sfScore, mockNewPeoriaNet: holes > 0 ? (score - (actualDiff * 0.8)) : 0, playedHoles: holes, variance: vari 
+        });
+      });
+    });
+    return allStats;
+  };
+
+  const getPredictionStats = () => {
+    const holeDiffs = allPars.map((p, hI) => {
+      const holeScores = allScores[hI]?.flat().filter(s => s !== null) || [];
+      return holeScores.length === 0 ? 0 : (holeScores.reduce((a, b) => a + b, 0) / holeScores.length) - p;
+    });
+
+    return teamData.flatMap((team, tIdx) => team.map((player, pIdx) => {
+      let actualDiff = 0, playedHoles = 0;
+      allScores.forEach((hs, hI) => { 
+        if (hs[tIdx]?.[pIdx] != null) { 
+          actualDiff += (hs[tIdx][pIdx] - allPars[hI]); 
+          playedHoles++; 
+        } 
+      });
+      const handi = parseInt(String(player.handicap).replace(/[^0-9-]/g, '')) || 0;
+      const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi;
+      const handiTrend = handicapOverPar / 18;
+      const currentTrend = playedHoles > 0 ? actualDiff / playedHoles : handiTrend;
+      
+      let predictedDiff = actualDiff;
+      for (let i = 0; i < 18; i++) {
+        if (allScores[i] && allScores[i][tIdx] && allScores[i][tIdx][pIdx] == null) {
+          predictedDiff += (currentTrend * 0.5) + (holeDiffs[i] * 0.3) + (handiTrend * 0.2);
+        }
+      }
+      return { ...player, tIdx, pIdx, diff: predictedDiff, playedHoles, actualDiff };
+    }));
+  };
+
+  const realtimeList = getAwardStats('realtime');
+  const syncList = getAwardStats('min_hole_sync');
+  const predictionList = getPredictionStats();
+
+  const allStats = realtimeList;
+  const totalPar = allPars.reduce((a,b)=>a+b, 0) || 72;
+  const currentOverallList = [...(overallTab === 'prediction' ? predictionList : overallTab === 'sync' ? syncList : realtimeList)].sort((a, b) => a.diff - b.diff);
+
+  const sortedByNewPeoria = [...realtimeList].sort((a, b) => a.mockNewPeoriaNet - b.mockNewPeoriaNet);
+  const sortedByStableford = [...realtimeList].sort((a, b) => b.stablefordScore - a.stablefordScore);
+  const sortedByBirdies = [...realtimeList].sort((a,b) => b.birdies - a.birdies);
+  const sortedByDaPa = [...realtimeList].sort((a,b) => b.daPaScore - a.daPaScore);
+  const sortedByDaBogey = [...realtimeList].sort((a,b) => b.daBogeyScore - a.daBogeyScore);
+  const sortedByRealPars = [...realtimeList].sort((a,b) => b.realPars - a.realPars);
+  const sortedByRealBogeys = [...realtimeList].sort((a,b) => b.realBogeys - a.realBogeys);
+  const sortedByRealDoublePars = [...realtimeList].sort((a,b) => b.realDoublePars - a.realDoublePars);
+  const sortedByRollercoaster = [...realtimeList].filter(s => s.playedHoles > 1).sort((a,b) => b.variance - a.variance);
+  const sortedBySimmons = [...realtimeList].filter(s => s.playedHoles > 1).sort((a,b) => a.variance - b.variance);
+  const sortedByIlchi = [...realtimeList].sort((a,b) => a.ilchiScore - b.ilchiScore);
+  const sortedByNakcha = [...realtimeList].sort((a,b) => b.nakchaScore - a.nakchaScore);
+
+  const teamStats = teamData.map((team, tIdx) => {
+    const members = realtimeList.filter(s => s.tIdx === tIdx);
+    const isNet = teamBalanceMode === 'net';
+    const tgt = isNet ? 'netDiff' : 'diff';
+    const vals = members.map(m => m[tgt]).sort((a, b) => a - b); 
+    let teamDiff = 0;
+    if (members.length > 0) {
+      if (teamBalanceMode === 'exclude_best' && vals.length > 1) teamDiff = vals.slice(1).reduce((a, b) => a + b, 0); 
+      else if (teamBalanceMode === 'exclude_worst' && vals.length > 1) teamDiff = vals.slice(0, -1).reduce((a, b) => a + b, 0); 
+      else if (teamBalanceMode === 'exclude_random' && vals.length > 1) teamDiff = vals.filter((_, i) => i !== (tIdx % vals.length)).reduce((a, b) => a + b, 0);
+      else if (teamBalanceMode === 'average' || isNet) teamDiff = vals.reduce((a, b) => a + b, 0) / vals.length;
+      else teamDiff = vals.reduce((a, b) => a + b, 0); 
+    }
+    return { tIdx, teamName: teamNames[tIdx] || `${tIdx + 1}조`, teamDiff, hardCarry: members.reduce((best, p) => p.diff < best.diff ? p : best, members[0] || {}), bomb: members.reduce((worst, p) => p.diff > worst.diff ? p : worst, members[0] || {}) };
+  });
+  const sortedTeams = [...teamStats].sort((a, b) => a.teamDiff - b.teamDiff);
+
+  const groupStats = customGroups.map(g => {
+    const members = realtimeList.filter(s => g.members.includes(`${s.tIdx}-${s.pIdx}`));
+    const isNet = groupBalanceMode === 'net';
+    const tgt = isNet ? 'netDiff' : 'diff';
+    const vals = members.map(m => m[tgt]).sort((a, b) => a - b);
+    let groupDiff = 0;
+    if (members.length > 0) {
+      if (groupBalanceMode === 'exclude_best' && vals.length > 1) groupDiff = vals.slice(1).reduce((a, b) => a + b, 0);
+      else if (groupBalanceMode === 'exclude_worst' && vals.length > 1) groupDiff = vals.slice(0, -1).reduce((a, b) => a + b, 0);
+      else if (groupBalanceMode === 'exclude_random' && vals.length > 1) groupDiff = vals.filter((_, i) => i !== (g.id.length % vals.length)).reduce((a, b) => a + b, 0);
+      else if (groupBalanceMode === 'average' || isNet) groupDiff = vals.reduce((a, b) => a + b, 0) / vals.length;
+      else groupDiff = vals.reduce((a, b) => a + b, 0);
+    }
+    return { ...g, name: g.name, groupDiff, members, hardCarry: members.reduce((best, p) => p.diff < best.diff ? p : best, members[0] || {}), bomb: members.reduce((worst, p) => p.diff > worst.diff ? p : worst, members[0] || {}) };
+  });
+  const sortedGroups = [...groupStats].sort((a, b) => a.groupDiff - b.groupDiff);
+
+  const specialRankings = { nearest: [], longest: [] };
+  specialRecords.forEach((holeRec, hI) => {
+    if (!holeRec) return;
+    Object.entries(holeRec).forEach(([tIStr, rec]) => {
+      const tI = parseInt(tIStr);
+      const par = allPars[hI];
+      ['nearest', 'longest'].forEach(type => {
+        if (rec[type]?.pIdx != null && rec[type].distance) {
+          const pI = rec[type].pIdx;
+          const dist = parseFloat(rec[type].distance);
+          const score = allScores[hI]?.[tI]?.[pI];
+          if (score != null) {
+            const isInvalid = specialHoles.requirePar && (score - par > 0);
+            specialRankings[type].push({ name: teamData[tI][pI].name, tIdx: tI, pIdx: pI, distance: dist, hIdx: hI, isInvalid });
+          }
+        }
+      });
+    });
+  });
+  specialRankings.nearest.sort((a, b) => {
+    if (a.isInvalid !== b.isInvalid) return a.isInvalid ? 1 : -1;
+    return a.distance - b.distance;
+  });
+  specialRankings.longest.sort((a, b) => {
+    if (a.isInvalid !== b.isInvalid) return a.isInvalid ? 1 : -1;
+    return b.distance - a.distance;
+  });
+
+  const isGameFinished = allScores.length > 0 && allScores.every(hole => hole.every(team => team.every(score => score !== null)));
+  const isHost = currentUserRole === 'host';
+  const isAwardOpen = isHost || isAwardsManuallyOpened;
+
+  const renderCompactAward = (title, IconComp, list, valueKey, formatFn, detailKey, customBg = "bg-[#E6F4EF]", customText = "text-[#0D8A5E]") => {
+    if (!selectedAwards.includes(title)) return null;
+    const topPlayer = list[0];
+    
+    return (
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between animate-fade-in-up">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <IconComp className={`w-8 h-8 p-1.5 rounded-full ${customBg} ${customText} shrink-0`} />
+          <span className="font-bold text-slate-700 text-sm whitespace-nowrap mr-2">{title}</span>
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-[15px] font-bold text-slate-800 truncate">{topPlayer?.name || '-'}</span>
+              {topPlayer?.name && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{teamNames[topPlayer.tIdx] || `${topPlayer.tIdx + 1}조`}</span>}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 shrink-0">
+          <span className={`font-black text-xl text-right min-w-[2rem] ${customText}`}>{topPlayer?.name ? formatFn(topPlayer[valueKey]) : '0'}</span>
+          <button onClick={() => setDetailModal({ title: `${title} 전체 순위`, list, valueKey, formatFn, detailKey, customGroups: enableGroupComp ? customGroups : null, teamNames })} className="text-[#0D8A5E] bg-slate-50 p-1.5 rounded-lg ml-1"><ChevronRight className="w-4 h-4" /></button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderRankingItem = (st, i, formatFn, showHoles = true) => (
+    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="w-8 flex justify-center items-center shrink-0"><RankBadge rank={i} /></div>
+        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+          <span className="font-bold text-slate-700 text-[15px] truncate">{st.name}</span>
+          <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{teamNames[st.tIdx] || `${st.tIdx + 1}조`}</span>
+          {enableGroupComp && <GroupBadges tIdx={st.tIdx} pIdx={st.pIdx} customGroups={customGroups} />}
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-3 shrink-0">
+        <span className={`font-black text-xl text-right min-w-[3rem] ${formatFn(st.diff).toString().includes('+') ? 'text-[#0D8A5E]' : formatFn(st.diff).toString().includes('-') ? 'text-red-500' : 'text-slate-600'}`}>{formatFn(st.diff)}</span>
+        {showHoles && <span className="font-black text-slate-300 text-xl text-right min-w-[2.5rem]">{st.playedHoles}H</span>}
+      </div>
+    </div>
+  );
+
+  const handleResetGame = () => {
+    setIsRoundStarted(false);
+    setJoinedStatus([]);
+    setMyPlayerInfo({ tIdx: 0, pIdx: 0 });
+    setCurrentHole(1);
+    setAllScores([]);
+    setAllPars([]);
+    setIsAwardsManuallyOpened(false);
+    setSpecialRecords(Array(18).fill(null).map(() => ({})));
+    setLastEditors({});
+    setCurrentView('settings');
+  };
+
+  const handleEndGame = () => {
+    setIsAwardsManuallyOpened(true);
+    setPreviousView('settings'); 
+    setCurrentView('awards');
+  };
+
+  return (
+    <div className="flex flex-col min-h-screen bg-[#F8F9FA] relative">
+      <div className="bg-[#1E293B] pt-12 pb-6 px-4 shrink-0 flex items-start justify-between relative z-20">
+        <button onClick={onBack} className="p-2 -ml-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors"><ArrowLeft className="w-6 h-6" /></button>
+        <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11">
+          <span className="text-slate-400 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{eventName}</span>
+          <div className="flex items-center gap-2"><h1 className="text-lg font-black text-white">실시간 시상 현황</h1><button onClick={() => setIsAwardInfoOpen(true)} className="ml-1 p-0.5 text-slate-300 hover:text-white transition-colors"><Info className="w-4 h-4"/></button></div>
+        </div>
+        <div className="w-8"></div>
+      </div>
+      
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 mt-2">
+        {isGameFinished && isHost && !isAwardsManuallyOpened && (
+          <div className="mb-4 bg-emerald-50 border border-emerald-200 p-4 rounded-2xl shadow-sm text-center animate-fade-in-up">
+            <h3 className="font-bold text-emerald-800 mb-3 flex items-center justify-center gap-2"><Award className="w-5 h-5"/> 모든 스코어 입력 완료!</h3>
+            <button onClick={() => setIsAwardsManuallyOpened(true)} className="bg-[#0D8A5E] text-white px-6 py-3.5 rounded-xl font-bold shadow-md w-full flex items-center justify-center gap-2 transition-all hover:bg-[#0A704C]">
+              🏆 니어/롱기 & 신페리오 결과 오픈하기
+            </button>
+          </div>
+        )}
+        
+        {/* 1. 개인 전체 순위 (탭 포함) */}
+        {selectedAwards.includes('전체 순위') && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up">
+            <div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2">
+              <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Award className="w-4 h-4 text-[#0D8A5E]" /> 전체 순위 (스트로크)</h4>
+              <button onClick={() => setDetailModal({ 
+                title: '전체 순위 (스트로크)', 
+                isOverall: true, 
+                lists: { realtime: realtimeList, sync: syncList, prediction: predictionList }, 
+                formatFn: (v, tab) => tab === 'prediction' ? Math.round(totalPar + v) : safeDisplayDiff(v),
+                customGroups: enableGroupComp ? customGroups : null,
+                teamNames
+              })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg">자세히 보기 &gt;</button>
+            </div>
+            <div className="flex bg-slate-100 p-1 rounded-xl mb-4 shrink-0">
+              <button onClick={() => setOverallTab('realtime')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-colors ${overallTab === 'realtime' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>실시간</button>
+              <button onClick={() => setOverallTab('sync')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-colors ${overallTab === 'sync' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>가장 느린조</button>
+              <button onClick={() => setOverallTab('prediction')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-colors ${overallTab === 'prediction' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>예상 기준</button>
+            </div>
+            <div className="space-y-2">
+              {currentOverallList.slice(0, 3).map((st, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className="w-8 flex justify-center items-center shrink-0"><RankBadge rank={i} /></div>
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                      <span className="font-bold text-slate-700 text-[15px] truncate">{st.name}</span>
+                      <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{teamNames[st.tIdx] || `${st.tIdx + 1}조`}</span>
+                      {enableGroupComp && <GroupBadges tIdx={st.tIdx} pIdx={st.pIdx} customGroups={customGroups} />}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-3 shrink-0">
+                    <span className={`font-black text-xl text-right min-w-[3rem] ${overallTab === 'prediction' ? 'text-slate-800' : (st.diff > 0 ? 'text-[#0D8A5E]' : st.diff < 0 ? 'text-red-500' : 'text-slate-600')}`}>
+                      {overallTab === 'prediction' ? Math.round(totalPar + st.diff) : safeDisplayDiff(st.diff)}
+                    </span>
+                    <span className="font-black text-slate-300 text-xl text-right min-w-[2.5rem]">{st.playedHoles}H</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 2. 신페리오 순위 */}
+        {selectedAwards.includes('신페리오') && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up">
+            <div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2">
+              <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Award className="w-4 h-4 text-[#0D8A5E]" /> 신페리오 (NET)</h4>
+              <button onClick={() => { if(!isAwardOpen) return alert("시상 공개 조건이 아직 충족되지 않았습니다."); setDetailModal({ title: '신페리오 전체 순위', list: sortedByNewPeoria, valueKey: 'mockNewPeoriaNet', formatFn: (v) => v > 0 ? v.toFixed(1) : '-', customGroups: enableGroupComp ? customGroups : null, teamNames }); }} className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg ${isAwardOpen ? 'text-[#0D8A5E] bg-[#E6F4EF]' : 'text-slate-400 bg-slate-100'}`}>자세히 보기 &gt;</button>
+            </div>
+            <div className="space-y-2">
+              {sortedByNewPeoria.slice(0, 3).map((st, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <RankBadge rank={i} />
+                    <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+                      {isAwardOpen ? (
+                        <><span className="font-bold text-slate-700 text-[15px] truncate">{st.name}</span><span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{teamNames[st.tIdx] || `${st.tIdx + 1}조`}</span>
+                        {enableGroupComp && <GroupBadges tIdx={st.tIdx} pIdx={st.pIdx} customGroups={customGroups} />}
+                        </>
+                      ) : (<span className="font-bold text-slate-400 text-sm flex items-center gap-1"><Lock className="w-3 h-3"/> 비공개</span>)}
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-3 shrink-0">
+                    <span className={`font-black text-xl text-right min-w-[3rem] text-[#0D8A5E]`}>{isAwardOpen ? (st.mockNewPeoriaNet > 0 ? st.mockNewPeoriaNet.toFixed(1) : '-') : '🔒'}</span>
+                    <span className={`font-black text-xl text-right min-w-[2.5rem] ${isAwardOpen ? 'text-slate-300' : 'text-transparent'}`}>{isAwardOpen ? `${st.playedHoles}H` : '-H'}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 3. 변형스테이블포드 순위 */}
+        {renderCompactAward(stablefordTitle, Award, sortedByStableford, 'stablefordScore', (v) => v, null)}
+
+        {/* 4. 기록상 (다버디, 다파 등) */}
+        <div className="grid grid-cols-1 gap-3 animate-fade-in-up">
+          {renderCompactAward('일취월장', TrendingUp, sortedByIlchi, 'ilchiScore', (v) => v > 0 ? `+${Number(v).toFixed(1)}` : Number(v).toFixed(1), null)}
+          {renderCompactAward('낙차큰커브', TrendingDown, sortedByNakcha, 'nakchaScore', (v) => v > 0 ? `+${Number(v).toFixed(1)}` : Number(v).toFixed(1), null, 'bg-red-50', 'text-red-500')}
+          {renderCompactAward('다버디', Star, sortedByBirdies, 'birdies', (v) => v, 'birdies', 'bg-red-50', 'text-red-500')}
+          {renderCompactAward('다파', Target, sortedByDaPa, 'daPaScore', (v) => v, 'daPa')}
+          {renderCompactAward('다보기', AlertCircle, sortedByDaBogey, 'daBogeyScore', (v) => v, 'daBogey', 'bg-slate-100', 'text-slate-500')}
+          {renderCompactAward('다찐파', Target, sortedByRealPars, 'realPars', (v) => v, 'realPars')}
+          {renderCompactAward('다찐보기', AlertCircle, sortedByRealBogeys, 'realBogeys', (v) => v, 'realBogeys', 'bg-slate-100', 'text-slate-500')}
+          {renderCompactAward('다찐양파', AlertCircle, sortedByRealDoublePars, 'realDoublePars', (v) => v, 'realDoublePars', 'bg-slate-100', 'text-slate-500')}
+          {renderCompactAward('널뛰기', TrendingUp, sortedByRollercoaster, 'variance', (v) => v, null, 'bg-orange-50', 'text-orange-500')}
+          {renderCompactAward('시몬스', Minus, sortedBySimmons, 'variance', (v) => v, null, 'bg-teal-50', 'text-teal-500')}
+        </div>
+
+        {/* 5. 롱기스트 / 니어리스트 */}
+        {(selectedAwards.includes('롱기스트') || selectedAwards.includes('니어리스트')) && (() => {
+          const topNearest = specialRankings.nearest.length > 0 ? specialRankings.nearest[0] : null;
+          const topLongest = specialRankings.longest.length > 0 ? specialRankings.longest[0] : null;
+
+          return (
+            <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
+              {selectedAwards.includes('롱기스트') && (
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2">
+                  <Flag className={`w-8 h-8 p-1.5 rounded-full ${topLongest?.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-500'}`} />
+                  <span className="font-bold text-slate-700 text-sm">롱기스트</span>
+                  {isAwardOpen ? (
+                    topLongest ? (
+                      <div className="text-center mt-1">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className={`font-black text-[15px] ${topLongest.isInvalid ? 'text-slate-400 line-through opacity-70' : 'text-blue-700'}`}>{topLongest.name}</span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${topLongest.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-blue-100/50 text-blue-600'}`}>{teamNames[topLongest.tIdx] || `${topLongest.tIdx + 1}조`}</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          <span className={`text-[11px] font-bold ${topLongest.isInvalid ? 'text-slate-400' : 'text-slate-500'}`}>{topLongest.distance}m 기록</span>
+                          {topLongest.isInvalid && <span className="text-[9px] bg-red-50 text-red-500 px-1 py-0.5 rounded font-bold border border-red-100">파 오버</span>}
+                        </div>
+                        <button onClick={() => setDetailModal({ title: '롱기스트 전체 랭킹', list: specialRankings.longest, valueKey: 'distance', formatFn: (v) => `${v}m`, detailKey: 'hIdx', customGroups: enableGroupComp ? customGroups : null, teamNames })} className="mt-2 text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded font-bold w-full">모든 순위 보기</button>
+                      </div>
+                    ) : (<span className="text-[10px] text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md font-bold mt-1">기록 없음</span>)
+                  ) : (<span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md mt-1 flex items-center gap-1"><Lock className="w-3 h-3"/> 비공개</span>)}
+                </div>
+              )}
+              {selectedAwards.includes('니어리스트') && (
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2">
+                  <Target className={`w-8 h-8 p-1.5 rounded-full ${topNearest?.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-purple-50 text-purple-500'}`} />
+                  <span className="font-bold text-slate-700 text-sm">니어리스트</span>
+                  {isAwardOpen ? (
+                    topNearest ? (
+                      <div className="text-center mt-1">
+                        <div className="flex items-center justify-center gap-1.5">
+                          <span className={`font-black text-[15px] ${topNearest.isInvalid ? 'text-slate-400 line-through opacity-70' : 'text-purple-700'}`}>{topNearest.name}</span>
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${topNearest.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-purple-100/50 text-purple-600'}`}>{teamNames[topNearest.tIdx] || `${topNearest.tIdx + 1}조`}</span>
+                        </div>
+                        <div className="flex items-center justify-center gap-1 mt-1">
+                          <span className={`text-[11px] font-bold ${topNearest.isInvalid ? 'text-slate-400' : 'text-slate-500'}`}>{topNearest.distance}m 기록</span>
+                          {topNearest.isInvalid && <span className="text-[9px] bg-red-50 text-red-500 px-1 py-0.5 rounded font-bold border border-red-100">파 오버</span>}
+                        </div>
+                        <button onClick={() => setDetailModal({ title: '니어리스트 전체 랭킹', list: specialRankings.nearest, valueKey: 'distance', formatFn: (v) => `${v}m`, detailKey: 'hIdx', customGroups: enableGroupComp ? customGroups : null, teamNames })} className="mt-2 text-[10px] text-purple-600 bg-purple-50 px-2 py-1 rounded font-bold w-full">모든 순위 보기</button>
+                      </div>
+                    ) : (<span className="text-[10px] text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md font-bold mt-1">기록 없음</span>)
+                  ) : (<span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md mt-1 flex items-center gap-1"><Lock className="w-3 h-3"/> 비공개</span>)}
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
+        {/* 6. 조별 대항전 결과 (전체 리스트) */}
+        {enableTeamComp && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-8">
+            <div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2">
+              <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-[#0D8A5E]" /> 조별 순위 <span className="text-[10px] font-normal text-slate-400">({teamBalanceMode === 'net' ? '핸디기준' : teamBalanceMode === 'average' ? '평균' : '합산'})</span>
+              </h4>
+            </div>
+            <div className="space-y-2">
+              {sortedTeams.map((st, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                  <div className="flex items-center gap-3 flex-1 min-w-0"><RankBadge rank={i} /><span className="font-bold text-slate-700 text-[15px] truncate">{st.teamName}</span></div>
+                  <div className="flex items-center justify-end gap-3 shrink-0"><span className={`font-black text-xl text-right min-w-[3rem] ${st.teamDiff > 0 ? 'text-[#0D8A5E]' : st.teamDiff < 0 ? 'text-red-500' : 'text-slate-600'}`}>{['average', 'net'].includes(teamBalanceMode) ? safeDisplayNet(st.teamDiff) : safeDisplayDiff(st.teamDiff)}</span><span className="font-black text-transparent text-xl text-right min-w-[2.5rem]">-H</span></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 7. 그룹 대항전 결과 (전체 리스트) */}
+        {enableGroupComp && customGroups.length > 0 && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2">
+            <div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2">
+              <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5">
+                <Users className="w-4 h-4 text-purple-600" /> 그룹별 순위 <span className="text-[10px] font-normal text-slate-400">({groupBalanceMode === 'net' ? '핸디기준' : groupBalanceMode === 'average' ? '평균' : '합산'})</span>
+              </h4>
+            </div>
+            <div className="space-y-2">
+              {sortedGroups.map((st, i) => {
+                const gStyle = GROUP_STYLES[customGroups.findIndex(cg => cg.id === st.id) % GROUP_STYLES.length];
+                return (
+                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <div className="flex items-center gap-3 flex-1 min-w-0"><RankBadge rank={i} /><span className={`font-bold text-[15px] px-2 py-0.5 rounded-md border truncate ${gStyle.badge}`}>{st.name}</span></div>
+                    <div className="flex items-center justify-end gap-3 shrink-0"><span className={`font-black text-xl text-right min-w-[3rem] ${st.groupDiff > 0 ? 'text-[#0D8A5E]' : st.groupDiff < 0 ? 'text-red-500' : 'text-slate-600'}`}>{['average', 'net'].includes(groupBalanceMode) ? safeDisplayNet(st.groupDiff) : safeDisplayDiff(st.groupDiff)}</span><span className="font-black text-transparent text-xl text-right min-w-[2.5rem]">-H</span></div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* 8. 팀 분석 (하드캐리 & 국밥) - 가장 하단으로 이동 */}
+        {(enableTeamComp || enableGroupComp) && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2">
+            <div className="flex justify-between items-center">
+              <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Coffee className="w-4 h-4 text-[#0D8A5E]" /> 팀 분석 (하드캐리 & 국밥)</h4>
+              <button onClick={() => setDetailModal({ title: '팀 분석 (하드캐리 & 국밥)', isSpecial: true, teamList: sortedTeams, groupList: sortedGroups, enableTeamComp, enableGroupComp })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg">자세히 보기 &gt;</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <DetailModal isOpen={!!detailModal} onClose={() => setDetailModal(null)} config={detailModal} />
+
+      {/* 안내 모달 */}
+      {isAwardInfoOpen && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsAwardInfoOpen(false)} />
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-slate-800 font-black text-lg flex items-center gap-2"><Info className="w-5 h-5 text-[#0D8A5E]"/> 시상 기준 안내</h3>
+              <button onClick={() => setIsAwardInfoOpen(false)} className="p-1.5 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-3 text-sm text-slate-600 max-h-[60vh] overflow-y-auto pr-1 pb-4">
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>전체 순위 (실시간):</b> 현재까지 각자 플레이한 홀을 기준으로 계산된 실제 스코어 순위입니다.</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>전체 순위 (가장 느린조):</b> 공정한 비교를 위해 진행이 가장 느린 조의 완료 홀 수에 맞춰 모든 선수의 기록을 동기화한 순위입니다.</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>전체 순위 (예상 기준):</b> 개인의 초기 핸디캡, 당일 타수 페이스, 골프장의 홀별 전체 난이도를 종합 분석하여 예측한 18홀 최종 타수입니다.</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>신페리오:</b> 임의의 숨겨진 홀 성적을 바탕으로 당일의 핸디캡을 산출해 적용하는 네트 스코어 순위입니다.</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>변형스테이블포드:</b> 파(0점)를 기준으로 알바트로스(8), 이글(5), 버디(2), 보기(-1), 더블보기 이하(-3) 등 스코어별 점수를 합산합니다.</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다파:</b> 파 1점, 양파 2점 합산</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다보기:</b> 보기 1점, 더블 2점, 트리플 3점, 쿼드러플 이상 4점 합산</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다찐파 / 다찐보기 / 다찐양파:</b> 해당 스코어(파/보기/양파) 순수 기록 횟수만 카운팅</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>일취월장:</b> 자신의 핸디캡 대비 가장 성적이 좋은(타수를 줄인) 사람</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>낙차큰커브:</b> 자신의 핸디캡 대비 성적이 가장 부진한(타수를 잃은) 사람</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>널뛰기:</b> 이전 홀 대비 스코어 변동폭(기복)이 가장 큰 사람</div>
+              <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>시몬스:</b> 스코어 변동폭이 가장 적어 흔들림 없는 플레이를 한 사람</div>
+            </div>
+            <button onClick={() => setIsAwardInfoOpen(false)} className="w-full bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md">확인</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SettingsView({ teamNames, setTeamNames, initialData, initialHandicapType, eventName, setEventName, courseInfo, setCourseInfo, selectedAwards, setSelectedAwards, stablefordTitle, setStablefordTitle, stablefordConfig, setStablefordConfig, specialHoles, setSpecialHoles, AVAILABLE_AWARDS, isRoundStarted, scoreInputPermission, setScoreInputPermission, awardRevealMode, setAwardRevealMode, teamBalanceMode, setTeamBalanceMode, customGroups, setCustomGroups, groupBalanceMode, setGroupBalanceMode, enableTeamComp, setEnableTeamComp, enableGroupComp, setEnableGroupComp, onComplete, onResetGame, onEndGame }) {
+  const [players, setPlayers] = useState(initialData);
+  const [handicapType, setHandicapType] = useState(initialHandicapType);
+  const [showSearchList, setShowSearchList] = useState(false);
+  const [filteredCourses, setFilteredCourses] = useState([]);
+  const [showStablefordModal, setShowStablefordModal] = useState(false);
+  const [showSpecialHoleModal, setShowSpecialHoleModal] = useState(false);
+  const [isCompSettingsOpen, setIsCompSettingsOpen] = useState(false);
+  const [isAwardSettingsOpen, setIsAwardSettingsOpen] = useState(false);
+  const [compTab, setCompTab] = useState('team'); 
+  const [tempStablefordTitle, setTempStablefordTitle] = useState(stablefordTitle);
+  const [tempStablefordConfig, setTempStablefordConfig] = useState(stablefordConfig);
+  const [tempSpecialHoles, setTempSpecialHoles] = useState(specialHoles);
+  const [tempAwardRevealMode, setTempAwardRevealMode] = useState(awardRevealMode);
+  const [tempCustomGroups, setTempCustomGroups] = useState(customGroups);
+  const [tempGroupBalanceMode, setTempGroupBalanceMode] = useState(groupBalanceMode);
+  
+  const [confirmModal, setConfirmModal] = useState(null); // 'reset' or 'end'
+
+  const currentCourseData = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0];
+  const courseOptions = Object.keys(currentCourseData?.courses || {});
+
+  const handleAddTeam = () => { 
+    if (players.length < 20) { 
+      const nt = players.length + 1; 
+      const usedNames = players.flat().map(p => p.name);
+      const availableNames = RANDOM_NAMES_POOL.filter(n => !usedNames.includes(n)).sort(() => 0.5 - Math.random());
+      
+      const newNames = [];
+      for(let i=0; i<4; i++) {
+        if(availableNames.length > 0) newNames.push(availableNames.pop());
+        else newNames.push(`선수 ${nt}-${i+1}`);
+      }
+      
+      setPlayers(prev => [...prev, [
+        { name: newNames[0], handicap: getRandomHandicap() }, 
+        { name: newNames[1], handicap: getRandomHandicap() }, 
+        { name: newNames[2], handicap: getRandomHandicap() }, 
+        { name: newNames[3], handicap: getRandomHandicap() }
+      ]]); 
+      setTeamNames(prev => [...prev, `${nt}조`]);
+    } 
+  };
+
+  const handleRemoveTeam = (index) => { 
+    setPlayers(prev => prev.filter((_, i) => i !== index)); 
+    setTeamNames(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  const handlePlayerChange = (tIdx, pIdx, field, val) => { const np = [...players]; np[tIdx] = [...np[tIdx]]; np[tIdx][pIdx] = { ...np[tIdx][pIdx], [field]: val }; setPlayers(np); };
+  const handleCourseInput = (v) => { setCourseInfo({...courseInfo, name: v}); if (v.length > 0) { setFilteredCourses(GOLF_COURSES_DATA.filter(c => c.name.includes(v))); setShowSearchList(true); } else setShowSearchList(false); };
+
+  return (
+    <div className="flex flex-col min-h-screen pb-40 overflow-x-hidden">
+      <div className="bg-[#0D8A5E] pt-14 pb-20 px-5 text-center relative rounded-b-[40px] shrink-0">
+        <div className="flex justify-center mb-3"><Award className="w-14 h-14 text-white stroke-[1.5]" /></div>
+        <div className="relative flex justify-center items-center mb-2 px-10">
+          <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} className="text-2xl font-black text-white bg-transparent text-center focus:outline-none w-full border-b border-white/20 pb-1" />
+        </div>
+      </div>
+      <div className="relative z-10 -mt-10 px-4 flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="bg-white rounded-2xl p-5 shadow-sm mb-4"><div className="flex items-center gap-2 mb-4"><MapPin className="w-5 h-5 text-slate-500" /><h2 className="text-slate-800 font-bold text-base">골프장 및 코스 설정</h2></div><div className="relative mb-3 flex gap-2"><input type="text" value={courseInfo.name} onChange={(e) => handleCourseInput(e.target.value)} onFocus={() => { setShowSearchList(true); if (courseInfo.name.length === 0) setFilteredCourses(GOLF_COURSES_DATA); }} placeholder="골프장 검색" className="flex-1 border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none" /><button onClick={() => { setFilteredCourses(GOLF_COURSES_DATA); setShowSearchList(!showSearchList); }} className="bg-[#0D8A5E] text-white px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-1.5 shadow-sm"><Search className="w-4 h-4" /> 목록</button>{showSearchList && (<div className="absolute top-full left-0 right-0 mt-2 bg-white border rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto">{filteredCourses.map((c, i) => (<button key={i} onClick={() => { setCourseInfo({ name: c.name, front: Object.keys(c.courses)[0], back: Object.keys(c.courses)[1] || Object.keys(c.courses)[0] }); setShowSearchList(false); }} className="w-full text-left px-5 py-3.5 text-sm font-semibold border-b hover:bg-[#F0FDF4]">{c.name}</button>))}</div>)}</div><div className="flex gap-3"><div className="flex-1 relative"><select value={courseInfo.front} onChange={(e) => setCourseInfo({...courseInfo, front: e.target.value})} className="w-full border rounded-xl px-3 py-2.5 text-sm font-bold appearance-none">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select><ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" /></div><div className="flex-1 relative"><select value={courseInfo.back} onChange={(e) => setCourseInfo({...courseInfo, back: e.target.value})} className="w-full border rounded-xl px-3 py-2.5 text-sm font-bold appearance-none">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select><ChevronDown className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" /></div></div></div>
+        <div className="bg-white rounded-2xl p-5 shadow-sm mb-4 transition-all">
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsCompSettingsOpen(!isCompSettingsOpen)}><div className="flex items-center gap-2"><Users className="w-5 h-5 text-slate-500" /><h2 className="text-slate-800 font-bold text-base">대항전 설정</h2></div><div className="flex items-center gap-3"><div className="flex gap-3" onClick={e => e.stopPropagation()}><label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={enableTeamComp} onChange={(e) => { const checked = e.target.checked; setEnableTeamComp(checked); if(checked) { setIsCompSettingsOpen(true); setCompTab('team'); } else if(compTab === 'team') setCompTab('group'); }} className="w-4 h-4 text-[#0D8A5E] rounded" /><span className="text-sm font-bold text-slate-700">조별</span></label><label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={enableGroupComp} onChange={(e) => { const checked = e.target.checked; setEnableGroupComp(checked); if(checked) { setIsCompSettingsOpen(true); setCompTab('group'); } else if(compTab === 'group') setCompTab('team'); }} className="w-4 h-4 text-[#0D8A5E] rounded" /><span className="text-sm font-bold text-slate-700">그룹별</span></label></div><ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isCompSettingsOpen ? 'rotate-180' : ''}`} /></div></div>
+          {isCompSettingsOpen && (<div className="pt-3 border-t animate-fade-in-up mt-3"><div className="flex bg-slate-100 p-1 rounded-xl mb-4"><button onClick={() => setCompTab('team')} className={`flex-1 py-2 text-sm font-bold rounded-lg ${compTab === 'team' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>조별</button><button onClick={() => setCompTab('group')} className={`flex-1 py-2 text-sm font-bold rounded-lg ${compTab === 'group' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500'}`}>그룹</button></div>{compTab === 'team' ? (<div className="space-y-4 animate-fade-in-up"><div className="flex items-center justify-between pt-1"><span className="text-slate-600 font-medium text-sm">입력 권한</span><div className="flex bg-slate-100 p-1 rounded-lg"><button onClick={() => setScoreInputPermission('all')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold ${scoreInputPermission === 'all' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>전체</button><button onClick={() => setScoreInputPermission('leader')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold ${scoreInputPermission === 'leader' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>조장만</button></div></div><div className="flex flex-col gap-2 pt-4 border-t"><span className="text-slate-600 font-medium text-sm">조별 순위 방식</span><div className="flex flex-wrap gap-1.5">{[{v:'average',l:'평균'},{v:'net',l:'핸디기준'},{v:'exclude_best',l:'최저타제외'},{v:'exclude_worst',l:'최고타제외'},{v:'exclude_random',l:'랜덤제외'}].map(o=>(<button key={o.v} onClick={()=>setTeamBalanceMode(o.v)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border ${teamBalanceMode===o.v?'bg-slate-800 text-white shadow-sm':'bg-white text-slate-500 hover:bg-slate-50'}`}>{o.l}</button>))}</div></div></div>) : (<div className="space-y-4 animate-fade-in-up"><div className="flex flex-col gap-2"><span className="text-slate-600 font-medium text-sm">그룹별 순위 방식</span><div className="flex flex-wrap gap-1.5">{[{v:'average',l:'평균'},{v:'net',l:'핸디기준'},{v:'exclude_best',l:'최저타제외'},{v:'exclude_worst',l:'최고타제외'},{v:'exclude_random',l:'랜덤제외'}].map(o=>(<button key={o.v} onClick={()=>setTempGroupBalanceMode(o.v)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border ${tempGroupBalanceMode===o.v?'bg-purple-600 text-white shadow-sm':'bg-white text-slate-500 hover:bg-purple-50'}`}>{o.l}</button>))}</div></div><div className="pt-4 border-t">{tempCustomGroups.map((g, idx) => {const style = GROUP_STYLES[idx % GROUP_STYLES.length];return (<div key={g.id} className={`mb-4 p-4 rounded-xl border ${style.card}`}><div className="flex items-center justify-between mb-3"><input type="text" value={g.name} onChange={(e)=>setTempCustomGroups(tempCustomGroups.map(tg=>tg.id===g.id?{...tg,name:e.target.value}:tg))} className={`font-bold bg-transparent border-b w-1/2 ${style.input}`}/><button onClick={()=>setTempCustomGroups(tempCustomGroups.filter(tg=>tg.id!==g.id))} className="text-xs text-red-500 font-bold bg-white px-2 py-1 rounded">삭제</button></div><div className="flex flex-wrap gap-1.5">{players.map((t,tI)=>t.map((p,pI)=>(<button key={`${tI}-${pI}`} onClick={()=>setTempCustomGroups(tempCustomGroups.map(tg=>tg.id===g.id?{...tg,members:tg.members.includes(`${tI}-${pI}`)?tg.members.filter(k=>k!==`${tI}-${pI}`):[...tg.members,`${tI}-${pI}`]}:tg))} className={`px-2 py-1 text-[10px] font-bold rounded-lg border ${g.members.includes(`${tI}-${pI}`)?style.btnActive:'bg-white text-slate-500'}`}>{p.name}</button>)))}</div></div>);})}<button onClick={()=>setTempCustomGroups([...tempCustomGroups,{id:Date.now().toString(),name:`그룹 ${tempCustomGroups.length+1}`,members:[]}])} className="w-full bg-white border border-dashed border-purple-300 text-purple-600 font-bold py-3 rounded-xl">+ 새 그룹 추가</button></div></div>)}</div>)}
+        </div>
+
+        {/* 시상 및 랭킹 설정 */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm mb-4">
+          <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsAwardSettingsOpen(!isAwardSettingsOpen)}><div className="flex items-center gap-2"><Award className="w-5 h-5 text-slate-500" /><h2 className="text-slate-800 font-bold text-base">시상 및 랭킹 설정</h2></div><ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isAwardSettingsOpen ? 'rotate-180' : ''}`} /></div>
+          {isAwardSettingsOpen && (
+            <div className="pt-2 animate-fade-in-up mt-2">
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
+                {AVAILABLE_AWARDS.map(award => {
+                  const isSelected = selectedAwards.includes(award);
+                  const hasSet = award === '니어리스트' || award === '롱기스트' || award.includes('스테이블포드');
+                  return (
+                    <div key={award} className="relative inline-flex items-center">
+                      <button onClick={() => { if (isSelected) setSelectedAwards(selectedAwards.filter(x=>x!==award)); else { setSelectedAwards([...selectedAwards,award]); if(award.includes('스테이블포드')) setShowStablefordModal(true); if(award==='니어리스트'||award==='롱기스트') setShowSpecialHoleModal(true); } }} className={`px-3 py-1.5 rounded-xl text-sm font-bold border ${isSelected?'bg-[#E6F4EF] border-[#0D8A5E] text-[#0D8A5E]':'bg-white text-slate-500'} ${hasSet && isSelected ? 'pr-8' : ''}`}>{award}</button>
+                      {hasSet && isSelected && (<button onClick={() => { if(award.includes('스테이블포드')) setShowStablefordModal(true); else setShowSpecialHoleModal(true); }} className="absolute right-1 p-1 text-[#0D8A5E] hover:bg-[#D1FAE5] rounded-full"><Settings className="w-3.5 h-3.5"/></button>)}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {players.map((team, tIdx) => (
+          <div key={tIdx} className="bg-white rounded-2xl p-4 shadow-sm mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
+                <div className="flex items-center">
+                  <input type="text" value={teamNames[tIdx]} onChange={(e) => { const nt = [...teamNames]; nt[tIdx] = e.target.value; setTeamNames(nt); }} className="bg-[#E6F4EF] text-[#0D8A5E] px-2.5 py-1 rounded-full text-xs font-bold w-16 text-center focus:outline-none focus:ring-2 focus:ring-[#0D8A5E]/50" />
+                </div>
+                <h3 className="text-slate-800 font-bold text-base truncate shrink-0">플레이어 명단</h3>
+                {tIdx === 0 && (<button onClick={handleAddTeam} className="ml-1 p-1 bg-[#0D8A5E] text-white rounded-md shadow-sm hover:bg-[#0A704C] transition-colors flex items-center justify-center shrink-0"><Plus className="w-4 h-4" strokeWidth={3} /></button>)}
+              </div>
+              <div className="flex gap-2 items-center shrink-0">
+                {tIdx > 0 && (<button onClick={() => handleRemoveTeam(tIdx)} className="p-1.5 text-slate-300 hover:text-slate-500 transition-colors"><Trash2 className="w-5 h-5" strokeWidth={1.5} /></button>)}
+                {tIdx === 0 && (<div className="flex bg-slate-100 p-1 rounded-lg shrink-0"><button onClick={()=>setHandicapType('strokes')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${handicapType==='strokes'?'bg-white shadow-sm':'text-slate-500'}`}>타수</button><button onClick={()=>setHandicapType('over')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold ${handicapType==='over'?'bg-white shadow-sm':'text-slate-500'}`}>오버파</button></div>)}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-2">{team.map((p,pI)=>(<div key={pI} className="relative flex bg-[#F8F9FA] rounded-xl border overflow-hidden shadow-sm"><div className="flex-1 flex items-center pl-3 py-1.5 min-w-0 pr-1 gap-1"><input type="text" value={p.name} onChange={(e)=>handlePlayerChange(tIdx,pI,'name',e.target.value)} className="w-full flex-1 text-sm font-medium focus:outline-none bg-transparent min-w-0" />{enableGroupComp && <GroupBadges tIdx={tIdx} pIdx={pI} customGroups={tempCustomGroups} />}</div><div className="w-16 border-l flex items-center pr-2 bg-slate-200/30 shrink-0"><input type="text" value={p.handicap} onChange={(e)=>handlePlayerChange(tIdx,pI,'handicap',e.target.value.replace(/[^0-9+\-]/g,''))} className="w-full bg-transparent py-1 text-xs text-center font-bold focus:outline-none" />{handicapType==='strokes'&&<span className="text-[11px] text-slate-500 font-bold">타</span>}</div></div>))}</div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#F4F5F7] via-[#F4F5F7] to-transparent z-20 flex flex-col gap-2">
+        {isRoundStarted && (
+          <div className="flex gap-2 mb-1">
+            <button onClick={() => setConfirmModal('reset')} className="flex-1 bg-white border border-red-200 text-red-500 font-bold py-3.5 rounded-xl shadow-sm text-sm">새 게임 시작</button>
+            <button onClick={() => setConfirmModal('end')} className="flex-1 bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-sm text-sm">게임 종료하기</button>
+          </div>
+        )}
+        <button onClick={()=>{ setCustomGroups(tempCustomGroups); setGroupBalanceMode(tempGroupBalanceMode); onComplete(players, handicapType); }} className="w-full bg-[#0D8A5E] text-white font-bold text-lg py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2">{isRoundStarted ? '게임 계속하기' : '대기실 입장하기'} <ChevronRight className="w-5 h-5" /></button>
+      </div>
+
+      {confirmModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setConfirmModal(null)} />
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up">
+            <h3 className="text-slate-800 font-black text-lg mb-2">
+              {confirmModal === 'reset' ? '새 게임 시작' : '게임 종료'}
+            </h3>
+            <p className="text-slate-600 text-sm mb-6">
+              {confirmModal === 'reset' 
+                ? '현재까지의 모든 스코어와 기록이 초기화됩니다. 정말 새 게임을 시작하시겠습니까?' 
+                : '진행 중인 게임을 조기 종료하고 최종 결과 및 시상 화면으로 이동하시겠습니까?'}
+            </p>
+            <div className="flex gap-3">
+              <button onClick={() => setConfirmModal(null)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl transition-colors">취소</button>
+              <button onClick={() => {
+                if (confirmModal === 'reset') onResetGame();
+                else onEndGame();
+                setConfirmModal(null);
+              }} className={`flex-1 text-white font-bold py-3.5 rounded-xl transition-colors shadow-md ${confirmModal === 'reset' ? 'bg-red-500' : 'bg-slate-800'}`}>
+                {confirmModal === 'reset' ? '초기화' : '종료하기'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {showStablefordModal && (<div className="fixed inset-0 z-50 flex items-center justify-center px-4"><div className="absolute inset-0 bg-slate-900/40" onClick={()=>setShowStablefordModal(false)}/><div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl flex flex-col max-h-[90vh]"><div className="flex items-center justify-between mb-4"><h3 className="text-slate-800 font-bold text-lg flex items-center gap-2"><Settings className="w-5 h-5 text-[#0D8A5E]"/> 점수제 설정</h3><button onClick={()=>setShowStablefordModal(false)} className="p-1.5 text-slate-400"><X className="w-5 h-5"/></button></div><div className="overflow-y-auto flex-1 space-y-4 mb-6"><div><label className="block text-xs font-bold text-slate-500 mb-2 pl-1">시상 명칭</label><input type="text" value={tempStablefordTitle} onChange={e=>setTempStablefordTitle(e.target.value)} className="w-full bg-[#F8F9FA] border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none" /></div><div className="space-y-3"><label className="block text-xs font-bold text-slate-500 pl-1">획득 기준</label>{tempStablefordConfig.map((item,idx)=>(<div key={item.id} className="flex items-center gap-2 w-full"><input type="text" value={item.label} onChange={e=>{const nc=[...tempStablefordConfig];nc[idx].label=e.target.value;setTempStablefordConfig(nc);}} className="flex-1 min-w-0 bg-[#F8F9FA] border rounded-xl px-3 py-2 text-sm font-bold"/><div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1 border shrink-0"><button onClick={()=>{const nc=[...tempStablefordConfig];nc[idx].score-=1;setTempStablefordConfig(nc);}} className="w-7 h-7 rounded-lg bg-white flex items-center justify-center active:bg-slate-100"><Minus className="w-3 h-3"/></button><span className="font-black text-sm w-6 text-center text-[#0D8A5E]">{item.score>0?`+${item.score}`:item.score}</span><button onClick={()=>{const nc=[...tempStablefordConfig];nc[idx].score+=1;setTempStablefordConfig(nc);}} className="w-7 h-7 rounded-lg bg-white flex items-center justify-center active:bg-slate-100"><Plus className="w-3 h-3"/></button></div></div>))}</div></div><button onClick={()=>{setStablefordTitle(tempStablefordTitle);setStablefordConfig(tempStablefordConfig);setShowStablefordModal(false);}} className="w-full bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md">설정 완료</button></div></div>)}
+      
+      {showSpecialHoleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          <div className="absolute inset-0 bg-slate-900/40" onClick={()=>setShowSpecialHoleModal(false)} />
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up">
+            <h3 className="text-slate-800 font-bold text-lg mb-6 flex items-center gap-2"><Target className="w-5 h-5 text-[#0D8A5E]" /> 지정 홀 및 시상 공개</h3>
+            <div className="space-y-4 mb-8">
+              <div>
+                <span className="font-bold text-slate-700 block mb-2 text-sm">니어리스트 홀</span>
+                <select value={tempSpecialHoles.nearest} onChange={e => setTempSpecialHoles({...tempSpecialHoles, nearest: Number(e.target.value)})} className="w-full bg-[#F8F9FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#0D8A5E]">
+                  {Array.from({length: 18}).map((_, i) => <option key={i+1} value={i+1}>{i+1}H</option>)}
+                </select>
+              </div>
+              <div>
+                <span className="font-bold text-slate-700 block mb-2 text-sm">롱기스트 홀</span>
+                <select value={tempSpecialHoles.longest} onChange={e => setTempSpecialHoles({...tempSpecialHoles, longest: Number(e.target.value)})} className="w-full bg-[#F8F9FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:border-[#0D8A5E]">
+                  {Array.from({length: 18}).map((_, i) => <option key={i+1} value={i+1}>{i+1}H</option>)}
+                </select>
+              </div>
+              <div className="pt-2 border-t border-slate-100">
+                <label className="flex items-center gap-2 cursor-pointer mb-1">
+                  <input type="checkbox" checked={tempSpecialHoles.requirePar !== false} onChange={e => setTempSpecialHoles({...tempSpecialHoles, requirePar: e.target.checked})} className="w-4 h-4 text-[#0D8A5E] rounded focus:ring-[#0D8A5E]" />
+                  <span className="font-bold text-slate-700 text-sm">파(Par) 이하 기록 시에만 유효</span>
+                </label>
+                <p className="text-[10px] text-slate-500 pl-6">보기 이상일 경우 무효 처리하되 기록은 보존됩니다.</p>
+              </div>
+              <div className="pt-4 border-t border-slate-100">
+                <span className="block text-slate-700 font-bold text-sm mb-2">니어리스트/롱기스트 및 신페리오 공개 시점</span>
+                <div className="flex bg-slate-100 p-1 rounded-xl">
+                  <button onClick={()=>setTempAwardRevealMode('after_input')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-colors ${tempAwardRevealMode==='after_input'?'bg-white text-slate-800 shadow-sm':'text-slate-500 hover:text-slate-700'}`}>입력 후 즉시</button>
+                  <button onClick={()=>setTempAwardRevealMode('after_game')} className={`flex-1 py-2 text-[10px] font-bold rounded-lg transition-colors ${tempAwardRevealMode==='after_game'?'bg-white text-slate-800 shadow-sm':'text-slate-500 hover:text-slate-700'}`}>라운드 종료 후</button>
+                </div>
+                <p className="text-[10px] text-slate-500 mt-2 pl-1 leading-relaxed">※ 게임 개설자(방장)는 설정과 무관하게 항상 확인할 수 있습니다.</p>
+              </div>
+            </div>
+            <button onClick={()=>{setSpecialHoles(tempSpecialHoles);setAwardRevealMode(tempAwardRevealMode);setShowSpecialHoleModal(false);}} className="w-full bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md">설정 완료</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default function App() {
+  const [currentView, setCurrentView] = useState('settings'); 
+  const [previousView, setPreviousView] = useState('scoreInput'); 
+  const [handicapType, setHandicapType] = useState('strokes');
+  const [scoreInputPermission, setScoreInputPermission] = useState('all'); 
+  const [awardRevealMode, setAwardRevealMode] = useState('after_game');
+  const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = useState(false);
+  const [hostSelectedTeam, setHostSelectedTeam] = useState(0);
+  const [lastEditors, setLastEditors] = useState({});
+  const [eventName, setEventName] = useState('단체 골프 라운드');
+  const [courseInfo, setCourseInfo] = useState({ name: '표준 파72 (일반 코스)', front: 'OUT 코스', back: 'IN 코스' });
+  const [isRoundStarted, setIsRoundStarted] = useState(false);
+  const [joinedStatus, setJoinedStatus] = useState([]);
+  const [currentUserRole, setCurrentUserRole] = useState('host'); 
+  const [myPlayerInfo, setMyPlayerInfo] = useState({ tIdx: 0, pIdx: 0 }); 
+  const [enableTeamComp, setEnableTeamComp] = useState(true);
+  const [enableGroupComp, setEnableGroupComp] = useState(false);
+  const [teamBalanceMode, setTeamBalanceMode] = useState('average'); 
+  const [customGroups, setCustomGroups] = useState([]);
+  const [groupBalanceMode, setGroupBalanceMode] = useState('average');
+  const [teamNames, setTeamNames] = useState(['1조', '2조']);
+  
+  const ALL_AWARDS = ['전체 순위', '신페리오', '변형스테이블포드', '니어리스트', '롱기스트', '다버디', '다파', '다보기', '다찐파', '다찐보기', '다찐양파', '널뛰기', '시몬스', '일취월장', '낙차큰커브'];
+  const [selectedAwards, setSelectedAwards] = useState(ALL_AWARDS);
+  const [stablefordTitle, setStablefordTitle] = useState('스테이블포드');
+  const [stablefordConfig, setStablefordConfig] = useState([{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
+  const [specialHoles, setSpecialHoles] = useState({ nearest: 3, longest: 14, requirePar: true }); 
+  const [specialRecords, setSpecialRecords] = useState(Array(18).fill(null).map(() => ({})));
+  
+  // 랜덤 플레이어로 초기값 구성
+  const [teamData, setTeamData] = useState(() => getRandomInitialTeams());
+
+  const [currentHole, setCurrentHole] = useState(1);
+  const [allPars, setAllPars] = useState([]);
+  const [allScores, setAllScores] = useState([]);
+
+  const handleCompleteSettings = (data, type) => {
+    setTeamData(data); setHandicapType(type);
+    if (!isRoundStarted) { setJoinedStatus(data.map((t, tI) => t.map((_, pI) => tI === 0 && pI === 0))); setCurrentUserRole('host'); setMyPlayerInfo({ tIdx: 0, pIdx: 0 }); setCurrentView('waitingRoom'); }
+    else setCurrentView('scoreInput');
+  };
+
+  const handleStartRound = () => {
+    if (allPars.length === 0) {
+      const d = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0];
+      setAllPars([...d.courses[courseInfo.front], ...d.courses[courseInfo.back]]);
+      setAllScores(Array(18).fill(null).map(() => teamData.map(t => Array(t.length).fill(null))));
+    }
+    setIsRoundStarted(true); setCurrentView('scoreInput');
+  };
+
+  const handleResetGame = () => {
+    setIsRoundStarted(false);
+    setJoinedStatus([]);
+    setMyPlayerInfo({ tIdx: 0, pIdx: 0 });
+    setCurrentHole(1);
+    setAllScores([]);
+    setAllPars([]);
+    setIsAwardsManuallyOpened(false);
+    setSpecialRecords(Array(18).fill(null).map(() => ({})));
+    setLastEditors({});
+    setCurrentView('settings');
+  };
+
+  const handleEndGame = () => {
+    setIsAwardsManuallyOpened(true);
+    setPreviousView('settings'); 
+    setCurrentView('awards');
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans sm:max-w-md sm:mx-auto sm:border-x sm:shadow-2xl relative overflow-x-hidden" style={{ fontFamily: 'Pretendard, sans-serif' }}>
+      <style>{`.no-scrollbar::-webkit-scrollbar { display: none; } .animate-fade-in-up { animation: fadeInUp 0.3s ease-out forwards; } @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+      {currentView === 'settings' && <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} initialHandicapType={handicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} AVAILABLE_AWARDS={ALL_AWARDS} isRoundStarted={isRoundStarted} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} awardRevealMode={awardRevealMode} setAwardRevealMode={setAwardRevealMode} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} onComplete={handleCompleteSettings} onResetGame={handleResetGame} onEndGame={handleEndGame} />}
+      {currentView === 'waitingRoom' && <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={enableGroupComp ? customGroups : []} />}
+      {currentView === 'scoreInput' && <ScoreInputView teamNames={teamNames} teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={enableGroupComp ? customGroups : []} onGoToSettings={() => setCurrentView('settings')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} />}
+      {currentView === 'scoreboard' && <ScoreboardView teamNames={teamNames} teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} courseInfo={courseInfo} allPars={allPars} allScores={allScores} handicapType={handicapType} eventName={eventName} customGroups={enableGroupComp ? customGroups : []} onGoToSettings={() => setCurrentView('settings')} onBack={() => setCurrentView('scoreInput')} onGoToInput={(h, t) => { if (currentUserRole === 'host' || t === myPlayerInfo.tIdx) { setCurrentHole(h + 1); setHostSelectedTeam(t); setCurrentView('scoreInput'); } }} onOpenAwards={() => { setPreviousView('scoreboard'); setCurrentView('awards'); }} />}
+      {currentView === 'awards' && <AwardsView teamNames={teamNames} teamData={teamData} allScores={allScores} allPars={allPars} stablefordTitle={stablefordTitle} stablefordConfig={stablefordConfig} specialHoles={specialHoles} selectedAwards={selectedAwards} specialRecords={specialRecords} eventName={eventName} isAwardsManuallyOpened={isAwardsManuallyOpened} setIsAwardsManuallyOpened={setIsAwardsManuallyOpened} awardRevealMode={awardRevealMode} teamBalanceMode={teamBalanceMode} customGroups={customGroups} groupBalanceMode={groupBalanceMode} enableTeamComp={enableTeamComp} enableGroupComp={enableGroupComp} handicapType={handicapType} currentUserRole={currentUserRole} onBack={() => setCurrentView(previousView)} />}
+    </div>
+  );
+}
