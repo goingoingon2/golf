@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   AlertCircle, ArrowLeft, ArrowRight, Award, Check, ChevronDown, ChevronRight,
   Flag, Info, List, Lock, MapPin, Minus, Plus, Search, Settings, Share2, Star, Target,
-  Trash2, TrendingUp, TrendingDown, User as UserIcon, Users, X, Zap, Coffee, HelpCircle, Unlock
+  Trash2, TrendingUp, TrendingDown, User as UserIcon, Users, X, Zap, Coffee
 } from 'lucide-react';
 
 // 샘플 골프장 데이터
@@ -587,7 +587,7 @@ function AwardsView({ teamNames, teamData, allScores, allPars, stablefordTitle, 
       team.forEach((player, pIdx) => {
         let score = 0, actualDiff = 0, birds = 0, pars = 0, bogeys = 0, sfScore = 0, holes = 0, vari = 0, prevD = null;
         let daPa = 0, daBogey = 0, realPars = 0, realBogeys = 0, realDoublePars = 0;
-        let details = { birdies: [], daPa: [], daBogey: [], realPars: [], realBogeys: [], realDoublePars: [] };
+        let details = { birdies: [], daPa: [], daBogey: [], realPars: [], realBogeys: [], realDoublePars: [], scores: [] };
         
         allScores.slice(0, limitHole).forEach((holeScores, hIdx) => {
           if (holeScores[tIdx] && holeScores[tIdx][pIdx] != null) {
@@ -609,6 +609,8 @@ function AwardsView({ teamNames, teamData, allScores, allPars, stablefordTitle, 
 
             if (prevD !== null) vari += Math.abs(d - prevD);
             prevD = d;
+            
+            details.scores.push(`${hName}(${d > 0 ? '+'+d : d === 0 ? 'E' : d})`);
             
             const sfConf = (id) => stablefordConfig.find(c => c.id === id)?.score || 0;
             if (d <= -3) sfScore += sfConf('albatross');
@@ -686,9 +688,15 @@ function AwardsView({ teamNames, teamData, allScores, allPars, stablefordTitle, 
   const syncList = getAwardStats('min_hole_sync');
   const predictionList = getPredictionStats();
 
-  const allStats = realtimeList;
   const totalPar = allPars.reduce((a,b)=>a+b, 0) || 72;
-  const currentOverallList = [...(overallTab === 'prediction' ? predictionList : overallTab === 'sync' ? syncList : realtimeList)].sort((a, b) => a.diff - b.diff);
+  
+  // 전체 순위 탭 연동을 위해 탭 변경시마다 정렬된 리스트를 반환
+  const getCurrentOverallList = (tab) => {
+    const list = tab === 'prediction' ? predictionList : tab === 'sync' ? syncList : realtimeList;
+    return [...list].sort((a, b) => a.diff - b.diff);
+  };
+
+  const allStats = realtimeList;
 
   const sortedByNewPeoria = [...realtimeList].sort((a, b) => a.mockNewPeoriaNet - b.mockNewPeoriaNet);
   const sortedByStableford = [...realtimeList].sort((a, b) => b.stablefordScore - a.stablefordScore);
@@ -700,8 +708,8 @@ function AwardsView({ teamNames, teamData, allScores, allPars, stablefordTitle, 
   const sortedByRealDoublePars = [...realtimeList].sort((a,b) => b.realDoublePars - a.realDoublePars);
   const sortedByRollercoaster = [...realtimeList].filter(s => s.playedHoles > 1).sort((a,b) => b.variance - a.variance);
   const sortedBySimmons = [...realtimeList].filter(s => s.playedHoles > 1).sort((a,b) => a.variance - b.variance);
-  const sortedByIlchi = [...realtimeList].sort((a,b) => a.ilchiScore - b.ilchiScore);
-  const sortedByNakcha = [...realtimeList].sort((a,b) => b.nakchaScore - a.nakchaScore);
+  const sortedByIlchi = [...realtimeList].sort((a,b) => a.ilchiScore - b.ilchiScore); // 낮은값(가장 언더)
+  const sortedByNakcha = [...realtimeList].sort((a,b) => b.nakchaScore - a.nakchaScore); // 높은값(가장 오버)
 
   const teamStats = teamData.map((team, tIdx) => {
     const members = realtimeList.filter(s => s.tIdx === tIdx);
@@ -858,7 +866,11 @@ function AwardsView({ teamNames, teamData, allScores, allPars, stablefordTitle, 
               <button onClick={() => setDetailModal({ 
                 title: '전체 순위 (스트로크)', 
                 isOverall: true, 
-                lists: { realtime: realtimeList, sync: syncList, prediction: predictionList }, 
+                lists: { 
+                  realtime: [...realtimeList].sort((a,b) => a.diff - b.diff), 
+                  sync: [...syncList].sort((a,b) => a.diff - b.diff), 
+                  prediction: [...predictionList].sort((a,b) => a.diff - b.diff) 
+                }, 
                 formatFn: (v, tab) => tab === 'prediction' ? Math.round(totalPar + v) : safeDisplayDiff(v),
                 customGroups: enableGroupComp ? customGroups : null,
                 teamNames
@@ -870,7 +882,7 @@ function AwardsView({ teamNames, teamData, allScores, allPars, stablefordTitle, 
               <button onClick={() => setOverallTab('prediction')} className={`flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-colors ${overallTab === 'prediction' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>예상 기준</button>
             </div>
             <div className="space-y-2">
-              {currentOverallList.slice(0, 3).map((st, i) => (
+              {getCurrentOverallList(overallTab).slice(0, 3).map((st, i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="w-8 flex justify-center items-center shrink-0"><RankBadge rank={i} /></div>
@@ -935,8 +947,8 @@ function AwardsView({ teamNames, teamData, allScores, allPars, stablefordTitle, 
           {renderCompactAward('다찐파', Target, sortedByRealPars, 'realPars', (v) => v, 'realPars')}
           {renderCompactAward('다찐보기', AlertCircle, sortedByRealBogeys, 'realBogeys', (v) => v, 'realBogeys', 'bg-slate-100', 'text-slate-500')}
           {renderCompactAward('다찐양파', AlertCircle, sortedByRealDoublePars, 'realDoublePars', (v) => v, 'realDoublePars', 'bg-slate-100', 'text-slate-500')}
-          {renderCompactAward('널뛰기', TrendingUp, sortedByRollercoaster, 'variance', (v) => v, null, 'bg-orange-50', 'text-orange-500')}
-          {renderCompactAward('시몬스', Minus, sortedBySimmons, 'variance', (v) => v, null, 'bg-teal-50', 'text-teal-500')}
+          {renderCompactAward('널뛰기', TrendingUp, sortedByRollercoaster, 'variance', (v) => v, 'scores', 'bg-orange-50', 'text-orange-500')}
+          {renderCompactAward('시몬스', Minus, sortedBySimmons, 'variance', (v) => v, 'scores', 'bg-teal-50', 'text-teal-500')}
         </div>
 
         {/* 5. 롱기스트 / 니어리스트 */}
@@ -1184,7 +1196,6 @@ function SettingsView({ teamNames, setTeamNames, initialData, initialHandicapTyp
           </div>
         ))}
       </div>
-      
       <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#F4F5F7] via-[#F4F5F7] to-transparent z-20 flex flex-col gap-2">
         {isRoundStarted && (
           <div className="flex gap-2 mb-1">
