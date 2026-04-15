@@ -34,12 +34,12 @@
       // 2. ❗ 깃허브(GitHub) 등 외부 배포용 개인 DB 설정 (여기에 본인 파이어베이스 키를 넣으세요!)
       else {
         firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+          apiKey: "YOUR_API_KEY",
+          authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+          projectId: "YOUR_PROJECT_ID",
+          storageBucket: "YOUR_PROJECT_ID.appspot.com",
+          messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+          appId: "YOUR_APP_ID"
         };
       }
     } catch (e) {
@@ -54,6 +54,26 @@
     
     // 앱 고유 ID (데이터 충돌 방지용)
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'golf-scoreboard-pro';
+
+    // 💡 [룸 변경 감지 로직]: URL의 방 번호가 로컬에 저장된 방 번호와 다르면, 이전 방의 데이터를 모두 초기화하여 데이터 혼선을 막습니다.
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlRoomId = urlParams.get('roomId');
+      let localRoomId = null;
+      try {
+        const raw = window.localStorage.getItem('golf_roomId');
+        localRoomId = raw ? JSON.parse(raw) : null;
+      } catch(e) {}
+      
+      if (urlRoomId && localRoomId && urlRoomId !== localRoomId) {
+        const keysToRemove = [];
+        for (let i = 0; i < window.localStorage.length; i++) {
+          const key = window.localStorage.key(i);
+          if (key && key.startsWith('golf_')) keysToRemove.push(key);
+        }
+        keysToRemove.forEach(k => window.localStorage.removeItem(k));
+      }
+    } catch(e) {}
 
     function usePersistentState(key, initialValue) {
       const [state, setState] = useState(() => {
@@ -707,10 +727,11 @@
         return () => unsubscribe();
       }, [roomId, isDbConnected, user]);
 
-      const syncToDB = async (updates) => { 
-        if (!db || !roomId || !isDbConnected || !user) return; 
+      const syncToDB = async (updates, explicitRoomId) => { 
+        const targetRoom = explicitRoomId || roomId;
+        if (!db || !targetRoom || !isDbConnected || !user) return; 
         try { 
-          const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'golf_rooms', roomId); 
+          const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'golf_rooms', targetRoom); 
           await setDoc(roomRef, updates, { merge: true }); 
         } catch (e) { console.error("Sync Error", e); } 
       };
@@ -719,7 +740,7 @@
         setTeamData(data); setHandicapType(type); setCurrentUserRole('host'); try { window.localStorage.setItem('golf_host_verified', 'true'); } catch(e) {}
         let currentRoomId = roomId; if (!currentRoomId) { currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase(); setRoomId(currentRoomId); }
         try { const url = new URL(window.location.href); if (url.searchParams.get('roomId') !== currentRoomId) { url.searchParams.set('roomId', currentRoomId); window.history.pushState({}, '', url.toString()); } } catch(e) {}
-        if (!isRoundStarted) { const initialJoin = data.map(t => (t || []).map(() => false)); setJoinedStatus(initialJoin); setCurrentView('waitingRoom'); syncToDB({ teamData: data, eventName: eventName, joinedStatus: initialJoin, isRoundStarted: false }); } 
+        if (!isRoundStarted) { const initialJoin = data.map(t => (t || []).map(() => false)); setJoinedStatus(initialJoin); setCurrentView('waitingRoom'); syncToDB({ teamData: data, eventName: eventName, joinedStatus: initialJoin, isRoundStarted: false }, currentRoomId); } 
         else { setCurrentView('scoreInput'); }
       };
 
