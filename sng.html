@@ -22,22 +22,22 @@
   <script type="text/babel" data-type="module">
     const { useState, useEffect, useRef } = React;
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
     import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
-    const firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-    };
+    let firebaseConfig = null;
+    try {
+      if (typeof __firebase_config !== 'undefined') {
+        firebaseConfig = JSON.parse(__firebase_config);
+      }
+    } catch (e) {
+      console.error("Firebase config parsing error", e);
+    }
 
-    const isConfigValid = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
-    const app = isConfigValid ? initializeApp(firebaseConfig) : null;
+    const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
     const auth = app ? getAuth(app) : null;
     const db = app ? getFirestore(app) : null;
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
     function usePersistentState(key, initialValue) {
       const [state, setState] = useState(() => {
@@ -652,17 +652,35 @@
       const [roomId, setRoomId] = usePersistentState('golf_roomId', null);
       const manuallyClearedRef = useRef({});
       const [isDbConnected, setIsDbConnected] = useState(false);
+      const [user, setUser] = useState(null);
 
       useEffect(() => { 
         try { if (window.localStorage.getItem('golf_host_verified') === 'true') setCurrentUserRole('host'); } catch(e) {} 
         try { const urlParams = new URLSearchParams(window.location.search); const rId = urlParams.get('roomId'); if (rId) setRoomId(rId); } catch(e) {}
       }, [setCurrentUserRole, setRoomId]);
 
-      useEffect(() => { if (!auth) return; signInAnonymously(auth).then(() => setIsDbConnected(true)).catch(console.error); }, []);
+      useEffect(() => { 
+        if (!auth) return; 
+        const initAuth = async () => {
+          try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+              await signInAnonymously(auth);
+            }
+          } catch (e) { console.error("Auth Error", e); }
+        };
+        initAuth();
+        const unsubscribe = onAuthStateChanged(auth, (u) => {
+          setUser(u);
+          if (u) setIsDbConnected(true);
+        });
+        return () => unsubscribe();
+      }, []);
 
       useEffect(() => {
-        if (!db || !roomId || !isDbConnected) return;
-        const roomRef = doc(db, 'golf_rooms', roomId);
+        if (!db || !roomId || !isDbConnected || !user) return;
+        const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'golf_rooms', roomId);
         const unsubscribe = onSnapshot(roomRef, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
@@ -671,9 +689,15 @@
           }
         }, (err) => console.error("Firebase Sync Error:", err));
         return () => unsubscribe();
-      }, [roomId, isDbConnected]);
+      }, [roomId, isDbConnected, user]);
 
-      const syncToDB = async (updates) => { if (!db || !roomId || !isDbConnected) return; try { const roomRef = doc(db, 'golf_rooms', roomId); await setDoc(roomRef, updates, { merge: true }); } catch (e) {} };
+      const syncToDB = async (updates) => { 
+        if (!db || !roomId || !isDbConnected || !user) return; 
+        try { 
+          const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'golf_rooms', roomId); 
+          await setDoc(roomRef, updates, { merge: true }); 
+        } catch (e) { console.error("Sync Error", e); } 
+      };
 
       const handleCompleteSettings = (data, type) => {
         setTeamData(data); setHandicapType(type); setCurrentUserRole('host'); try { window.localStorage.setItem('golf_host_verified', 'true'); } catch(e) {}
@@ -761,7 +785,7 @@
       const renderCurrentView = () => {
         switch(currentView) {
           case 'settings': return <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} setTeamData={setTeamData} initialHandicapType={handicapType} setHandicapType={setHandicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} isMultiCourse={isMultiCourse} setIsMultiCourse={setIsMultiCourse} teamCourses={teamCourses} setTeamCourses={setTeamCourses} onComplete={handleCompleteSettings} isRoundStarted={isRoundStarted} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} onEndGame={handleEndGame} onResetGame={handleResetGame} />;
-          case 'waitingRoom': return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={auth?.currentUser?.uid} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} setScoreInputAuthorizedPlayers={setScoreInputAuthorizedPlayers} />;
+          case 'waitingRoom': return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={user?.uid} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} setScoreInputAuthorizedPlayers={setScoreInputAuthorizedPlayers} />;
           case 'scoreInput': return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} />;
           case 'scoreboard': return <ScoreboardView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} allPars={allPars} allScores={allScores} handicapType={handicapType} eventName={eventName} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onBack={() => setCurrentView('scoreInput')} onGoToInput={(h, t) => { setCurrentHole(h); setHostSelectedTeam(t); setCurrentView('scoreInput'); }} onOpenAwards={() => { setPreviousView('scoreboard'); setCurrentView('awards'); }} />;
           case 'awards': return <AwardsPageViewMain stats={stats} syncStats={syncStats} predictionStats={predictionStats} totalPar={totalPar} teamNames={teamNames} teamData={teamData} eventName={eventName} isAwardOpen={isAwardOpenFlag} isAwardsManuallyOpened={isAwardsManuallyOpened} setIsAwardsManuallyOpened={setIsAwardsManuallyOpened} currentUserRole={currentUserRole} customGroups={customGroups} enableGroupComp={enableGroupComp} enableTeamComp={enableTeamComp} teamBalanceMode={teamBalanceMode} groupBalanceMode={groupBalanceMode} selectedAwards={selectedAwards} stablefordTitle={stablefordTitle} allPars={allPars} onBack={() => setCurrentView(previousView)} setDetailModal={setDetailModal} setIsAwardInfoOpen={setIsAwardInfoOpen} specialRankings={{ nearest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.nearest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.nearest.pIdx].name, tIdx: parseInt(tI), pIdx: r.nearest.pIdx, distance: r.nearest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.nearest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.nearest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? a.distance - b.distance : (a.isInvalid ? 1 : -1)), longest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.longest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.longest.pIdx].name, tIdx: parseInt(tI), pIdx: r.longest.pIdx, distance: r.longest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.longest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.longest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? b.distance - a.distance : (a.isInvalid ? 1 : -1)) }} />;
