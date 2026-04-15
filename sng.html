@@ -22,16 +22,16 @@
   <script type="text/babel" data-type="module">
     const { useState, useEffect, useRef } = React;
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-    import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+    import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     const firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     const isConfigValid = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
@@ -64,31 +64,32 @@
     ];
 
     const Icons = {
-      AlertCircle: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>,
-      ArrowLeft: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>,
-      ArrowRight: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
-      Award: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>,
-      Check: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="20 6 9 17 4 12"/></svg>,
-      ChevronDown: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="6 9 12 15 18 9"/></svg>,
-      ChevronRight: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="9 18 15 12 9 6"/></svg>,
-      Flag: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>,
-      Info: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
-      List: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+      AlertCircle: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>,
+      ArrowLeft: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19 12H5m7 7l-7-7 7-7"/></svg>,
+      ArrowRight: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14m-7-7l7 7-7 7"/></svg>,
+      Award: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>,
+      Check: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 6L9 17l-5-5"/></svg>,
+      ChevronDown: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M6 9l6 6 6-6"/></svg>,
+      ChevronRight: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M9 18l6-6-6-6"/></svg>,
+      Edit2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
+      Flag: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg>,
+      Info: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>,
+      List: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>,
       Lock: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
       MapPin: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-      Minus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-      Plus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
-      Search: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
-      Settings: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
-      Share2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>,
+      Minus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14"/></svg>,
+      Plus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 5v14M5 12h14"/></svg>,
+      Search: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>,
+      Settings: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/><circle cx="12" cy="12" r="3"/></svg>,
+      Share2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>,
       Star: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
       Target: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-      Trash2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>,
+      Trash2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>,
       UserIcon: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-      Users: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+      Users: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
       Activity: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
       Zap: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-      Coffee: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>,
+      Coffee: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>,
       TrendingUp: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
       TrendingDown: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
       X: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
@@ -100,11 +101,7 @@
       [{ name: "황의홍", handicap: "102" }, { name: "김종빈", handicap: "103" }, { name: "조영광", handicap: "106" }, { name: "피진철", handicap: "110" }],
       [{ name: "이경민", handicap: "112" }, { name: "김형묵", handicap: "100" }, { name: "김휘동", handicap: "115" }, { name: "성기용", handicap: "127" }]
     ];
-    const getInitialGroups = () => [
-      { id: 'g94', name: '94', members: ['0-0', '1-0', '1-1', '2-2', '3-1'] },
-      { id: 'g92', name: '92', members: ['0-1', '0-2', '1-3', '2-0', '3-2', '3-3'] },
-      { id: 'g93', name: '93', members: ['0-3', '1-2', '2-1', '2-3', '3-0'] }
-    ];
+    const getInitialGroups = () => [ { id: 'g94', name: '94', members: ['0-0', '1-0', '1-1', '2-2', '3-1'] }, { id: 'g92', name: '92', members: ['0-1', '0-2', '1-3', '2-0', '3-2', '3-3'] }, { id: 'g93', name: '93', members: ['0-3', '1-2', '2-1', '2-3', '3-0'] } ];
     
     const getRandomHandicap = () => String(Math.floor(Math.random() * 31) + 80);
     const safeDisplayDiff = diff => { if (diff == null || isNaN(diff)) return '-'; if (diff === 0) return 'E'; return diff > 0 ? `+${Math.round(diff)}` : String(Math.round(diff)); };
@@ -119,60 +116,51 @@
 
     function GroupBadges({ tIdx, pIdx, customGroups }) {
       if (!customGroups || customGroups.length === 0) return null;
-      const pKey = `${tIdx}-${pIdx}`;
-      const myGroups = customGroups.map((g, idx) => ({ ...g, style: GROUP_STYLES[idx % GROUP_STYLES.length] })).filter(g => (g.members || []).includes(pKey));
+      const myGroups = customGroups.map((g, idx) => ({ ...g, style: GROUP_STYLES[idx % GROUP_STYLES.length] })).filter(g => (g.members || []).includes(`${tIdx}-${pIdx}`));
       if (myGroups.length === 0) return null;
       return <div className="flex flex-wrap gap-1 items-center shrink-0 ml-1">{myGroups.map(g => <span key={g.id} className={`shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded border shadow-sm max-w-[50px] truncate ${g.style.badge}`}>{String(g.name)}</span>)}</div>;
+    }
+
+    function ShareModal({ isOpen, onClose, roomId }) {
+      if (!isOpen) return null;
+      const inviteUrl = roomId ? `${window.location.origin}${window.location.pathname}?roomId=${roomId}` : window.location.href;
+      const handleCopy = () => {
+        try { const el = document.createElement('textarea'); el.value = inviteUrl; el.setAttribute('readonly', ''); el.style.position = 'absolute'; el.style.left = '-9999px'; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); alert('URL이 복사되었습니다.'); } 
+        catch(e) { alert('복사 실패. 아래 URL을 직접 복사해주세요.'); }
+        onClose();
+      };
+      return (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center px-4 text-center font-sans">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" onClick={onClose} />
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up text-left">
+            <div className="flex items-center justify-between mb-6"><div className="flex items-center gap-2 text-slate-800 font-bold text-lg"><Icons.Share2 className="w-5 h-5 text-[#0D8A5E]" /> 방 초대하기</div><button onClick={onClose} className="p-2 text-slate-400"><Icons.X className="w-5 h-5" /></button></div>
+            <div className="bg-[#F8F9FA] rounded-3xl p-6 flex items-center justify-center mb-6 border"><Icons.Share2 className="w-20 h-20 text-slate-300" strokeWidth={1.5} /></div>
+            <div className="mb-6"><label className="block text-slate-500 text-xs font-bold mb-2 pl-1">초대 URL</label><div className="bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-600 text-sm truncate font-medium select-all">{inviteUrl}</div></div>
+            <div className="flex gap-3"><button onClick={handleCopy} className="flex-1 bg-white border border-[#0D8A5E] text-[#0D8A5E] font-bold py-3.5 rounded-xl">URL 복사</button><button onClick={() => { if(navigator.share) navigator.share({ title: '골프 스코어보드', url: inviteUrl }); onClose(); }} className="flex-1 bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md">공유하기</button></div>
+          </div>
+        </div>
+      );
     }
 
     function DetailModal({ isOpen, onClose, config }) {
       const [overallTab, setOverallTab] = useState('realtime');
       if (!isOpen || !config) return null;
       const currentLists = config.isOverall ? [...(config.lists?.[overallTab] || [])].sort((a, b) => a.diff - b.diff) : (config.list || []);
-
       return (
         <div className="fixed inset-0 z-[250] flex items-end sm:items-center justify-center sm:px-4 sm:max-w-md sm:mx-auto font-sans">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
           <div className="bg-white w-full sm:rounded-[32px] rounded-t-[32px] max-h-[85vh] p-6 relative z-10 shadow-2xl flex flex-col animate-fade-in-up">
-            <div className="flex items-center justify-between mb-4 shrink-0">
-              <h3 className="text-slate-800 font-black text-lg flex items-center gap-2"><Icons.Award className="w-5 h-5 text-[#0D8A5E]" /> {String(config.title || '')}</h3>
-              <button onClick={onClose} className="p-1.5 text-slate-400 hover:bg-slate-50 rounded-full transition-colors"><Icons.X className="w-5 h-5" /></button>
-            </div>
-            
-            {config.title?.includes('신페리오') && <div className="bg-blue-50 p-4 rounded-xl mb-4 border border-blue-100 text-left text-[11px] text-blue-600 leading-relaxed">임의의 12개 홀 스코어 합산 후 가상 핸디캡(HDCP)을 산출하여 그로스에서 차감합니다.<br/><b>NET = GROSS - HDCP</b></div>}
-            
+            <div className="flex items-center justify-between mb-4 shrink-0"><h3 className="text-slate-800 font-black text-lg flex items-center gap-2"><Icons.Award className="w-5 h-5 text-[#0D8A5E]" /> {String(config.title || '')}</h3><button onClick={onClose} className="p-1.5 text-slate-400 hover:bg-slate-50 rounded-full"><Icons.X className="w-5 h-5" /></button></div>
+            {config.title?.includes('신페리오') && <div className="bg-blue-50 p-4 rounded-xl mb-4 border border-blue-100 text-[11px] text-blue-600 leading-relaxed text-left">임의의 12개 홀 스코어 합산 후 가상 핸디캡(HDCP)을 산출하여 그로스에서 차감합니다.<br/><b>NET = GROSS - HDCP</b></div>}
             {config.isOverall ? (
               <>
-                <div className="flex bg-slate-100 p-1 rounded-xl mb-3 shrink-0">
-                  {['realtime', 'sync', 'prediction'].map(t => (
-                    <button key={t} onClick={() => setOverallTab(t)} className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-colors ${overallTab === t ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>{t === 'realtime' ? '실시간' : t === 'sync' ? '동기화' : '예상 기준'}</button>
-                  ))}
-                </div>
+                <div className="flex bg-slate-100 p-1 rounded-xl mb-3 shrink-0">{['realtime', 'sync', 'prediction'].map(t => (<button key={t} onClick={() => setOverallTab(t)} className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-colors ${overallTab === t ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>{t === 'realtime' ? '실시간' : t === 'sync' ? '동기화' : '예상 기준'}</button>))}</div>
                 <div className="bg-slate-50 rounded-xl flex items-center text-xs font-bold text-slate-500 py-2 px-4 mb-2 shrink-0"><div className="w-10 text-center">순위</div><div className="flex-1 px-2">플레이어</div><div className="flex items-center justify-end gap-3 shrink-0"><span className="w-16 text-right">기록</span><span className="w-10 text-right">진행</span></div></div>
                 <div className="overflow-y-auto flex-1 pr-1 space-y-2 pb-4 no-scrollbar">
                   {currentLists.map((item, idx) => (
                     <div key={idx} className="flex items-center justify-between p-3 bg-white border border-slate-100 shadow-sm rounded-xl text-left">
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <RankBadge rank={idx} />
-                        <div className="flex flex-col min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                            <span className={`font-bold text-[15px] truncate ${item.isInvalid ? 'line-through text-slate-400' : 'text-slate-700'}`}>{String(item.name || '-')}</span>
-                            {item.tIdx != null && <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{config.teamNames?.[item.tIdx] || `${item.tIdx + 1}조`}</span>}
-                            {config.customGroups && item.tIdx != null && item.pIdx != null && <GroupBadges tIdx={item.tIdx} pIdx={item.pIdx} customGroups={config.customGroups} />}
-                            {item.isInvalid && <span className="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded shadow-sm shrink-0 ml-1">파 오버</span>}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center justify-end gap-3 shrink-0 ml-2">
-                        <div className="flex flex-col items-end min-w-[3.5rem]">
-                          <span className={`font-black text-xl leading-none ${item.isInvalid ? 'text-slate-400' : (overallTab === 'prediction' ? 'text-slate-800' : (item.diff > 0 ? 'text-red-500' : 'text-[#0D8A5E]'))}`}>
-                            {overallTab === 'prediction' ? String(Math.round((config.totalPar || 72) + item.diff)) + '타' : safeDisplayDiff(item.diff)}
-                          </span>
-                          {overallTab === 'prediction' && <span className="text-[10px] font-bold text-slate-400 mt-1">예상: {safeDisplayDiff(item.diff)}</span>}
-                          {overallTab !== 'prediction' && <span className="text-[10px] font-bold text-slate-400 mt-1">{String(item.score || 0)}타</span>}
-                        </div>
-                        <span className="font-black text-slate-300 text-sm text-right min-w-[2rem] ml-1">{String(item.playedHoles || 0)}H</span>
-                      </div>
+                      <div className="flex items-center gap-3 flex-1 min-w-0"><RankBadge rank={idx} /><div className="flex flex-col min-w-0 flex-1"><div className="flex items-center gap-1.5 flex-wrap min-w-0"><span className={`font-bold text-[15px] truncate ${item.isInvalid ? 'line-through text-slate-400' : 'text-slate-700'}`}>{String(item.name || '-')}</span>{item.tIdx != null && <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{config.teamNames?.[item.tIdx] || `${item.tIdx + 1}조`}</span>}{config.customGroups && item.tIdx != null && item.pIdx != null && <GroupBadges tIdx={item.tIdx} pIdx={item.pIdx} customGroups={config.customGroups} />}{item.isInvalid && <span className="text-[10px] font-bold text-red-500 bg-red-50 border border-red-100 px-1.5 py-0.5 rounded shadow-sm shrink-0 ml-1">파 오버</span>}</div></div></div>
+                      <div className="flex items-center justify-end gap-3 shrink-0 ml-2"><div className="flex flex-col items-end min-w-[3.5rem]"><span className={`font-black text-xl leading-none ${item.isInvalid ? 'text-slate-400' : (overallTab === 'prediction' ? 'text-slate-800' : (item.diff > 0 ? 'text-red-500' : 'text-[#0D8A5E]'))}`}>{overallTab === 'prediction' ? String(Math.round((config.totalPar || 72) + item.diff)) + '타' : safeDisplayDiff(item.diff)}</span>{overallTab === 'prediction' && <span className="text-[10px] font-bold text-slate-400 mt-1">예상: {safeDisplayDiff(item.diff)}</span>}{overallTab !== 'prediction' && <span className="text-[10px] font-bold text-slate-400 mt-1">{String(item.score || 0)}타</span>}</div><span className="font-black text-slate-300 text-sm text-right min-w-[2rem] ml-1">{String(item.playedHoles || 0)}H</span></div>
                     </div>
                   ))}
                 </div>
@@ -180,10 +168,7 @@
             ) : config.isSpecial ? (
               <div className="overflow-y-auto flex-1 pr-1 space-y-4 pb-4 no-scrollbar">
                 {config.enableGroupComp && config.groupList && config.groupList.length > 0 && (
-                  <div>
-                    <h4 className="font-bold text-slate-700 text-sm mb-2 flex items-center gap-1.5"><Icons.Users className="w-4 h-4 text-purple-600"/> 그룹별 분석</h4>
-                    <div className="space-y-3">
-                      {config.groupList.map((st, idx) => (
+                  <div><h4 className="font-bold text-slate-700 text-sm mb-2 flex items-center gap-1.5"><Icons.Users className="w-4 h-4 text-purple-600"/> 그룹별 분석</h4><div className="space-y-3">{config.groupList.map((st, idx) => (
                         <div key={idx} className="flex flex-col p-4 bg-white border border-slate-100 shadow-sm rounded-xl gap-3 text-left">
                           <div className="flex items-center gap-2 border-b border-slate-50 pb-2"><span className="font-bold text-sm text-slate-800 shrink-0 truncate">{String(st.name || st.teamName || '-')}</span><span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">평균 {Number(st.avgGross || 0).toFixed(1)}타</span></div>
                           <div className="flex flex-col gap-2 text-xs text-slate-600 min-w-0">
@@ -191,15 +176,10 @@
                             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Coffee className="w-3.5 h-3.5 text-amber-600 shrink-0"/> <span className="text-slate-500 font-medium">국밥</span> <b className="text-slate-800">{String(st.bomb?.name || '-')}</b></span><span className="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{st.bomb?.score || 0}타 ({safeDisplayNet(st.bomb?.diffFromAvg)})</span></div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      ))}</div></div>
                 )}
                 {config.enableTeamComp && config.teamList && config.teamList.length > 0 && (
-                  <div>
-                    <h4 className="font-bold text-slate-700 text-sm mb-2 flex items-center gap-1.5"><Icons.Users className="w-4 h-4 text-[#0D8A5E]"/> 조별 분석</h4>
-                    <div className="space-y-3">
-                      {config.teamList.map((st, idx) => (
+                  <div><h4 className="font-bold text-slate-700 text-sm mb-2 flex items-center gap-1.5"><Icons.Users className="w-4 h-4 text-[#0D8A5E]"/> 조별 분석</h4><div className="space-y-3">{config.teamList.map((st, idx) => (
                         <div key={idx} className="flex flex-col p-4 bg-white border border-slate-100 shadow-sm rounded-xl gap-3 text-left">
                           <div className="flex items-center gap-2 border-b border-slate-50 pb-2"><span className="font-bold text-sm text-slate-800 shrink-0 truncate">{String(st.teamName || st.name || '-')}</span><span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">평균 {Number(st.avgGross || 0).toFixed(1)}타</span></div>
                           <div className="flex flex-col gap-2 text-xs text-slate-600 min-w-0">
@@ -207,36 +187,18 @@
                             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Coffee className="w-3.5 h-3.5 text-amber-600 shrink-0"/> <span className="text-slate-500 font-medium">국밥</span> <b className="text-slate-800">{String(st.bomb?.name || '-')}</b></span><span className="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{st.bomb?.score || 0}타 ({safeDisplayNet(st.bomb?.diffFromAvg)})</span></div>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </div>
+                      ))}</div></div>
                 )}
               </div>
             ) : (
               <div className="overflow-y-auto flex-1 pr-1 space-y-2 pb-4 no-scrollbar">
                 {(config.list || []).map((item, idx) => {
-                  const val = item[config.valueKey];
-                  let valColor = 'text-slate-700';
-                  if (config.title?.includes('순위') || config.title?.includes('일취') || config.title?.includes('낙차')) { valColor = val > 0 ? 'text-red-500' : val < 0 ? 'text-[#0D8A5E]' : 'text-slate-700'; } 
-                  else if (config.title?.includes('다') || config.title?.includes('널뛰기') || config.title?.includes('시몬스') || config.title?.includes('스테이블')) { valColor = 'text-[#0D8A5E]'; }
+                  const val = item[config.valueKey]; let valColor = 'text-slate-700';
+                  if (config.title?.includes('순위') || config.title?.includes('일취') || config.title?.includes('낙차')) valColor = val > 0 ? 'text-red-500' : val < 0 ? 'text-[#0D8A5E]' : 'text-slate-700';
+                  else if (config.title?.includes('다') || config.title?.includes('널뛰기') || config.title?.includes('시몬스') || config.title?.includes('스테이블')) valColor = 'text-[#0D8A5E]';
                   return (
                     <div key={idx} className="flex flex-col p-3 bg-white border border-slate-100 shadow-sm rounded-xl gap-1 text-left">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <RankBadge rank={idx} />
-                          <div className="flex flex-col gap-0.5 min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                              <span className={`font-bold text-[15px] truncate ${item.isInvalid ? 'line-through text-slate-400' : 'text-slate-700'}`}>{String(item.name || item.teamName || '-')}</span>
-                              {config.customGroups && item.tIdx != null && item.pIdx != null && <GroupBadges tIdx={item.tIdx} pIdx={item.pIdx} customGroups={config.customGroups} />}
-                            </div>
-                            {config.title?.includes('신페리오') && <span className="text-[10px] text-slate-400 mt-0.5">Gross: {String(item.score || 0)} | HDCP: {Number((item.score || 0) - (item.mockNewPeoriaNet || 0)).toFixed(1)}</span>}
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-end gap-3 shrink-0">
-                          <span className={`font-black text-xl text-right min-w-[3rem] ${item.isInvalid ? 'text-slate-400' : valColor}`}>{String(config.formatFn ? config.formatFn(val, item) : val)}</span>
-                          <span className="font-black text-slate-300 text-sm text-right min-w-[2rem] ml-1">{String(config.detailKey === 'hIdx' ? `${(item.hIdx||0) + 1}H` : `${item.playedHoles || 0}H`)}</span>
-                        </div>
-                      </div>
+                      <div className="flex items-center justify-between"><div className="flex items-center gap-3 flex-1 min-w-0"><RankBadge rank={idx} /><div className="flex flex-col gap-0.5 min-w-0 flex-1"><div className="flex items-center gap-1.5 flex-wrap min-w-0"><span className={`font-bold text-[15px] truncate ${item.isInvalid ? 'line-through text-slate-400' : 'text-slate-700'}`}>{String(item.name || item.teamName || '-')}</span>{config.customGroups && item.tIdx != null && item.pIdx != null && <GroupBadges tIdx={item.tIdx} pIdx={item.pIdx} customGroups={config.customGroups} />}</div>{config.title?.includes('신페리오') && <span className="text-[10px] text-slate-400 mt-0.5">Gross: {String(item.score || 0)} | HDCP: {Number((item.score || 0) - (item.mockNewPeoriaNet || 0)).toFixed(1)}</span>}</div></div><div className="flex items-center justify-end gap-3 shrink-0"><span className={`font-black text-xl text-right min-w-[3rem] ${item.isInvalid ? 'text-slate-400' : valColor}`}>{String(config.formatFn ? config.formatFn(val, item) : val)}</span><span className="font-black text-slate-300 text-sm text-right min-w-[2rem] ml-1">{String(config.detailKey === 'hIdx' ? `${(item.hIdx||0) + 1}H` : `${item.playedHoles || 0}H`)}</span></div></div>
                       {config.detailKey && item.details && Array.isArray(item.details[config.detailKey]) && item.details[config.detailKey].length > 0 && <div className="text-[10px] text-slate-400 leading-snug pl-11 mt-1">{String(item.details[config.detailKey].join(', '))}</div>}
                     </div>
                   );
@@ -248,86 +210,50 @@
       );
     }
 
-    function ShareModal({ isOpen, onClose, roomId }) {
-      if (!isOpen) return null;
-      const inviteUrl = roomId ? `${window.location.origin}${window.location.pathname}?roomId=${roomId}` : window.location.href;
-      
-      const handleCopy = () => {
-        try {
-          const el = document.createElement('textarea');
-          el.value = inviteUrl;
-          el.setAttribute('readonly', '');
-          el.style.position = 'absolute';
-          el.style.left = '-9999px';
-          document.body.appendChild(el);
-          el.select();
-          document.execCommand('copy');
-          document.body.removeChild(el);
-          alert('URL이 복사되었습니다.');
-        } catch(e) {
-          alert('복사 실패. 아래 URL을 직접 복사해주세요.');
-        }
-        onClose();
-      };
-
-      return (
-        <div className="fixed inset-0 z-[130] flex items-center justify-center px-4 text-center">
-          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" onClick={onClose} />
-          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up text-left font-sans">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2 text-slate-800 font-bold text-lg"><Icons.Share2 className="w-5 h-5 text-[#0D8A5E]" /> 방 초대하기</div>
-              <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full transition-colors"><Icons.X className="w-5 h-5" /></button>
-            </div>
-            <div className="bg-[#F8F9FA] rounded-3xl p-6 flex items-center justify-center mb-6 border border-slate-100">
-              <Icons.Share2 className="w-20 h-20 text-slate-300" strokeWidth={1.5} />
-            </div>
-            <div className="mb-6">
-              <label className="block text-slate-500 text-xs font-bold mb-2 pl-1">초대 URL</label>
-              <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-600 text-sm truncate font-medium select-all">{inviteUrl}</div>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={handleCopy} className="flex-1 bg-white border border-[#0D8A5E] text-[#0D8A5E] font-bold py-3.5 rounded-xl transition-colors">URL 복사</button>
-              <button onClick={() => { if(navigator.share) navigator.share({ title: '골프 스코어보드', url: inviteUrl }); onClose(); }} className="flex-1 bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md transition-colors">공유하기</button>
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    function WaitingRoomView({ teamData, currentUserRole, myPlayerInfo, setMyPlayerInfo, joinedStatus, setJoinedStatus, isRoundStarted, onBack, eventName, onStartRound, customGroups, roomId, syncToDB, userUid }) {
+    function WaitingRoomView({ teamData, currentUserRole, myPlayerInfo, setMyPlayerInfo, joinedStatus, setJoinedStatus, isRoundStarted, onBack, eventName, onStartRound, customGroups, roomId, syncToDB, userUid, scoreInputPermission, scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers }) {
       const [isModalOpen, setIsModalOpen] = useState(false);
-      if (!joinedStatus || joinedStatus.length === 0) return null;
-      const joinedCount = joinedStatus.flat().filter(Boolean).length;
-      const totalPlayers = (teamData || []).flat().length;
+      const pressTimer = useRef(null); const isLongPressRef = useRef(false);
 
+      if (!joinedStatus || joinedStatus.length === 0) return null;
+      const joinedCount = joinedStatus.flat().filter(Boolean).length; const totalPlayers = (teamData || []).flat().length;
+
+      const handlePointerDown = (tIdx, pIdx) => {
+        if (currentUserRole !== 'host' || scoreInputPermission !== 'selected') return;
+        isLongPressRef.current = false;
+        pressTimer.current = setTimeout(() => {
+          isLongPressRef.current = true; const key = `${tIdx}-${pIdx}`;
+          setScoreInputAuthorizedPlayers(prev => { const newAuth = prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]; if(syncToDB) syncToDB({ scoreInputAuthorizedPlayers: newAuth }); return newAuth; });
+          try { if (navigator.vibrate) navigator.vibrate(50); } catch(e) {}
+        }, 500);
+      };
+      const handlePointerUpOrLeave = () => { if (pressTimer.current) clearTimeout(pressTimer.current); };
       const toggleJoinStatus = (tIdx, pIdx) => {
+        if (isLongPressRef.current) { isLongPressRef.current = false; return; }
         if (tIdx === 0 && pIdx === 0 && currentUserRole !== 'host') return; 
         const newStatus = [...joinedStatus]; newStatus[tIdx] = [...newStatus[tIdx]];
         if (currentUserRole === 'guest') {
           if (!newStatus[tIdx][pIdx]) { newStatus[tIdx][pIdx] = userUid || 'guest_user'; setJoinedStatus(newStatus); setMyPlayerInfo({ tIdx, pIdx }); if(syncToDB) syncToDB({ joinedStatus: newStatus }); if (isRoundStarted) onStartRound(); }
-        } else {
-          newStatus[tIdx][pIdx] = newStatus[tIdx][pIdx] ? null : 'host_approved'; setJoinedStatus(newStatus); if(syncToDB) syncToDB({ joinedStatus: newStatus });
-        }
+        } else { newStatus[tIdx][pIdx] = newStatus[tIdx][pIdx] ? null : 'host_approved'; setJoinedStatus(newStatus); if(syncToDB) syncToDB({ joinedStatus: newStatus }); }
       };
 
       return (
         <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] overflow-x-hidden font-sans">
           <div className="bg-[#0D8A5E] pt-12 pb-10 px-5 text-center rounded-b-[30px] shadow-sm shrink-0">
-            <h1 className="text-2xl font-black text-white tracking-tight truncate px-10">{String(eventName)}</h1>
-            <p className="text-emerald-100 text-sm font-medium mt-1">라운드 대기실</p>
+            <h1 className="text-2xl font-black text-white tracking-tight truncate px-10">{String(eventName)}</h1><p className="text-emerald-100 text-sm font-medium mt-1">라운드 대기실</p>
           </div>
           <div className="px-4 pt-6 flex-1 overflow-y-auto no-scrollbar text-left">
-            {isRoundStarted && currentUserRole === 'guest' && <div className="mb-6 bg-amber-50 text-amber-800 p-4 rounded-2xl text-sm text-center border border-amber-200 shadow-sm font-bold animate-pulse">방장이 라운드를 시작했습니다! 본인 이름을 클릭하여 입장하세요.</div>}
+            {isRoundStarted && currentUserRole === 'guest' && <div className="mb-4 bg-amber-50 text-amber-800 p-4 rounded-2xl text-sm text-center border border-amber-200 shadow-sm font-bold animate-pulse">방장이 라운드를 시작했습니다! 본인 이름을 클릭하여 입장하세요.</div>}
+            {currentUserRole === 'host' && scoreInputPermission === 'selected' && <div className="mb-4 bg-blue-50 text-blue-800 p-4 rounded-2xl text-xs text-center border border-blue-200 shadow-sm font-bold animate-fade-in-up"><Icons.Info className="w-4 h-4 inline mr-1 -mt-0.5" />권한을 줄 플레이어를 길게 눌러(Long Press) 점수 입력 권한을 부여하세요.</div>}
             <button onClick={() => setIsModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-white border border-[#A7F3D0] text-[#0D8A5E] font-bold py-4 rounded-2xl mb-6 shadow-sm transition-colors active:scale-[0.98]"><Icons.List className="w-5 h-5" /> 방 초대 코드 / URL 열기</button>
             {(teamData || []).map((team, tIdx) => (
               <div key={tIdx} className="mb-8 text-left">
                 <h3 className="text-slate-500 font-bold text-sm mb-3 pl-2 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>{tIdx + 1}조</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {(team || []).map((player, pIdx) => {
-                    const isJoined = !!joinedStatus[tIdx]?.[pIdx];
-                    const isMe = currentUserRole === 'guest' && myPlayerInfo && tIdx === myPlayerInfo.tIdx && pIdx === myPlayerInfo.pIdx;
+                    const isJoined = !!joinedStatus[tIdx]?.[pIdx]; const isMe = currentUserRole === 'guest' && myPlayerInfo && tIdx === myPlayerInfo.tIdx && pIdx === myPlayerInfo.pIdx; const isAuth = scoreInputPermission === 'selected' && scoreInputAuthorizedPlayers.includes(`${tIdx}-${pIdx}`);
                     return (
-                      <div key={pIdx} onClick={() => toggleJoinStatus(tIdx, pIdx)} className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer border-2 ${isJoined ? 'bg-[#F0FDF4] border-[#0D8A5E] shadow-sm' : 'bg-white border-dashed border-slate-200'} ${isMe ? 'ring-2 ring-emerald-400' : ''}`}>
+                      <div key={pIdx} onPointerDown={() => handlePointerDown(tIdx, pIdx)} onPointerUp={handlePointerUpOrLeave} onPointerLeave={handlePointerUpOrLeave} onContextMenu={e => e.preventDefault()} onClick={() => toggleJoinStatus(tIdx, pIdx)} className={`relative p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer border-2 select-none ${isJoined ? 'bg-[#F0FDF4] border-[#0D8A5E] shadow-sm' : 'bg-white border-dashed border-slate-200'} ${isMe ? 'ring-2 ring-emerald-400' : ''}`} style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}>
+                        {isAuth && <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm flex items-center gap-0.5 z-10"><Icons.Edit2 className="w-2.5 h-2.5"/>입력</div>}
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isJoined ? 'bg-[#D1FAE5] text-[#0D8A5E]' : 'bg-slate-100 text-slate-400'}`}>{isJoined ? <Icons.Check className="w-5 h-5 stroke-[3]" /> : <Icons.UserIcon className="w-5 h-5" />}</div>
                         <span className={`font-bold text-sm text-center ${isJoined ? 'text-[#0D8A5E]' : 'text-slate-600'}`}>{String(player.name)}</span>
                         <GroupBadges tIdx={tIdx} pIdx={pIdx} customGroups={customGroups} />
@@ -347,18 +273,10 @@
       );
     }
 
-    function ScoreInputView({ teamNames, teamData, isMultiCourse, teamCourses, courseInfo, currentUserRole, myPlayerInfo, hostSelectedTeam, setHostSelectedTeam, allPars, setAllPars, allScores, setAllScores, specialHoles, specialRecords, setSpecialRecords, eventName, scoreInputPermission, lastEditors, setLastEditors, customGroups, onGoToSettings, onOpenScoreboard, onOpenAwards, currentHole, setCurrentHole, manuallyClearedRef, syncToDB }) {
-      const isHost = currentUserRole === 'host';
-      const teamIndex = isHost ? hostSelectedTeam : (myPlayerInfo?.tIdx || 0);
-      const myTeam = teamData[teamIndex] || [];
-      const scores = allScores[currentHole-1]?.[teamIndex] || Array(myTeam.length).fill(null);
-      const par = allPars[teamIndex]?.[currentHole-1] || 4;
-      const canEdit = isHost || scoreInputPermission === 'all';
-
-      const tCourse = isMultiCourse ? teamCourses[teamIndex] : courseInfo;
-      const currentPhysicalCourse = currentHole <= 9 ? tCourse.front : tCourse.back;
-      const currentPhysicalHole = currentHole <= 9 ? currentHole : currentHole - 9;
-      
+    function ScoreInputView({ teamNames, teamData, isMultiCourse, teamCourses, courseInfo, currentUserRole, myPlayerInfo, hostSelectedTeam, setHostSelectedTeam, allPars, setAllPars, allScores, setAllScores, specialHoles, specialRecords, setSpecialRecords, eventName, scoreInputPermission, scoreInputAuthorizedPlayers, lastEditors, setLastEditors, customGroups, onGoToSettings, onOpenScoreboard, onOpenAwards, currentHole, setCurrentHole, manuallyClearedRef, syncToDB }) {
+      const isHost = currentUserRole === 'host'; const teamIndex = isHost ? hostSelectedTeam : (myPlayerInfo?.tIdx || 0); const myTeam = teamData[teamIndex] || []; const scores = allScores[currentHole-1]?.[teamIndex] || Array(myTeam.length).fill(null); const par = allPars[teamIndex]?.[currentHole-1] || 4;
+      const canEdit = isHost || scoreInputPermission === 'all' || (scoreInputPermission === 'selected' && myPlayerInfo && scoreInputAuthorizedPlayers.includes(`${myPlayerInfo.tIdx}-${myPlayerInfo.pIdx}`));
+      const tCourse = isMultiCourse ? teamCourses[teamIndex] : courseInfo; const currentPhysicalCourse = currentHole <= 9 ? tCourse.front : tCourse.back; const currentPhysicalHole = currentHole <= 9 ? currentHole : currentHole - 9;
       const isNearestHole = specialHoles.nearest && specialHoles.nearest.course === currentPhysicalCourse && specialHoles.nearest.hole === currentPhysicalHole;
       const isLongestHole = specialHoles.longest && specialHoles.longest.course === currentPhysicalCourse && specialHoles.longest.hole === currentPhysicalHole;
 
@@ -367,44 +285,27 @@
         const currentTeamScores = allScores[currentHole - 1][teamIndex];
         if (currentTeamScores && currentTeamScores.every(s => s === null)) {
           if (manuallyClearedRef.current[`${currentHole}-${teamIndex}`]) return;
-          const ns = [...allScores]; ns[currentHole - 1] = [...ns[currentHole - 1]]; ns[currentHole - 1][teamIndex] = Array(myTeam.length).fill(par);
-          setAllScores(ns); if(syncToDB) syncToDB({ allScores: ns });
+          const ns = [...allScores]; ns[currentHole - 1] = [...ns[currentHole - 1]]; ns[currentHole - 1][teamIndex] = Array(myTeam.length).fill(par); setAllScores(ns); if(syncToDB) syncToDB({ allScores: ns });
         }
       }, [currentHole, teamIndex, par, canEdit, myTeam.length]);
 
       const updateScore = (pI, d) => { 
-        if(!canEdit) return;
-        manuallyClearedRef.current[`${currentHole}-${teamIndex}`] = false;
-        const ns = [...allScores]; ns[currentHole-1] = [...ns[currentHole-1]]; ns[currentHole-1][teamIndex] = [...ns[currentHole-1][teamIndex]]; ns[currentHole-1][teamIndex][pI] = (ns[currentHole-1][teamIndex][pI] || par) + d; 
-        setAllScores(ns); 
-        const newEditors = { ...lastEditors, [`${currentHole}-${teamIndex}`]: isHost ? '방장' : (myTeam[myPlayerInfo?.pIdx]?.name || '알 수 없음') };
-        setLastEditors(newEditors); if(syncToDB) syncToDB({ allScores: ns, lastEditors: newEditors });
+        if(!canEdit) return; manuallyClearedRef.current[`${currentHole}-${teamIndex}`] = false;
+        const ns = [...allScores]; ns[currentHole-1] = [...ns[currentHole-1]]; ns[currentHole-1][teamIndex] = [...ns[currentHole-1][teamIndex]]; ns[currentHole-1][teamIndex][pI] = (ns[currentHole-1][teamIndex][pI] || par) + d; setAllScores(ns); 
+        const newEditors = { ...lastEditors, [`${currentHole}-${teamIndex}`]: isHost ? '방장' : (myTeam[myPlayerInfo?.pIdx]?.name || '알 수 없음') }; setLastEditors(newEditors); if(syncToDB) syncToDB({ allScores: ns, lastEditors: newEditors });
       };
-
       const updatePar = (np) => { 
-        if(!canEdit || np === par) return;
-        const diff = np - par;
+        if(!canEdit || np === par) return; const diff = np - par;
         const nps = [...allPars]; nps[teamIndex] = [...nps[teamIndex]]; nps[teamIndex][currentHole-1] = np; setAllPars(nps);
-        const ns = [...allScores]; ns[currentHole-1] = ns[currentHole-1].map((ts, tI) => tI === teamIndex ? ts.map(s => s !== null ? s + diff : null) : ts);
-        setAllScores(ns); if(syncToDB) syncToDB({ allPars: nps, allScores: ns });
+        const ns = [...allScores]; ns[currentHole-1] = ns[currentHole-1].map((ts, tI) => tI === teamIndex ? ts.map(s => s !== null ? s + diff : null) : ts); setAllScores(ns); if(syncToDB) syncToDB({ allPars: nps, allScores: ns });
       };
-
-      const handleResetCurrentHole = () => {
-        if(!canEdit) return;
-        manuallyClearedRef.current[`${currentHole}-${teamIndex}`] = true;
-        const ns = [...allScores]; ns[currentHole-1] = [...ns[currentHole-1]]; ns[currentHole-1][teamIndex] = Array(myTeam.length).fill(null);
-        setAllScores(ns); if(syncToDB) syncToDB({ allScores: ns });
-      };
-
-      const timerRef = useRef(null);
-      const [isLongPress, setIsLongPress] = useState(false);
+      const handleResetCurrentHole = () => { if(!canEdit) return; manuallyClearedRef.current[`${currentHole}-${teamIndex}`] = true; const ns = [...allScores]; ns[currentHole-1] = [...ns[currentHole-1]]; ns[currentHole-1][teamIndex] = Array(myTeam.length).fill(null); setAllScores(ns); if(syncToDB) syncToDB({ allScores: ns }); };
+      const timerRef = useRef(null); const [isLongPress, setIsLongPress] = useState(false);
       const handleS = (v) => { setIsLongPress(false); if(v >= 5) timerRef.current = setTimeout(()=>{ setIsLongPress(true); updatePar(v === 5 ? 6 : v === 6 ? 7 : 5); }, 500); };
       const handleE = (v) => { clearTimeout(timerRef.current); if(!isLongPress) updatePar(v); };
       const handleCancel = () => { clearTimeout(timerRef.current); };
-
       const updateSpecial = (type, field, val) => {
-        if(!canEdit) return;
-        const nr = [...specialRecords]; nr[currentHole-1] = { ...nr[currentHole-1] };
+        if(!canEdit) return; const nr = [...specialRecords]; nr[currentHole-1] = { ...nr[currentHole-1] };
         if (!nr[currentHole-1][teamIndex]) nr[currentHole-1][teamIndex] = { nearest: {pIdx: null, distance: '', isPar: false}, longest: {pIdx: null, distance: '', isPar: false} };
         nr[currentHole-1][teamIndex] = { ...nr[currentHole-1][teamIndex] }; nr[currentHole-1][teamIndex][type] = { ...nr[currentHole-1][teamIndex][type], [field]: val };
         setSpecialRecords(nr); if(syncToDB) syncToDB({ specialRecords: nr });
@@ -418,33 +319,14 @@
         <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] font-sans">
           <div className="bg-[#0D8A5E] pt-12 pb-16 px-5 text-center rounded-b-[30px] shrink-0 relative flex items-start justify-between shadow-lg">
             <button onClick={onOpenAwards} className="p-2 -ml-1 mt-1 hover:bg-black/10 rounded-lg relative z-20 transition-colors"><Icons.Award className="w-6 h-6 text-white"/></button>
-            <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11 text-center">
-              <span className="text-emerald-100/90 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span>
-              <div className="flex items-center gap-2 justify-center"><span className="text-3xl font-black text-white">{currentHole}H</span>{canEdit && <button onClick={handleResetCurrentHole} className="text-[10px] bg-white/20 text-white font-bold px-2.5 py-1 rounded-full hover:bg-white/30 transition-colors active:scale-95 ml-1 border border-white/20">초기화</button>}</div>
-            </div>
-            <div className="flex items-center gap-1.5 mt-1 relative z-20">
-              {isHost && (<button onClick={onGoToSettings} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors"><Icons.Settings className="w-5 h-5 text-white/90" /></button>)}
-              <button onClick={onOpenScoreboard} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors"><Icons.List className="w-6 h-6 text-white" /></button>
-            </div>
+            <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11 text-center"><span className="text-emerald-100/90 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span><div className="flex items-center gap-2 justify-center"><span className="text-3xl font-black text-white">{currentHole}H</span>{canEdit && <button onClick={handleResetCurrentHole} className="text-[10px] bg-white/20 text-white font-bold px-2.5 py-1 rounded-full hover:bg-white/30 transition-colors active:scale-95 ml-1 border border-white/20">초기화</button>}</div></div>
+            <div className="flex items-center gap-1.5 mt-1 relative z-20">{isHost && (<button onClick={onGoToSettings} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors"><Icons.Settings className="w-5 h-5 text-white/90" /></button>)}<button onClick={onOpenScoreboard} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors"><Icons.List className="w-6 h-6 text-white" /></button></div>
           </div>
           
           <div className="px-4 -mt-8 relative z-10 flex-1 overflow-y-auto no-scrollbar">
             <div className="flex gap-2 mb-4 h-[56px]">
-              <div className={`bg-white rounded-[20px] p-1.5 shadow-sm flex items-center ${isHost ? 'shrink-0' : 'w-full'}`}>
-                <div className="px-1.5 hidden sm:flex text-slate-400"><Icons.Flag className="w-4 h-4"/></div>
-                <div className="flex gap-1 w-full h-full">
-                  {[3, 4, par>=5?par:5].map(v=>(
-                    <button key={v} onPointerDown={()=>handleS(v)} onPointerUp={()=>handleE(v)} onPointerLeave={handleCancel} onContextMenu={e=>e.preventDefault()} style={{ WebkitTouchCallout: 'none' }} className={`h-full ${isHost?'w-11':'flex-1'} rounded-xl font-black text-lg select-none flex items-center justify-center transition-all ${par===v?'bg-[#0D8A5E] text-white shadow-md':'bg-transparent text-slate-500 hover:bg-slate-100'}`}>{v}</button>
-                  ))}
-                </div>
-              </div>
-              {isHost && (
-                <div className="bg-white rounded-[20px] p-1.5 shadow-sm flex flex-1 min-w-0 overflow-hidden">
-                  <div className="flex justify-start gap-1 overflow-x-auto no-scrollbar w-full h-full pr-1">
-                    {(teamNames || []).map((name, idx) => (<button key={idx} onClick={() => setHostSelectedTeam(idx)} className={`h-full px-3.5 rounded-xl font-bold text-sm whitespace-nowrap flex items-center justify-center transition-all shrink-0 ${hostSelectedTeam === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-transparent text-slate-500 hover:bg-slate-100'}`}>{String(name)}</button>))}
-                  </div>
-                </div>
-              )}
+              <div className={`bg-white rounded-[20px] p-1.5 shadow-sm flex items-center ${isHost ? 'shrink-0' : 'w-full'}`}><div className="px-1.5 hidden sm:flex text-slate-400"><Icons.Flag className="w-4 h-4"/></div><div className="flex gap-1 w-full h-full">{[3, 4, par>=5?par:5].map(v=>(<button key={v} onPointerDown={()=>handleS(v)} onPointerUp={()=>handleE(v)} onPointerLeave={handleCancel} onContextMenu={e=>e.preventDefault()} style={{ WebkitTouchCallout: 'none' }} className={`h-full ${isHost?'w-11':'flex-1'} rounded-xl font-black text-lg select-none flex items-center justify-center transition-all ${par===v?'bg-[#0D8A5E] text-white shadow-md':'bg-transparent text-slate-500 hover:bg-slate-100'}`}>{v}</button>))}</div></div>
+              {isHost && (<div className="bg-white rounded-[20px] p-1.5 shadow-sm flex flex-1 min-w-0 overflow-hidden"><div className="flex justify-start gap-1 overflow-x-auto no-scrollbar w-full h-full pr-1">{(teamNames || []).map((name, idx) => (<button key={idx} onClick={() => setHostSelectedTeam(idx)} className={`h-full px-3.5 rounded-xl font-bold text-sm whitespace-nowrap flex items-center justify-center transition-all shrink-0 ${hostSelectedTeam === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-transparent text-slate-500 hover:bg-slate-100'}`}>{String(name)}</button>))}</div></div>)}
             </div>
             
             <div className="bg-white rounded-3xl px-5 py-2 shadow-sm border border-slate-50">
@@ -452,18 +334,8 @@
                 const sVal = scores[pI]; const diff = sVal !== null ? sVal - par : null;
                 return (
                 <div key={pI} className="flex items-center justify-between py-4 border-b last:border-0 border-slate-50 text-left">
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><Icons.UserIcon className="w-5 h-5"/></div>
-                    <div className="flex flex-col min-w-0"><div className="flex items-center gap-1 min-w-0"><span className="font-bold text-slate-800 truncate">{String(p.name)}</span><GroupBadges tIdx={teamIndex} pIdx={pI} customGroups={customGroups}/></div></div>
-                  </div>
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className={`font-black text-sm w-6 text-center ${sVal != null ? (diff===0?'text-[#0D8A5E]':diff>0?'text-slate-600':'text-red-500') : 'text-slate-300'}`}>{sVal != null ? safeDisplayDiff(diff) : '-'}</span>
-                    <div className="flex items-center gap-4 ml-1">
-                      <button onClick={()=>updateScore(pI,-1)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 active:bg-slate-200 transition-colors"><Icons.Minus className="w-5 h-5"/></button>
-                      <span className="font-black text-2xl w-5 text-center text-slate-800">{sVal !== null ? sVal : par}</span>
-                      <button onClick={()=>updateScore(pI,1)} className="w-10 h-10 rounded-full bg-[#0D8A5E] flex items-center justify-center text-white shadow-md active:bg-[#0A704C] transition-colors"><Icons.Plus className="w-5 h-5"/></button>
-                    </div>
-                  </div>
+                  <div className="flex items-center gap-3 min-w-0 flex-1"><div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><Icons.UserIcon className="w-5 h-5"/></div><div className="flex flex-col min-w-0"><div className="flex items-center gap-1 min-w-0"><span className="font-bold text-slate-800 truncate">{String(p.name)}</span><GroupBadges tIdx={teamIndex} pIdx={pI} customGroups={customGroups}/></div></div></div>
+                  <div className="flex items-center gap-3 shrink-0"><span className={`font-black text-sm w-6 text-center ${sVal != null ? (diff===0?'text-[#0D8A5E]':diff>0?'text-slate-600':'text-red-500') : 'text-slate-300'}`}>{sVal != null ? safeDisplayDiff(diff) : '-'}</span><div className="flex items-center gap-4 ml-1"><button onClick={()=>updateScore(pI,-1)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 active:bg-slate-200 transition-colors"><Icons.Minus className="w-5 h-5"/></button><span className="font-black text-2xl w-5 text-center text-slate-800">{sVal !== null ? sVal : par}</span><button onClick={()=>updateScore(pI,1)} className="w-10 h-10 rounded-full bg-[#0D8A5E] flex items-center justify-center text-white shadow-md active:bg-[#0A704C] transition-colors"><Icons.Plus className="w-5 h-5"/></button></div></div>
                 </div>
                 );
               })}
@@ -472,85 +344,42 @@
             {(isNearestHole || isLongestHole) && (
               <div className="bg-white rounded-3xl p-5 shadow-sm mt-4 border border-slate-100 text-left">
                 <h3 className="text-slate-800 font-black text-sm mb-4">⛳ 팀별 이벤트 기록</h3>
-                {isNearestHole && (
-                  <div className="bg-purple-50 p-4 rounded-2xl border border-purple-100">
-                    <div className="flex justify-between items-center mb-3 text-purple-800 font-bold text-sm">
-                      <div className="flex items-center gap-2"><span>니어리스트</span>{nIsInvalid && <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded whitespace-nowrap">파 오버 무효</span>}</div>
-                      <label className="flex items-center text-xs cursor-pointer"><input type="checkbox" className="mr-1" checked={nRec?.isPar || false} onChange={e => updateSpecial('nearest', 'isPar', e.target.checked)} /> 파 달성</label>
-                    </div>
-                    <div className="flex gap-1.5 mb-3"><div className="relative w-full"><input type="number" inputMode="decimal" value={nRec?.distance || ''} onChange={e=>updateSpecial('nearest', 'distance', e.target.value)} className="w-full p-2 border border-purple-200 rounded-lg text-right pr-6 focus:outline-none focus:ring-2 focus:ring-purple-400 [&::-webkit-inner-spin-button]:appearance-none text-sm" placeholder="기록(m)"/><span className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-400 font-bold text-xs">m</span></div></div>
-                    <div className="flex gap-1.5">{(myTeam || []).map((p,i)=>(<button key={i} onClick={()=>updateSpecial('nearest', 'pIdx', nRec?.pIdx === i ? null : i)} className={`flex-1 py-2 text-[10px] font-bold rounded-xl border ${nRec?.pIdx === i ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-white text-purple-700 hover:bg-purple-100'}`}>{String(p.name)}</button>))}</div>
-                  </div>
-                )}
-                {isLongestHole && (
-                  <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 mt-3">
-                    <div className="flex justify-between items-center mb-3 text-blue-800 font-bold text-sm">
-                      <div className="flex items-center gap-2"><span>롱기스트</span>{lIsInvalid && <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded whitespace-nowrap">파 오버 무효</span>}</div>
-                      <label className="flex items-center text-xs cursor-pointer"><input type="checkbox" className="mr-1" checked={lRec?.isPar || false} onChange={e => updateSpecial('longest', 'isPar', e.target.checked)} /> 파 달성</label>
-                    </div>
-                    <div className="flex gap-1.5 mb-3"><div className="relative w-full"><input type="number" inputMode="decimal" value={lRec?.distance || ''} onChange={e=>updateSpecial('longest', 'distance', e.target.value)} className="w-full p-2 border border-blue-200 rounded-lg text-right pr-6 focus:outline-none focus:ring-2 focus:ring-blue-400 [&::-webkit-inner-spin-button]:appearance-none text-sm" placeholder="기록(m)"/><span className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400 font-bold text-xs">m</span></div></div>
-                    <div className="flex gap-1.5">{(myTeam || []).map((p,i)=>(<button key={i} onClick={()=>updateSpecial('longest', 'pIdx', lRec?.pIdx === i ? null : i)} className={`flex-1 py-2 text-[10px] font-bold rounded-xl border ${lRec?.pIdx === i ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-blue-700 hover:bg-blue-100'}`}>{String(p.name)}</button>))}</div>
-                  </div>
-                )}
+                {isNearestHole && (<div className="bg-purple-50 p-4 rounded-2xl border border-purple-100"><div className="flex justify-between items-center mb-3 text-purple-800 font-bold text-sm"><div className="flex items-center gap-2"><span>니어리스트</span>{nIsInvalid && <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded whitespace-nowrap">파 오버 무효</span>}</div><label className="flex items-center text-xs cursor-pointer"><input type="checkbox" className="mr-1" checked={nRec?.isPar || false} onChange={e => updateSpecial('nearest', 'isPar', e.target.checked)} /> 파 달성</label></div><div className="flex gap-1.5 mb-3"><div className="relative w-full"><input type="number" inputMode="decimal" value={nRec?.distance || ''} onChange={e=>updateSpecial('nearest', 'distance', e.target.value)} className="w-full p-2 border border-purple-200 rounded-lg text-right pr-6 focus:outline-none focus:ring-2 focus:ring-purple-400 [&::-webkit-inner-spin-button]:appearance-none text-sm" placeholder="기록(m)"/><span className="absolute right-2 top-1/2 -translate-y-1/2 text-purple-400 font-bold text-xs">m</span></div></div><div className="flex gap-1.5">{(myTeam || []).map((p,i)=>(<button key={i} onClick={()=>updateSpecial('nearest', 'pIdx', nRec?.pIdx === i ? null : i)} className={`flex-1 py-2 text-[10px] font-bold rounded-xl border ${nRec?.pIdx === i ? 'bg-purple-600 text-white border-purple-600 shadow-sm' : 'bg-white text-purple-700 hover:bg-purple-100'}`}>{String(p.name)}</button>))}</div></div>)}
+                {isLongestHole && (<div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 mt-3"><div className="flex justify-between items-center mb-3 text-blue-800 font-bold text-sm"><div className="flex items-center gap-2"><span>롱기스트</span>{lIsInvalid && <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded whitespace-nowrap">파 오버 무효</span>}</div><label className="flex items-center text-xs cursor-pointer"><input type="checkbox" className="mr-1" checked={lRec?.isPar || false} onChange={e => updateSpecial('longest', 'isPar', e.target.checked)} /> 파 달성</label></div><div className="flex gap-1.5 mb-3"><div className="relative w-full"><input type="number" inputMode="decimal" value={lRec?.distance || ''} onChange={e=>updateSpecial('longest', 'distance', e.target.value)} className="w-full p-2 border border-blue-200 rounded-lg text-right pr-6 focus:outline-none focus:ring-2 focus:ring-blue-400 [&::-webkit-inner-spin-button]:appearance-none text-sm" placeholder="기록(m)"/><span className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-400 font-bold text-xs">m</span></div></div><div className="flex gap-1.5">{(myTeam || []).map((p,i)=>(<button key={i} onClick={()=>updateSpecial('longest', 'pIdx', lRec?.pIdx === i ? null : i)} className={`flex-1 py-2 text-[10px] font-bold rounded-xl border ${lRec?.pIdx === i ? 'bg-blue-600 text-white border-blue-600 shadow-sm' : 'bg-white text-blue-700 hover:bg-blue-100'}`}>{String(p.name)}</button>))}</div></div>)}
               </div>
             )}
             <div className="pb-6 pt-4 text-center"><span className="text-[10px] text-slate-400 font-medium bg-white px-3 py-1.5 rounded-lg border shadow-sm">마지막 입력: <b className="text-slate-600">{String(lastEditors[`${currentHole}-${teamIndex}`] || '-')}</b></span></div>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 p-4 bg-white flex gap-3 z-10 border-t shadow-up">
-            <button onClick={()=>{if(currentHole>1)setCurrentHole(currentHole-1)}} className={`flex-1 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors ${currentHole>1?'bg-[#F1F3F5] text-slate-600 hover:bg-slate-200':'bg-slate-50 text-slate-300'}`}><Icons.ArrowLeft className="w-4 h-4"/> 이전 홀</button>
-            <button onClick={()=>{if(currentHole<18)setCurrentHole(currentHole+1); else onOpenScoreboard();}} className="flex-[2] font-bold py-4 rounded-2xl bg-[#0D8A5E] text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]">{currentHole<18?'다음 홀':'결과 확인'} <Icons.ArrowRight className="w-4 h-4" /></button>
-          </div>
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-white flex gap-3 z-10 border-t shadow-up"><button onClick={()=>{if(currentHole>1)setCurrentHole(currentHole-1)}} className={`flex-1 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-colors ${currentHole>1?'bg-[#F1F3F5] text-slate-600 hover:bg-slate-200':'bg-slate-50 text-slate-300'}`}><Icons.ArrowLeft className="w-4 h-4"/> 이전 홀</button><button onClick={()=>{if(currentHole<18)setCurrentHole(currentHole+1); else onOpenScoreboard();}} className="flex-[2] font-bold py-4 rounded-2xl bg-[#0D8A5E] text-white shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]">{currentHole<18?'다음 홀':'결과 확인'} <Icons.ArrowRight className="w-4 h-4" /></button></div>
         </div>
       );
     }
 
     function ScoreboardView({ teamNames, teamData, currentUserRole, myPlayerInfo, hostSelectedTeam, isMultiCourse, teamCourses, courseInfo, allPars, allScores, handicapType, eventName, customGroups, onGoToSettings, onBack, onGoToInput, onOpenAwards }) {
-      const isHost = currentUserRole === 'host';
-      const [vTeamIdx, setVTeamIdx] = useState(isHost ? hostSelectedTeam : (myPlayerInfo?.tIdx || 0));
-      const myTeam = teamData[vTeamIdx] || [];
-      const [activeTab, setActiveTab] = useState('front');
-      const vTeamCourse = isMultiCourse ? teamCourses[vTeamIdx] : courseInfo;
-
+      const isHost = currentUserRole === 'host'; const [vTeamIdx, setVTeamIdx] = useState(isHost ? hostSelectedTeam : (myPlayerInfo?.tIdx || 0)); const myTeam = teamData[vTeamIdx] || []; const [activeTab, setActiveTab] = useState('front'); const vTeamCourse = isMultiCourse ? teamCourses[vTeamIdx] : courseInfo;
       const getStats = (pIdx) => {
         let score = 0, diff = 0, holes = 0;
         (allScores || []).forEach((hs, hIdx) => { if (hs[vTeamIdx] && hs[vTeamIdx][pIdx] != null) { score += hs[vTeamIdx][pIdx]; diff += (hs[vTeamIdx][pIdx] - allPars[vTeamIdx][hIdx]); holes++; } });
-        const handi = parseInt(String(myTeam[pIdx]?.handicap || "").replace(/[^0-9+\-]/g, '')) || 0;
-        const expOver = (handicapType === 'strokes' ? handi - 72 : handi) * (holes / 18);
+        const handi = parseInt(String(myTeam[pIdx]?.handicap || "").replace(/[^0-9+\-]/g, '')) || 0; const expOver = (handicapType === 'strokes' ? handi - 72 : handi) * (holes / 18);
         return { score, diff, holes, net: holes > 0 ? (diff - expOver) : 0 };
       };
-
       return (
         <div className="flex flex-col min-h-screen bg-[#F8F9FA] relative font-sans font-pretendard">
-          <div className="bg-[#1E293B] pt-12 pb-6 px-4 shrink-0 flex items-start justify-between shadow-sm relative z-20">
-            <button onClick={onBack} className="p-2 -ml-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors"><Icons.ArrowLeft className="w-6 h-6" /></button>
-            <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11"><span className="text-slate-400 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span><h1 className="text-lg font-black text-white">전체 스코어보드</h1></div>
-            <div className="flex items-center gap-1 mt-1.5 relative z-20"><button onClick={onOpenAwards} className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><Icons.Award className="w-5 h-5 text-amber-400" /></button>{isHost && (<button onClick={onGoToSettings} className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><Icons.Settings className="w-5 h-5 text-slate-300" /></button>)}</div>
-          </div>
-
+          <div className="bg-[#1E293B] pt-12 pb-6 px-4 shrink-0 flex items-start justify-between shadow-sm relative z-20"><button onClick={onBack} className="p-2 -ml-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors"><Icons.ArrowLeft className="w-6 h-6" /></button><div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11"><span className="text-slate-400 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span><h1 className="text-lg font-black text-white">전체 스코어보드</h1></div><div className="flex items-center gap-1 mt-1.5 relative z-20"><button onClick={onOpenAwards} className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><Icons.Award className="w-5 h-5 text-amber-400" /></button>{isHost && (<button onClick={onGoToSettings} className="p-1.5 hover:bg-white/10 rounded-full transition-colors"><Icons.Settings className="w-5 h-5 text-slate-300" /></button>)}</div></div>
           <div className="flex-1 overflow-y-auto pb-48 mt-4 no-scrollbar">
             <div className="px-4 mb-4"><div className="flex justify-start overflow-x-auto gap-2 no-scrollbar">{(teamNames || []).map((name, idx) => (<button key={idx} onClick={() => setVTeamIdx(idx)} className={`px-4 py-2 rounded-xl font-bold text-sm whitespace-nowrap border transition-all ${vTeamIdx === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-white text-slate-400'}`}>{String(name)} {myPlayerInfo?.tIdx === idx && '(MY)'}</button>))}</div></div>
-            <div className="bg-white rounded-3xl px-2 py-4 shadow-sm mb-4 flex justify-between mx-4 border border-slate-50">
-              {(myTeam || []).map((p, i) => { const s = getStats(i); return (<div key={i} className="flex flex-col items-center flex-1 min-w-0 border-r last:border-0 border-slate-100 text-center"><div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 mb-1.5 shadow-inner"><Icons.UserIcon className="w-5 h-5" /></div><span className="font-bold text-slate-700 text-[11px] text-center truncate w-full px-1 mb-0.5">{String(p.name)}</span><GroupBadges tIdx={vTeamIdx} pIdx={i} customGroups={customGroups} /><span className={`font-black text-sm mt-1 ${s.diff > 0 ? 'text-[#0D8A5E]' : s.diff < 0 ? 'text-red-500' : 'text-slate-400'}`}>{safeDisplayDiff(s.diff)}</span></div>); })}
-            </div>
+            <div className="bg-white rounded-3xl px-2 py-4 shadow-sm mb-4 flex justify-between mx-4 border border-slate-50">{(myTeam || []).map((p, i) => { const s = getStats(i); return (<div key={i} className="flex flex-col items-center flex-1 min-w-0 border-r last:border-0 border-slate-100 text-center"><div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 mb-1.5 shadow-inner"><Icons.UserIcon className="w-5 h-5" /></div><span className="font-bold text-slate-700 text-[11px] text-center truncate w-full px-1 mb-0.5">{String(p.name)}</span><GroupBadges tIdx={vTeamIdx} pIdx={i} customGroups={customGroups} /><span className={`font-black text-sm mt-1 ${s.diff > 0 ? 'text-[#0D8A5E]' : s.diff < 0 ? 'text-red-500' : 'text-slate-400'}`}>{safeDisplayDiff(s.diff)}</span></div>); })}</div>
             <div className="px-4 mb-3 flex bg-white rounded-xl p-1 shadow-sm mx-4"><button onClick={() => setActiveTab('front')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'front' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400'}`}>전반 ({String(vTeamCourse.front)})</button><button onClick={() => setActiveTab('back')} className={`flex-1 py-2.5 text-sm font-bold rounded-lg transition-all ${activeTab === 'back' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-400'}`}>후반 ({String(vTeamCourse.back)})</button></div>
             <div className="px-4 pb-4">
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 {Array.from({length: 9}).map((_, idx) => {
-                  const hIdx = activeTab === 'front' ? idx : idx + 9;
-                  const par = allPars[vTeamIdx]?.[hIdx] || 4;
-                  const scores = allScores[hIdx]?.[vTeamIdx] || Array(myTeam.length).fill(null);
+                  const hIdx = activeTab === 'front' ? idx : idx + 9; const par = allPars[vTeamIdx]?.[hIdx] || 4; const scores = allScores[hIdx]?.[vTeamIdx] || Array(myTeam.length).fill(null);
                   return (<div key={hIdx} onClick={() => onGoToInput(hIdx + 1, vTeamIdx)} className="flex border-b last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"><div className="w-12 bg-slate-50 py-3 flex flex-col items-center justify-center border-r shrink-0"><span className="text-xs font-black text-slate-800">{hIdx + 1}H</span><span className="text-[9px] font-bold text-slate-400">P{par}</span></div><div className="flex-1 flex">{scores.map((sVal, i) => (<div key={i} className="flex-1 flex flex-col items-center justify-center py-2 border-r last:border-0">{sVal == null ? <span className="text-[10px] text-slate-300">대기</span> : <><span className={`font-black text-sm ${sVal - par > 0 ? 'text-[#0D8A5E]' : sVal - par < 0 ? 'text-red-500' : 'text-slate-800'}`}>{safeDisplayDiff(sVal - par)}</span></>}</div>))}</div></div>);
                 })}
               </div>
             </div>
           </div>
-
-          <div className="fixed bottom-0 left-0 right-0 sm:max-w-md sm:mx-auto bg-white p-4 shadow-up rounded-t-3xl border-t z-50">
-            <div className="flex justify-between items-center mb-4 px-1"><h2 className="font-bold text-sm flex items-center gap-1.5"><Icons.Star className="w-4 h-4 text-[#0D8A5E]" /> 실시간 합산 & NET 스코어</h2></div>
-            <div className="flex gap-2">
-              {(myTeam || []).map((_, i) => { const s = getStats(i); return (<div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl py-2 flex flex-col items-center shadow-sm relative overflow-hidden" key={i}><span className="text-[10px] font-bold text-slate-600 truncate w-full text-center px-1 mb-0.5">{String(myTeam[i].name)}</span><span className="text-xl font-black text-slate-800 mb-1 leading-none">{String(s.score)}</span><div className="w-full bg-[#0D8A5E]/10 py-1 text-center mt-1 border-t border-[#0D8A5E]/20"><span className="text-[10px] font-bold text-[#0D8A5E]">NET {safeDisplayNet(s.net)}</span></div></div>); })}
-            </div>
-          </div>
+          <div className="fixed bottom-0 left-0 right-0 sm:max-w-md sm:mx-auto bg-white p-4 shadow-up rounded-t-3xl border-t z-50"><div className="flex justify-between items-center mb-4 px-1"><h2 className="font-bold text-sm flex items-center gap-1.5"><Icons.Star className="w-4 h-4 text-[#0D8A5E]" /> 실시간 합산 & NET 스코어</h2></div><div className="flex gap-2">{(myTeam || []).map((_, i) => { const s = getStats(i); return (<div className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl py-2 flex flex-col items-center shadow-sm relative overflow-hidden" key={i}><span className="text-[10px] font-bold text-slate-600 truncate w-full text-center px-1 mb-0.5">{String(myTeam[i].name)}</span><span className="text-xl font-black text-slate-800 mb-1 leading-none">{String(s.score)}</span><div className="w-full bg-[#0D8A5E]/10 py-1 text-center mt-1 border-t border-[#0D8A5E]/20"><span className="text-[10px] font-bold text-[#0D8A5E]">NET {safeDisplayNet(s.net)}</span></div></div>); })}</div></div>
         </div>
       );
     }
@@ -559,56 +388,50 @@
       const getCompStats = (type) => {
         const list = type === 'group' ? (customGroups || []) : (teamData || []).map((_, i) => ({ id: i, name: teamNames[i], members: (teamData[i] || []).map((__, pi) => `${i}-${pi}`) }));
         return list.map(g => {
-          const members = stats.filter(s => (g.members || []).includes(`${s.tIdx}-${s.pIdx}`));
-          const targetMode = type === 'group' ? groupBalanceMode : teamBalanceMode;
-          const diffs = members.map(m => targetMode === 'net' ? m.netDiff : m.diff);
-          const avgGross = members.length > 0 ? members.reduce((sum, m) => sum + (m.score || 0), 0) / members.length : 0;
-          const compDiff = diffs.length > 0 ? diffs.reduce((a,b)=>a+b, 0) / diffs.length : 0;
-          const hardCarry = members.reduce((a, b) => (a.score || 0) < (b.score || 0) ? a : b, members[0] || {});
-          const bomb = members.reduce((a, b) => (a.score || 0) > (b.score || 0) ? a : b, members[0] || {});
-          return { 
-            ...g, compDiff, avgGross, teamName: g.name,
-            hardCarry: { ...hardCarry, score: hardCarry.score || 0, diffFromAvg: (hardCarry.score || 0) - avgGross }, 
-            bomb: { ...bomb, score: bomb.score || 0, diffFromAvg: (bomb.score || 0) - avgGross } 
-          };
+          const members = stats.filter(s => (g.members || []).includes(`${s.tIdx}-${s.pIdx}`)); const targetMode = type === 'group' ? groupBalanceMode : teamBalanceMode; const diffs = members.map(m => targetMode === 'net' ? m.netDiff : m.diff);
+          const avgGross = members.length > 0 ? members.reduce((sum, m) => sum + (m.score || 0), 0) / members.length : 0; const compDiff = diffs.length > 0 ? diffs.reduce((a,b)=>a+b, 0) / diffs.length : 0;
+          const hardCarry = members.reduce((a, b) => (a.score || 0) < (b.score || 0) ? a : b, members[0] || {}); const bomb = members.reduce((a, b) => (a.score || 0) > (b.score || 0) ? a : b, members[0] || {});
+          return { ...g, compDiff, avgGross, teamName: g.name, hardCarry: { ...hardCarry, score: hardCarry.score || 0, diffFromAvg: (hardCarry.score || 0) - avgGross }, bomb: { ...bomb, score: bomb.score || 0, diffFromAvg: (bomb.score || 0) - avgGross } };
         }).sort((a,b)=>a.compDiff - b.compDiff);
       };
 
       const renderAwardRow = (title, IconComp, list, valueKey, formatFn, detailKey, customBg = "bg-[#E6F4EF]", customText = "text-[#0D8A5E]", checkKey = title) => {
-        if (!(selectedAwards || []).includes(checkKey)) return null;
-        const isAscending = title === '시몬스' || title === '일취월장' || title === '전체 순위';
+        if (!(selectedAwards || []).includes(checkKey)) return null; 
+        const isAscending = title === '시몬스' || title === '일취월장' || title === '전체 순위'; 
         let validList = list;
-        if (title === '일취월장') validList = list.filter(p => p.ilchiScore !== 9999);
+        if (title === '일취월장') validList = list.filter(p => p.ilchiScore !== 9999); 
         else if (title === '낙차큰커브') validList = list.filter(p => p.nakchaScore !== -9999);
+        else if (title === '시몬스' || title === '널뛰기') validList = list.filter(p => p.playedHoles >= 2);
+        
         const sorted = [...validList].sort((a,b) => isAscending ? a[valueKey] - b[valueKey] : b[valueKey] - a[valueKey]);
-        if (sorted.length === 0) return null;
-
-        const topScore = sorted[0][valueKey];
-        if (topScore === 0 && ['다버디', '다파', '다보기', '다찐파', '다찐보기', '다찐양파', '변형스테이블포드'].includes(checkKey)) return null;
-
-        const tiedPlayers = sorted.filter(p => p[valueKey] === topScore);
-        const topPlayer = tiedPlayers[0];
-        const displayName = tiedPlayers.length > 1 ? `${topPlayer.name} 외 ${tiedPlayers.length - 1}인` : topPlayer.name;
+        
+        // 최고 점수가 0점이거나 아예 기록이 없는 경우 '기록 없음'으로 화면에 노출 (단, 시몬스는 0점이 최고 기록이므로 0점 무효에서 제외)
+        const hasNoRecord = sorted.length === 0 || (sorted[0][valueKey] === 0 && ['다버디', '다파', '다보기', '다찐파', '다찐보기', '다찐양파', '변형스테이블포드', '널뛰기'].includes(checkKey));
+        
+        const topScore = hasNoRecord ? 0 : sorted[0][valueKey];
+        const tiedPlayers = hasNoRecord ? [] : sorted.filter(p => p[valueKey] === topScore); 
+        const topPlayer = tiedPlayers[0]; 
+        const displayName = hasNoRecord ? "아직 기록이 없습니다" : (tiedPlayers.length > 1 ? `${topPlayer.name} 외 ${tiedPlayers.length - 1}명` : topPlayer.name);
 
         return (
           <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center justify-between animate-fade-in-up font-sans">
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <IconComp className={`w-8 h-8 p-1.5 rounded-full ${customBg} ${customText} shrink-0`} />
+              <IconComp className={`w-8 h-8 p-1.5 rounded-full ${hasNoRecord ? 'bg-slate-100 text-slate-400' : customBg} ${hasNoRecord ? '' : customText} shrink-0`} />
               <div className="flex flex-col min-w-0 text-left">
                  <span className="font-bold text-slate-500 text-[11px]">{String(title)}</span>
                  <div className="flex items-center gap-1 min-w-0">
-                   <span className="text-[15px] font-bold text-slate-800 truncate">{String(displayName)}</span>
-                   {tiedPlayers.length === 1 && topPlayer?.name && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0 mx-1">{teamNames[topPlayer.tIdx] || `${topPlayer.tIdx + 1}조`}</span>}
-                   {tiedPlayers.length === 1 && topPlayer?.name && <GroupBadges tIdx={topPlayer.tIdx} pIdx={topPlayer.pIdx} customGroups={customGroups} />}
+                   <span className={`text-[15px] font-bold ${hasNoRecord ? 'text-slate-400' : 'text-slate-800'} truncate`}>{String(displayName)}</span>
+                   {!hasNoRecord && tiedPlayers.length === 1 && topPlayer?.name && <span className="text-[9px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0 mx-1">{teamNames[topPlayer.tIdx] || `${topPlayer.tIdx + 1}조`}</span>}
+                   {!hasNoRecord && tiedPlayers.length === 1 && topPlayer?.name && <GroupBadges tIdx={topPlayer.tIdx} pIdx={topPlayer.pIdx} customGroups={customGroups} />}
                  </div>
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 shrink-0 ml-2">
               <div className="flex flex-col items-end leading-none">
-                <span className={`font-black text-xl text-right min-w-[2rem] ${customText}`}>{topPlayer?.name ? String(formatFn(topScore, topPlayer)) : '0'}</span>
-                {(title === '일취월장' || title === '낙차큰커브') && <span className="text-[10px] font-bold text-slate-400 mt-1 opacity-70">HDCP:{topPlayer?.handicap || 0}</span>}
+                <span className={`font-black text-xl text-right min-w-[2rem] ${hasNoRecord ? 'text-slate-300' : customText}`}>{hasNoRecord ? '-' : String(formatFn(topScore, topPlayer))}</span>
+                {!hasNoRecord && (title === '일취월장' || title === '낙차큰커브') && <span className="text-[10px] font-bold text-slate-400 mt-1 opacity-70">HDCP:{topPlayer?.handicap || 0}</span>}
               </div>
-              <button onClick={() => setDetailModal({ title: `${title} 순위`, list: sorted, valueKey, formatFn, detailKey, customGroups: enableGroupComp?customGroups:null, teamNames, totalPar })} className="p-1.5 bg-slate-50 rounded-lg text-slate-400 transition-colors hover:bg-slate-100"><Icons.ChevronRight className="w-4 h-4" /></button>
+              <button onClick={() => { if(!hasNoRecord) setDetailModal({ title: `${title} 순위`, list: sorted, valueKey, formatFn, detailKey, customGroups: enableGroupComp?customGroups:null, teamNames, totalPar }) }} className={`p-1.5 rounded-lg transition-colors ${hasNoRecord ? 'text-slate-200 bg-transparent' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`} disabled={hasNoRecord}><Icons.ChevronRight className="w-4 h-4" /></button>
             </div>
           </div>
         );
@@ -619,74 +442,16 @@
         setDetailModal({ title: '신페리오 전체 순위', list: [...stats].sort((a,b)=>a.mockNewPeoriaNet - b.mockNewPeoriaNet), valueKey: 'mockNewPeoriaNet', formatFn: (v) => v > 0 ? Number(v).toFixed(1) : '-', customGroups: enableGroupComp ? customGroups : null, teamNames });
       };
 
-      const groupCompStats = getCompStats('group');
-      const teamCompStats = getCompStats('team');
+      const groupCompStats = getCompStats('group'); const teamCompStats = getCompStats('team');
 
       return (
         <div className="flex flex-col min-h-screen bg-[#F8F9FA] relative text-left">
-          <div className="bg-[#1E293B] pt-12 pb-6 px-4 shrink-0 flex items-start justify-between relative z-20 shadow-lg">
-            <button onClick={onBack} className="p-2 -ml-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors"><Icons.ArrowLeft className="w-6 h-6" /></button>
-            <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11">
-              <span className="text-slate-400 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span>
-              <div className="flex items-center gap-2"><h1 className="text-lg font-black text-white">실시간 시상 현황</h1><button onClick={() => setIsAwardInfoOpen(true)} className="ml-1 p-0.5 text-slate-300 hover:text-white transition-colors"><Icons.Info className="w-4 h-4"/></button></div>
-            </div>
-            <div className="w-8"></div>
-          </div>
+          <div className="bg-[#1E293B] pt-12 pb-6 px-4 shrink-0 flex items-start justify-between relative z-20 shadow-lg"><button onClick={onBack} className="p-2 -ml-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors"><Icons.ArrowLeft className="w-6 h-6" /></button><div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11"><span className="text-slate-400 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span><div className="flex items-center gap-2"><h1 className="text-lg font-black text-white">실시간 시상 현황</h1><button onClick={() => setIsAwardInfoOpen(true)} className="ml-1 p-0.5 text-slate-300 hover:text-white transition-colors"><Icons.Info className="w-4 h-4"/></button></div></div><div className="w-8"></div></div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 mt-2 no-scrollbar">
-            {currentUserRole === 'host' && !isAwardsManuallyOpened && (
-              <button onClick={()=>setIsAwardsManuallyOpened(true)} className="w-full bg-emerald-50 border border-emerald-200 text-[#0D8A5E] p-4 rounded-2xl font-bold flex items-center justify-center gap-2 mb-2 active:scale-95 transition-all shadow-sm"><Icons.Award className="w-5 h-5"/> 모든 시상 결과 오픈하기 (게스트 공개)</button>
-            )}
-            
-            {/* 전체 순위 (예상타수) */}
-            {selectedAwards.includes('전체 순위') && (
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up">
-                <div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2">
-                  <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Icons.Award className="w-4 h-4 text-[#0D8A5E]" /> 전체 순위</h4>
-                  <button onClick={() => setDetailModal({ title: '전체 순위', isOverall: true, teamNames, totalPar, lists: { realtime: stats, sync: syncStats, prediction: predictionStats }, formatFn: (v, tab) => tab === 'prediction' ? Math.round(totalPar + v) + '타' : safeDisplayDiff(v), customGroups: enableGroupComp ? customGroups : null })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#D1FAE5]">자세히 보기 &gt;</button>
-                </div>
-                <div className="space-y-2">
-                  {[...stats].sort((a,b)=>a.diff-b.diff).slice(0, 3).map((st, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                      <div className="flex items-center gap-3 flex-1 min-w-0 text-left">
-                        <RankBadge rank={i} />
-                        <div className="flex items-center gap-1.5 flex-wrap min-w-0">
-                          <span className="font-bold text-slate-700 text-[15px] truncate">{String(st.name || '-')}</span>
-                          <span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{teamNames[st.tIdx] || `${st.tIdx + 1}조`}</span>
-                          {enableGroupComp && <GroupBadges tIdx={st.tIdx} pIdx={st.pIdx} customGroups={customGroups} />}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end min-w-[3.5rem]">
-                        <span className={`font-black text-xl leading-none ${st.diff>0?'text-red-500':'text-[#0D8A5E]'}`}>{safeDisplayDiff(st.diff)}</span>
-                        <span className="text-[10px] font-bold text-slate-400 mt-1">{String(st.score || 0)}타</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 신페리오 */}
-            {(selectedAwards || []).includes('신페리오') && (
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up">
-                <div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2">
-                  <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5 cursor-pointer" onClick={handlePeoriaClick}>
-                    <Icons.Award className="w-4 h-4 text-[#0D8A5E]" /> 신페리오 (NET) {isAwardOpen && <Icons.Info className="w-4 h-4 text-slate-300 ml-1" />}
-                  </h4>
-                  <button onClick={handlePeoriaClick} className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-colors ${isAwardOpen ? 'text-[#0D8A5E] bg-[#E6F4EF] hover:bg-[#D1FAE5]' : 'text-slate-400 bg-slate-100'}`}>자세히 보기 &gt;</button>
-                </div>
-                <div className="space-y-2">
-                  {[...stats].sort((a,b)=>a.mockNewPeoriaNet - b.mockNewPeoriaNet).slice(0, 3).map((st, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                      <div className="flex items-center gap-3 flex-1 min-w-0 text-left"><RankBadge rank={i} /><span className="font-bold text-slate-700 text-[15px]">{isAwardOpen ? String(st.name) : '🔒 비공개'}</span></div>
-                      <span className={`font-black text-xl text-[#0D8A5E]`}>{isAwardOpen ? Number(st.mockNewPeoriaNet).toFixed(1) : '-'}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
+            {currentUserRole === 'host' && !isAwardsManuallyOpened && (<button onClick={()=>setIsAwardsManuallyOpened(true)} className="w-full bg-emerald-50 border border-emerald-200 text-[#0D8A5E] p-4 rounded-2xl font-bold flex items-center justify-center gap-2 mb-2 active:scale-95 transition-all shadow-sm"><Icons.Award className="w-5 h-5"/> 모든 시상 결과 오픈하기 (게스트 공개)</button>)}
+            {selectedAwards.includes('전체 순위') && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up"><div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Icons.Award className="w-4 h-4 text-[#0D8A5E]" /> 전체 순위</h4><button onClick={() => setDetailModal({ title: '전체 순위', isOverall: true, teamNames, totalPar, lists: { realtime: stats, sync: syncStats, prediction: predictionStats }, formatFn: (v, tab) => tab === 'prediction' ? Math.round(totalPar + v) + '타' : safeDisplayDiff(v), customGroups: enableGroupComp ? customGroups : null })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#D1FAE5]">자세히 보기 &gt;</button></div><div className="space-y-2">{[...stats].sort((a,b)=>a.diff-b.diff).slice(0, 3).map((st, i) => (<div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"><div className="flex items-center gap-3 flex-1 min-w-0 text-left"><RankBadge rank={i} /><div className="flex items-center gap-1.5 flex-wrap min-w-0"><span className="font-bold text-slate-700 text-[15px] truncate">{String(st.name || '-')}</span><span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{teamNames[st.tIdx] || `${st.tIdx + 1}조`}</span>{enableGroupComp && <GroupBadges tIdx={st.tIdx} pIdx={st.pIdx} customGroups={customGroups} />}</div></div><div className="flex flex-col items-end min-w-[3.5rem]"><span className={`font-black text-xl leading-none ${st.diff>0?'text-red-500':'text-[#0D8A5E]'}`}>{safeDisplayDiff(st.diff)}</span><span className="text-[10px] font-bold text-slate-400 mt-1">{String(st.score || 0)}타</span></div></div>))}</div></div>)}
+            {(selectedAwards || []).includes('신페리오') && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up"><div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5 cursor-pointer" onClick={handlePeoriaClick}><Icons.Award className="w-4 h-4 text-[#0D8A5E]" /> 신페리오 (NET) {isAwardOpen && <Icons.Info className="w-4 h-4 text-slate-300 ml-1" />}</h4><button onClick={handlePeoriaClick} className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-colors ${isAwardOpen ? 'text-[#0D8A5E] bg-[#E6F4EF] hover:bg-[#D1FAE5]' : 'text-slate-400 bg-slate-100'}`}>자세히 보기 &gt;</button></div><div className="space-y-2">{[...stats].sort((a,b)=>a.mockNewPeoriaNet - b.mockNewPeoriaNet).slice(0, 3).map((st, i) => (<div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"><div className="flex items-center gap-3 flex-1 min-w-0 text-left"><RankBadge rank={i} /><span className="font-bold text-slate-700 text-[15px]">{isAwardOpen ? String(st.name) : '🔒 비공개'}</span></div><span className={`font-black text-xl text-[#0D8A5E]`}>{isAwardOpen ? Number(st.mockNewPeoriaNet).toFixed(1) : '-'}</span></div>))}</div></div>)}
             {renderAwardRow(stablefordTitle, Icons.Star, stats, 'stablefordScore', (v)=>String(v), null, "bg-[#E6F4EF]", "text-[#0D8A5E]", '변형스테이블포드')}
-            
             <div className="grid grid-cols-1 gap-3 animate-fade-in-up">
               {renderAwardRow('일취월장', Icons.Zap, stats, 'ilchiScore', (v)=>v !== 9999 ? safeDisplayNet(v) : '-', 'perfText')}
               {renderAwardRow('낙차큰커브', Icons.TrendingDown, stats, 'nakchaScore', (v)=>v !== -9999 ? safeDisplayNet(v) : '-', 'perfText', "bg-red-50", "text-red-500")}
@@ -699,212 +464,61 @@
               {renderAwardRow('널뛰기', Icons.TrendingUp, stats, 'variance', (v)=>String(v), 'variance', "bg-orange-50", "text-orange-500")}
               {renderAwardRow('시몬스', Icons.Minus, stats, 'variance', (v)=>String(v), 'variance', "bg-teal-50", "text-teal-500")}
             </div>
-
-            {/* 롱기스트 / 니어리스트 */}
             {(selectedAwards.includes('롱기스트') || selectedAwards.includes('니어리스트')) && (() => {
-              const topNearest = specialRankings.nearest.length > 0 ? specialRankings.nearest[0] : null;
-              const topLongest = specialRankings.longest.length > 0 ? specialRankings.longest[0] : null;
-
+              const topNearest = specialRankings.nearest.length > 0 ? specialRankings.nearest[0] : null; const topLongest = specialRankings.longest.length > 0 ? specialRankings.longest[0] : null;
               return (
                 <div className="grid grid-cols-2 gap-3 animate-fade-in-up">
-                  {selectedAwards.includes('롱기스트') && (
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2">
-                      <Icons.Flag className={`w-8 h-8 p-1.5 rounded-full ${topLongest?.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-500'}`} />
-                      <span className="font-bold text-slate-700 text-sm">롱기스트</span>
-                      {isAwardOpen ? (
-                        topLongest ? (
-                          <div className="text-center mt-1">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <span className={`font-black text-[15px] ${topLongest.isInvalid ? 'text-slate-400 line-through opacity-70' : 'text-blue-700'}`}>{String(topLongest.name)}</span>
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${topLongest.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-blue-100/50 text-blue-600'}`}>{teamNames[topLongest.tIdx] || `${topLongest.tIdx + 1}조`}</span>
-                            </div>
-                            <div className="flex items-center justify-center gap-1 mt-1">
-                              <span className={`text-[11px] font-bold ${topLongest.isInvalid ? 'text-slate-400' : 'text-slate-500'}`}>{String(topLongest.distance)}m 기록</span>
-                              {topLongest.isInvalid && <span className="text-[9px] bg-red-50 text-red-500 px-1 py-0.5 rounded font-bold border border-red-100">파 오버</span>}
-                            </div>
-                            <button onClick={() => setDetailModal({ title: '롱기스트 전체 랭킹', list: specialRankings.longest, valueKey: 'distance', formatFn: (v) => `${v}m`, detailKey: 'hIdx', customGroups: enableGroupComp ? customGroups : null, teamNames })} className="mt-2 text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded font-bold w-full">모든 순위 보기</button>
-                          </div>
-                        ) : (<span className="text-[10px] text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md font-bold mt-1">기록 없음</span>)
-                      ) : (<span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md mt-1 flex items-center gap-1"><Icons.Lock className="w-3 h-3"/> 비공개</span>)}
-                    </div>
-                  )}
-                  {selectedAwards.includes('니어리스트') && (
-                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2">
-                      <Icons.Target className={`w-8 h-8 p-1.5 rounded-full ${topNearest?.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-purple-50 text-purple-500'}`} />
-                      <span className="font-bold text-slate-700 text-sm">니어리스트</span>
-                      {isAwardOpen ? (
-                        topNearest ? (
-                          <div className="text-center mt-1">
-                            <div className="flex items-center justify-center gap-1.5">
-                              <span className={`font-black text-[15px] ${topNearest.isInvalid ? 'text-slate-400 line-through opacity-70' : 'text-purple-700'}`}>{String(topNearest.name)}</span>
-                              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${topNearest.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-purple-100/50 text-purple-600'}`}>{teamNames[topNearest.tIdx] || `${topNearest.tIdx + 1}조`}</span>
-                            </div>
-                            <div className="flex items-center justify-center gap-1 mt-1">
-                              <span className={`text-[11px] font-bold ${topNearest.isInvalid ? 'text-slate-400' : 'text-slate-500'}`}>{String(topNearest.distance)}m 기록</span>
-                              {topNearest.isInvalid && <span className="text-[9px] bg-red-50 text-red-500 px-1 py-0.5 rounded font-bold border border-red-100">파 오버</span>}
-                            </div>
-                            <button onClick={() => setDetailModal({ title: '니어리스트 전체 랭킹', list: specialRankings.nearest, valueKey: 'distance', formatFn: (v) => `${v}m`, detailKey: 'hIdx', customGroups: enableGroupComp ? customGroups : null, teamNames })} className="mt-2 text-[10px] text-purple-600 bg-purple-50 px-2 py-1 rounded font-bold w-full">모든 순위 보기</button>
-                          </div>
-                        ) : (<span className="text-[10px] text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md font-bold mt-1">기록 없음</span>)
-                      ) : (<span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md mt-1 flex items-center gap-1"><Icons.Lock className="w-3 h-3"/> 비공개</span>)}
-                    </div>
-                  )}
+                  {selectedAwards.includes('롱기스트') && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2"><Icons.Flag className={`w-8 h-8 p-1.5 rounded-full ${topLongest?.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-500'}`} /><span className="font-bold text-slate-700 text-sm">롱기스트</span>{isAwardOpen ? (topLongest ? (<div className="text-center mt-1"><div className="flex items-center justify-center gap-1.5"><span className={`font-black text-[15px] ${topLongest.isInvalid ? 'text-slate-400 line-through opacity-70' : 'text-blue-700'}`}>{String(topLongest.name)}</span><span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${topLongest.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-blue-100/50 text-blue-600'}`}>{teamNames[topLongest.tIdx] || `${topLongest.tIdx + 1}조`}</span></div><div className="flex items-center justify-center gap-1 mt-1"><span className={`text-[11px] font-bold ${topLongest.isInvalid ? 'text-slate-400' : 'text-slate-500'}`}>{String(topLongest.distance)}m 기록</span>{topLongest.isInvalid && <span className="text-[9px] bg-red-50 text-red-500 px-1 py-0.5 rounded font-bold border border-red-100">파 오버</span>}</div><button onClick={() => setDetailModal({ title: '롱기스트 전체 랭킹', list: specialRankings.longest, valueKey: 'distance', formatFn: (v) => `${v}m`, detailKey: 'hIdx', customGroups: enableGroupComp ? customGroups : null, teamNames })} className="mt-2 text-[10px] text-blue-600 bg-blue-50 px-2 py-1 rounded font-bold w-full">모든 순위 보기</button></div>) : (<span className="text-[10px] text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md font-bold mt-1">기록 없음</span>)) : (<span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md mt-1 flex items-center gap-1"><Icons.Lock className="w-3 h-3"/> 비공개</span>)}</div>)}
+                  {selectedAwards.includes('니어리스트') && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-2"><Icons.Target className={`w-8 h-8 p-1.5 rounded-full ${topNearest?.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-purple-50 text-purple-500'}`} /><span className="font-bold text-slate-700 text-sm">니어리스트</span>{isAwardOpen ? (topNearest ? (<div className="text-center mt-1"><div className="flex items-center justify-center gap-1.5"><span className={`font-black text-[15px] ${topNearest.isInvalid ? 'text-slate-400 line-through opacity-70' : 'text-purple-700'}`}>{String(topNearest.name)}</span><span className={`text-[9px] font-bold px-1.5 py-0.5 rounded ${topNearest.isInvalid ? 'bg-slate-100 text-slate-400' : 'bg-purple-100/50 text-purple-600'}`}>{teamNames[topNearest.tIdx] || `${topNearest.tIdx + 1}조`}</span></div><div className="flex items-center justify-center gap-1 mt-1"><span className={`text-[11px] font-bold ${topNearest.isInvalid ? 'text-slate-400' : 'text-slate-500'}`}>{String(topNearest.distance)}m 기록</span>{topNearest.isInvalid && <span className="text-[9px] bg-red-50 text-red-500 px-1 py-0.5 rounded font-bold border border-red-100">파 오버</span>}</div><button onClick={() => setDetailModal({ title: '니어리스트 전체 랭킹', list: specialRankings.nearest, valueKey: 'distance', formatFn: (v) => `${v}m`, detailKey: 'hIdx', customGroups: enableGroupComp ? customGroups : null, teamNames })} className="mt-2 text-[10px] text-purple-600 bg-purple-50 px-2 py-1 rounded font-bold w-full">모든 순위 보기</button></div>) : (<span className="text-[10px] text-purple-600 bg-purple-50 px-2.5 py-1 rounded-md font-bold mt-1">기록 없음</span>)) : (<span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-2.5 py-1 rounded-md mt-1 flex items-center gap-1"><Icons.Lock className="w-3 h-3"/> 비공개</span>)}</div>)}
                 </div>
               );
             })()}
-
-            {/* 그룹/조 분석 */}
             {enableGroupComp && customGroups.length > 0 && (
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-8">
-                <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5 mb-3 border-b pb-2"><Icons.Users className="w-4 h-4 text-purple-600" /> 그룹별 순위</h4>
-                <div className="space-y-2">
-                  {groupCompStats.map((st, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                      <div className="flex items-center gap-3"><RankBadge rank={i} /><span className="font-bold text-slate-700 text-[15px]">{String(st.name || '-')}</span></div>
-                      <div className="flex flex-col items-end min-w-[4rem]">
-                        <span className="font-black text-xl text-emerald-700 leading-none">{Number(st.avgGross || 0).toFixed(1)}타</span>
-                        <span className={`text-[10px] font-bold ${st.compDiff > 0 ? 'text-red-500' : 'text-[#0D8A5E]'} mt-1`}>{safeDisplayNet(st.compDiff)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-8"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5 mb-3 border-b pb-2"><Icons.Users className="w-4 h-4 text-purple-600" /> 그룹별 순위</h4><div className="space-y-2">{groupCompStats.map((st, i) => (<div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"><div className="flex items-center gap-3"><RankBadge rank={i} /><span className="font-bold text-slate-700 text-[15px]">{String(st.name || '-')}</span></div><div className="flex flex-col items-end min-w-[4rem]"><span className="font-black text-xl text-emerald-700 leading-none">{Number(st.avgGross || 0).toFixed(1)}타</span><span className={`text-[10px] font-bold ${st.compDiff > 0 ? 'text-red-500' : 'text-[#0D8A5E]'} mt-1`}>{safeDisplayNet(st.compDiff)}</span></div></div>))}</div></div>
             )}
             {enableTeamComp && (
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2">
-                <h4 className="font-bold text-[#0D8A5E] text-sm flex items-center gap-1.5 mb-3 border-b pb-2"><Icons.Users className="w-4 h-4" /> 조별 순위</h4>
-                <div className="space-y-2">
-                  {teamCompStats.map((st, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl">
-                      <div className="flex items-center gap-3">
-                        <RankBadge rank={i} />
-                        <span className="font-bold text-emerald-900">{String(st.teamName || '-')}</span>
-                      </div>
-                      <div className="flex flex-col items-end min-w-[4rem]">
-                        <span className="font-black text-xl text-emerald-700 leading-none">{Number(st.avgGross || 0).toFixed(1)}타</span>
-                        <span className={`text-[10px] font-bold ${st.compDiff > 0 ? 'text-red-500' : 'text-[#0D8A5E]'} mt-1`}>{safeDisplayNet(st.compDiff)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2"><h4 className="font-bold text-[#0D8A5E] text-sm flex items-center gap-1.5 mb-3 border-b pb-2"><Icons.Users className="w-4 h-4" /> 조별 순위</h4><div className="space-y-2">{teamCompStats.map((st, i) => (<div key={i} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl"><div className="flex items-center gap-3"><RankBadge rank={i} /><span className="font-bold text-emerald-900">{String(st.teamName || '-')}</span></div><div className="flex flex-col items-end min-w-[4rem]"><span className="font-black text-xl text-emerald-700 leading-none">{Number(st.avgGross || 0).toFixed(1)}타</span><span className={`text-[10px] font-bold ${st.compDiff > 0 ? 'text-red-500' : 'text-[#0D8A5E]'} mt-1`}>{safeDisplayNet(st.compDiff)}</span></div></div>))}</div></div>
             )}
-            {(enableTeamComp || enableGroupComp) && (
-              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2">
-                <div className="flex justify-between items-center">
-                  <h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Icons.Activity className="w-4 h-4 text-[#0D8A5E]" /> 팀 및 그룹 분석 (하드캐리 & 국밥)</h4>
-                  <button onClick={() => setDetailModal({ title: '팀 및 그룹 분석 (하드캐리 & 국밥)', isSpecial: true, teamList: teamCompStats, groupList: groupCompStats, enableTeamComp, enableGroupComp })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#D1FAE5]">자세히 보기 &gt;</button>
-                </div>
-              </div>
-            )}
+            {(enableTeamComp || enableGroupComp) && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2"><div className="flex justify-between items-center"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Icons.Activity className="w-4 h-4 text-[#0D8A5E]" /> 팀 및 그룹 분석 (하드캐리 & 국밥)</h4><button onClick={() => setDetailModal({ title: '팀 및 그룹 분석 (하드캐리 & 국밥)', isSpecial: true, teamList: teamCompStats, groupList: groupCompStats, enableTeamComp, enableGroupComp })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#D1FAE5]">자세히 보기 &gt;</button></div></div>)}
           </div>
         </div>
       );
     }
 
     function SettingsView({ teamNames, setTeamNames, initialData, setTeamData, initialHandicapType, setHandicapType, eventName, setEventName, courseInfo, setCourseInfo, selectedAwards, setSelectedAwards, stablefordTitle, setStablefordTitle, stablefordConfig, setStablefordConfig, specialHoles, setSpecialHoles, isMultiCourse, setIsMultiCourse, teamCourses, setTeamCourses, onComplete, onResetGame, onEndGame, isRoundStarted, enableTeamComp, setEnableTeamComp, enableGroupComp, setEnableGroupComp, teamBalanceMode, setTeamBalanceMode, customGroups, setCustomGroups, groupBalanceMode, setGroupBalanceMode, scoreInputPermission, setScoreInputPermission }) {
-      const [compTab, setCompTab] = useState('team');
-      const [isCompSettingsOpen, setIsCompSettingsOpen] = useState(false);
-      const [isAwardSettingsOpen, setIsAwardSettingsOpen] = useState(false);
-      const [showSearchList, setShowSearchList] = useState(false);
-      const [filteredCourses, setFilteredCourses] = useState([]);
-      const [showStablefordModal, setShowStablefordModal] = useState(false);
-      const [showSpecialHoleModal, setShowSpecialHoleModal] = useState(false);
-      const [confirmModal, setConfirmModal] = useState(null);
+      const [compTab, setCompTab] = useState('team'); const [isCompSettingsOpen, setIsCompSettingsOpen] = useState(false); const [isAwardSettingsOpen, setIsAwardSettingsOpen] = useState(false); const [showSearchList, setShowSearchList] = useState(false); const [filteredCourses, setFilteredCourses] = useState([]); const [showStablefordModal, setShowStablefordModal] = useState(false); const [showSpecialHoleModal, setShowSpecialHoleModal] = useState(false); const [confirmModal, setConfirmModal] = useState(null);
+      const [players, setPlayers] = useState(initialData || []); const [currentHandicapType, setCurrentHandicapType] = useState(initialHandicapType); const [tempCustomGroups, setTempCustomGroups] = useState(customGroups || []); const [tempGroupBalanceMode, setTempGroupBalanceMode] = useState(groupBalanceMode); const [tempSpecialHoles, setTempSpecialHoles] = useState(specialHoles); const [tempStablefordTitle, setTempStablefordTitle] = useState(stablefordTitle); const [tempStablefordConfig, setTempStablefordConfig] = useState(stablefordConfig || []);
 
-      const [players, setPlayers] = useState(initialData || []);
-      const [currentHandicapType, setCurrentHandicapType] = useState(initialHandicapType);
-      const [tempCustomGroups, setTempCustomGroups] = useState(customGroups || []);
-      const [tempGroupBalanceMode, setTempGroupBalanceMode] = useState(groupBalanceMode);
-      const [tempSpecialHoles, setTempSpecialHoles] = useState(specialHoles);
-      const [tempStablefordTitle, setTempStablefordTitle] = useState(stablefordTitle);
-      const [tempStablefordConfig, setTempStablefordConfig] = useState(stablefordConfig || []);
+      const currentCourseData = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0]; const courseOptions = Object.keys(currentCourseData?.courses || {});
 
-      const currentCourseData = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0];
-      const courseOptions = Object.keys(currentCourseData?.courses || {});
-
-      const handleAddTeam = () => { 
-        if (players.length < 20) { 
-          const nt = players.length + 1; 
-          const usedNames = players.flat().map(p => p.name);
-          const availableNames = RANDOM_NAMES_POOL.filter(n => !usedNames.includes(n)).sort(() => 0.5 - Math.random());
-          const newTeam = Array.from({length: 4}).map((_, i) => ({ name: availableNames.length > i ? availableNames[i] : `선수 ${nt}-${i+1}`, handicap: getRandomHandicap() }));
-          setPlayers(prev => [...(prev || []), newTeam]); setTeamNames(prev => [...(prev || []), `${nt}조`]);
-        } 
-      };
-
-      const handleRemoveTeam = (index) => { 
-        if (players.length <= 2) return;
-        setPlayers(prev => (prev || []).filter((_, i) => i !== index)); setTeamNames(prev => (prev || []).filter((_, i) => i !== index));
-      };
-      
+      const handleAddTeam = () => { if (players.length < 20) { const nt = players.length + 1; const usedNames = players.flat().map(p => p.name); const availableNames = RANDOM_NAMES_POOL.filter(n => !usedNames.includes(n)).sort(() => 0.5 - Math.random()); const newTeam = Array.from({length: 4}).map((_, i) => ({ name: availableNames.length > i ? availableNames[i] : `선수 ${nt}-${i+1}`, handicap: getRandomHandicap() })); setPlayers(prev => [...(prev || []), newTeam]); setTeamNames(prev => [...(prev || []), `${nt}조`]); } };
+      const handleRemoveTeam = (index) => { if (players.length <= 2) return; setPlayers(prev => (prev || []).filter((_, i) => i !== index)); setTeamNames(prev => (prev || []).filter((_, i) => i !== index)); };
       const handlePlayerChange = (tIdx, pIdx, field, val) => { const np = [...players]; np[tIdx] = [...(np[tIdx] || [])]; np[tIdx][pIdx] = { ...(np[tIdx][pIdx] || {}), [field]: val }; setPlayers(np); };
       const handleCourseInput = (v) => { setCourseInfo({...courseInfo, name: v}); if (v.length > 0) { setFilteredCourses(GOLF_COURSES_DATA.filter(c => c.name.includes(v))); setShowSearchList(true); } else { setShowSearchList(false); } };
-
-      const getOverlappingCourses = () => {
-        if (!isMultiCourse) return [courseInfo.front, courseInfo.back];
-        const activeTeamCourses = teamCourses.slice(0, players.length);
-        const allPlayedCourses = activeTeamCourses.map(tc => [tc.front, tc.back]);
-        if (allPlayedCourses.length === 0) return [];
-        return allPlayedCourses.reduce((a, b) => a.filter(c => b.includes(c)));
-      };
+      const getOverlappingCourses = () => { if (!isMultiCourse) return [courseInfo.front, courseInfo.back]; const activeTeamCourses = teamCourses.slice(0, players.length); const allPlayedCourses = activeTeamCourses.map(tc => [tc.front, tc.back]); if (allPlayedCourses.length === 0) return []; return allPlayedCourses.reduce((a, b) => a.filter(c => b.includes(c))); };
       const overlappingCourses = getOverlappingCourses();
 
       return (
         <div className="flex flex-col min-h-screen pb-40 overflow-x-hidden font-sans font-pretendard">
-          <div className="bg-[#0D8A5E] pt-14 pb-20 px-5 text-center relative rounded-b-[40px] shrink-0 shadow-lg">
-            <Icons.Award className="w-14 h-14 text-white mx-auto mb-3 stroke-[1.5]" />
-            <div className="relative flex flex-col justify-center items-center mb-2 px-10">
-              <input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} className="text-2xl font-black text-white bg-transparent text-center focus:outline-none w-full border-b border-white/20 pb-1" />
-              <span className="text-emerald-100/70 text-[10px] mt-2 font-medium animate-pulse">타이틀을 클릭하여 수정할 수 있습니다</span>
-            </div>
-          </div>
+          <div className="bg-[#0D8A5E] pt-14 pb-20 px-5 text-center relative rounded-b-[40px] shrink-0 shadow-lg"><Icons.Award className="w-14 h-14 text-white mx-auto mb-3 stroke-[1.5]" /><div className="relative flex flex-col justify-center items-center mb-2 px-10"><input type="text" value={eventName} onChange={(e) => setEventName(e.target.value)} className="text-2xl font-black text-white bg-transparent text-center focus:outline-none w-full border-b border-white/20 pb-1" /><span className="text-emerald-100/70 text-[10px] mt-2 font-medium animate-pulse">타이틀을 클릭하여 수정할 수 있습니다</span></div></div>
           <div className="relative z-10 -mt-10 px-4 flex-1 overflow-y-auto space-y-4 no-scrollbar">
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 text-left">
               <div className="flex items-center gap-2 mb-4 font-bold text-slate-800"><Icons.MapPin className="w-5 h-5 text-slate-500" /> 골프장 설정</div>
-              <div className="relative mb-3 flex gap-2">
-                <input type="text" value={courseInfo.name} onChange={(e) => handleCourseInput(e.target.value)} onFocus={() => { setShowSearchList(true); if (courseInfo.name.length === 0) setFilteredCourses(GOLF_COURSES_DATA); }} placeholder="골프장 검색" className="flex-1 border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none" />
-                <button onClick={() => { setFilteredCourses(GOLF_COURSES_DATA); setShowSearchList(!showSearchList); }} className="bg-[#0D8A5E] text-white px-4 rounded-xl shadow-sm active:scale-95 flex items-center justify-center gap-1.5 font-bold text-sm"><Icons.Search className="w-4 h-4" /> 검색</button>
-                {showSearchList && (
-                  <div className="absolute top-full left-0 right-0 mt-2 bg-white border rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto no-scrollbar">
-                    {(filteredCourses || []).map((c, i) => (
-                      <button key={i} onClick={() => { setCourseInfo({ name: c.name, front: Object.keys(c.courses)[0], back: Object.keys(c.courses)[1] || Object.keys(c.courses)[0] }); setTeamCourses(Array(20).fill({ front: Object.keys(c.courses)[0], back: Object.keys(c.courses)[1] || Object.keys(c.courses)[0] })); setShowSearchList(false); }} className="w-full text-left px-5 py-3.5 text-sm font-semibold border-b hover:bg-[#F0FDF4] transition-colors">{String(c.name)}</button>
-                    ))}
-                  </div>
-                )}
+              <div className="relative mb-3 flex gap-2"><input type="text" value={courseInfo.name} onChange={(e) => handleCourseInput(e.target.value)} onFocus={() => { setShowSearchList(true); if (courseInfo.name.length === 0) setFilteredCourses(GOLF_COURSES_DATA); }} placeholder="골프장 검색" className="flex-1 border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none" /><button onClick={() => { setFilteredCourses(GOLF_COURSES_DATA); setShowSearchList(!showSearchList); }} className="bg-[#0D8A5E] text-white px-4 rounded-xl shadow-sm active:scale-95 flex items-center justify-center gap-1.5 font-bold text-sm"><Icons.Search className="w-4 h-4" /> 검색</button>
+                {showSearchList && (<div className="absolute top-full left-0 right-0 mt-2 bg-white border rounded-2xl shadow-xl z-50 max-h-48 overflow-y-auto no-scrollbar">{(filteredCourses || []).map((c, i) => (<button key={i} onClick={() => { setCourseInfo({ name: c.name, front: Object.keys(c.courses)[0], back: Object.keys(c.courses)[1] || Object.keys(c.courses)[0] }); setTeamCourses(Array(20).fill({ front: Object.keys(c.courses)[0], back: Object.keys(c.courses)[1] || Object.keys(c.courses)[0] })); setShowSearchList(false); }} className="w-full text-left px-5 py-3.5 text-sm font-semibold border-b hover:bg-[#F0FDF4] transition-colors">{String(c.name)}</button>))}</div>)}
               </div>
-              {!isMultiCourse && (
-                <div className="flex gap-3 animate-fade-in-up">
-                  <select value={courseInfo.front} onChange={(e) => setCourseInfo({...courseInfo, front: e.target.value})} className="flex-1 border rounded-xl px-3 py-2.5 text-sm font-bold appearance-none bg-white outline-none focus:ring-2 focus:ring-[#0D8A5E]/50">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select>
-                  <select value={courseInfo.back} onChange={(e) => setCourseInfo({...courseInfo, back: e.target.value})} className="flex-1 border rounded-xl px-3 py-2.5 text-sm font-bold appearance-none bg-white outline-none focus:ring-2 focus:ring-[#0D8A5E]/50">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select>
-                </div>
-              )}
-              <div className="flex items-center gap-1.5 cursor-pointer mt-4 pt-4 border-t border-slate-100">
-                 <input type="checkbox" checked={isMultiCourse} onChange={e => setIsMultiCourse(e.target.checked)} className="w-4 h-4 text-[#0D8A5E] rounded outline-none" />
-                 <span className="text-sm font-bold text-slate-700">조별 코스 다름 (조별로 다른 코스를 배정)</span>
-              </div>
+              {!isMultiCourse && (<div className="flex gap-3 animate-fade-in-up"><select value={courseInfo.front} onChange={(e) => setCourseInfo({...courseInfo, front: e.target.value})} className="flex-1 border rounded-xl px-3 py-2.5 text-sm font-bold appearance-none bg-white outline-none focus:ring-2 focus:ring-[#0D8A5E]/50">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select><select value={courseInfo.back} onChange={(e) => setCourseInfo({...courseInfo, back: e.target.value})} className="flex-1 border rounded-xl px-3 py-2.5 text-sm font-bold appearance-none bg-white outline-none focus:ring-2 focus:ring-[#0D8A5E]/50">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>)}
+              <div className="flex items-center gap-1.5 cursor-pointer mt-4 pt-4 border-t border-slate-100"><input type="checkbox" checked={isMultiCourse} onChange={e => setIsMultiCourse(e.target.checked)} className="w-4 h-4 text-[#0D8A5E] rounded outline-none" /><span className="text-sm font-bold text-slate-700">조별 코스 다름 (조별로 다른 코스를 배정)</span></div>
             </div>
 
             <div className="bg-white rounded-2xl p-5 shadow-sm transition-all border border-slate-100">
-              <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsCompSettingsOpen(!isCompSettingsOpen)}>
-                <div className="flex items-center gap-2"><Icons.Users className="w-5 h-5 text-slate-500" /><h2 className="text-slate-800 font-bold text-base">대항전 설정</h2></div>
-                <div className="flex items-center gap-3">
-                  <div className="flex gap-3" onClick={e => e.stopPropagation()}>
-                    <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={enableTeamComp} onChange={(e) => { const checked = e.target.checked; setEnableTeamComp(checked); if(checked) { setIsCompSettingsOpen(true); setCompTab('team'); } else if(compTab === 'team') setCompTab('group'); }} className="w-4 h-4 text-[#0D8A5E] rounded" /><span className="text-sm font-bold text-slate-700">조별</span></label>
-                    <label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={enableGroupComp} onChange={(e) => { const checked = e.target.checked; setEnableGroupComp(checked); if(checked) { setIsCompSettingsOpen(true); setCompTab('group'); } else if(compTab === 'group') setCompTab('team'); }} className="w-4 h-4 text-[#0D8A5E] rounded" /><span className="text-sm font-bold text-slate-700">그룹별</span></label>
-                  </div>
-                  <Icons.ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isCompSettingsOpen ? 'rotate-180' : ''}`} />
-                </div>
-              </div>
+              <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsCompSettingsOpen(!isCompSettingsOpen)}><div className="flex items-center gap-2"><Icons.Users className="w-5 h-5 text-slate-500" /><h2 className="text-slate-800 font-bold text-base">대항전 설정</h2></div><div className="flex items-center gap-3"><div className="flex gap-3" onClick={e => e.stopPropagation()}><label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={enableTeamComp} onChange={(e) => { const checked = e.target.checked; setEnableTeamComp(checked); if(checked) { setIsCompSettingsOpen(true); setCompTab('team'); } else if(compTab === 'team') setCompTab('group'); }} className="w-4 h-4 text-[#0D8A5E] rounded" /><span className="text-sm font-bold text-slate-700">조별</span></label><label className="flex items-center gap-1.5 cursor-pointer"><input type="checkbox" checked={enableGroupComp} onChange={(e) => { const checked = e.target.checked; setEnableGroupComp(checked); if(checked) { setIsCompSettingsOpen(true); setCompTab('group'); } else if(compTab === 'group') setCompTab('team'); }} className="w-4 h-4 text-[#0D8A5E] rounded" /><span className="text-sm font-bold text-slate-700">그룹별</span></label></div><Icons.ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isCompSettingsOpen ? 'rotate-180' : ''}`} /></div></div>
               {isCompSettingsOpen && (
                 <div className="pt-3 border-t mt-3 animate-fade-in-up">
-                  <div className="flex bg-slate-100 p-1 rounded-xl mb-4">
-                    <button onClick={() => setCompTab('team')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${compTab === 'team' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>조별 설정</button>
-                    <button onClick={() => setCompTab('group')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${compTab === 'group' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>그룹별 설정</button>
-                  </div>
+                  <div className="flex bg-slate-100 p-1 rounded-xl mb-4"><button onClick={() => setCompTab('team')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${compTab === 'team' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>조별 설정</button><button onClick={() => setCompTab('group')} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-colors ${compTab === 'group' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>그룹별 설정</button></div>
                   {compTab === 'team' ? (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between pt-1"><span className="text-slate-600 font-medium text-sm text-left">입력 권한</span><div className="flex bg-slate-100 p-1 rounded-lg"><button onClick={()=>setScoreInputPermission('all')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='all'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>전체</button><button onClick={()=>setScoreInputPermission('host')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='host'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>방장만</button></div></div>
+                      <div className="flex items-center justify-between pt-1"><span className="text-slate-600 font-medium text-sm text-left">입력 권한</span><div className="flex bg-slate-100 p-1 rounded-lg"><button onClick={()=>setScoreInputPermission('all')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='all'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>전체</button><button onClick={()=>setScoreInputPermission('host')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='host'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>방장만</button><button onClick={()=>setScoreInputPermission('selected')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='selected'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>선택</button></div></div>
                       <div className="flex flex-col gap-2 pt-4 border-t"><span className="text-slate-600 font-medium text-sm text-left">조별 순위 방식</span><div className="flex flex-wrap gap-1.5">{[{v:'average',l:'평균'},{v:'net',l:'핸디기준'}].map(o=>(<button key={o.v} onClick={()=>setTeamBalanceMode(o.v)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border transition-colors ${teamBalanceMode===o.v?'bg-slate-800 text-white shadow-sm':'bg-white text-slate-500 hover:bg-slate-50'}`}>{o.l}</button>))}</div></div>
                     </div>
                   ) : (
@@ -913,14 +527,7 @@
                       <div className="pt-4 border-t space-y-4">
                         {(tempCustomGroups || []).map((g, idx) => {
                           const style = GROUP_STYLES[idx % GROUP_STYLES.length] || GROUP_STYLES[0];
-                          return (
-                            <div key={g.id} className={`mb-4 p-4 rounded-xl border ${style.card}`}>
-                              <div className="flex items-center justify-between mb-3"><input type="text" value={g.name} onChange={(e)=>setTempCustomGroups(tempCustomGroups.map(tg=>tg.id===g.id?{...tg,name:e.target.value}:tg))} className={`font-bold bg-transparent border-b w-1/2 focus:outline-none ${style.input}`}/><button onClick={()=>setTempCustomGroups(tempCustomGroups.filter(tg=>tg.id!==g.id))} className="text-xs text-red-500 font-bold bg-white px-2 py-1 rounded transition-colors active:scale-95">삭제</button></div>
-                              <div className="flex flex-wrap gap-1.5">
-                                {players.map((t,tI)=>(t || []).map((p,pI)=>(<button key={`${tI}-${pI}`} onClick={()=>setTempCustomGroups(tempCustomGroups.map(tg=>tg.id===g.id?{...tg,members:(tg.members||[]).includes(`${tI}-${pI}`)?(tg.members||[]).filter(k=>k!==`${tI}-${pI}`):[...(tg.members||[]),`${tI}-${pI}`]}:tg))} className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors ${(g.members||[]).includes(`${tI}-${pI}`)?style.btnActive:'bg-white text-slate-500'}`}>{String(p.name)}</button>)))}
-                              </div>
-                            </div>
-                          );
+                          return (<div key={g.id} className={`mb-4 p-4 rounded-xl border ${style.card}`}><div className="flex items-center justify-between mb-3"><input type="text" value={g.name} onChange={(e)=>setTempCustomGroups(tempCustomGroups.map(tg=>tg.id===g.id?{...tg,name:e.target.value}:tg))} className={`font-bold bg-transparent border-b w-1/2 focus:outline-none ${style.input}`}/><button onClick={()=>setTempCustomGroups(tempCustomGroups.filter(tg=>tg.id!==g.id))} className="text-xs text-red-500 font-bold bg-white px-2 py-1 rounded transition-colors active:scale-95">삭제</button></div><div className="flex flex-wrap gap-1.5">{players.map((t,tI)=>(t || []).map((p,pI)=>(<button key={`${tI}-${pI}`} onClick={()=>setTempCustomGroups(tempCustomGroups.map(tg=>tg.id===g.id?{...tg,members:(tg.members||[]).includes(`${tI}-${pI}`)?(tg.members||[]).filter(k=>k!==`${tI}-${pI}`):[...(tg.members||[]),`${tI}-${pI}`]}:tg))} className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition-colors ${(g.members||[]).includes(`${tI}-${pI}`)?style.btnActive:'bg-white text-slate-500'}`}>{String(p.name)}</button>)))}</div></div>);
                         })}
                         <button onClick={()=>setTempCustomGroups([...(tempCustomGroups||[]),{id:Date.now().toString(),name:`그룹 ${(tempCustomGroups||[]).length+1}`,members:[]}])} className="w-full bg-white border border-dashed border-purple-300 text-purple-600 font-bold py-3 rounded-xl transition-all active:scale-[0.98] shadow-sm">+ 새 그룹 추가</button>
                       </div>
@@ -933,86 +540,32 @@
             <div className="bg-white rounded-2xl p-5 shadow-sm transition-all border border-slate-100">
               <div className="flex items-center justify-between cursor-pointer" onClick={() => setIsAwardSettingsOpen(!isAwardSettingsOpen)}><div className="flex items-center gap-2"><Icons.Award className="w-5 h-5 text-slate-500" /><h2 className="text-slate-800 font-bold text-base">시상 및 랭킹 설정</h2></div><Icons.ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${isAwardSettingsOpen ? 'rotate-180' : ''}`} /></div>
               {isAwardSettingsOpen && (
-                <div className="pt-2 animate-fade-in-up mt-2 text-left">
-                  <div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">
-                    {(ALL_AWARDS_KEYS || []).map(award => {
-                      const isSelected = (selectedAwards || []).includes(award);
-                      const hasSet = award === '니어리스트' || award === '롱기스트' || award === '변형스테이블포드';
-                      return (
-                        <div key={award} className="relative inline-flex items-center">
-                          <button onClick={() => { if (isSelected) setSelectedAwards((selectedAwards||[]).filter(x=>x!==award)); else { setSelectedAwards([...(selectedAwards||[]),award]); if(award==='변형스테이블포드') setShowStablefordModal(true); if(award==='니어리스트'||award==='롱기스트') setShowSpecialHoleModal(true); } }} className={`px-3 py-1.5 rounded-xl text-sm font-bold border transition-all ${isSelected?'bg-[#E6F4EF] border-[#0D8A5E] text-[#0D8A5E]':'bg-white text-slate-500'} ${hasSet && isSelected ? 'pr-8' : ''}`}>{String(award)}</button>
-                          {hasSet && isSelected && (<button onClick={() => { if(award==='변형스테이블포드') setShowStablefordModal(true); else setShowSpecialHoleModal(true); }} className="absolute right-1 p-1 text-[#0D8A5E] hover:bg-[#D1FAE5] rounded-full transition-colors"><Icons.Settings className="w-3.5 h-3.5"/></button>)}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                <div className="pt-2 animate-fade-in-up mt-2 text-left"><div className="flex flex-wrap gap-2 pt-4 border-t border-slate-100">{(ALL_AWARDS_KEYS || []).map(award => {
+                      const isSelected = (selectedAwards || []).includes(award); const hasSet = award === '니어리스트' || award === '롱기스트' || award === '변형스테이블포드';
+                      return (<div key={award} className="relative inline-flex items-center"><button onClick={() => { if (isSelected) setSelectedAwards((selectedAwards||[]).filter(x=>x!==award)); else { setSelectedAwards([...(selectedAwards||[]),award]); if(award==='변형스테이블포드') setShowStablefordModal(true); if(award==='니어리스트'||award==='롱기스트') setShowSpecialHoleModal(true); } }} className={`px-3 py-1.5 rounded-xl text-sm font-bold border transition-all ${isSelected?'bg-[#E6F4EF] border-[#0D8A5E] text-[#0D8A5E]':'bg-white text-slate-500'} ${hasSet && isSelected ? 'pr-8' : ''}`}>{String(award)}</button>{hasSet && isSelected && (<button onClick={() => { if(award==='변형스테이블포드') setShowStablefordModal(true); else setShowSpecialHoleModal(true); }} className="absolute right-1 p-1 text-[#0D8A5E] hover:bg-[#D1FAE5] rounded-full transition-colors"><Icons.Settings className="w-3.5 h-3.5"/></button>)}</div>);
+                    })}</div></div>
               )}
             </div>
 
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 no-scrollbar text-left">
               {players.map((team, tIdx) => (
                 <div key={tIdx} className="mb-6 last:mb-0">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2 flex-1 min-w-0 pr-2">
-                      <input type="text" value={teamNames[tIdx] || ''} onChange={e=>{const nt=[...(teamNames||[])]; nt[tIdx]=e.target.value; setTeamNames(nt);}} className="bg-[#E6F4EF] text-[#0D8A5E] px-2.5 py-1 rounded-full text-xs font-bold w-16 text-center outline-none" />
-                      <h3 className="text-slate-800 font-bold text-sm truncate shrink-0">플레이어 명단</h3>
-                    </div>
-                    <div className="flex gap-2 items-center shrink-0">
-                      {tIdx >= 2 && <button onClick={() => handleRemoveTeam(tIdx)} className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"><Icons.Trash2 className="w-5 h-5" strokeWidth={1.5} /></button>}
-                      {tIdx === 0 && (<div className="flex bg-slate-100 p-1 rounded-lg shrink-0"><button onClick={()=>setCurrentHandicapType('strokes')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors ${currentHandicapType==='strokes'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>타수</button><button onClick={()=>setCurrentHandicapType('over')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors ${currentHandicapType==='over'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>오버파</button></div>)}
-                    </div>
-                  </div>
-                  {isMultiCourse && (
-                    <div className="flex gap-2 mt-3 mb-2 bg-slate-50 p-2 rounded-xl animate-fade-in-up">
-                       <span className="text-[11px] font-bold text-slate-500 shrink-0 self-center w-10 text-center">코스</span>
-                       <select value={teamCourses[tIdx]?.front || courseInfo.front} onChange={e => { const ntc = [...teamCourses]; ntc[tIdx] = {...ntc[tIdx], front: e.target.value}; setTeamCourses(ntc); }} className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold bg-white outline-none">
-                         {courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                       </select>
-                       <select value={teamCourses[tIdx]?.back || courseInfo.back} onChange={e => { const ntc = [...teamCourses]; ntc[tIdx] = {...ntc[tIdx], back: e.target.value}; setTeamCourses(ntc); }} className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold bg-white outline-none">
-                         {courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                       </select>
-                    </div>
-                  )}
+                  <div className="flex items-center justify-between mb-3"><div className="flex items-center gap-2 flex-1 min-w-0 pr-2"><input type="text" value={teamNames[tIdx] || ''} onChange={e=>{const nt=[...(teamNames||[])]; nt[tIdx]=e.target.value; setTeamNames(nt);}} className="bg-[#E6F4EF] text-[#0D8A5E] px-2.5 py-1 rounded-full text-xs font-bold w-16 text-center outline-none" /><h3 className="text-slate-800 font-bold text-sm truncate shrink-0">플레이어 명단</h3></div><div className="flex gap-2 items-center shrink-0">{tIdx >= 2 && <button onClick={() => handleRemoveTeam(tIdx)} className="p-1.5 text-slate-300 hover:text-red-500 transition-colors"><Icons.Trash2 className="w-5 h-5" strokeWidth={1.5} /></button>}{tIdx === 0 && (<div className="flex bg-slate-100 p-1 rounded-lg shrink-0"><button onClick={()=>setCurrentHandicapType('strokes')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors ${currentHandicapType==='strokes'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>타수</button><button onClick={()=>setCurrentHandicapType('over')} className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-colors ${currentHandicapType==='over'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>오버파</button></div>)}</div></div>
+                  {isMultiCourse && (<div className="flex gap-2 mt-3 mb-2 bg-slate-50 p-2 rounded-xl animate-fade-in-up"><span className="text-[11px] font-bold text-slate-500 shrink-0 self-center w-10 text-center">코스</span><select value={teamCourses[tIdx]?.front || courseInfo.front} onChange={e => { const ntc = [...teamCourses]; ntc[tIdx] = {...ntc[tIdx], front: e.target.value}; setTeamCourses(ntc); }} className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold bg-white outline-none">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select><select value={teamCourses[tIdx]?.back || courseInfo.back} onChange={e => { const ntc = [...teamCourses]; ntc[tIdx] = {...ntc[tIdx], back: e.target.value}; setTeamCourses(ntc); }} className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold bg-white outline-none">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>)}
                   <div className="grid grid-cols-2 gap-2">
                     {(team || []).map((p,pI)=>(
-                      <div key={pI} className="relative flex bg-[#F8F9FA] rounded-xl border overflow-hidden shadow-sm">
-                        <div className="flex-1 flex items-center pl-3 py-1.5 min-w-0 pr-1 gap-1">
-                          <input type="text" value={p.name} onChange={(e)=>handlePlayerChange(tIdx,pI,'name',e.target.value)} className="w-full flex-1 text-sm font-medium focus:outline-none bg-transparent min-w-0" />
-                          {enableGroupComp && <GroupBadges tIdx={tIdx} pIdx={pI} customGroups={tempCustomGroups} />}
-                        </div>
-                        <div className="w-16 border-l flex items-center pr-2 bg-slate-200/30 shrink-0">
-                          <input type="text" value={p.handicap} onChange={(e)=>handlePlayerChange(tIdx,pI,'handicap',e.target.value.replace(/[^0-9+\-]/g,''))} className="w-full bg-transparent py-1 text-xs text-center font-bold focus:outline-none" />
-                          {currentHandicapType==='strokes'&&<span className="text-[11px] text-slate-500 font-bold">타</span>}
-                        </div>
-                      </div>
+                      <div key={pI} className="relative flex bg-[#F8F9FA] rounded-xl border overflow-hidden shadow-sm"><div className="flex-1 flex items-center pl-3 py-1.5 min-w-0 pr-1 gap-1"><input type="text" value={p.name} onChange={(e)=>handlePlayerChange(tIdx,pI,'name',e.target.value)} className="w-full flex-1 text-sm font-medium focus:outline-none bg-transparent min-w-0" /></div><div className="w-16 border-l flex items-center pr-2 bg-slate-200/30 shrink-0"><input type="text" value={p.handicap} onChange={(e)=>handlePlayerChange(tIdx,pI,'handicap',e.target.value.replace(/[^0-9+\-]/g,''))} className="w-full bg-transparent py-1 text-xs text-center font-bold focus:outline-none" />{currentHandicapType==='strokes'&&<span className="text-[11px] text-slate-500 font-bold">타</span>}</div></div>
                     ))}
                   </div>
                 </div>
               ))}
-              {players.length < 20 && (
-                <button onClick={handleAddTeam} className="w-full mt-2 bg-slate-50 border border-dashed border-slate-300 py-3 rounded-xl text-slate-500 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors active:scale-[0.98]">
-                  <Icons.Plus className="w-4 h-4" /> 다음 조 추가하기
-                </button>
-              )}
+              {players.length < 20 && (<button onClick={handleAddTeam} className="w-full mt-2 bg-slate-50 border border-dashed border-slate-300 py-3 rounded-xl text-slate-500 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors active:scale-[0.98]"><Icons.Plus className="w-4 h-4" /> 다음 조 추가하기</button>)}
             </div>
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-[#F4F5F7] via-[#F4F5F7] to-transparent z-20 flex flex-col gap-2">
-            {isRoundStarted && (
-              <div className="flex gap-2 mb-1">
-                <button onClick={() => setConfirmModal('reset')} className="flex-1 bg-white border border-red-200 text-red-500 font-bold py-3.5 rounded-xl shadow-sm active:scale-95 transition-all text-sm">새 게임 시작</button>
-                <button onClick={() => setConfirmModal('end')} className="flex-1 bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-sm active:scale-95 transition-all text-sm">게임 종료하기</button>
-              </div>
-            )}
-            <button onClick={()=>{ 
-              setCustomGroups(tempCustomGroups); 
-              setGroupBalanceMode(tempGroupBalanceMode); 
-              setSpecialHoles(tempSpecialHoles); 
-              setStablefordTitle(tempStablefordTitle); 
-              setStablefordConfig(tempStablefordConfig); 
-              onComplete(players, currentHandicapType); 
-            }} className="w-full bg-[#0D8A5E] text-white font-bold text-lg py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]">{isRoundStarted ? '게임 계속하기' : '대기실 입장'} <Icons.ChevronRight className="w-5 h-5" /></button>
+            {isRoundStarted && (<div className="flex gap-2 mb-1"><button onClick={() => setConfirmModal('reset')} className="flex-1 bg-white border border-red-200 text-red-500 font-bold py-3.5 rounded-xl shadow-sm active:scale-95 transition-all text-sm">새 게임 시작</button><button onClick={() => setConfirmModal('end')} className="flex-1 bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-sm active:scale-95 transition-all text-sm">게임 종료하기</button></div>)}
+            <button onClick={()=>{ setCustomGroups(tempCustomGroups); setGroupBalanceMode(tempGroupBalanceMode); setSpecialHoles(tempSpecialHoles); setStablefordTitle(tempStablefordTitle); setStablefordConfig(tempStablefordConfig); onComplete(players, currentHandicapType); }} className="w-full bg-[#0D8A5E] text-white font-bold text-lg py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-[0.98]">{isRoundStarted ? '게임 계속하기' : '대기실 입장'} <Icons.ChevronRight className="w-5 h-5" /></button>
           </div>
 
           {confirmModal && (
@@ -1021,10 +574,7 @@
               <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up">
                 <h3 className="text-slate-800 font-black text-lg mb-2">{confirmModal === 'reset' ? '새 게임 시작' : '게임 종료'}</h3>
                 <p className="text-slate-600 text-sm mb-6 leading-relaxed">{confirmModal === 'reset' ? '모든 스코어가 초기화됩니다. 정말 새 게임을 시작하시겠습니까?' : '진행 중인 게임 조기 종료하고 결과 화면으로 이동하시겠습니까?'}</p>
-                <div className="flex gap-3">
-                  <button onClick={() => setConfirmModal(null)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl transition-colors">취소</button>
-                  <button onClick={() => { if (confirmModal === 'reset') onResetGame(); else onEndGame(); setConfirmModal(null); }} className={`flex-1 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors active:scale-95 ${confirmModal === 'reset' ? 'bg-red-500' : 'bg-slate-800'}`}>확인</button>
-                </div>
+                <div className="flex gap-3"><button onClick={() => setConfirmModal(null)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl transition-colors">취소</button><button onClick={() => { if (confirmModal === 'reset') onResetGame(); else onEndGame(); setConfirmModal(null); }} className={`flex-1 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors active:scale-95 ${confirmModal === 'reset' ? 'bg-red-500' : 'bg-slate-800'}`}>확인</button></div>
               </div>
             </div>
           )}
@@ -1033,27 +583,11 @@
             <div className="fixed inset-0 z-[200] flex items-center justify-center px-4 font-sans text-left">
               <div className="absolute inset-0 bg-slate-900/40" onClick={()=>setShowStablefordModal(false)}/>
               <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl flex flex-col max-h-[90vh] no-scrollbar">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-slate-800 font-bold text-lg flex items-center gap-2"><Icons.Settings className="w-5 h-5 text-[#0D8A5E]"/> 점수제 설정</h3>
-                  <button onClick={()=>setShowStablefordModal(false)} className="p-1.5 text-slate-400"><Icons.X className="w-5 h-5"/></button>
-                </div>
+                <div className="flex items-center justify-between mb-4"><h3 className="text-slate-800 font-bold text-lg flex items-center gap-2"><Icons.Settings className="w-5 h-5 text-[#0D8A5E]"/> 점수제 설정</h3><button onClick={()=>setShowStablefordModal(false)} className="p-1.5 text-slate-400"><Icons.X className="w-5 h-5"/></button></div>
                 <div className="overflow-y-auto flex-1 space-y-4 mb-6 no-scrollbar">
-                  <div>
-                    <label className="block text-xs font-bold text-slate-500 mb-2 pl-1">시상 명칭</label>
-                    <input type="text" value={tempStablefordTitle} onChange={e=>setTempStablefordTitle(e.target.value)} className="w-full bg-[#F8F9FA] border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#0D8A5E]" />
-                  </div>
-                  <div className="space-y-3">
-                    <label className="block text-xs font-bold text-slate-500 pl-1">획득 기준</label>
-                    {(tempStablefordConfig || []).map((item,idx)=>(
-                      <div key={item.id} className="flex items-center gap-2 w-full">
-                        <input type="text" value={item.label} onChange={e=>{const nc=[...tempStablefordConfig];nc[idx].label=e.target.value;setTempStablefordConfig(nc);}} className="flex-1 border rounded-xl px-3 py-2 text-sm font-bold outline-none"/>
-                        <div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1 border shrink-0">
-                          <button onClick={()=>{const nc=[...tempStablefordConfig];nc[idx].score-=1;setTempStablefordConfig(nc);}} className="w-7 h-7 rounded-lg bg-white flex items-center justify-center transition-colors"><Icons.Minus className="w-3 h-3"/></button>
-                          <span className="font-black text-sm w-6 text-center text-[#0D8A5E]">{item.score>0?`+${item.score}`:item.score}</span>
-                          <button onClick={()=>{const nc=[...tempStablefordConfig];nc[idx].score+=1;setTempStablefordConfig(nc);}} className="w-7 h-7 rounded-lg bg-white flex items-center justify-center transition-colors"><Icons.Plus className="w-3 h-3"/></button>
-                        </div>
-                      </div>
-                    ))}
+                  <div><label className="block text-xs font-bold text-slate-500 mb-2 pl-1">시상 명칭</label><input type="text" value={tempStablefordTitle} onChange={e=>setTempStablefordTitle(e.target.value)} className="w-full bg-[#F8F9FA] border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#0D8A5E]" /></div>
+                  <div className="space-y-3"><label className="block text-xs font-bold text-slate-500 pl-1">획득 기준</label>
+                    {(tempStablefordConfig || []).map((item,idx)=>(<div key={item.id} className="flex items-center gap-2 w-full"><input type="text" value={item.label} onChange={e=>{const nc=[...tempStablefordConfig];nc[idx].label=e.target.value;setTempStablefordConfig(nc);}} className="flex-1 border rounded-xl px-3 py-2 text-sm font-bold outline-none"/><div className="flex items-center gap-1 bg-slate-50 rounded-xl p-1 border shrink-0"><button onClick={()=>{const nc=[...tempStablefordConfig];nc[idx].score-=1;setTempStablefordConfig(nc);}} className="w-7 h-7 rounded-lg bg-white flex items-center justify-center transition-colors"><Icons.Minus className="w-3 h-3"/></button><span className="font-black text-sm w-6 text-center text-[#0D8A5E]">{item.score>0?`+${item.score}`:item.score}</span><button onClick={()=>{const nc=[...tempStablefordConfig];nc[idx].score+=1;setTempStablefordConfig(nc);}} className="w-7 h-7 rounded-lg bg-white flex items-center justify-center transition-colors"><Icons.Plus className="w-3 h-3"/></button></div></div>))}
                   </div>
                 </div>
                 <button onClick={()=>{setStablefordTitle(tempStablefordTitle);setStablefordConfig(tempStablefordConfig);setShowStablefordModal(false);}} className="w-full bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md transition-all active:scale-[0.98]">설정 완료</button>
@@ -1067,35 +601,10 @@
               <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up">
                 <h3 className="text-slate-800 font-bold text-lg mb-6 flex items-center gap-2"><Icons.Target className="w-5 h-5 text-[#0D8A5E]" /> 지정 홀 설정</h3>
                 <div className="space-y-4 mb-8">
-                  {overlappingCourses.length === 0 && (
-                    <div className="bg-red-50 text-red-500 p-3 rounded-xl text-xs font-bold border border-red-100">조별 코스가 달라서 모든 조가 겹치는 코스가 없습니다. 특수 홀을 지정할 수 없습니다.</div>
-                  )}
-                  <div>
-                    <span className="font-bold text-slate-700 block mb-2 text-sm">니어리스트 홀 (파3 중첩 코스)</span>
-                    <select value={tempSpecialHoles.nearest ? JSON.stringify(tempSpecialHoles.nearest) : ""} onChange={e => setTempSpecialHoles({...tempSpecialHoles, nearest: e.target.value ? JSON.parse(e.target.value) : null})} className="w-full bg-[#F8F9FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#0D8A5E] outline-none">
-                      <option value="">설정 안함</option>
-                      {overlappingCourses.map(c => Array.from({length: 9}).map((_, i) => {
-                        if (currentCourseData.courses[c] && currentCourseData.courses[c][i] === 3) return <option key={`${c}-${i+1}`} value={JSON.stringify({course: c, hole: i+1})}>{c} {i+1}H (파3)</option>;
-                        return null;
-                      }))}
-                    </select>
-                  </div>
-                  <div>
-                    <span className="font-bold text-slate-700 block mb-2 text-sm">롱기스트 홀 (파5 중첩 코스)</span>
-                    <select value={tempSpecialHoles.longest ? JSON.stringify(tempSpecialHoles.longest) : ""} onChange={e => setTempSpecialHoles({...tempSpecialHoles, longest: e.target.value ? JSON.parse(e.target.value) : null})} className="w-full bg-[#F8F9FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#0D8A5E] outline-none">
-                      <option value="">설정 안함</option>
-                      {overlappingCourses.map(c => Array.from({length: 9}).map((_, i) => {
-                        if (currentCourseData.courses[c] && currentCourseData.courses[c][i] === 5) return <option key={`${c}-${i+1}`} value={JSON.stringify({course: c, hole: i+1})}>{c} {i+1}H (파5)</option>;
-                        return null;
-                      }))}
-                    </select>
-                  </div>
-                  <div className="pt-2 border-t border-slate-100">
-                    <label className="flex items-center gap-2 cursor-pointer mb-1">
-                      <input type="checkbox" checked={tempSpecialHoles.requirePar !== false} onChange={e => setTempSpecialHoles({...tempSpecialHoles, requirePar: e.target.checked})} className="w-4 h-4 text-[#0D8A5E] rounded focus:ring-[#0D8A5E] outline-none" />
-                      <span className="font-bold text-slate-700 text-sm">파(Par) 이하 기록 시에만 유효</span>
-                    </label>
-                  </div>
+                  {overlappingCourses.length === 0 && (<div className="bg-red-50 text-red-500 p-3 rounded-xl text-xs font-bold border border-red-100">조별 코스가 달라서 모든 조가 겹치는 코스가 없습니다. 특수 홀을 지정할 수 없습니다.</div>)}
+                  <div><span className="font-bold text-slate-700 block mb-2 text-sm">니어리스트 홀 (파3 중첩 코스)</span><select value={tempSpecialHoles.nearest ? JSON.stringify(tempSpecialHoles.nearest) : ""} onChange={e => setTempSpecialHoles({...tempSpecialHoles, nearest: e.target.value ? JSON.parse(e.target.value) : null})} className="w-full bg-[#F8F9FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#0D8A5E] outline-none"><option value="">설정 안함</option>{overlappingCourses.map(c => Array.from({length: 9}).map((_, i) => { if (currentCourseData.courses[c] && currentCourseData.courses[c][i] === 3) return <option key={`${c}-${i+1}`} value={JSON.stringify({course: c, hole: i+1})}>{c} {i+1}H (파3)</option>; return null; }))}</select></div>
+                  <div><span className="font-bold text-slate-700 block mb-2 text-sm">롱기스트 홀 (파5 중첩 코스)</span><select value={tempSpecialHoles.longest ? JSON.stringify(tempSpecialHoles.longest) : ""} onChange={e => setTempSpecialHoles({...tempSpecialHoles, longest: e.target.value ? JSON.parse(e.target.value) : null})} className="w-full bg-[#F8F9FA] border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#0D8A5E] outline-none"><option value="">설정 안함</option>{overlappingCourses.map(c => Array.from({length: 9}).map((_, i) => { if (currentCourseData.courses[c] && currentCourseData.courses[c][i] === 5) return <option key={`${c}-${i+1}`} value={JSON.stringify({course: c, hole: i+1})}>{c} {i+1}H (파5)</option>; return null; }))}</select></div>
+                  <div className="pt-2 border-t border-slate-100"><label className="flex items-center gap-2 cursor-pointer mb-1"><input type="checkbox" checked={tempSpecialHoles.requirePar !== false} onChange={e => setTempSpecialHoles({...tempSpecialHoles, requirePar: e.target.checked})} className="w-4 h-4 text-[#0D8A5E] rounded focus:ring-[#0D8A5E] outline-none" /><span className="font-bold text-slate-700 text-sm">파(Par) 이하 기록 시에만 유효</span></label></div>
                 </div>
                 <button onClick={()=>{setShowSpecialHoleModal(false);}} className="w-full bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md active:scale-[0.98] transition-all">설정 완료</button>
               </div>
@@ -1135,6 +644,7 @@
       const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus', []);
       const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors', {});
       const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission', 'all');
+      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers', []);
 
       const [previousView, setPreviousView] = useState('scoreInput');
       const [detailModal, setDetailModal] = useState(null);
@@ -1143,99 +653,48 @@
       const manuallyClearedRef = useRef({});
       const [isDbConnected, setIsDbConnected] = useState(false);
 
-      // 1. 방장 권한 복구 및 URL의 roomId 감지
       useEffect(() => { 
         try { if (window.localStorage.getItem('golf_host_verified') === 'true') setCurrentUserRole('host'); } catch(e) {} 
-        try {
-          const urlParams = new URLSearchParams(window.location.search);
-          const rId = urlParams.get('roomId');
-          if (rId) setRoomId(rId);
-        } catch(e) {}
+        try { const urlParams = new URLSearchParams(window.location.search); const rId = urlParams.get('roomId'); if (rId) setRoomId(rId); } catch(e) {}
       }, [setCurrentUserRole, setRoomId]);
 
-      // 2. 파이어베이스 익명 로그인 (실시간 연동을 위한 권한 획득)
-      useEffect(() => {
-        if (!auth) return;
-        signInAnonymously(auth).then(() => setIsDbConnected(true)).catch(console.error);
-      }, []);
+      useEffect(() => { if (!auth) return; signInAnonymously(auth).then(() => setIsDbConnected(true)).catch(console.error); }, []);
 
-      // 3. 파이어베이스 실시간 데이터 수신 (다른 사람의 점수 입력 등을 내 화면에 반영)
       useEffect(() => {
         if (!db || !roomId || !isDbConnected) return;
         const roomRef = doc(db, 'golf_rooms', roomId);
         const unsubscribe = onSnapshot(roomRef, (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (data.allScores) setAllScores(data.allScores);
-            if (data.allPars) setAllPars(data.allPars);
-            if (data.joinedStatus) setJoinedStatus(data.joinedStatus);
-            if (data.specialRecords) setSpecialRecords(data.specialRecords);
-            if (data.lastEditors) setLastEditors(data.lastEditors);
-            if (data.isRoundStarted !== undefined) setIsRoundStarted(data.isRoundStarted);
-            if (data.teamData) setTeamData(data.teamData);
-            if (data.eventName) setEventName(data.eventName);
+            if (data.allScores) setAllScores(data.allScores); if (data.allPars) setAllPars(data.allPars); if (data.joinedStatus) setJoinedStatus(data.joinedStatus); if (data.specialRecords) setSpecialRecords(data.specialRecords);
+            if (data.lastEditors) setLastEditors(data.lastEditors); if (data.isRoundStarted !== undefined) setIsRoundStarted(data.isRoundStarted); if (data.teamData) setTeamData(data.teamData); if (data.eventName) setEventName(data.eventName); if (data.scoreInputAuthorizedPlayers) setScoreInputAuthorizedPlayers(data.scoreInputAuthorizedPlayers);
           }
         }, (err) => console.error("Firebase Sync Error:", err));
         return () => unsubscribe();
       }, [roomId, isDbConnected]);
 
-      // 4. 파이어베이스 실시간 데이터 송신 (내가 입력한 점수를 DB에 전달)
-      const syncToDB = async (updates) => {
-        if (!db || !roomId || !isDbConnected) return;
-        try {
-          const roomRef = doc(db, 'golf_rooms', roomId);
-          await setDoc(roomRef, updates, { merge: true });
-        } catch (e) {
-          console.error("DB Update Error:", e);
-        }
-      };
+      const syncToDB = async (updates) => { if (!db || !roomId || !isDbConnected) return; try { const roomRef = doc(db, 'golf_rooms', roomId); await setDoc(roomRef, updates, { merge: true }); } catch (e) {} };
 
       const handleCompleteSettings = (data, type) => {
-        setTeamData(data); setHandicapType(type); setCurrentUserRole('host');
-        try { window.localStorage.setItem('golf_host_verified', 'true'); } catch(e) {}
-        
-        let currentRoomId = roomId;
-        if (!currentRoomId) {
-          currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-          setRoomId(currentRoomId);
-        }
-        try {
-          const url = new URL(window.location.href);
-          if (url.searchParams.get('roomId') !== currentRoomId) {
-            url.searchParams.set('roomId', currentRoomId);
-            window.history.pushState({}, '', url.toString());
-          }
-        } catch(e) {}
-
-        if (!isRoundStarted) { 
-          const initialJoin = data.map(t => (t || []).map(() => false));
-          setJoinedStatus(initialJoin); 
-          setCurrentView('waitingRoom'); 
-          // 방장이 세팅 완료 후 DB에도 룸 정보 생성/업데이트
-          syncToDB({ teamData: data, eventName: eventName, joinedStatus: initialJoin, isRoundStarted: false });
-        } 
+        setTeamData(data); setHandicapType(type); setCurrentUserRole('host'); try { window.localStorage.setItem('golf_host_verified', 'true'); } catch(e) {}
+        let currentRoomId = roomId; if (!currentRoomId) { currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase(); setRoomId(currentRoomId); }
+        try { const url = new URL(window.location.href); if (url.searchParams.get('roomId') !== currentRoomId) { url.searchParams.set('roomId', currentRoomId); window.history.pushState({}, '', url.toString()); } } catch(e) {}
+        if (!isRoundStarted) { const initialJoin = data.map(t => (t || []).map(() => false)); setJoinedStatus(initialJoin); setCurrentView('waitingRoom'); syncToDB({ teamData: data, eventName: eventName, joinedStatus: initialJoin, isRoundStarted: false }); } 
         else { setCurrentView('scoreInput'); }
       };
 
       const handleStartRound = () => {
-        let newPars = allPars;
-        let newScores = allScores;
+        let newPars = allPars; let newScores = allScores;
         if (allPars.length === 0) {
           const d = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0];
           newPars = teamData.map((_, tIdx) => { const tc = isMultiCourse ? teamCourses[tIdx] : courseInfo; return [...d.courses[tc.front], ...d.courses[tc.back]]; });
-          setAllPars(newPars);
-          newScores = Array(18).fill(null).map(() => (teamData || []).map(t => (t || []).map(() => null)));
-          setAllScores(newScores);
+          setAllPars(newPars); newScores = Array(18).fill(null).map(() => (teamData || []).map(t => (t || []).map(() => null))); setAllScores(newScores);
         }
-        setIsRoundStarted(true); setCurrentView('scoreInput');
-        syncToDB({ allPars: newPars, allScores: newScores, isRoundStarted: true });
+        setIsRoundStarted(true); setCurrentView('scoreInput'); syncToDB({ allPars: newPars, allScores: newScores, isRoundStarted: true });
       };
 
       const handleResetGame = () => {
-        setIsRoundStarted(false); setJoinedStatus([]); setMyPlayerInfo(null); setCurrentHole(1);
-        setAllScores([]); setAllPars([]); setIsAwardsManuallyOpened(false); setSpecialRecords(Array(18).fill(null).map(() => ({})));
-        setLastEditors({}); manuallyClearedRef.current = {}; setCurrentView('settings');
-        // DB 초기화
+        setIsRoundStarted(false); setJoinedStatus([]); setMyPlayerInfo(null); setCurrentHole(1); setAllScores([]); setAllPars([]); setIsAwardsManuallyOpened(false); setSpecialRecords(Array(18).fill(null).map(() => ({}))); setLastEditors({}); manuallyClearedRef.current = {}; setCurrentView('settings');
         syncToDB({ allScores: [], allPars: [], isRoundStarted: false, joinedStatus: [], specialRecords: Array(18).fill(null).map(() => ({})) });
       };
 
@@ -1246,154 +705,66 @@
         if (basis === 'min_hole_sync') {
           for (let i = 0; i < 18; i++) {
             let allPlayed = true;
-            for (let t = 0; t < teamData.length; t++) {
-              for (let p = 0; p < teamData[t].length; p++) {
-                if (allScores[i]?.[t]?.[p] == null) { allPlayed = false; break; }
-              }
-              if (!allPlayed) break;
-            }
+            for (let t = 0; t < teamData.length; t++) { for (let p = 0; p < teamData[t].length; p++) { if (allScores[i]?.[t]?.[p] == null) { allPlayed = false; break; } } if (!allPlayed) break; }
             if (allPlayed) syncHoles.push(i);
           }
         }
-
         return (teamData || []).flatMap((team, tIdx) => (team || []).map((player, pIdx) => {
           let score = 0, actualDiff = 0, birds = 0, sfScore = 0, holes = 0, vari = 0, prevD = null;
           let daPa = 0, daBogey = 0, realPars = 0, realBogeys = 0, realDoublePars = 0;
           let details = { birdies: [], daPa: [], daBogey: [], realPars: [], realBogeys: [], realDoublePars: [], variance: [] };
-          
           allScores.slice(0, 18).forEach((hs, hIdx) => {
             if (basis === 'min_hole_sync' && !syncHoles.includes(hIdx)) return;
             const s = hs[tIdx]?.[pIdx];
             if (s != null) {
-              holes++;
-              const p = allPars[tIdx]?.[hIdx] || 4;
-              const d = s - p; 
-              const hName = `${hIdx+1}H`;
+              holes++; const p = allPars[tIdx]?.[hIdx] || 4; const d = s - p; const hName = `${hIdx+1}H`;
               score += s; actualDiff += d;
               if (d <= -1) { birds++; details.birdies.push(`${hName}(${s})`); }
-              else if (d === 0) { realPars++; details.realPars.push(hName); daPa += 1; details.daPa.push(`${hName}(1)`); }
+              if (d === 0) { realPars++; details.realPars.push(hName); daPa += 1; details.daPa.push(`${hName}(1)`); }
               else if (d >= p) { realDoublePars++; details.realDoublePars.push(hName); daPa += 2; details.daPa.push(`${hName}(2)`); }
-              else { 
-                if (d === 1) { realBogeys++; details.realBogeys.push(hName); }
-                daBogey += d; details.daBogey.push(`${hName}(+${d})`); 
-              }
-
-              if (prevD !== null && hIdx >= 1) {
-                const diffVal = Math.abs(d - prevD);
-                details.variance.push(`${hName}(${diffVal})`);
-                vari += diffVal;
-              }
+              else { if (d === 1) { realBogeys++; details.realBogeys.push(hName); } daBogey += d; details.daBogey.push(`${hName}(+${d})`); }
+              if (prevD !== null && hIdx >= 1) { const diffVal = Math.abs(d - prevD); details.variance.push(`${hName}(${diffVal})`); vari += diffVal; }
               prevD = d;
               const conf = (id) => stablefordConfig.find(c => c.id === id)?.score || 0;
-              if (d <= -3) sfScore += conf('albatross');
-              else if (d === -2) sfScore += conf('eagle');
-              else if (d === -1) sfScore += conf('birdie');
-              else if (d === 0) sfScore += conf('par');
-              else if (d === 1) sfScore += conf('bogey');
-              else if (d >= 2) sfScore += conf('doubleBogey');
+              if (d <= -3) sfScore += conf('albatross'); else if (d === -2) sfScore += conf('eagle'); else if (d === -1) sfScore += conf('birdie'); else if (d === 0) sfScore += conf('par'); else if (d === 1) sfScore += conf('bogey'); else if (d >= 2) sfScore += conf('doubleBogey');
             }
           });
-          const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-]/g, '')) || 0;
-          const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi;
-          
-          const handiTrend = handicapOverPar / 18;
-          const expectedDiffNow = handiTrend * holes;
-          const diffVsExpected = actualDiff - expectedDiffNow;
-          
+          const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-]/g, '')) || 0; const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi;
+          const handiTrend = handicapOverPar / 18; const expectedDiffNow = handiTrend * holes; const diffVsExpected = actualDiff - expectedDiffNow;
           let perfText = '';
           if (holes > 0) {
-            if (diffVsExpected < 0) {
-                perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (${Math.abs(Math.round(diffVsExpected))}타 이득)`;
-            } else if (diffVsExpected > 0) {
-                perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (${Math.round(diffVsExpected)}타 손해)`;
-            } else {
-                perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (기대치 부합)`;
-            }
+            if (diffVsExpected < 0) perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (${Math.abs(Math.round(diffVsExpected))}타 이득)`;
+            else if (diffVsExpected > 0) perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (${Math.round(diffVsExpected)}타 손해)`;
+            else perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (기대치 부합)`;
             details.perfText = [perfText];
           }
-          
-          return { 
-            ...player, tIdx, pIdx, score, actualDiff, diff: actualDiff, birdies: birds,
-            daPaScore: daPa, daBogeyScore: daBogey, realPars, realBogeys, realDoublePars, details,
-            netDiff: holes > 0 ? (actualDiff - (handicapOverPar * (holes/18))) : 0,
-            ilchiScore: holes > 0 ? diffVsExpected : 9999,
-            nakchaScore: holes > 0 ? diffVsExpected : -9999,
-            stablefordScore: sfScore, mockNewPeoriaNet: holes > 0 ? (score - (actualDiff * 0.8)) : 0, playedHoles: holes, variance: vari
-          };
+          return { ...player, tIdx, pIdx, score, actualDiff, diff: actualDiff, birdies: birds, daPaScore: daPa, daBogeyScore: daBogey, realPars, realBogeys, realDoublePars, details, netDiff: holes > 0 ? (actualDiff - (handicapOverPar * (holes/18))) : 0, ilchiScore: holes > 0 ? diffVsExpected : 9999, nakchaScore: holes > 0 ? diffVsExpected : -9999, stablefordScore: sfScore, mockNewPeoriaNet: holes > 0 ? (score - (actualDiff * 0.8)) : 0, playedHoles: holes, variance: vari };
         }));
       };
 
       const getPredictionStats = () => {
-        const physicalHoleDiffs = {};
-        const physicalHoleCounts = {};
-        allScores.forEach((hs, hI) => {
-          hs.forEach((team, tI) => {
-            team.forEach((score, pI) => {
-              if (score != null) {
-                const tc = isMultiCourse ? teamCourses[tI] : courseInfo;
-                const cName = hI < 9 ? tc.front : tc.back;
-                const cHole = hI < 9 ? hI + 1 : hI - 8;
-                const key = `${cName}-${cHole}`;
-                const par = allPars[tI]?.[hI] || 4;
-                if (!physicalHoleDiffs[key]) { physicalHoleDiffs[key] = 0; physicalHoleCounts[key] = 0; }
-                physicalHoleDiffs[key] += (score - par);
-                physicalHoleCounts[key]++;
-              }
-            });
-          });
-        });
+        const physicalHoleDiffs = {}; const physicalHoleCounts = {};
+        allScores.forEach((hs, hI) => { hs.forEach((team, tI) => { team.forEach((score, pI) => { if (score != null) { const tc = isMultiCourse ? teamCourses[tI] : courseInfo; const cName = hI < 9 ? tc.front : tc.back; const cHole = hI < 9 ? hI + 1 : hI - 8; const key = `${cName}-${cHole}`; const par = allPars[tI]?.[hI] || 4; if (!physicalHoleDiffs[key]) { physicalHoleDiffs[key] = 0; physicalHoleCounts[key] = 0; } physicalHoleDiffs[key] += (score - par); physicalHoleCounts[key]++; } }); }); });
         Object.keys(physicalHoleDiffs).forEach(k => { physicalHoleDiffs[k] /= physicalHoleCounts[k]; });
-
         return (teamData || []).flatMap((team, tIdx) => (team || []).map((player, pIdx) => {
           let actualDiff = 0, playedHoles = 0, score = 0;
-          allScores.forEach((hs, hI) => { 
-            if (hs[tIdx]?.[pIdx] != null) { 
-              score += hs[tIdx][pIdx];
-              actualDiff += (hs[tIdx][pIdx] - (allPars[tIdx]?.[hI] || 4)); 
-              playedHoles++; 
-            } 
-          });
-          const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-]/g, '')) || 0;
-          const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi;
-          const handiTrend = handicapOverPar / 18;
-          const currentTrend = playedHoles > 0 ? actualDiff / playedHoles : handiTrend;
-          
+          allScores.forEach((hs, hI) => { if (hs[tIdx]?.[pIdx] != null) { score += hs[tIdx][pIdx]; actualDiff += (hs[tIdx][pIdx] - (allPars[tIdx]?.[hI] || 4)); playedHoles++; } });
+          const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-]/g, '')) || 0; const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi; const handiTrend = handicapOverPar / 18; const currentTrend = playedHoles > 0 ? actualDiff / playedHoles : handiTrend;
           let predictedDiff = actualDiff;
-          for (let i = 0; i < 18; i++) {
-            if (allScores[i]?.[tIdx]?.[pIdx] == null) {
-              const tc = isMultiCourse ? teamCourses[tIdx] : courseInfo;
-              const cName = i < 9 ? tc.front : tc.back;
-              const cHole = i < 9 ? i + 1 : i - 8;
-              const key = `${cName}-${cHole}`;
-              const holeDiff = physicalHoleDiffs[key] || 0;
-              predictedDiff += (currentTrend * 0.5) + (holeDiff * 0.3) + (handiTrend * 0.2);
-            }
-          }
+          for (let i = 0; i < 18; i++) { if (allScores[i]?.[tIdx]?.[pIdx] == null) { const tc = isMultiCourse ? teamCourses[tIdx] : courseInfo; const cName = i < 9 ? tc.front : tc.back; const cHole = i < 9 ? i + 1 : i - 8; const key = `${cName}-${cHole}`; const holeDiff = physicalHoleDiffs[key] || 0; predictedDiff += (currentTrend * 0.5) + (holeDiff * 0.3) + (handiTrend * 0.2); } }
           return { ...player, tIdx, pIdx, diff: predictedDiff, score, playedHoles, actualDiff, predictedScore: Math.round(72 + predictedDiff) };
         }));
       };
 
-      const stats = getAwardStats('realtime');
-      const syncStats = getAwardStats('min_hole_sync');
-      const predictionStats = getPredictionStats();
-      const totalPar = allPars.length > 0 && allPars[0] ? allPars[0].reduce((a,b)=>a+b, 0) : 72;
-      const isAwardOpenFlag = currentUserRole === 'host' || isAwardsManuallyOpened;
+      const stats = getAwardStats('realtime'); const syncStats = getAwardStats('min_hole_sync'); const predictionStats = getPredictionStats(); const totalPar = allPars.length > 0 && allPars[0] ? allPars[0].reduce((a,b)=>a+b, 0) : 72; const isAwardOpenFlag = currentUserRole === 'host' || isAwardsManuallyOpened;
 
       const renderCurrentView = () => {
         switch(currentView) {
-          case 'settings':
-            return <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} setTeamData={setTeamData} initialHandicapType={handicapType} setHandicapType={setHandicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} isMultiCourse={isMultiCourse} setIsMultiCourse={setIsMultiCourse} teamCourses={teamCourses} setTeamCourses={setTeamCourses} onComplete={handleCompleteSettings} isRoundStarted={isRoundStarted} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} onEndGame={handleEndGame} onResetGame={handleResetGame} />;
-          case 'waitingRoom':
-            return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={auth?.currentUser?.uid} />;
-          case 'scoreInput':
-            return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} />;
-          case 'scoreboard':
-            return <ScoreboardView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} allPars={allPars} allScores={allScores} handicapType={handicapType} eventName={eventName} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onBack={() => setCurrentView('scoreInput')} onGoToInput={(h, t) => { setCurrentHole(h); setHostSelectedTeam(t); setCurrentView('scoreInput'); }} onOpenAwards={() => { setPreviousView('scoreboard'); setCurrentView('awards'); }} />;
-          case 'awards':
-            return <AwardsPageViewMain stats={stats} syncStats={syncStats} predictionStats={predictionStats} totalPar={totalPar} teamNames={teamNames} teamData={teamData} eventName={eventName} isAwardOpen={isAwardOpenFlag} isAwardsManuallyOpened={isAwardsManuallyOpened} setIsAwardsManuallyOpened={setIsAwardsManuallyOpened} currentUserRole={currentUserRole} customGroups={customGroups} enableGroupComp={enableGroupComp} enableTeamComp={enableTeamComp} teamBalanceMode={teamBalanceMode} groupBalanceMode={groupBalanceMode} selectedAwards={selectedAwards} stablefordTitle={stablefordTitle} allPars={allPars} onBack={() => setCurrentView(previousView)} setDetailModal={setDetailModal} setIsAwardInfoOpen={setIsAwardInfoOpen} specialRankings={{
-              nearest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.nearest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.nearest.pIdx].name, tIdx: parseInt(tI), pIdx: r.nearest.pIdx, distance: r.nearest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.nearest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.nearest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? a.distance - b.distance : (a.isInvalid ? 1 : -1)),
-              longest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.longest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.longest.pIdx].name, tIdx: parseInt(tI), pIdx: r.longest.pIdx, distance: r.longest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.longest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.longest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? b.distance - a.distance : (a.isInvalid ? 1 : -1))
-            }} />;
+          case 'settings': return <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} setTeamData={setTeamData} initialHandicapType={handicapType} setHandicapType={setHandicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} isMultiCourse={isMultiCourse} setIsMultiCourse={setIsMultiCourse} teamCourses={teamCourses} setTeamCourses={setTeamCourses} onComplete={handleCompleteSettings} isRoundStarted={isRoundStarted} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} onEndGame={handleEndGame} onResetGame={handleResetGame} />;
+          case 'waitingRoom': return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={auth?.currentUser?.uid} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} setScoreInputAuthorizedPlayers={setScoreInputAuthorizedPlayers} />;
+          case 'scoreInput': return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} />;
+          case 'scoreboard': return <ScoreboardView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} allPars={allPars} allScores={allScores} handicapType={handicapType} eventName={eventName} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onBack={() => setCurrentView('scoreInput')} onGoToInput={(h, t) => { setCurrentHole(h); setHostSelectedTeam(t); setCurrentView('scoreInput'); }} onOpenAwards={() => { setPreviousView('scoreboard'); setCurrentView('awards'); }} />;
+          case 'awards': return <AwardsPageViewMain stats={stats} syncStats={syncStats} predictionStats={predictionStats} totalPar={totalPar} teamNames={teamNames} teamData={teamData} eventName={eventName} isAwardOpen={isAwardOpenFlag} isAwardsManuallyOpened={isAwardsManuallyOpened} setIsAwardsManuallyOpened={setIsAwardsManuallyOpened} currentUserRole={currentUserRole} customGroups={customGroups} enableGroupComp={enableGroupComp} enableTeamComp={enableTeamComp} teamBalanceMode={teamBalanceMode} groupBalanceMode={groupBalanceMode} selectedAwards={selectedAwards} stablefordTitle={stablefordTitle} allPars={allPars} onBack={() => setCurrentView(previousView)} setDetailModal={setDetailModal} setIsAwardInfoOpen={setIsAwardInfoOpen} specialRankings={{ nearest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.nearest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.nearest.pIdx].name, tIdx: parseInt(tI), pIdx: r.nearest.pIdx, distance: r.nearest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.nearest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.nearest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? a.distance - b.distance : (a.isInvalid ? 1 : -1)), longest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.longest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.longest.pIdx].name, tIdx: parseInt(tI), pIdx: r.longest.pIdx, distance: r.longest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.longest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.longest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? b.distance - a.distance : (a.isInvalid ? 1 : -1)) }} />;
           default: return null;
         }
       };
@@ -1406,19 +777,17 @@
             <div className="fixed inset-0 z-[300] flex items-center justify-center px-4 font-sans font-pretendard">
               <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setIsAwardInfoOpen(false)} />
               <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up text-left text-[#1E293B]">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-slate-800 font-black text-lg flex items-center gap-2"><Icons.Info className="w-5 h-5 text-[#0D8A5E]"/> 시상 기준 안내</h3>
-                  <button onClick={() => setIsAwardInfoOpen(false)} className="p-1.5 text-slate-400 hover:bg-slate-50 rounded-full"><Icons.X className="w-5 h-5" /></button>
-                </div>
+                <div className="flex items-center justify-between mb-4"><h3 className="text-slate-800 font-black text-lg flex items-center gap-2"><Icons.Info className="w-5 h-5 text-[#0D8A5E]"/> 시상 기준 안내</h3><button onClick={() => setIsAwardInfoOpen(false)} className="p-1.5 text-slate-400 hover:bg-slate-50 rounded-full"><Icons.X className="w-5 h-5" /></button></div>
                 <div className="space-y-3 text-sm text-slate-600 max-h-[60vh] overflow-y-auto pr-1 pb-4 leading-relaxed no-scrollbar text-left">
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>전체 순위 (실시간):</b> 현재까지 플레이한 홀을 기준으로 한 실제 스코어 순위입니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>전체 순위 (예상 기준):</b> 개인의 핸디캡과 당일 타수 페이스를 바탕으로 한 18홀 예상 실제 타수입니다.</div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>조별/그룹 순위:</b> 팀 평균 실제 타수를 아주 크게 표시합니다.</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>조별/그룹 순위:</b> 팀 평균 실제 타수를 비교합니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>신페리오:</b> 임의 지정된 12개 홀 성적을 바탕으로 당일 핸디캡을 산출하는 네트 스코어 순위입니다.</div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>변형스테이블포드:</b> 알바트로스(8), 이글(5), 버디(2), 파(0), 보기(-1), 더블보기 이하(-3) 합산 점수입니다.</div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다버디/다파/다보기:</b> 해당 기록을 달성한 횟수의 합산 점수입니다. 예) 1H(1)</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다파/다찐파:</b> 파(Par) 1점, 양파(Double Par) 2점으로 합산 (다찐파는 양파 제외 순수 파만 카운트)</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다보기/다찐보기:</b> 보기 1점, 더블 2점, 트리플 3점 등 오버파 수만큼 합산 (다찐보기는 순수 보기만 카운트)</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다찐양파:</b> 양파(Double Par) 횟수만 카운트합니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>일취월장/낙차큰커브:</b> 핸디캡 대비 스코어를 가장 많이 줄이거나(-) 잃은(+) 플레이어입니다.</div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>널뛰기/시몬스:</b> 2번 홀부터 이전 홀과의 타수 차이를 기록합니다. 예) 2H(2)</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>널뛰기/시몬스:</b> 2번 홀부터 이전 홀과의 타수 차이를 누적 합산합니다.</div>
                 </div>
                 <button onClick={() => setIsAwardInfoOpen(false)} className="w-full bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md mt-2 active:scale-95 transition-all">확인</button>
               </div>
