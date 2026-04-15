@@ -27,17 +27,33 @@
 
     let firebaseConfig = null;
     try {
+      // 1. 현재 화면(미리보기)용 임시 클라우드 DB 자동 연결 (수정 금지)
       if (typeof __firebase_config !== 'undefined') {
         firebaseConfig = JSON.parse(__firebase_config);
+      } 
+      // 2. ❗ 깃허브(GitHub) 등 외부 배포용 개인 DB 설정 (여기에 본인 파이어베이스 키를 넣으세요!)
+      else {
+        firebaseConfig = {
+  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+  authDomain: "left-right-6da31.firebaseapp.com",
+  projectId: "left-right-6da31",
+  storageBucket: "left-right-6da31.firebasestorage.app",
+  messagingSenderId: "128347797181",
+  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+        };
       }
     } catch (e) {
       console.error("Firebase config parsing error", e);
     }
 
-    const app = firebaseConfig ? initializeApp(firebaseConfig) : null;
+    // 유효한 키가 있을 때만 Firebase 초기화 실행
+    const isConfigValid = firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
+    const app = isConfigValid ? initializeApp(firebaseConfig) : null;
     const auth = app ? getAuth(app) : null;
     const db = app ? getFirestore(app) : null;
-    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    
+    // 앱 고유 ID (데이터 충돌 방지용)
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'golf-scoreboard-pro';
 
     function usePersistentState(key, initialValue) {
       const [state, setState] = useState(() => {
