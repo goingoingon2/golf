@@ -26,12 +26,12 @@
     import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     const firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     const isConfigValid = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
@@ -1139,16 +1139,37 @@
       const [previousView, setPreviousView] = useState('scoreInput');
       const [detailModal, setDetailModal] = useState(null);
       const [isAwardInfoOpen, setIsAwardInfoOpen] = useState(false);
-      const [roomId, setRoomId] = useState(null);
+      const [roomId, setRoomId] = usePersistentState('golf_roomId', null);
       const manuallyClearedRef = useRef({});
 
-      useEffect(() => { try { if (window.localStorage.getItem('golf_host_verified') === 'true') setCurrentUserRole('host'); } catch(e) {} }, [setCurrentUserRole]);
+      useEffect(() => { 
+        try { if (window.localStorage.getItem('golf_host_verified') === 'true') setCurrentUserRole('host'); } catch(e) {} 
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          const rId = urlParams.get('roomId');
+          if (rId) setRoomId(rId);
+        } catch(e) {}
+      }, [setCurrentUserRole, setRoomId]);
 
       const syncToDB = (updates) => {};
 
       const handleCompleteSettings = (data, type) => {
         setTeamData(data); setHandicapType(type); setCurrentUserRole('host');
         try { window.localStorage.setItem('golf_host_verified', 'true'); } catch(e) {}
+        
+        let currentRoomId = roomId;
+        if (!currentRoomId) {
+          currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+          setRoomId(currentRoomId);
+        }
+        try {
+          const url = new URL(window.location.href);
+          if (url.searchParams.get('roomId') !== currentRoomId) {
+            url.searchParams.set('roomId', currentRoomId);
+            window.history.pushState({}, '', url.toString());
+          }
+        } catch(e) {}
+
         if (!isRoundStarted) { setJoinedStatus(data.map(t => (t || []).map(() => false))); setCurrentView('waitingRoom'); } 
         else { setCurrentView('scoreInput'); }
       };
