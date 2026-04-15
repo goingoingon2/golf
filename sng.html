@@ -26,12 +26,12 @@
     import { getFirestore, doc, setDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     const firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+      appId: "YOUR_APP_ID"
     };
 
     const isConfigValid = firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
@@ -353,7 +353,7 @@
       const myTeam = teamData[teamIndex] || [];
       const scores = allScores[currentHole-1]?.[teamIndex] || Array(myTeam.length).fill(null);
       const par = allPars[teamIndex]?.[currentHole-1] || 4;
-      const canEdit = isHost || scoreInputPermission === 'all' || (scoreInputPermission === 'leader' && myPlayerInfo?.pIdx === 0);
+      const canEdit = isHost || scoreInputPermission === 'all';
 
       const tCourse = isMultiCourse ? teamCourses[teamIndex] : courseInfo;
       const currentPhysicalCourse = currentHole <= 9 ? tCourse.front : tCourse.back;
@@ -904,7 +904,7 @@
                   </div>
                   {compTab === 'team' ? (
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between pt-1"><span className="text-slate-600 font-medium text-sm text-left">입력 권한</span><div className="flex bg-slate-100 p-1 rounded-lg"><button onClick={()=>setScoreInputPermission('all')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='all'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>전체</button><button onClick={()=>setScoreInputPermission('leader')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='leader'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>조장만</button></div></div>
+                      <div className="flex items-center justify-between pt-1"><span className="text-slate-600 font-medium text-sm text-left">입력 권한</span><div className="flex bg-slate-100 p-1 rounded-lg"><button onClick={()=>setScoreInputPermission('all')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='all'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>전체</button><button onClick={()=>setScoreInputPermission('host')} className={`px-2.5 py-1.5 rounded-md text-[11px] font-bold transition-colors ${scoreInputPermission==='host'?'bg-white shadow-sm text-slate-800':'text-slate-500'}`}>방장만</button></div></div>
                       <div className="flex flex-col gap-2 pt-4 border-t"><span className="text-slate-600 font-medium text-sm text-left">조별 순위 방식</span><div className="flex flex-wrap gap-1.5">{[{v:'average',l:'평균'},{v:'net',l:'핸디기준'}].map(o=>(<button key={o.v} onClick={()=>setTeamBalanceMode(o.v)} className={`px-3 py-1.5 text-[11px] font-bold rounded-xl border transition-colors ${teamBalanceMode===o.v?'bg-slate-800 text-white shadow-sm':'bg-white text-slate-500 hover:bg-slate-50'}`}>{o.l}</button>))}</div></div>
                     </div>
                   ) : (
@@ -1141,7 +1141,9 @@
       const [isAwardInfoOpen, setIsAwardInfoOpen] = useState(false);
       const [roomId, setRoomId] = usePersistentState('golf_roomId', null);
       const manuallyClearedRef = useRef({});
+      const [isDbConnected, setIsDbConnected] = useState(false);
 
+      // 1. 방장 권한 복구 및 URL의 roomId 감지
       useEffect(() => { 
         try { if (window.localStorage.getItem('golf_host_verified') === 'true') setCurrentUserRole('host'); } catch(e) {} 
         try {
@@ -1151,7 +1153,42 @@
         } catch(e) {}
       }, [setCurrentUserRole, setRoomId]);
 
-      const syncToDB = (updates) => {};
+      // 2. 파이어베이스 익명 로그인 (실시간 연동을 위한 권한 획득)
+      useEffect(() => {
+        if (!auth) return;
+        signInAnonymously(auth).then(() => setIsDbConnected(true)).catch(console.error);
+      }, []);
+
+      // 3. 파이어베이스 실시간 데이터 수신 (다른 사람의 점수 입력 등을 내 화면에 반영)
+      useEffect(() => {
+        if (!db || !roomId || !isDbConnected) return;
+        const roomRef = doc(db, 'golf_rooms', roomId);
+        const unsubscribe = onSnapshot(roomRef, (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.allScores) setAllScores(data.allScores);
+            if (data.allPars) setAllPars(data.allPars);
+            if (data.joinedStatus) setJoinedStatus(data.joinedStatus);
+            if (data.specialRecords) setSpecialRecords(data.specialRecords);
+            if (data.lastEditors) setLastEditors(data.lastEditors);
+            if (data.isRoundStarted !== undefined) setIsRoundStarted(data.isRoundStarted);
+            if (data.teamData) setTeamData(data.teamData);
+            if (data.eventName) setEventName(data.eventName);
+          }
+        }, (err) => console.error("Firebase Sync Error:", err));
+        return () => unsubscribe();
+      }, [roomId, isDbConnected]);
+
+      // 4. 파이어베이스 실시간 데이터 송신 (내가 입력한 점수를 DB에 전달)
+      const syncToDB = async (updates) => {
+        if (!db || !roomId || !isDbConnected) return;
+        try {
+          const roomRef = doc(db, 'golf_rooms', roomId);
+          await setDoc(roomRef, updates, { merge: true });
+        } catch (e) {
+          console.error("DB Update Error:", e);
+        }
+      };
 
       const handleCompleteSettings = (data, type) => {
         setTeamData(data); setHandicapType(type); setCurrentUserRole('host');
@@ -1170,23 +1207,36 @@
           }
         } catch(e) {}
 
-        if (!isRoundStarted) { setJoinedStatus(data.map(t => (t || []).map(() => false))); setCurrentView('waitingRoom'); } 
+        if (!isRoundStarted) { 
+          const initialJoin = data.map(t => (t || []).map(() => false));
+          setJoinedStatus(initialJoin); 
+          setCurrentView('waitingRoom'); 
+          // 방장이 세팅 완료 후 DB에도 룸 정보 생성/업데이트
+          syncToDB({ teamData: data, eventName: eventName, joinedStatus: initialJoin, isRoundStarted: false });
+        } 
         else { setCurrentView('scoreInput'); }
       };
 
       const handleStartRound = () => {
+        let newPars = allPars;
+        let newScores = allScores;
         if (allPars.length === 0) {
           const d = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0];
-          setAllPars(teamData.map((_, tIdx) => { const tc = isMultiCourse ? teamCourses[tIdx] : courseInfo; return [...d.courses[tc.front], ...d.courses[tc.back]]; }));
-          setAllScores(Array(18).fill(null).map(() => (teamData || []).map(t => (t || []).map(() => null))));
+          newPars = teamData.map((_, tIdx) => { const tc = isMultiCourse ? teamCourses[tIdx] : courseInfo; return [...d.courses[tc.front], ...d.courses[tc.back]]; });
+          setAllPars(newPars);
+          newScores = Array(18).fill(null).map(() => (teamData || []).map(t => (t || []).map(() => null)));
+          setAllScores(newScores);
         }
         setIsRoundStarted(true); setCurrentView('scoreInput');
+        syncToDB({ allPars: newPars, allScores: newScores, isRoundStarted: true });
       };
 
       const handleResetGame = () => {
         setIsRoundStarted(false); setJoinedStatus([]); setMyPlayerInfo(null); setCurrentHole(1);
         setAllScores([]); setAllPars([]); setIsAwardsManuallyOpened(false); setSpecialRecords(Array(18).fill(null).map(() => ({})));
         setLastEditors({}); manuallyClearedRef.current = {}; setCurrentView('settings');
+        // DB 초기화
+        syncToDB({ allScores: [], allPars: [], isRoundStarted: false, joinedStatus: [], specialRecords: Array(18).fill(null).map(() => ({})) });
       };
 
       const handleEndGame = () => { setIsAwardsManuallyOpened(true); setPreviousView('settings'); setCurrentView('awards'); };
@@ -1334,7 +1384,7 @@
           case 'settings':
             return <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} setTeamData={setTeamData} initialHandicapType={handicapType} setHandicapType={setHandicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} isMultiCourse={isMultiCourse} setIsMultiCourse={setIsMultiCourse} teamCourses={teamCourses} setTeamCourses={setTeamCourses} onComplete={handleCompleteSettings} isRoundStarted={isRoundStarted} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} onEndGame={handleEndGame} onResetGame={handleResetGame} />;
           case 'waitingRoom':
-            return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} />;
+            return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={auth?.currentUser?.uid} />;
           case 'scoreInput':
             return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} />;
           case 'scoreboard':
