@@ -107,7 +107,7 @@
       Minus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14"/></svg>,
       Plus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 5v14M5 12h14"/></svg>,
       Search: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>,
-      Settings: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/><circle cx="12" cy="12" r="3"/></svg>,
+      Settings: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/><circle cx="12" cy="12" r="3"/></svg>,
       Share2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>,
       Star: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
       Target: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
@@ -254,13 +254,35 @@
         }, 500);
       };
       const handlePointerUpOrLeave = () => { if (pressTimer.current) clearTimeout(pressTimer.current); };
+      
       const toggleJoinStatus = (tIdx, pIdx) => {
         if (isLongPressRef.current) { isLongPressRef.current = false; return; }
         if (tIdx === 0 && pIdx === 0 && currentUserRole !== 'host') return; 
-        const newStatus = [...joinedStatus]; newStatus[tIdx] = [...newStatus[tIdx]];
+        
         if (currentUserRole === 'guest') {
-          if (!newStatus[tIdx][pIdx]) { newStatus[tIdx][pIdx] = userUid || 'guest_user'; setJoinedStatus(newStatus); setMyPlayerInfo({ tIdx, pIdx }); if(syncToDB) syncToDB({ joinedStatus: newStatus }); if (isRoundStarted) onStartRound(); }
-        } else { newStatus[tIdx][pIdx] = newStatus[tIdx][pIdx] ? null : 'host_approved'; setJoinedStatus(newStatus); if(syncToDB) syncToDB({ joinedStatus: newStatus }); }
+          const newStatus = joinedStatus.map(row => [...row]); // Deep copy
+          
+          if (myPlayerInfo && myPlayerInfo.tIdx === tIdx && myPlayerInfo.pIdx === pIdx) {
+            // 본인 선택 취소
+            newStatus[tIdx][pIdx] = null;
+            setJoinedStatus(newStatus);
+            setMyPlayerInfo(null);
+            if(syncToDB) syncToDB({ joinedStatus: newStatus });
+          } else {
+            // 새로운 사람 선택 (기존 선택 해제 후 적용)
+            if (myPlayerInfo) newStatus[myPlayerInfo.tIdx][myPlayerInfo.pIdx] = null;
+            newStatus[tIdx][pIdx] = userUid || 'guest_user';
+            setJoinedStatus(newStatus);
+            setMyPlayerInfo({ tIdx, pIdx });
+            if(syncToDB) syncToDB({ joinedStatus: newStatus });
+          }
+        } else {
+          // 방장 로직 (다수 선택 및 해제 가능)
+          const newStatus = joinedStatus.map(row => [...row]);
+          newStatus[tIdx][pIdx] = newStatus[tIdx][pIdx] ? null : 'host_approved';
+          setJoinedStatus(newStatus);
+          if(syncToDB) syncToDB({ joinedStatus: newStatus });
+        }
       };
 
       return (
@@ -293,7 +315,20 @@
           </div>
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 flex gap-3 z-10 shadow-up">
             {currentUserRole === 'host' && <button onClick={onBack} className="flex-1 bg-[#F1F3F5] text-slate-600 font-bold py-4 rounded-2xl hover:bg-slate-200 transition-colors">설정으로</button>}
-            <button onClick={onStartRound} className="flex-[2] bg-[#0D8A5E] text-white shadow-lg font-bold py-4 rounded-2xl active:scale-95 transition-all">{isRoundStarted ? '스코어 입력으로 돌아가기' : `${joinedCount}/${totalPlayers} 명 라운드 시작`}</button>
+            
+            {currentUserRole === 'host' ? (
+              <button onClick={onStartRound} className="flex-[2] bg-[#0D8A5E] text-white shadow-lg font-bold py-4 rounded-2xl active:scale-95 transition-all">
+                {isRoundStarted ? '스코어 입력으로 돌아가기' : `${joinedCount}/${totalPlayers} 명 라운드 시작`}
+              </button>
+            ) : (
+              <button 
+                onClick={() => { if (myPlayerInfo) onStartRound(); }} 
+                disabled={!myPlayerInfo} 
+                className={`flex-[2] font-bold py-4 rounded-2xl transition-all ${myPlayerInfo ? 'bg-[#0D8A5E] text-white shadow-lg active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
+              >
+                {isRoundStarted && myPlayerInfo ? '스코어 입력으로 돌아가기' : '라운드 참여하기'}
+              </button>
+            )}
           </div>
           <ShareModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} roomId={roomId} />
         </div>
@@ -316,6 +351,15 @@
       const currentPhysicalHole = currentHole <= 9 ? currentHole : currentHole - 9;
       const isNearestHole = specialHoles.nearest && specialHoles.nearest.course === currentPhysicalCourse && specialHoles.nearest.hole === currentPhysicalHole;
       const isLongestHole = specialHoles.longest && specialHoles.longest.course === currentPhysicalCourse && specialHoles.longest.hole === currentPhysicalHole;
+
+      useEffect(() => {
+        if (!canEdit || !allScores[currentHole - 1]) return;
+        const currentTeamScores = allScores[currentHole - 1][teamIndex];
+        if (currentTeamScores && currentTeamScores.every(s => s === null)) {
+          if (manuallyClearedRef.current[`${currentHole}-${teamIndex}`]) return;
+          const ns = [...allScores]; ns[currentHole - 1] = [...ns[currentHole - 1]]; ns[currentHole - 1][teamIndex] = Array(myTeam.length).fill(par); setAllScores(ns); if(syncToDB) syncToDB({ allScores: ns });
+        }
+      }, [currentHole, teamIndex, par, canEdit, myTeam.length]);
 
       const updateScore = (pI, d) => { 
         if(!canEdit) return; manuallyClearedRef.current[`${currentHole}-${teamIndex}`] = false;
@@ -880,9 +924,9 @@
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>전체 순위 (예상 기준):</b> 개인의 핸디캡과 당일 타수 페이스를 바탕으로 한 18홀 예상 실제 타수입니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>조별/그룹 순위:</b> 팀 평균 실제 타수를 비교합니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>신페리오:</b> 임의 지정된 12개 홀 성적을 바탕으로 당일 핸디캡을 산출하는 네트 스코어 순위입니다.</div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다파/다찐파:</b> 파(Par) 1점, 양파(Double Par) 2점으로 합산 (다찐파는 양파 제외 순수 파만 카운트)</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다파/다찐파:</b> 파(Par) 1점, 양파(Double 파) 2점으로 합산 (다찐파는 양파 제외 순수 파만 카운트)</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다보기/다찐보기:</b> 보기 1점, 더블 2점, 트리플 3점 등 오버파 수만큼 합산 (다찐보기는 순수 보기만 카운트)</div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다찐양파:</b> 양파(Double Par) 횟수만 카운트합니다.</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다찐양파:</b> 양파(Double 파) 횟수만 카운트합니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>일취월장/낙차큰커브:</b> 핸디캡 대비 스코어를 가장 많이 줄이거나(-) 잃은(+) 플레이어입니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>널뛰기/시몬스:</b> 2번 홀부터 이전 홀과의 타수 차이를 누적 합산합니다.</div>
                 </div>
