@@ -666,7 +666,11 @@
     }
 
     function App() {
-      const [currentView, setCurrentView] = usePersistentState('golf_currentView', 'settings');
+      // 💡 [게스트/방장 자동 분류]: URL에 roomId(초대코드)가 포함되어 있으면 게스트, 없으면 방장으로 초기값 설정
+      const urlParams = new URLSearchParams(window.location.search);
+      const isInviteLink = !!urlParams.get('roomId');
+
+      const [currentView, setCurrentView] = usePersistentState('golf_currentView', isInviteLink ? 'waitingRoom' : 'settings');
       const [handicapType, setHandicapType] = usePersistentState('golf_handicapType', 'strokes');
       const [eventName, setEventName] = usePersistentState('golf_eventName', '단체 골프 라운드');
       const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo', { name: '표준 파72 (일반 코스)', front: 'OUT 코스', back: 'IN 코스' });
@@ -690,7 +694,7 @@
       const [allScores, setAllScores] = usePersistentState('golf_allScores', []);
       const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam', 0);
       const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened', false);
-      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole', 'host');
+      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole', isInviteLink ? 'guest' : 'host');
       const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo', null);
       const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus', []);
       const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors', {});
@@ -846,7 +850,13 @@
       const isAwardOpenFlag = currentUserRole === 'host' || isAwardsManuallyOpened;
 
       const renderCurrentView = () => {
-        switch(currentView) {
+        let viewToRender = currentView;
+        // 💡 [보안 보강]: 게스트(참여자)가 비정상적으로 설정 페이지에 접근/잔류하려 할 경우 대기실로 강제 이동
+        if (viewToRender === 'settings' && currentUserRole !== 'host') {
+          viewToRender = 'waitingRoom';
+        }
+
+        switch(viewToRender) {
           case 'settings': return <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} setTeamData={setTeamData} initialHandicapType={handicapType} setHandicapType={setHandicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} isMultiCourse={isMultiCourse} setIsMultiCourse={setIsMultiCourse} teamCourses={teamCourses} setTeamCourses={setTeamCourses} onComplete={handleCompleteSettings} isRoundStarted={isRoundStarted} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} onEndGame={handleEndGame} onResetGame={handleResetGame} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} />;
           case 'waitingRoom': return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={user?.uid} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} setScoreInputAuthorizedPlayers={setScoreInputAuthorizedPlayers} />;
           case 'scoreInput': return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} />;
