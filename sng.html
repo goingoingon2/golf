@@ -23,7 +23,7 @@
     const { useState, useEffect, useRef } = React;
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
     import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
-    import { getFirestore, doc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+    import { getFirestore, doc, setDoc, onSnapshot, getDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
 
     let firebaseConfig = null;
     try {
@@ -107,7 +107,7 @@
       Minus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14"/></svg>,
       Plus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 5v14M5 12h14"/></svg>,
       Search: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>,
-      Settings: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>,
+      Settings: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
       Share2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>,
       Star: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
       Target: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
@@ -120,6 +120,7 @@
       TrendingUp: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
       TrendingDown: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
       X: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      RefreshCcw: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"/><path d="M3.51 15A9 9 0 0 0 18.36 18.36L23 14"/></svg>,
     };
 
     const getInitialTeams = () => [
@@ -200,7 +201,7 @@
                           <div className="flex items-center gap-2 border-b border-slate-50 pb-2"><span className="font-bold text-sm text-slate-800 shrink-0 truncate">{String(st.name || st.teamName || '-')}</span><span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">평균 {Number(st.avgGross || 0).toFixed(1)}타</span></div>
                           <div className="flex flex-col gap-2 text-xs text-slate-600 min-w-0">
                             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Zap className="w-3.5 h-3.5 text-emerald-500 shrink-0"/> <span className="text-slate-500 font-medium">하드캐리</span> <b className="text-slate-800">{String(st.hardCarry?.name || '-')}</b></span><span className="font-bold text-[#0D8A5E] bg-emerald-50 px-2 py-0.5 rounded">{st.hardCarry?.score || 0}타 ({safeDisplayNet(st.hardCarry?.diffFromAvg)})</span></div>
-                            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Coffee className="w-3.5 h-3.5 text-amber-600 shrink-0"/> <span className="text-slate-500 font-medium">국밥</span> <b className="text-slate-800">{String(st.bomb?.name || '-')}</b></span><span className="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{st.bomb?.score || 0}타 ({safeDisplayNet(st.bomb?.diffFromAvg)})</span></div>
+                            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Coffee className="w-3.5 h-3.5 text-amber-600 shrink-0"/> <span className="text-slate-500 font-medium">국밥말아</span> <b className="text-slate-800">{String(st.bomb?.name || '-')}</b></span><span className="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{st.bomb?.score || 0}타 ({safeDisplayNet(st.bomb?.diffFromAvg)})</span></div>
                           </div>
                         </div>
                       ))}</div></div>
@@ -211,7 +212,7 @@
                           <div className="flex items-center gap-2 border-b border-slate-50 pb-2"><span className="font-bold text-sm text-slate-800 shrink-0 truncate">{String(st.teamName || st.name || '-')}</span><span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">평균 {Number(st.avgGross || 0).toFixed(1)}타</span></div>
                           <div className="flex flex-col gap-2 text-xs text-slate-600 min-w-0">
                             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Zap className="w-3.5 h-3.5 text-emerald-500 shrink-0"/> <span className="text-slate-500 font-medium">하드캐리</span> <b className="text-slate-800">{String(st.hardCarry?.name || '-')}</b></span><span className="font-bold text-[#0D8A5E] bg-emerald-50 px-2 py-0.5 rounded">{st.hardCarry?.score || 0}타 ({safeDisplayNet(st.hardCarry?.diffFromAvg)})</span></div>
-                            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Coffee className="w-3.5 h-3.5 text-amber-600 shrink-0"/> <span className="text-slate-500 font-medium">국밥</span> <b className="text-slate-800">{String(st.bomb?.name || '-')}</b></span><span className="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{st.bomb?.score || 0}타 ({safeDisplayNet(st.bomb?.diffFromAvg)})</span></div>
+                            <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Coffee className="w-3.5 h-3.5 text-amber-600 shrink-0"/> <span className="text-slate-500 font-medium">국밥말아</span> <b className="text-slate-800">{String(st.bomb?.name || '-')}</b></span><span className="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{st.bomb?.score || 0}타 ({safeDisplayNet(st.bomb?.diffFromAvg)})</span></div>
                           </div>
                         </div>
                       ))}</div></div>
@@ -336,7 +337,7 @@
       );
     }
 
-    function ScoreInputView({ teamNames, teamData, isMultiCourse, teamCourses, courseInfo, currentUserRole, myPlayerInfo, hostSelectedTeam, setHostSelectedTeam, allPars, setAllPars, allScores, setAllScores, specialHoles, specialRecords, setSpecialRecords, eventName, scoreInputPermission, scoreInputAuthorizedPlayers, lastEditors, setLastEditors, customGroups, onGoToSettings, onOpenScoreboard, onOpenAwards, currentHole, setCurrentHole, manuallyClearedRef, syncToDB }) {
+    function ScoreInputView({ teamNames, teamData, isMultiCourse, teamCourses, courseInfo, currentUserRole, myPlayerInfo, hostSelectedTeam, setHostSelectedTeam, allPars, setAllPars, allScores, setAllScores, specialHoles, specialRecords, setSpecialRecords, eventName, scoreInputPermission, scoreInputAuthorizedPlayers, lastEditors, setLastEditors, customGroups, onGoToSettings, onGoToWaitingRoom, onOpenScoreboard, onOpenAwards, currentHole, setCurrentHole, manuallyClearedRef, syncToDB }) {
       const isHost = currentUserRole === 'host'; 
       // 💡 [조회 및 렌더링 기준 조]: 방장이 선택한 조 또는 게스트가 직접 탭으로 선택한 조
       const teamIndex = hostSelectedTeam; 
@@ -388,28 +389,36 @@
       const nRec = teamSpecials.nearest; const nScoreDiff = nRec?.pIdx != null && scores[nRec.pIdx] !== null ? scores[nRec.pIdx] - par : null; const nIsInvalid = specialHoles.requirePar && nScoreDiff > 0 && nRec?.isPar !== true;
       const lRec = teamSpecials.longest; const lScoreDiff = lRec?.pIdx != null && scores[lRec.pIdx] !== null ? scores[lRec.pIdx] - par : null; const lIsInvalid = specialHoles.requirePar && lScoreDiff > 0 && lRec?.isPar !== true;
 
+      // 💡 hostSelectedTeam 변수명을 상태 관리와 독립적으로 활용 (게스트도 탭을 눌러 다른 조 열람)
+      // 게스트 시점에서는 렌더링용 임시 변수로 사용하기 위해 useEffect로 myPlayerInfo.tIdx 초기화
+      useEffect(() => { if (!isHost && myPlayerInfo) { setHostSelectedTeam(myPlayerInfo.tIdx); } }, [isHost, myPlayerInfo]);
+
       return (
         <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] font-sans">
           <div className="bg-[#0D8A5E] pt-12 pb-16 px-5 text-center rounded-b-[30px] shrink-0 relative flex items-start justify-between shadow-lg">
             <button onClick={onOpenAwards} className="p-2 -ml-1 mt-1 hover:bg-black/10 rounded-lg relative z-20 transition-colors"><Icons.Award className="w-6 h-6 text-amber-400"/></button>
             <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11 text-center"><span className="text-emerald-100/90 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span><div className="flex items-center gap-2 justify-center"><span className="text-3xl font-black text-white">{currentHole}H</span>{canEdit && <button onClick={handleResetCurrentHole} className="text-[10px] bg-white/20 text-white font-bold px-2.5 py-1 rounded-full hover:bg-white/30 transition-colors active:scale-95 ml-1 border border-white/20">초기화</button>}</div></div>
-            <div className="flex items-center gap-1.5 mt-1 relative z-20">{isHost && (<button onClick={onGoToSettings} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors"><Icons.Settings className="w-5 h-5 text-white/90" /></button>)}<button onClick={onOpenScoreboard} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors"><Icons.List className="w-6 h-6 text-white" /></button></div>
+            <div className="flex items-center gap-1 mt-1 relative z-20">
+              <button onClick={onGoToWaitingRoom} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors" title="대기실 가기"><Icons.Users className="w-5 h-5 text-white/90" /></button>
+              {isHost && (<button onClick={onGoToSettings} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors" title="방장 설정"><Icons.Settings className="w-5 h-5 text-white/90" /></button>)}
+              <button onClick={onOpenScoreboard} className="p-1.5 hover:bg-black/10 rounded-lg transition-colors" title="전체 스코어보드"><Icons.List className="w-6 h-6 text-white" /></button>
+            </div>
           </div>
           
           <div className="px-4 -mt-8 relative z-10 flex-1 overflow-y-auto no-scrollbar">
-            <div className="flex gap-2 mb-4 h-[56px]">
-              <div className="bg-white rounded-[20px] p-1.5 shadow-sm flex items-center shrink-0">
-                <div className="px-1.5 hidden sm:flex text-slate-400"><Icons.Flag className="w-4 h-4"/></div>
-                <div className="flex gap-1 w-full h-full">
+            <div className="flex gap-1.5 mb-4 h-[52px]">
+              <div className="bg-white rounded-[16px] p-1 shadow-sm flex items-center shrink-0">
+                <div className="px-1 hidden sm:flex text-slate-400"><Icons.Flag className="w-4 h-4"/></div>
+                <div className="flex gap-0.5 w-full h-full">
                   {[3, 4, par>=5?par:5].map(v=>(
-                    <button key={v} onPointerDown={()=>canEdit&&handleS(v)} onPointerUp={()=>canEdit&&handleE(v)} onPointerLeave={()=>canEdit&&handleCancel()} onContextMenu={e=>e.preventDefault()} style={{ WebkitTouchCallout: 'none' }} className={`h-full w-11 rounded-xl font-black text-lg select-none flex items-center justify-center transition-all ${par===v?'bg-[#0D8A5E] text-white shadow-md': canEdit?'bg-transparent text-slate-500 hover:bg-slate-100':'bg-transparent text-slate-300'} ${!canEdit && par!==v ? 'opacity-50 cursor-not-allowed':''}`}>{v}</button>
+                    <button key={v} onPointerDown={()=>canEdit&&handleS(v)} onPointerUp={()=>canEdit&&handleE(v)} onPointerLeave={()=>canEdit&&handleCancel()} onContextMenu={e=>e.preventDefault()} style={{ WebkitTouchCallout: 'none' }} className={`h-full w-9 rounded-lg font-black text-base select-none flex items-center justify-center transition-all ${par===v?'bg-[#0D8A5E] text-white shadow-md': canEdit?'bg-transparent text-slate-500 hover:bg-slate-100':'bg-transparent text-slate-300'} ${!canEdit && par!==v ? 'opacity-50 cursor-not-allowed':''}`}>{v}</button>
                   ))}
                 </div>
               </div>
-              <div className="bg-white rounded-[20px] p-1.5 shadow-sm flex flex-1 min-w-0 overflow-hidden">
+              <div className="bg-white rounded-[16px] p-1 shadow-sm flex flex-1 min-w-0 overflow-hidden">
                 <div className="flex justify-start gap-1 overflow-x-auto no-scrollbar w-full h-full pr-1">
                   {(teamNames || []).map((name, idx) => (
-                    <button key={idx} onClick={() => setHostSelectedTeam(idx)} className={`h-full px-3.5 rounded-xl font-bold text-sm whitespace-nowrap flex items-center justify-center transition-all shrink-0 ${teamIndex === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-transparent text-slate-500 hover:bg-slate-100'}`}>
+                    <button key={idx} onClick={() => setHostSelectedTeam(idx)} className={`h-full px-2.5 rounded-lg font-bold text-[13px] whitespace-nowrap flex items-center justify-center transition-all shrink-0 ${teamIndex === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-transparent text-slate-500 hover:bg-slate-100'}`}>
                       {String(name)} {!isHost && myPlayerInfo?.tIdx === idx && ' (MY)'}
                     </button>
                   ))}
@@ -462,7 +471,7 @@
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 {Array.from({length: 9}).map((_, idx) => {
                   const hIdx = activeTab === 'front' ? idx : idx + 9; const par = allPars[vTeamIdx]?.[hIdx] || 4; const scores = allScores[hIdx]?.[vTeamIdx] || Array(myTeam.length).fill(null);
-                  return (<div key={hIdx} onClick={() => onGoToInput(hIdx + 1, vTeamIdx)} className="flex border-b last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"><div className="w-12 bg-slate-50 py-3 flex flex-col items-center justify-center border-r shrink-0"><span className="text-xs font-black text-slate-800">{hIdx + 1}H</span><span className="text-[9px] font-bold text-slate-400">P{par}</span></div><div className="flex-1 flex">{scores.map((sVal, i) => (<div key={i} className="flex-1 flex flex-col items-center justify-center py-2 border-r last:border-0">{sVal == null ? <span className="font-black text-sm text-slate-300">E</span> : <><span className={`font-black text-sm ${sVal - par > 0 ? 'text-[#0D8A5E]' : sVal - par < 0 ? 'text-red-500' : 'text-slate-800'}`}>{safeDisplayDiff(sVal - par)}</span></>}</div>))}</div></div>);
+                  return (<div key={hIdx} onClick={() => onGoToInput(hIdx + 1, vTeamIdx)} className="flex border-b last:border-0 hover:bg-slate-50 transition-colors cursor-pointer"><div className="w-12 bg-slate-50 py-3 flex flex-col items-center justify-center border-r shrink-0"><span className="text-xs font-black text-slate-800">{hIdx + 1}H</span><span className="text-[9px] font-bold text-slate-400">P{par}</span></div><div className="flex-1 flex">{scores.map((sVal, i) => (<div key={i} className="flex-1 flex flex-col items-center justify-center py-2 border-r last:border-0">{sVal == null ? <span className="text-[10px] text-slate-400">E</span> : <><span className={`font-black text-sm ${sVal - par > 0 ? 'text-[#0D8A5E]' : sVal - par < 0 ? 'text-red-500' : 'text-slate-800'}`}>{safeDisplayDiff(sVal - par)}</span></>}</div>))}</div></div>);
                 })}
               </div>
             </div>
@@ -472,7 +481,15 @@
       );
     }
 
-    function AwardsPageViewMain({ stats, syncStats, predictionStats, totalPar, teamNames, teamData, eventName, isAwardOpen, isAwardsManuallyOpened, setIsAwardsManuallyOpened, currentUserRole, customGroups, enableGroupComp, enableTeamComp, teamBalanceMode, groupBalanceMode, selectedAwards, stablefordTitle, allPars, onBack, setDetailModal, setIsAwardInfoOpen, specialRankings }) {
+    function AwardsPageViewMain({ stats, syncStats, predictionStats, totalPar, teamNames, teamData, eventName, isAwardOpen, isAwardsManuallyOpened, setIsAwardsManuallyOpened, currentUserRole, customGroups, enableGroupComp, enableTeamComp, teamBalanceMode, groupBalanceMode, selectedAwards, stablefordTitle, allPars, onBack, setDetailModal, setIsAwardInfoOpen, specialRankings, onRefresh }) {
+      const [isSpinning, setIsSpinning] = useState(false);
+      
+      const handleRefresh = () => {
+        setIsSpinning(true);
+        if (onRefresh) onRefresh();
+        setTimeout(() => setIsSpinning(false), 800);
+      };
+
       const getCompStats = (type) => {
         const list = type === 'group' ? (customGroups || []) : (teamData || []).map((_, i) => ({ id: i, name: teamNames[i], members: (teamData[i] || []).map((__, pi) => `${i}-${pi}`) }));
         return list.map(g => {
@@ -531,12 +548,24 @@
 
       return (
         <div className="flex flex-col min-h-screen bg-[#F8F9FA] relative text-left">
-          <div className="bg-[#1E293B] pt-12 pb-6 px-4 shrink-0 flex items-start justify-between relative z-20 shadow-lg"><button onClick={onBack} className="p-2 -ml-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors"><Icons.ArrowLeft className="w-6 h-6" /></button><div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11"><span className="text-slate-400 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span><div className="flex items-center gap-2"><h1 className="text-lg font-black text-white">실시간 시상 현황</h1><button onClick={() => setIsAwardInfoOpen(true)} className="ml-1 p-0.5 text-slate-300 hover:text-white transition-colors"><Icons.Info className="w-4 h-4"/></button></div></div><div className="w-8"></div></div>
+          <div className="bg-[#1E293B] pt-12 pb-6 px-4 shrink-0 flex items-start justify-between relative z-20 shadow-lg">
+            <button onClick={onBack} className="p-2 -ml-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors"><Icons.ArrowLeft className="w-6 h-6" /></button>
+            <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11">
+              <span className="text-slate-400 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-black text-white">실시간 시상 현황</h1>
+                <button onClick={() => setIsAwardInfoOpen(true)} className="ml-1 p-0.5 text-slate-300 hover:text-white transition-colors"><Icons.Info className="w-4 h-4"/></button>
+              </div>
+            </div>
+            <button onClick={handleRefresh} className="p-2 -mr-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors" title="새로고침">
+              <Icons.RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 mt-2 no-scrollbar">
             {currentUserRole === 'host' && !isAwardsManuallyOpened && (<button onClick={()=>setIsAwardsManuallyOpened(true)} className="w-full bg-emerald-50 border border-emerald-200 text-[#0D8A5E] p-4 rounded-2xl font-bold flex items-center justify-center gap-2 mb-2 active:scale-95 transition-all shadow-sm"><Icons.Award className="w-5 h-5"/> 모든 시상 결과 오픈하기 (게스트 공개)</button>)}
             {selectedAwards.includes('전체 순위') && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up"><div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Icons.Award className="w-4 h-4 text-[#0D8A5E]" /> 전체 순위</h4><button onClick={() => setDetailModal({ title: '전체 순위', isOverall: true, teamNames, totalPar, lists: { realtime: stats, sync: syncStats, prediction: predictionStats }, formatFn: (v, tab) => tab === 'prediction' ? Math.round(totalPar + v) + '타' : safeDisplayDiff(v), customGroups: enableGroupComp ? customGroups : null })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#D1FAE5]">자세히 보기 &gt;</button></div><div className="space-y-2">{[...stats].sort((a,b)=>a.diff-b.diff).slice(0, 3).map((st, i) => (<div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"><div className="flex items-center gap-3 flex-1 min-w-0 text-left"><RankBadge rank={i} /><div className="flex items-center gap-1.5 flex-wrap min-w-0"><span className="font-bold text-slate-700 text-[15px] truncate">{String(st.name || '-')}</span><span className="text-[10px] font-bold text-slate-500 bg-white border border-slate-200 px-1.5 py-0.5 rounded shadow-sm shrink-0">{teamNames[st.tIdx] || `${st.tIdx + 1}조`}</span>{enableGroupComp && <GroupBadges tIdx={st.tIdx} pIdx={st.pIdx} customGroups={customGroups} />}</div></div><div className="flex flex-col items-end min-w-[3.5rem]"><span className={`font-black text-xl leading-none ${st.diff>0?'text-red-500':'text-[#0D8A5E]'}`}>{safeDisplayDiff(st.diff)}</span><span className="text-[10px] font-bold text-slate-400 mt-1">{String(st.score || 0)}타</span></div></div>))}</div></div>)}
             {(selectedAwards || []).includes('신페리오') && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up"><div className="flex justify-between items-center mb-3 border-b border-slate-50 pb-2"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5 cursor-pointer" onClick={handlePeoriaClick}><Icons.Award className="w-4 h-4 text-[#0D8A5E]" /> 신페리오 (NET) {isAwardOpen && <Icons.Info className="w-4 h-4 text-slate-300 ml-1" />}</h4><button onClick={handlePeoriaClick} className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-colors ${isAwardOpen ? 'text-[#0D8A5E] bg-[#E6F4EF] hover:bg-[#D1FAE5]' : 'text-slate-400 bg-slate-100'}`}>자세히 보기 &gt;</button></div><div className="space-y-2">{[...stats].sort((a,b)=>a.mockNewPeoriaNet - b.mockNewPeoriaNet).slice(0, 3).map((st, i) => (<div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl"><div className="flex items-center gap-3 flex-1 min-w-0 text-left"><RankBadge rank={i} /><span className="font-bold text-slate-700 text-[15px]">{isAwardOpen ? String(st.name) : '🔒 비공개'}</span></div><span className={`font-black text-xl text-[#0D8A5E]`}>{isAwardOpen ? Number(st.mockNewPeoriaNet).toFixed(1) : '-'}</span></div>))}</div></div>)}
-            {renderAwardRow(stablefordTitle, Icons.Star, stats, 'stablefordScore', (v)=>String(v), null, "bg-[#E6F4EF]", "text-[#0D8A5E]", '변형스테이블포드')}
+            {renderAwardRow(stablefordTitle, Icons.Star, stats, 'stablefordScore', (v)=>String(v), 'stableford', "bg-[#E6F4EF]", "text-[#0D8A5E]", '변형스테이블포드')}
             <div className="grid grid-cols-1 gap-3 animate-fade-in-up">
               {renderAwardRow('일취월장', Icons.Zap, stats, 'ilchiScore', (v)=>v !== 9999 ? safeDisplayNet(v) : '-', 'perfText')}
               {renderAwardRow('낙차큰커브', Icons.TrendingDown, stats, 'nakchaScore', (v)=>v !== -9999 ? safeDisplayNet(v) : '-', 'perfText', "bg-red-50", "text-red-500")}
@@ -564,7 +593,7 @@
             {enableTeamComp && (
               <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2"><h4 className="font-bold text-[#0D8A5E] text-sm flex items-center gap-1.5 mb-3 border-b pb-2"><Icons.Users className="w-4 h-4" /> 조별 순위</h4><div className="space-y-2">{teamCompStats.map((st, i) => (<div key={i} className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl"><div className="flex items-center gap-3"><RankBadge rank={i} /><span className="font-bold text-emerald-900">{String(st.teamName || '-')}</span></div><div className="flex flex-col items-end min-w-[4rem]"><span className="font-black text-xl text-emerald-700 leading-none">{Number(st.avgGross || 0).toFixed(1)}타</span><span className={`text-[10px] font-bold ${st.compDiff > 0 ? 'text-red-500' : 'text-[#0D8A5E]'} mt-1`}>{safeDisplayNet(st.compDiff)}</span></div></div>))}</div></div>
             )}
-            {(enableTeamComp || enableGroupComp) && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2"><div className="flex justify-between items-center"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Icons.Activity className="w-4 h-4 text-[#0D8A5E]" /> 팀 및 그룹 분석 (하드캐리 & 국밥)</h4><button onClick={() => setDetailModal({ title: '팀 및 그룹 분석 (하드캐리 & 국밥)', isSpecial: true, teamList: teamCompStats, groupList: groupCompStats, enableTeamComp, enableGroupComp })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#D1FAE5]">자세히 보기 &gt;</button></div></div>)}
+            {(enableTeamComp || enableGroupComp) && (<div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 animate-fade-in-up mt-2"><div className="flex justify-between items-center"><h4 className="font-bold text-slate-700 text-sm flex items-center gap-1.5"><Icons.Activity className="w-4 h-4 text-[#0D8A5E]" /> 팀 및 그룹 분석 (하드캐리 & 국밥말아)</h4><button onClick={() => setDetailModal({ title: '팀 및 그룹 분석 (하드캐리 & 국밥말아)', isSpecial: true, teamList: teamCompStats, groupList: groupCompStats, enableTeamComp, enableGroupComp })} className="text-[11px] text-[#0D8A5E] font-bold bg-[#E6F4EF] px-2.5 py-1.5 rounded-lg transition-colors hover:bg-[#D1FAE5]">자세히 보기 &gt;</button></div></div>)}
           </div>
         </div>
       );
@@ -639,7 +668,7 @@
                   {isMultiCourse && (<div className="flex gap-2 mt-3 mb-2 bg-slate-50 p-2 rounded-xl animate-fade-in-up"><span className="text-[11px] font-bold text-slate-500 shrink-0 self-center w-10 text-center">코스</span><select value={teamCourses[tIdx]?.front || courseInfo.front} onChange={e => { const ntc = [...teamCourses]; ntc[tIdx] = {...ntc[tIdx], front: e.target.value}; setTeamCourses(ntc); }} className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold bg-white outline-none">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select><select value={teamCourses[tIdx]?.back || courseInfo.back} onChange={e => { const ntc = [...teamCourses]; ntc[tIdx] = {...ntc[tIdx], back: e.target.value}; setTeamCourses(ntc); }} className="flex-1 border border-slate-200 rounded-lg px-2 py-1.5 text-[11px] font-bold bg-white outline-none">{courseOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}</select></div>)}
                   <div className="grid grid-cols-2 gap-2">
                     {(team || []).map((p,pI)=>(
-                      <div key={pI} className="relative flex bg-[#F8F9FA] rounded-xl border overflow-hidden shadow-sm"><div className="flex-1 flex items-center pl-3 py-1.5 min-w-0 pr-1 gap-1"><input type="text" value={p.name} onChange={(e)=>handlePlayerChange(tIdx,pI,'name',e.target.value)} className="w-full flex-1 text-sm font-medium focus:outline-none bg-transparent min-w-0" /></div><div className="w-16 border-l flex items-center pr-2 bg-slate-200/30 shrink-0"><input type="text" value={p.handicap} onChange={(e)=>handlePlayerChange(tIdx,pI,'handicap',e.target.value.replace(/[^0-9+\-]/g,''))} className="w-full bg-transparent py-1 text-xs text-center font-bold focus:outline-none" />{currentHandicapType==='strokes'&&<span className="text-[11px] text-slate-500 font-bold">타</span>}</div></div>
+                      <div key={pI} className="relative flex bg-[#F8F9FA] rounded-xl border overflow-hidden shadow-sm"><div className="flex-1 flex items-center pl-3 py-1.5 min-w-0 pr-1 gap-1"><input type="text" value={p.name} onChange={(e)=>handlePlayerChange(tIdx,pI,'name',e.target.value)} className="w-full flex-1 text-sm font-medium focus:outline-none bg-transparent min-w-0" />{enableGroupComp && <GroupBadges tIdx={tIdx} pIdx={pI} customGroups={tempCustomGroups} />}</div><div className="w-16 border-l flex items-center pr-2 bg-slate-200/30 shrink-0"><input type="text" value={p.handicap} onChange={(e)=>handlePlayerChange(tIdx,pI,'handicap',e.target.value.replace(/[^0-9+\-]/g,''))} className="w-full bg-transparent py-1 text-xs text-center font-bold focus:outline-none" />{currentHandicapType==='strokes'&&<span className="text-[11px] text-slate-500 font-bold">타</span>}</div></div>
                     ))}
                   </div>
                 </div>
@@ -749,6 +778,7 @@
       const manuallyClearedRef = useRef({});
       const [isDbConnected, setIsDbConnected] = useState(false);
       const [user, setUser] = useState(null);
+      const [refreshTrigger, setRefreshTrigger] = useState(0);
 
       useEffect(() => { 
         try { if (window.localStorage.getItem('golf_host_verified') === 'true') setCurrentUserRole('host'); } catch(e) {} 
@@ -805,6 +835,27 @@
         } catch (e) { console.error("Sync Error", e); } 
       };
 
+      const handleManualRefresh = async () => {
+        setRefreshTrigger(prev => prev + 1);
+        if (!db || !roomId || !isDbConnected || !user) return;
+        try {
+          const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'golf_rooms', roomId);
+          const docSnap = await getDoc(roomRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (data.allScores) { try { setAllScores(typeof data.allScores === 'string' ? JSON.parse(data.allScores) : data.allScores); } catch(e) { setAllScores(data.allScores); } }
+            if (data.allPars) { try { setAllPars(typeof data.allPars === 'string' ? JSON.parse(data.allPars) : data.allPars); } catch(e) { setAllPars(data.allPars); } }
+            if (data.joinedStatus) { try { setJoinedStatus(typeof data.joinedStatus === 'string' ? JSON.parse(data.joinedStatus) : data.joinedStatus); } catch(e) { setJoinedStatus(data.joinedStatus); } }
+            if (data.teamData) { try { setTeamData(typeof data.teamData === 'string' ? JSON.parse(data.teamData) : data.teamData); } catch(e) { setTeamData(data.teamData); } }
+            if (data.specialRecords) setSpecialRecords(data.specialRecords);
+            if (data.lastEditors) setLastEditors(data.lastEditors); 
+            if (data.isRoundStarted !== undefined) setIsRoundStarted(data.isRoundStarted); 
+            if (data.eventName) setEventName(data.eventName); 
+            if (data.scoreInputAuthorizedPlayers) setScoreInputAuthorizedPlayers(data.scoreInputAuthorizedPlayers);
+          }
+        } catch(e) { console.error("Manual Refresh Error:", e); }
+      };
+
       const handleCompleteSettings = (data, type) => {
         setTeamData(data); setHandicapType(type); setCurrentUserRole('host'); try { window.localStorage.setItem('golf_host_verified', 'true'); } catch(e) {}
         let currentRoomId = roomId; if (!currentRoomId) { currentRoomId = Math.random().toString(36).substring(2, 8).toUpperCase(); setRoomId(currentRoomId); }
@@ -842,7 +893,7 @@
         return (teamData || []).flatMap((team, tIdx) => (team || []).map((player, pIdx) => {
           let score = 0, actualDiff = 0, birds = 0, sfScore = 0, holes = 0, vari = 0, prevD = null;
           let daPa = 0, daBogey = 0, realPars = 0, realBogeys = 0, realDoublePars = 0;
-          let details = { birdies: [], daPa: [], daBogey: [], realPars: [], realBogeys: [], realDoublePars: [], variance: [] };
+          let details = { birdies: [], daPa: [], daBogey: [], realPars: [], realBogeys: [], realDoublePars: [], variance: [], stableford: [] };
           allScores.slice(0, 18).forEach((hs, hIdx) => {
             if (basis === 'min_hole_sync' && !syncHoles.includes(hIdx)) return;
             const s = hs[tIdx]?.[pIdx];
@@ -852,11 +903,14 @@
               if (d <= -1) { birds++; details.birdies.push(`${hName}(${s})`); }
               if (d === 0) { realPars++; details.realPars.push(hName); daPa += 1; details.daPa.push(`${hName}(1)`); }
               else if (d >= p) { realDoublePars++; details.realDoublePars.push(hName); daPa += 2; details.daPa.push(`${hName}(2)`); }
-              else { if (d === 1) { realBogeys++; details.realBogeys.push(hName); } daBogey += d; details.daBogey.push(`${hName}(+${d})`); }
+              else { if (d === 1) { realBogeys++; details.realBogeys.push(hName); } daBogey += d; details.daBogey.push(`${hName}(${d})`); }
               if (prevD !== null && hIdx >= 1) { const diffVal = Math.abs(d - prevD); details.variance.push(`${hName}(${diffVal})`); vari += diffVal; }
               prevD = d;
               const conf = (id) => stablefordConfig.find(c => c.id === id)?.score || 0;
-              if (d <= -3) sfScore += conf('albatross'); else if (d === -2) sfScore += conf('eagle'); else if (d === -1) sfScore += conf('birdie'); else if (d === 0) sfScore += conf('par'); else if (d === 1) sfScore += conf('bogey'); else if (d >= 2) sfScore += conf('doubleBogey');
+              let sfDelta = 0;
+              if (d <= -3) sfDelta = conf('albatross'); else if (d === -2) sfDelta = conf('eagle'); else if (d === -1) sfDelta = conf('birdie'); else if (d === 0) sfDelta = conf('par'); else if (d === 1) sfDelta = conf('bogey'); else if (d >= 2) sfDelta = conf('doubleBogey');
+              sfScore += sfDelta;
+              if (sfDelta !== 0) details.stableford.push(`${hName}(${sfDelta})`);
             }
           });
           const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-]/g, '')) || 0; const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi;
@@ -900,9 +954,9 @@
         switch(viewToRender) {
           case 'settings': return <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} setTeamData={setTeamData} initialHandicapType={handicapType} setHandicapType={setHandicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} isMultiCourse={isMultiCourse} setIsMultiCourse={setIsMultiCourse} teamCourses={teamCourses} setTeamCourses={setTeamCourses} onComplete={handleCompleteSettings} isRoundStarted={isRoundStarted} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} onEndGame={handleEndGame} onResetGame={handleResetGame} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} />;
           case 'waitingRoom': return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={user?.uid} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} setScoreInputAuthorizedPlayers={setScoreInputAuthorizedPlayers} setHostSelectedTeam={setHostSelectedTeam} />;
-          case 'scoreInput': return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} />;
+          case 'scoreInput': return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} />;
           case 'scoreboard': return <ScoreboardView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} allPars={allPars} allScores={allScores} handicapType={handicapType} eventName={eventName} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onBack={() => setCurrentView('scoreInput')} onGoToInput={(h, t) => { setCurrentHole(h); setHostSelectedTeam(t); setCurrentView('scoreInput'); }} onOpenAwards={() => { setPreviousView('scoreboard'); setCurrentView('awards'); }} />;
-          case 'awards': return <AwardsPageViewMain stats={stats} syncStats={syncStats} predictionStats={predictionStats} totalPar={totalPar} teamNames={teamNames} teamData={teamData} eventName={eventName} isAwardOpen={isAwardOpenFlag} isAwardsManuallyOpened={isAwardsManuallyOpened} setIsAwardsManuallyOpened={setIsAwardsManuallyOpened} currentUserRole={currentUserRole} customGroups={customGroups} enableGroupComp={enableGroupComp} enableTeamComp={enableTeamComp} teamBalanceMode={teamBalanceMode} groupBalanceMode={groupBalanceMode} selectedAwards={selectedAwards} stablefordTitle={stablefordTitle} allPars={allPars} onBack={() => setCurrentView(previousView)} setDetailModal={setDetailModal} setIsAwardInfoOpen={setIsAwardInfoOpen} specialRankings={{ nearest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.nearest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.nearest.pIdx].name, tIdx: parseInt(tI), pIdx: r.nearest.pIdx, distance: r.nearest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.nearest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.nearest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? a.distance - b.distance : (a.isInvalid ? 1 : -1)), longest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.longest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.longest.pIdx].name, tIdx: parseInt(tI), pIdx: r.longest.pIdx, distance: r.longest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.longest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.longest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? b.distance - a.distance : (a.isInvalid ? 1 : -1)) }} />;
+          case 'awards': return <AwardsPageViewMain stats={stats} syncStats={syncStats} predictionStats={predictionStats} totalPar={totalPar} teamNames={teamNames} teamData={teamData} eventName={eventName} isAwardOpen={isAwardOpenFlag} isAwardsManuallyOpened={isAwardsManuallyOpened} setIsAwardsManuallyOpened={setIsAwardsManuallyOpened} currentUserRole={currentUserRole} customGroups={customGroups} enableGroupComp={enableGroupComp} enableTeamComp={enableTeamComp} teamBalanceMode={teamBalanceMode} groupBalanceMode={groupBalanceMode} selectedAwards={selectedAwards} stablefordTitle={stablefordTitle} allPars={allPars} onBack={() => setCurrentView(previousView)} setDetailModal={setDetailModal} setIsAwardInfoOpen={setIsAwardInfoOpen} onRefresh={handleManualRefresh} specialRankings={{ nearest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.nearest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.nearest.pIdx].name, tIdx: parseInt(tI), pIdx: r.nearest.pIdx, distance: r.nearest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.nearest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.nearest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? a.distance - b.distance : (a.isInvalid ? 1 : -1)), longest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.longest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.longest.pIdx].name, tIdx: parseInt(tI), pIdx: r.longest.pIdx, distance: r.longest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.longest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.longest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? b.distance - a.distance : (a.isInvalid ? 1 : -1)) }} />;
           default: return null;
         }
       };
@@ -921,9 +975,9 @@
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>전체 순위 (예상 기준):</b> 개인의 핸디캡과 당일 타수 페이스를 바탕으로 한 18홀 예상 실제 타수입니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>조별/그룹 순위:</b> 팀 평균 실제 타수를 비교합니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>신페리오:</b> 임의 지정된 12개 홀 성적을 바탕으로 당일 핸디캡을 산출하는 네트 스코어 순위입니다.</div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다파/다찐파:</b> 파(Par) 1점, 양파(Double 파) 2점으로 합산 (다찐파는 양파 제외 순수 파만 카운트)</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다파/다찐파:</b> 파(Par) 1점, 양파(Double Par) 2점으로 합산 (다찐파는 양파 제외 순수 파만 카운트)</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다보기/다찐보기:</b> 보기 1점, 더블 2점, 트리플 3점 등 오버파 수만큼 합산 (다찐보기는 순수 보기만 카운트)</div>
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다찐양파:</b> 양파(Double 파) 횟수만 카운트합니다.</div>
+                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>다찐양파:</b> 양파(Double Par) 횟수만 카운트합니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>일취월장/낙차큰커브:</b> 핸디캡 대비 스코어를 가장 많이 줄이거나(-) 잃은(+) 플레이어입니다.</div>
                   <div className="bg-slate-50 p-3 rounded-xl border border-slate-100"><b>널뛰기/시몬스:</b> 2번 홀부터 이전 홀과의 타수 차이를 누적 합산합니다.</div>
                 </div>
