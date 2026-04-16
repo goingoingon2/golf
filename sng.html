@@ -258,7 +258,6 @@
       
       const toggleJoinStatus = (tIdx, pIdx) => {
         if (isLongPressRef.current) { isLongPressRef.current = false; return; }
-        if (tIdx === 0 && pIdx === 0 && currentUserRole !== 'host') return; 
         
         if (currentUserRole === 'guest') {
           const newStatus = joinedStatus.map(row => [...row]); // Deep copy
