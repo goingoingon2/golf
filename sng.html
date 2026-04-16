@@ -119,6 +119,7 @@
       Coffee: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>,
       TrendingUp: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
       TrendingDown: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
+      X: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
     };
 
     const getInitialTeams = () => [
@@ -710,8 +711,9 @@
             if (data.allScores) { try { setAllScores(typeof data.allScores === 'string' ? JSON.parse(data.allScores) : data.allScores); } catch(e) { setAllScores(data.allScores); } }
             if (data.allPars) { try { setAllPars(typeof data.allPars === 'string' ? JSON.parse(data.allPars) : data.allPars); } catch(e) { setAllPars(data.allPars); } }
             if (data.joinedStatus) { try { setJoinedStatus(typeof data.joinedStatus === 'string' ? JSON.parse(data.joinedStatus) : data.joinedStatus); } catch(e) { setJoinedStatus(data.joinedStatus); } }
+            if (data.teamData) { try { setTeamData(typeof data.teamData === 'string' ? JSON.parse(data.teamData) : data.teamData); } catch(e) { setTeamData(data.teamData); } }
             if (data.specialRecords) setSpecialRecords(data.specialRecords);
-            if (data.lastEditors) setLastEditors(data.lastEditors); if (data.isRoundStarted !== undefined) setIsRoundStarted(data.isRoundStarted); if (data.teamData) setTeamData(data.teamData); if (data.eventName) setEventName(data.eventName); if (data.scoreInputAuthorizedPlayers) setScoreInputAuthorizedPlayers(data.scoreInputAuthorizedPlayers);
+            if (data.lastEditors) setLastEditors(data.lastEditors); if (data.isRoundStarted !== undefined) setIsRoundStarted(data.isRoundStarted); if (data.eventName) setEventName(data.eventName); if (data.scoreInputAuthorizedPlayers) setScoreInputAuthorizedPlayers(data.scoreInputAuthorizedPlayers);
           }
         }, (err) => console.error("Firebase Sync Error:", err));
         return () => unsubscribe();
@@ -723,10 +725,10 @@
         try { 
           const roomRef = doc(db, 'artifacts', appId, 'public', 'data', 'golf_rooms', targetRoom);
           const formattedUpdates = { ...updates };
-          // Firebase는 중첩 배열을 지원하지 않으므로 JSON 문자열로 직렬화하여 저장합니다.
           if (formattedUpdates.allScores) formattedUpdates.allScores = JSON.stringify(formattedUpdates.allScores);
           if (formattedUpdates.allPars) formattedUpdates.allPars = JSON.stringify(formattedUpdates.allPars);
           if (formattedUpdates.joinedStatus) formattedUpdates.joinedStatus = JSON.stringify(formattedUpdates.joinedStatus);
+          if (formattedUpdates.teamData) formattedUpdates.teamData = JSON.stringify(formattedUpdates.teamData);
           await setDoc(roomRef, formattedUpdates, { merge: true }); 
         } catch (e) { console.error("Sync Error", e); } 
       };
