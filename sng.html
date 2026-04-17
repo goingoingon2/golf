@@ -745,7 +745,7 @@
 
       const [currentView, setCurrentView] = usePersistentState('golf_currentView', isInviteLink ? 'waitingRoom' : 'settings');
       const [handicapType, setHandicapType] = usePersistentState('golf_handicapType', 'strokes');
-      const [eventName, setEventName] = usePersistentState('golf_eventName', '단체 골프 라운드');
+      const [eventName, setEventName] = usePersistentState('golf_eventName', '제5회 SNG 자진 골프대회');
       const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo', { name: '표준 파72 (일반 코스)', front: 'OUT 코스', back: 'IN 코스' });
       const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse', false);
       const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses', Array(20).fill({front: 'OUT 코스', back: 'IN 코스'}));
