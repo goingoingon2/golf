@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>단체팀 스코어보드 프로</title>
+  <title>제5회 SNG 자진 골프대회</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -269,6 +269,9 @@
             setMyPlayerInfo(null);
             if(syncToDB) syncToDB({ joinedStatus: newStatus });
           } else {
+            // 💡 [추가] 이미 다른 사람이 선택한 자리면 무시 (가로채기 방지)
+            if (joinedStatus[tIdx]?.[pIdx]) return;
+
             // 새로운 사람 선택 (기존 선택 해제 후 적용)
             if (myPlayerInfo) newStatus[myPlayerInfo.tIdx][myPlayerInfo.pIdx] = null;
             newStatus[tIdx][pIdx] = userUid || 'guest_user';
@@ -287,10 +290,7 @@
       };
 
       return (
-        <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] overflow-x-hidden font-sans">
-          <div className="bg-[#0D8A5E] pt-12 pb-10 px-5 text-center rounded-b-[30px] shadow-sm shrink-0">
-            <h1 className="text-2xl font-black text-white tracking-tight truncate px-10">{String(eventName)}</h1><p className="text-emerald-100 text-sm font-medium mt-1">라운드 대기실</p>
-          </div>
+        <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] overflow-x-hidden font-sans font-pretendard">
           <div className="px-4 pt-6 flex-1 overflow-y-auto no-scrollbar text-left">
             {isRoundStarted && currentUserRole === 'guest' && <div className="mb-4 bg-amber-50 text-amber-800 p-4 rounded-2xl text-sm text-center border border-amber-200 shadow-sm font-bold animate-pulse">방장이 라운드를 시작했습니다! 본인 이름을 클릭하여 입장하세요.</div>}
             {currentUserRole === 'host' && scoreInputPermission === 'selected' && <div className="mb-4 bg-blue-50 text-blue-800 p-4 rounded-2xl text-xs text-center border border-blue-200 shadow-sm font-bold animate-fade-in-up"><Icons.Info className="w-4 h-4 inline mr-1 -mt-0.5" />권한을 줄 플레이어를 길게 눌러(Long Press) 점수 입력 권한을 부여하세요.</div>}
@@ -300,9 +300,13 @@
                 <h3 className="text-slate-500 font-bold text-sm mb-3 pl-2 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>{tIdx + 1}조</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {(team || []).map((player, pIdx) => {
-                    const isJoined = !!joinedStatus[tIdx]?.[pIdx]; const isMe = currentUserRole === 'guest' && myPlayerInfo && tIdx === myPlayerInfo.tIdx && pIdx === myPlayerInfo.pIdx; const isAuth = scoreInputPermission === 'selected' && scoreInputAuthorizedPlayers.includes(`${tIdx}-${pIdx}`);
+                    const isJoined = !!joinedStatus[tIdx]?.[pIdx]; 
+                    const isMe = currentUserRole === 'guest' && myPlayerInfo && tIdx === myPlayerInfo.tIdx && pIdx === myPlayerInfo.pIdx; 
+                    const isAuth = scoreInputPermission === 'selected' && scoreInputAuthorizedPlayers.includes(`${tIdx}-${pIdx}`);
+                    const isTakenByOther = currentUserRole === 'guest' && isJoined && !isMe;
+                    
                     return (
-                      <div key={pIdx} onPointerDown={() => handlePointerDown(tIdx, pIdx)} onPointerUp={handlePointerUpOrLeave} onPointerLeave={handlePointerUpOrLeave} onContextMenu={e => e.preventDefault()} onClick={() => toggleJoinStatus(tIdx, pIdx)} className={`relative p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer border-2 select-none ${isJoined ? 'bg-[#F0FDF4] border-[#0D8A5E] shadow-sm' : 'bg-white border-dashed border-slate-200'} ${isMe ? 'ring-2 ring-emerald-400' : ''}`} style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}>
+                      <div key={pIdx} onPointerDown={() => handlePointerDown(tIdx, pIdx)} onPointerUp={handlePointerUpOrLeave} onPointerLeave={handlePointerUpOrLeave} onContextMenu={e => e.preventDefault()} onClick={() => toggleJoinStatus(tIdx, pIdx)} className={`relative p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border-2 select-none ${isJoined ? 'bg-[#F0FDF4] border-[#0D8A5E] shadow-sm' : 'bg-white border-dashed border-slate-200'} ${isMe ? 'ring-2 ring-emerald-400' : ''} ${isTakenByOther ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}>
                         {isAuth && <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm flex items-center gap-0.5 z-10"><Icons.Edit2 className="w-2.5 h-2.5"/>입력</div>}
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isJoined ? 'bg-[#D1FAE5] text-[#0D8A5E]' : 'bg-slate-100 text-slate-400'}`}>{isJoined ? <Icons.Check className="w-5 h-5 stroke-[3]" /> : <Icons.UserIcon className="w-5 h-5" />}</div>
                         <span className={`font-bold text-sm text-center ${isJoined ? 'text-[#0D8A5E]' : 'text-slate-600'}`}>{String(player.name)}</span>
