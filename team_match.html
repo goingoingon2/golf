@@ -90,12 +90,12 @@
     // ★ 0. Firebase 설정 (깃허브 배포 시 본인 프로젝트 정보로 변경하세요)
     // =====================================================================
     const USER_FIREBASE_CONFIG = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+  authDomain: "left-right-6da31.firebaseapp.com",
+  projectId: "left-right-6da31",
+  storageBucket: "left-right-6da31.firebasestorage.app",
+  messagingSenderId: "128347797181",
+  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
     };
 
     // =====================================================================
@@ -132,7 +132,8 @@
       Map: '<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>',
       Search: '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>',
       Wallet: '<path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>',
-      QrCode: '<rect x="3" y="3" width="5" height="5" rx="1" ry="1"/><rect x="16" y="3" width="5" height="5" rx="1" ry="1"/><rect x="3" y="16" width="5" height="5" rx="1" ry="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>'
+      QrCode: '<rect x="3" y="3" width="5" height="5" rx="1" ry="1"/><rect x="16" y="3" width="5" height="5" rx="1" ry="1"/><rect x="3" y="16" width="5" height="5" rx="1" ry="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/>',
+      AlertCircle: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'
     };
 
     const Icon = ({ name, className = "", size = 24, onClick }) => (
@@ -177,15 +178,18 @@
       const [db, setDb] = useState(null);
       const [user, setUser] = useState(null);
       const [roomId, setRoomId] = useState('');
-      const [isAdmin, setIsAdmin] = useState(false); // 로컬 권한 (방장 여부)
-      const [isDataLoaded, setIsDataLoaded] = useState(false); // 초기 동기화 대기
+      const [isDataLoaded, setIsDataLoaded] = useState(false); 
+      
       const isInitialLoad = useRef(true);
+      const isApplyingRemoteData = useRef(false);
+      const lastSentTimestamp = useRef(0);
 
       // --- 화면 상태 ---
-      const [step, setStep] = useState('setup'); 
+      const [step, setStep] = useState('setup'); // setup, waiting, play, holeResult, scoreboard, settlement, transfer
       const [toastMsg, setToastMsg] = useState('');
       const [settingTab, setSettingTab] = useState(null); 
       const [showQrModal, setShowQrModal] = useState(false); // 초대 모달
+      const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, message: '', onConfirm: null }); // 커스텀 확인 모달
 
       // --- 골프장/코스 설정 상태 ---
       const [selectedCourseId, setSelectedCourseId] = useState('standard_72');
@@ -200,6 +204,8 @@
       // --- 게임 설정 상태 ---
       const [players, setPlayers] = useState([...DEFAULT_PLAYERS]);
       const [initialBalances, setInitialBalances] = useState(['', '', '', '']); // 핸디캡
+      const [joinedPlayers, setJoinedPlayers] = useState([]); // 대기실 참가자 목록
+      const [isGameStarted, setIsGameStarted] = useState(false); // 진행 여부
       
       const [scoringMethod, setScoringMethod] = useState('aggregate'); 
       const [calcMethod, setCalcMethod] = useState('difference'); 
@@ -246,8 +252,7 @@
           }
           
           if (!config.apiKey || config.apiKey === "YOUR_API_KEY") {
-              setIsDataLoaded(true); // Firebase 설정이 없으면 로컬 모드로 동작
-              setIsAdmin(true);
+              setIsDataLoaded(true); // 로컬 모드
               return;
           }
 
@@ -269,7 +274,6 @@
           } catch (e) {
               console.error("Firebase init failed", e);
               setIsDataLoaded(true);
-              setIsAdmin(true);
           }
         };
 
@@ -278,15 +282,13 @@
         return () => window.removeEventListener('firebaseLoaded', initFb);
       }, []);
 
-      // --- [ URL Room ID 확인 및 호스트/게스트 권한 설정 ] ---
+      // --- [ URL Room ID 확인 ] ---
       useEffect(() => {
         const urlParams = new URLSearchParams(window.location.search);
         const rId = urlParams.get('roomId');
         if (rId) {
             setRoomId(rId);
-            setIsAdmin(localStorage.getItem(`golf_admin_${rId}`) === 'true');
         } else {
-            setIsAdmin(true); // URL에 Room ID가 없으면 무조건 방장
             setIsDataLoaded(true);
         }
       }, []);
@@ -302,8 +304,10 @@
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 
-                // 방장은 자신이 쓰고 있으므로 첫 로드시에만 덮어씀, 게스트는 무조건 덮어씀(Live Sync)
-                if (!isAdmin || isInitialLoad.current) {
+                // 최신 데이터일 때만 동기화
+                if (!data.updatedAt || data.updatedAt > lastSentTimestamp.current || isInitialLoad.current) {
+                    isApplyingRemoteData.current = true;
+                    
                     if (data.step) setStep(data.step);
                     if (data.players) setPlayers(data.players);
                     if (data.initialBalances) setInitialBalances(data.initialBalances);
@@ -334,9 +338,17 @@
                     
                     if (data.gaepyungRate !== undefined) setGaepyungRate(data.gaepyungRate);
                     if (data.isRoundThousand !== undefined) setIsRoundThousand(data.isRoundThousand);
+                    if (data.joinedPlayers !== undefined) setJoinedPlayers(data.joinedPlayers);
+                    if (data.isGameStarted !== undefined) setIsGameStarted(data.isGameStarted);
+
+                    // 방금 수신한 타임스탬프로 업데이트하여 중복 적용 방지
+                    lastSentTimestamp.current = data.updatedAt || 0;
 
                     isInitialLoad.current = false;
                     setIsDataLoaded(true);
+
+                    // React 상태 반영 대기
+                    setTimeout(() => { isApplyingRemoteData.current = false; }, 100);
                 }
             } else {
                 isInitialLoad.current = false;
@@ -344,34 +356,38 @@
             }
         });
         return () => unsubscribe();
-      }, [db, user, roomId, isAdmin]);
+      }, [db, user, roomId]);
 
-      // --- [ Firebase 실시간 동기화 (쓰기 - 방장 전용) ] ---
+      // --- [ Firebase 실시간 동기화 (쓰기) ] ---
       const syncData = {
           step, players, initialBalances,
           scoringMethod, calcMethod, pointValueDiff, pointValueFixed,
           doubleSettings, birdieEnabled, birdieSet, eagleEnabled, eagleSet, nearEnabled, nearSet, longestEnabled, longestSet,
           gaepyungRate, isRoundThousand, holes, currentHoleIdx, segmentStarts, scoreCaddieIdx,
-          selectedCourseId, frontNineId, backNineId, customCourseName, customFrontName, customBackName
+          selectedCourseId, frontNineId, backNineId, customCourseName, customFrontName, customBackName,
+          joinedPlayers, isGameStarted
       };
 
       const syncDataRef = useRef(syncData);
       useEffect(() => { syncDataRef.current = syncData; }, Object.values(syncData));
 
       useEffect(() => {
-        if (!isAdmin || !isDataLoaded || !roomId || !db || !user) return;
+        if (!isDataLoaded || !roomId || !db || !user) return;
+        if (isApplyingRemoteData.current) return; // 외부 데이터 동기화 중에는 로컬 쓰기 방지 (무한 루프 차단)
         
         const timer = setTimeout(() => {
+            const now = Date.now();
+            lastSentTimestamp.current = now;
+
             const { doc, setDoc } = window.FirebaseSDK;
             const appPrefix = typeof __app_id !== 'undefined' ? __app_id : 'golf-match-app';
             const docRef = doc(db, 'artifacts', appPrefix, 'public', 'data', 'rooms', roomId);
             
-            // 모든 상태를 덮어쓰지 않고 최신 상태(syncDataRef)를 동기화
-            setDoc(docRef, { ...syncDataRef.current, updatedAt: Date.now() }, { merge: true }).catch(console.error);
-        }, 500); // 디바운스 적용
+            setDoc(docRef, { ...syncDataRef.current, updatedAt: now }, { merge: true }).catch(console.error);
+        }, 500); 
         
         return () => clearTimeout(timer);
-      }, [JSON.stringify(syncData), isAdmin, isDataLoaded, roomId, db, user]);
+      }, [JSON.stringify(syncData), isDataLoaded, roomId, db, user]);
 
       const showToast = (msg) => {
         setToastMsg(msg);
@@ -391,25 +407,21 @@
       }, [selectedCourseId, frontNineId, backNineId]);
 
       useEffect(() => {
-         if (step === 'play' && currentHoleIdx === 0 && !holes[0].isCompleted && isAdmin) {
+         if (step === 'play' && currentHoleIdx === 0 && !holes[0].isCompleted) {
              setHoles(prev => {
                  return prev.map((h, i) => ({ ...h, par: coursePars[i] || 4, scores: [coursePars[i]||4, coursePars[i]||4, coursePars[i]||4, coursePars[i]||4] }));
              });
          }
-      }, [step, coursePars, isAdmin]);
+      }, [step, coursePars]);
 
-      // 매치 시작 시 방 생성 (URL 업데이트 안전처리 적용)
-      const handleStartMatch = () => {
-         if (!isAdmin) return;
+      // 매치 시작 시 방 생성 -> 대기실로 이동
+      const handleCreateRoom = () => {
          let targetRoomId = roomId;
          if (!targetRoomId) {
              targetRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
              setRoomId(targetRoomId);
-             localStorage.setItem(`golf_admin_${targetRoomId}`, 'true');
-             setIsAdmin(true);
              
              try {
-               // 샌드박스(blob:) 환경에서 SecurityError 방지
                if (!window.location.href.startsWith('blob:')) {
                    const newUrl = new URL(window.location.href);
                    newUrl.searchParams.set('roomId', targetRoomId);
@@ -419,6 +431,15 @@
                console.warn("현재 환경에서는 URL을 갱신할 수 없습니다.", e);
              }
          }
+         // 방장은 최초 입장 완료로 표시
+         if (!joinedPlayers.includes(scoreCaddieIdx)) {
+             setJoinedPlayers(prev => [...prev, scoreCaddieIdx]);
+         }
+         setStep('waiting');
+      };
+
+      const startRound = () => {
+         setIsGameStarted(true);
          setStep('play');
       };
 
@@ -456,7 +477,6 @@
       // ★ 로직: 타수 및 특수 옵션 입력
       // =====================================================================
       const updateScore = (playerIdx, delta) => {
-        if (!isAdmin) return;
         setHoles(prev => {
           const newHoles = [...prev];
           const hole = { ...newHoles[currentHoleIdx] };
@@ -476,7 +496,6 @@
       };
 
       const setPar = (par) => {
-        if (!isAdmin) return;
         if (isParLongPress.current) {
           isParLongPress.current = false;
           return;
@@ -502,7 +521,6 @@
       };
 
       const startParPress = () => {
-        if (!isAdmin) return;
         if (parPressTimer.current) clearTimeout(parPressTimer.current);
         parPressTimer.current = setTimeout(() => {
           isParLongPress.current = true;
@@ -534,7 +552,6 @@
       };
 
       const setSpecial = (type, playerIdx, isReverse) => {
-        if (!isAdmin) return;
         setHoles(prev => {
           const newHoles = [...prev];
           const hole = { ...newHoles[currentHoleIdx] };
@@ -551,7 +568,6 @@
       };
 
       const changeTeam = (comboValue) => {
-        if (!isAdmin) return;
         setHoles(prev => {
           const newHoles = [...prev];
           newHoles[currentHoleIdx] = { ...newHoles[currentHoleIdx], teams: comboValue };
@@ -560,7 +576,6 @@
       };
 
       const shuffleTeam = () => {
-        if (!isAdmin) return;
         const arr = [0, 1, 2, 3];
         for (let i = arr.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -571,7 +586,6 @@
       };
 
       const setMultiplier = (delta) => {
-        if (!isAdmin) return;
         setHoles(prev => {
           const newHoles = [...prev];
           const hole = { ...newHoles[currentHoleIdx] };
@@ -587,7 +601,6 @@
       // ★ 로직: 홀 결과 계산
       // =====================================================================
       const calculateHoleResult = () => {
-        if (!isAdmin) return;
         setHoles(prev => {
           const newHoles = prev.map(h => ({
             ...h,
@@ -713,7 +726,6 @@
       };
 
       const goToNextHole = () => {
-        if (!isAdmin) return;
         if (currentHoleIdx < 17) {
           setHoles(prev => {
             const newHoles = prev.map(h => ({ ...h }));
@@ -858,21 +870,54 @@
         return details;
       }, [players, currentSegmentMoney, gaepyungRate, isRoundThousand]);
 
-      const handleCutAndReset = () => {
-        if (!isAdmin) return;
-        if (!holes[currentHoleIdx].isCompleted && currentHoleIdx > 0 && currentHoleIdx === currentSegmentStartIdx) {
-            showToast("아직 기록된 홀이 없습니다."); return;
-        }
+      // 새 게임 시작 (완전 초기화)
+      const handleFullReset = () => {
+        setConfirmDialog({
+          isOpen: true,
+          message: "스코어와 모든 기록을 초기화하고 완전히 새 라운드를 시작하시겠습니까?\n(플레이어 명단과 설정 내역은 유지됩니다)",
+          onConfirm: () => {
+            setHoles(generateInitialHoles());
+            setCurrentHoleIdx(0);
+            setSegmentStarts([0]);
+            setIsGameStarted(false);
+            setStep('setup');
+            setConfirmDialog({ isOpen: false, message: '', onConfirm: null });
+            showToast("새 게임으로 초기화되었습니다.");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        });
+      };
+
+      // 구간 중간 정산 (이후 홀부터 리셋하여 계속)
+      const handleSegmentReset = () => {
         const nextHoleToStart = holes[currentHoleIdx].isCompleted ? currentHoleIdx + 1 : currentHoleIdx;
+        
         if (nextHoleToStart > 17) {
-            showToast("이미 18홀을 모두 마쳤습니다."); return;
+            setConfirmDialog({
+              isOpen: true,
+              message: "18홀을 모두 마쳤습니다. 중간 정산을 할 수 없습니다.\n새 게임을 시작해주세요.",
+              onConfirm: () => {
+                setConfirmDialog({ isOpen: false, message: '', onConfirm: null });
+              }
+            });
+            return;
         }
-        if (confirm(`${nextHoleToStart + 1}홀부터 포인트를 0으로 리셋하고 새롭게 시작합니다. 계속하시겠습니까?`)) {
-          setSegmentStarts(prev => [...prev, nextHoleToStart]);
-          setStep('play');
-          setCurrentHoleIdx(nextHoleToStart);
-          showToast(`금액이 리셋되었습니다. ${nextHoleToStart + 1}홀 시작!`);
-        }
+
+        setConfirmDialog({
+          isOpen: true,
+          message: `현재까지의 포인트를 정산하고, ${nextHoleToStart + 1}홀부터 포인트를 0으로 리셋하여 계속하시겠습니까?`,
+          onConfirm: () => {
+            setSegmentStarts(prev => {
+                if (prev.includes(nextHoleToStart)) return prev;
+                return [...prev, nextHoleToStart];
+            });
+            setStep('play');
+            setCurrentHoleIdx(nextHoleToStart);
+            setConfirmDialog({ isOpen: false, message: '', onConfirm: null });
+            showToast(`중간 정산 완료. ${nextHoleToStart + 1}홀 시작!`);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        });
       };
 
       // =====================================================================
@@ -887,7 +932,7 @@
                 <h3 className="font-bold text-[17px] text-slate-800 flex items-center"><Icon name="Edit3" size={20} className="mr-2 text-[#10b981]"/> 스코어캐디 변경</h3>
                 <button onClick={() => setShowCaddieModal(false)} className="p-1 hover:bg-slate-100 rounded-full transition active:scale-95"><Icon name="X" size={20} className="text-slate-500"/></button>
               </div>
-              <p className="text-[13px] text-slate-500 font-medium">현재 라운드의 스코어를 입력할 담당자(방장)를 선택해 주세요.</p>
+              <p className="text-[13px] text-slate-500 font-medium">현재 라운드의 스코어를 입력할 담당자를 선택해 주세요.</p>
               <div className="grid grid-cols-2 gap-3 mt-2">
                 {players.map((p, idx) => (
                   <button key={`change-caddie-${idx}`} onClick={() => { setScoreCaddieIdx(idx); setShowCaddieModal(false); showToast(`${p} 님으로 스코어캐디가 변경되었습니다.`); }} className={`py-3.5 px-2 flex flex-col items-center justify-center gap-2 rounded-[16px] transition border active:scale-95 ${scoreCaddieIdx === idx ? 'bg-emerald-50 border-[#10b981] text-[#10b981] shadow-sm' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}`}>
@@ -957,7 +1002,7 @@
           <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm pointer-events-auto">
             <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-xl text-center flex flex-col items-center relative">
               <button onClick={() => setShowQrModal(false)} className="absolute top-4 right-4 p-1.5 bg-slate-100 hover:bg-slate-200 rounded-full transition active:scale-95"><Icon name="X" size={18} className="text-slate-500"/></button>
-              <h3 className="font-black text-[18px] text-slate-800 mb-2">방 초대하기</h3>
+              <h3 className="font-black text-[18px] text-slate-800 mb-2 flex items-center justify-center gap-1"><Icon name="QrCode" size={20} /> 방 초대하기</h3>
               <p className="text-[13px] text-slate-500 font-medium mb-5">아래 QR코드를 스캔하거나<br/>초대 링크를 복사하여 공유하세요.</p>
               
               <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100 mb-5">
@@ -1007,6 +1052,30 @@
         )
       };
 
+      const renderConfirmModal = () => {
+        if (!confirmDialog.isOpen) return null;
+        return (
+          <div className="fixed inset-0 bg-black/60 z-[200] flex items-center justify-center p-4 animate-in fade-in duration-200 backdrop-blur-sm pointer-events-auto">
+            <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl relative text-center">
+              <div className="w-14 h-14 bg-rose-100 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Icon name="AlertCircle" size={28} />
+              </div>
+              <h3 className="font-black text-[18px] text-slate-800 mb-2">초기화 확인</h3>
+              <p className="text-[14px] text-slate-500 font-medium mb-6 leading-relaxed whitespace-pre-wrap">{confirmDialog.message}</p>
+              
+              <div className="flex gap-2 w-full">
+                <button onClick={() => setConfirmDialog({ isOpen: false, message: '', onConfirm: null })} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl hover:bg-slate-200 active:scale-95 transition text-[14px]">
+                  취소
+                </button>
+                <button onClick={confirmDialog.onConfirm} className="flex-1 bg-[#10b981] text-white font-bold py-3.5 rounded-xl shadow-sm hover:bg-emerald-600 active:scale-95 transition text-[14px]">
+                  확인
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
       if (!isDataLoaded) {
           return (
               <div className="app-wrapper items-center justify-center bg-slate-900 text-white">
@@ -1031,7 +1100,7 @@
         };
 
         return (
-          <div className={`app-wrapper px-5 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] ${!isAdmin ? 'pointer-events-none opacity-90' : ''}`}>
+          <div className="app-wrapper px-5 py-8 pb-[calc(2rem+env(safe-area-inset-bottom))]">
             {toastMsg && (
               <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-slate-800 text-white px-4 py-2.5 rounded-full shadow-lg text-[12px] font-bold animate-in whitespace-nowrap pointer-events-none">
                 {toastMsg}
@@ -1084,26 +1153,18 @@
                       </div>
                       <div className="flex-1 flex items-center gap-2 min-w-0">
                         <input type="text" 
-                          disabled={!isAdmin}
                           value={p === DEFAULT_PLAYERS[i] ? '' : p} 
                           placeholder={DEFAULT_PLAYERS[i]}
                           onChange={e => { const newP = [...players]; newP[i] = e.target.value; setPlayers(newP); }}
                           onBlur={e => { if(e.target.value.trim()==='') { const newP = [...players]; newP[i] = DEFAULT_PLAYERS[i]; setPlayers(newP); } }}
-                          className="w-full bg-transparent py-2 outline-none text-[14px] font-bold text-slate-700 placeholder:text-slate-400 truncate disabled:bg-transparent" 
+                          className="w-full bg-transparent py-2 outline-none text-[14px] font-bold text-slate-700 placeholder:text-slate-400 truncate" 
                         />
-                        {scoreCaddieIdx === i ? (
-                          <div onClick={() => { if(isAdmin) setShowCaddieModal(true); }} className="shrink-0 text-[#10b981] bg-emerald-50 rounded-full p-1 cursor-pointer border border-emerald-100" title="스코어캐디 변경">
-                            <Icon name="Edit3" size={14} />
-                          </div>
-                        ) : (
-                          <div onClick={() => { if(isAdmin) setShowCaddieModal(true); }} className="shrink-0 text-transparent hover:text-slate-300 rounded-full p-1 cursor-pointer transition-colors" title="스코어캐디 변경">
-                            <Icon name="Edit3" size={14} />
-                          </div>
-                        )}
+                        <div onClick={() => setShowCaddieModal(true)} className={`shrink-0 rounded-full p-1 cursor-pointer transition-colors ${scoreCaddieIdx === i ? 'text-[#10b981] bg-emerald-50 border border-emerald-100' : 'text-transparent hover:text-slate-300'}`} title="스코어캐디 변경">
+                          <Icon name="Edit3" size={14} />
+                        </div>
                       </div>
                       <div className="relative w-24 shrink-0 bg-slate-50 rounded-xl overflow-hidden border border-slate-200 focus-within:border-[#10b981] focus-within:ring-1 focus-within:ring-[#10b981] transition-all">
                         <input type="text" inputMode="numeric"
-                          disabled={!isAdmin}
                           value={initialBalances[i] === 0 || initialBalances[i] === '' ? '' : (initialBalances[i] === '-' ? '-' : Number(initialBalances[i]).toLocaleString())} 
                           onChange={e => {
                               const val = e.target.value.replace(/,/g, '');
@@ -1113,7 +1174,7 @@
                               setInitialBalances(newBal);
                           }}
                           placeholder="0"
-                          className="w-full bg-transparent px-3 py-2.5 outline-none text-right pr-6 text-sm font-bold text-slate-700 disabled:bg-transparent" 
+                          className="w-full bg-transparent px-3 py-2.5 outline-none text-right pr-6 text-sm font-bold text-slate-700" 
                         />
                         <span className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-[10px] pointer-events-none">P</span>
                       </div>
@@ -1147,14 +1208,13 @@
                   
                   <div className="relative">
                     <input type="text" 
-                      disabled={!isAdmin}
                       value={calcMethod === 'difference' ? (pointValueDiff ? pointValueDiff.toLocaleString() : '') : (pointValueFixed ? pointValueFixed.toLocaleString() : '')} 
                       onChange={e => {
                         const val = Number(e.target.value.replace(/,/g, ''));
                         if(calcMethod === 'difference') setPointValueDiff(val);
                         else setPointValueFixed(val);
                       }}
-                      className="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-right font-black text-lg text-amber-500 outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all pr-10 disabled:bg-slate-50" />
+                      className="w-full px-4 py-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-right font-black text-lg text-amber-500 outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white transition-all pr-10" />
                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">P</span>
                   </div>
                 </div>
@@ -1162,10 +1222,10 @@
 
               {/* 탭 컨트롤: 배판 조건 / 보너스 설정 */}
               <div className="flex gap-2 pt-2 border-t border-slate-100 pointer-events-auto">
-                  <button disabled={!isAdmin} onClick={() => setSettingTab(settingTab === 'double' ? null : 'double')} className={`flex-1 py-3.5 rounded-xl font-bold text-[14px] transition-all border ${settingTab === 'double' ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 disabled:opacity-100'}`}>
+                  <button onClick={() => setSettingTab(settingTab === 'double' ? null : 'double')} className={`flex-1 py-3.5 rounded-xl font-bold text-[14px] transition-all border ${settingTab === 'double' ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
                      <Icon name="Settings" size={16} className="inline mr-1" /> 배판 조건
                   </button>
-                  <button disabled={!isAdmin} onClick={() => setSettingTab(settingTab === 'bonus' ? null : 'bonus')} className={`flex-1 py-3.5 rounded-xl font-bold text-[14px] transition-all border ${settingTab === 'bonus' ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50 disabled:opacity-100'}`}>
+                  <button onClick={() => setSettingTab(settingTab === 'bonus' ? null : 'bonus')} className={`flex-1 py-3.5 rounded-xl font-bold text-[14px] transition-all border ${settingTab === 'bonus' ? 'bg-slate-800 text-white border-slate-800 shadow-md' : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'}`}>
                      <Icon name="Trophy" size={16} className="inline mr-1" /> 보너스 설정
                   </button>
               </div>
@@ -1177,7 +1237,7 @@
                           <label className="text-[13px] font-bold text-slate-700 block mb-2">배판 적용 기준 시점</label>
                           <div className="flex bg-white border border-slate-200 p-1.5 rounded-xl shadow-sm">
                               {['none', 'current', 'prev'].map(t => (
-                                  <button key={t} disabled={!isAdmin} onClick={() => setDoubleSettings({...doubleSettings, timing: t})} className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-all disabled:opacity-100 ${doubleSettings.timing === t ? 'bg-slate-100 text-[#10b981] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                                  <button key={t} onClick={() => setDoubleSettings({...doubleSettings, timing: t})} className={`flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-all ${doubleSettings.timing === t ? 'bg-slate-100 text-[#10b981] shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                                       {t === 'none' ? '미적용' : t === 'current' ? '당홀' : '전홀'}
                                   </button>
                               ))}
@@ -1198,7 +1258,7 @@
                                       <div className={`w-5 h-5 rounded flex items-center justify-center mr-3 transition-colors ${doubleSettings[cond.id] ? 'bg-[#10b981]' : 'bg-slate-200'}`}>
                                           {doubleSettings[cond.id] && <Icon name="Check" size={14} className="text-white" />}
                                       </div>
-                                      <input type="checkbox" disabled={!isAdmin} className="hidden" checked={doubleSettings[cond.id]} onChange={e => setDoubleSettings({...doubleSettings, [cond.id]: e.target.checked})} />
+                                      <input type="checkbox" className="hidden" checked={doubleSettings[cond.id]} onChange={e => setDoubleSettings({...doubleSettings, [cond.id]: e.target.checked})} />
                                       <span className="text-[14px] font-bold text-slate-700">{cond.label}</span>
                                   </label>
                               ))}
@@ -1212,7 +1272,7 @@
                   <div className="space-y-2 animate-in pointer-events-auto">
                     <div className="flex justify-between items-center mb-2 px-1">
                       <span className="text-[14px] font-bold text-slate-800">보너스 상세 설정</span>
-                      <button disabled={!isAdmin} onClick={toggleAllBonus} className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-colors active:scale-95 disabled:opacity-100 ${isAnyBonusEnabled ? 'text-slate-500 bg-slate-200 hover:bg-slate-300' : 'text-[#10b981] bg-emerald-100 hover:bg-emerald-200'}`}>
+                      <button onClick={toggleAllBonus} className={`text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition-colors active:scale-95 ${isAnyBonusEnabled ? 'text-slate-500 bg-slate-200 hover:bg-slate-300' : 'text-[#10b981] bg-emerald-100 hover:bg-emerald-200'}`}>
                           {isAnyBonusEnabled ? '전체 사용안함' : '전체 사용함'}
                       </button>
                     </div>
@@ -1226,16 +1286,16 @@
                        <div key={cfg.id} className={`bg-slate-50 border border-slate-100 rounded-xl p-3 transition-opacity ${cfg.hasEnable && !cfg.en ? 'opacity-60' : ''}`}>
                           <div className="flex justify-between items-center mb-1.5">
                              <label className="flex items-center gap-2 cursor-pointer">
-                                {cfg.hasEnable && <input type="checkbox" disabled={!isAdmin} checked={cfg.en} onChange={e => cfg.setEn(e.target.checked)} className={`w-4 h-4 rounded border-slate-300 ${cfg.check} disabled:opacity-100`} />}
+                                {cfg.hasEnable && <input type="checkbox" checked={cfg.en} onChange={e => cfg.setEn(e.target.checked)} className={`w-4 h-4 rounded border-slate-300 ${cfg.check}`} />}
                                 <span className={`text-[14px] font-bold ${cfg.hasEnable && !cfg.en ? 'text-slate-400' : cfg.tColor}`}>{cfg.title}</span>
                              </label>
                              <div className="flex gap-2 items-center">
                                <div className="flex bg-white rounded-md p-0.5 border border-slate-200 shadow-sm shrink-0">
-                                 <button disabled={!isAdmin || (cfg.hasEnable && !cfg.en)} onClick={()=>cfg.set({...cfg.state, type:'individual'})} className={`px-2 py-1.5 text-[11px] font-bold rounded transition-colors disabled:opacity-100 ${cfg.state.type==='individual'?`${cfg.bg} text-white`:'text-slate-500'}`}>개인</button>
-                                 <button disabled={!isAdmin || (cfg.hasEnable && !cfg.en)} onClick={()=>cfg.set({...cfg.state, type:'team'})} className={`px-2 py-1.5 text-[11px] font-bold rounded transition-colors disabled:opacity-100 ${cfg.state.type==='team'?`${cfg.bg} text-white`:'text-slate-500'}`}>팀</button>
+                                 <button disabled={cfg.hasEnable && !cfg.en} onClick={()=>cfg.set({...cfg.state, type:'individual'})} className={`px-2 py-1.5 text-[11px] font-bold rounded transition-colors ${cfg.state.type==='individual'?`${cfg.bg} text-white`:'text-slate-500'}`}>개인</button>
+                                 <button disabled={cfg.hasEnable && !cfg.en} onClick={()=>cfg.set({...cfg.state, type:'team'})} className={`px-2 py-1.5 text-[11px] font-bold rounded transition-colors ${cfg.state.type==='team'?`${cfg.bg} text-white`:'text-slate-500'}`}>팀</button>
                                </div>
                                <div className="relative w-24 shrink-0">
-                                 <input type="text" disabled={!isAdmin || (cfg.hasEnable && !cfg.en)} value={cfg.state.type === 'individual' ? (cfg.state.ind ? cfg.state.ind.toLocaleString() : '') : cfg.state.team} 
+                                 <input type="text" disabled={cfg.hasEnable && !cfg.en} value={cfg.state.type === 'individual' ? (cfg.state.ind ? cfg.state.ind.toLocaleString() : '') : cfg.state.team} 
                                    onChange={e => {
                                      const val = Number(e.target.value.replace(/,/g, ''));
                                      if(cfg.state.type === 'individual') cfg.set({...cfg.state, ind: val});
@@ -1249,7 +1309,7 @@
                           {cfg.state.type === 'individual' && (
                             <div className="flex justify-end">
                               <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input type="checkbox" disabled={!isAdmin || (cfg.hasEnable && !cfg.en)} checked={cfg.state.excludeTeam} onChange={e => cfg.set({...cfg.state, excludeTeam: e.target.checked})} className={`w-3.5 h-3.5 rounded border-slate-300 disabled:opacity-50 ${cfg.check}`} />
+                                <input type="checkbox" disabled={cfg.hasEnable && !cfg.en} checked={cfg.state.excludeTeam} onChange={e => cfg.set({...cfg.state, excludeTeam: e.target.checked})} className={`w-3.5 h-3.5 rounded border-slate-300 disabled:opacity-50 ${cfg.check}`} />
                                 <span className={`text-[11px] font-bold ${cfg.hasEnable && !cfg.en ? 'text-slate-400' : 'text-slate-500'}`}>같은 팀 제외 (상대팀에게만 받기)</span>
                               </label>
                             </div>
@@ -1267,16 +1327,15 @@
                   </div>
               )}
 
-              {/* 매치 시작 버튼 및 관전자 안내 */}
               <div className="pt-4 pointer-events-auto">
-                {isAdmin ? (
-                  <button onClick={handleStartMatch} className="w-full py-4 rounded-2xl bg-[#10b981] text-white font-black text-lg shadow-[0_8px_20px_rgba(16,185,129,0.25)] active:scale-95 transition-transform mt-2">
-                    매치 시작하기
+                {roomId ? (
+                  <button onClick={() => setStep(isGameStarted ? 'play' : 'waiting')} className="w-full py-4 rounded-2xl bg-slate-800 text-white font-black text-lg shadow-[0_8px_20px_rgba(30,41,59,0.25)] active:scale-95 transition-transform mt-2 flex justify-center items-center gap-2">
+                    {isGameStarted ? '게임 계속하기' : '대기실로 돌아가기'} <Icon name="ChevronRight" size={20} />
                   </button>
                 ) : (
-                  <div className="w-full text-center text-slate-500 font-bold text-[14px] bg-slate-100 py-4 rounded-2xl">
-                    현재 관전 모드입니다. (수정 불가)
-                  </div>
+                  <button onClick={handleCreateRoom} className="w-full py-4 rounded-2xl bg-[#10b981] text-white font-black text-lg shadow-[0_8px_20px_rgba(16,185,129,0.25)] active:scale-95 transition-transform mt-2 flex justify-center items-center gap-2">
+                    방 만들기 (대기실 생성) <Icon name="ChevronRight" size={20} />
+                  </button>
                 )}
               </div>
             </div>
@@ -1288,39 +1347,86 @@
       }
 
       // =====================================================================
-      // ★ 화면: PLAY (타수 입력)
+      // ★ 화면: WAITING (대기실)
       // =====================================================================
-      const renderPlayerCard = (playerIdx, teamType) => {
-        const score = curHole.scores[playerIdx];
-        const diff = score - curHole.par;
-        const colorClass = teamType === 'A' ? 'text-blue-600' : 'text-rose-600';
-        const bgClass = teamType === 'A' ? 'bg-blue-50 border-blue-100' : 'bg-rose-50 border-rose-100';
-
+      if (step === 'waiting') {
         return (
-          <div key={playerIdx} className={`rounded-2xl border p-3 flex flex-col justify-between shadow-sm relative transition-all ${bgClass} ${!isAdmin ? 'pointer-events-none' : ''}`}>
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-bold text-slate-800 text-[13px] truncate pr-1">{players[playerIdx]}</span>
-              {/* 스포일러 제거: 언더/오버파 표시 안 함 */}
+          <div className="app-wrapper flex-col items-center pb-24">
+            <div className="w-full max-w-md bg-[#10b981] px-6 pt-12 pb-8 text-white rounded-b-[2rem] shadow-md relative z-10 text-center">
+              <h1 className="text-2xl font-black mb-2">라운드 대기실</h1>
+              <p className="text-emerald-100 text-sm">모든 플레이어가 입장하면 게임을 시작할 수 있습니다.</p>
             </div>
-            <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
-              <button onClick={() => updateScore(playerIdx, -1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                <Icon name="Minus" size={18} />
+
+            <div className="w-full max-w-md px-4 mt-6">
+              <button onClick={() => setShowQrModal(true)} className="w-full mb-6 bg-white border border-emerald-200 text-emerald-600 font-bold py-3.5 rounded-xl shadow-sm hover:bg-emerald-50 active:scale-[0.98] transition-all flex justify-center items-center gap-2">
+                <Icon name="QrCode" size={20} /> 방 초대 코드 / URL 열기
               </button>
-              <div className={`text-xl font-black w-8 text-center flex flex-col items-center ${colorClass}`}>
-                {score}
+
+              <div className="grid grid-cols-2 gap-3">
+                {players.map((p, idx) => {
+                  const isJoined = joinedPlayers.includes(idx);
+                  const isHost = idx === scoreCaddieIdx;
+                  return (
+                    <div key={idx} onClick={() => { if (!isJoined) setJoinedPlayers(prev => [...prev, idx]); }} className={`flex flex-col items-center justify-center p-5 rounded-2xl border-2 transition-all duration-300 ${isJoined ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm transform scale-100' : 'border-dashed border-slate-300 bg-slate-50 text-slate-400 cursor-pointer hover:bg-slate-100 hover:border-slate-400 transform scale-[0.98]'}`}>
+                      <div className={`w-14 h-14 rounded-full mb-3 flex items-center justify-center border-2 transition-colors ${isJoined ? 'bg-white border-emerald-200' : 'bg-slate-100 border-slate-200'}`}>
+                        {isJoined ? <Icon name="Check" size={28} className="text-emerald-500" /> : <Icon name="User" size={24} className="text-slate-300" />}
+                      </div>
+                      <span className="font-bold text-[14px] text-center w-full truncate px-1">{p}</span>
+                      <div className="mt-2 h-5 flex items-center justify-center">
+                        {isHost ? <span className="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">방장(스코어 캐디)</span> : isJoined ? <span className="bg-emerald-200 text-emerald-800 text-[10px] px-2 py-0.5 rounded-full font-bold shadow-sm">입장 완료</span> : <span className="text-[10px] bg-slate-200 text-slate-500 px-2 py-0.5 rounded-full font-bold animate-pulse">대기 중... (클릭)</span>}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              <button onClick={() => updateScore(playerIdx, 1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                <Icon name="Plus" size={18} />
+            </div>
+
+            <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 flex gap-3 w-full max-w-[480px] mx-auto z-10 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <button onClick={() => setStep('setup')} className="flex-1 bg-slate-100 text-slate-700 font-bold py-3.5 rounded-xl hover:bg-slate-200 active:scale-[0.98] transition-all">설정으로</button>
+              <button onClick={startRound} disabled={joinedPlayers.length < 4} className="flex-[2] bg-[#10b981] text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-emerald-600 active:scale-[0.98] transition-all disabled:bg-slate-300 disabled:text-slate-100 disabled:shadow-none disabled:active:scale-100 flex items-center justify-center gap-2">
+                {joinedPlayers.length < 4 ? `${joinedPlayers.length}/4 명 입장완료` : '게임 시작하기'}
               </button>
             </div>
+            {renderQrModal()}
+            {renderConfirmModal()}
           </div>
         );
-      };
+      }
 
+      // =====================================================================
+      // ★ 화면: PLAY (타수 입력)
+      // =====================================================================
       if (step === 'play') {
         const curHole = holes[currentHoleIdx];
         const tA = [curHole.teams[0], curHole.teams[1]];
         const tB = [curHole.teams[2], curHole.teams[3]];
+
+        const renderPlayerCard = (playerIdx, teamType) => {
+          const score = curHole.scores[playerIdx];
+          const diff = score - curHole.par;
+          const colorClass = teamType === 'A' ? 'text-blue-600' : 'text-rose-600';
+          const bgClass = teamType === 'A' ? 'bg-blue-50 border-blue-100' : 'bg-rose-50 border-rose-100';
+
+          return (
+            <div key={playerIdx} className={`rounded-2xl border p-3 flex flex-col justify-between shadow-sm relative transition-all ${bgClass}`}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-bold text-slate-800 text-[13px] truncate pr-1">{players[playerIdx]}</span>
+                {/* 스포일러 제거: 언더/오버파 표시 안 함 */}
+              </div>
+              <div className="flex items-center justify-between bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+                <button onClick={() => updateScore(playerIdx, -1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                  <Icon name="Minus" size={18} />
+                </button>
+                <div className={`text-xl font-black w-8 text-center flex flex-col items-center ${colorClass}`}>
+                  {score}
+                </div>
+                <button onClick={() => updateScore(playerIdx, 1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                  <Icon name="Plus" size={18} />
+                </button>
+              </div>
+            </div>
+          );
+        };
         
         return (
           <div className="app-wrapper flex-col pb-[calc(2rem+env(safe-area-inset-bottom))]">
@@ -1338,7 +1444,7 @@
                 </div>
                 <div>
                   <h2 className="font-bold text-slate-800 text-sm">Hole {currentHoleIdx + 1}</h2>
-                  <div className={`flex items-center gap-1 mt-0.5 ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                  <div className="flex items-center gap-1 mt-0.5">
                     <span className="text-[10px] font-bold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">PAR</span>
                     {[3, 4].map(p => (
                       <button key={p} onClick={() => setPar(p)} className={`w-6 h-6 rounded-full text-[12px] font-bold flex items-center justify-center transition-colors ${curHole.par === p ? 'bg-[#10b981] text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>
@@ -1360,6 +1466,9 @@
                 </div>
               </div>
               <div className="flex gap-2">
+                 <button onClick={() => setStep('setup')} className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition border border-slate-200">
+                  <Icon name="Settings" size={18} />
+                </button>
                  <button onClick={() => setStep('scoreboard')} className="w-9 h-9 rounded-full bg-slate-50 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition border border-slate-200">
                   <Icon name="List" size={18} />
                 </button>
@@ -1369,7 +1478,7 @@
             <div className="flex-1 overflow-y-auto p-4 pb-32">
               
               {/* 팀 선택기 */}
-              <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 ${!isAdmin ? 'pointer-events-none' : ''}`}>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4">
                 <div className="flex justify-between items-center mb-3">
                   <h3 className="font-bold text-sm text-slate-700 flex items-center"><Icon name="Users" size={16} className="mr-1.5 text-[#10b981]"/> 팀 교체</h3>
                   <button onClick={shuffleTeam} className="text-[11px] font-bold bg-slate-800 text-white px-2.5 py-1.5 rounded-lg flex items-center gap-1 active:scale-95 transition">
@@ -1409,7 +1518,7 @@
 
               {/* 특수 보너스 (니어/롱기) 패널 */}
               {curHole.par === 3 && nearEnabled && (
-                <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 animate-in ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 animate-in">
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="font-bold text-sm text-slate-700 flex items-center"><Icon name="Target" size={16} className="mr-1.5 text-blue-500"/> 니어리스트</h3>
                     <label className="flex items-center gap-1.5 cursor-pointer text-[12px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
@@ -1432,7 +1541,7 @@
               )}
 
               {curHole.par >= 5 && longestEnabled && (
-                <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 animate-in ${!isAdmin ? 'pointer-events-none' : ''}`}>
+                <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 mb-4 animate-in">
                   <div className="flex justify-between items-center mb-3">
                     <h3 className="font-bold text-sm text-slate-700 flex items-center"><Icon name="Flag" size={16} className="mr-1.5 text-rose-500"/> 롱기스트</h3>
                     <label className="flex items-center gap-1.5 cursor-pointer text-[12px] font-bold text-rose-500 bg-rose-50 px-2 py-1 rounded-lg border border-rose-100">
@@ -1455,7 +1564,7 @@
               )}
 
               {/* 배판 수동 설정 (예상 결과 제외) */}
-              <div className={`bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex justify-between items-center mb-4 ${!isAdmin ? 'pointer-events-none' : ''}`}>
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex justify-between items-center mb-4">
                  <div className="font-bold text-[14px] text-slate-800">현재 홀 배판</div>
                  <div className="flex items-center gap-2">
                      {curHole.autoReason && !curHole.hasManualMultiplier && curHole.multiplier > 1 && (
@@ -1484,7 +1593,7 @@
       }
 
       // =====================================================================
-      // ★ 화면: HOLE RESULT (홀 결과 및 정산)
+      // ★ 화면: HOLE RESULT (홀 결과)
       // =====================================================================
       if (step === 'holeResult') {
         const curHole = holes[currentHoleIdx];
@@ -1597,7 +1706,7 @@
             {/* 하단 네비게이션 버튼 */}
             <div className="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white border-t border-slate-100 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-20 flex gap-2 shadow-[0_-10px_20px_rgba(0,0,0,0.03)]">
               <button onClick={() => { setStep('play'); window.scrollTo({top:0}); }} className="flex-[1.2] py-4 rounded-xl border border-slate-200 text-slate-600 font-bold text-[14px] flex justify-center items-center hover:bg-slate-50 active:scale-95 transition">
-                <Icon name="Edit3" size={16} className="mr-1.5" /> 수정하기
+                <Icon name="Edit3" size={16} className="mr-1.5" /> 수정
               </button>
               <button onClick={() => setStep('scoreboard')} className="flex-[1.2] bg-slate-100 text-slate-700 py-4 rounded-xl font-bold text-[14px] hover:bg-slate-200 active:scale-95 transition">
                 스코어보드
@@ -1609,6 +1718,7 @@
             </div>
             
             {renderQrModal()}
+            {renderConfirmModal()}
           </div>
         );
       }
@@ -1761,6 +1871,7 @@
             </div>
             
             {renderQrModal()}
+            {renderConfirmModal()}
           </div>
         );
       }
@@ -1862,6 +1973,7 @@
                 </button>
               </div>
             </div>
+            {renderConfirmModal()}
           </div>
         );
       }
@@ -1944,11 +2056,15 @@
 
             <div className="absolute bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-white/80 backdrop-blur-md border-t border-slate-200 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] z-30 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
               <div className="max-w-md mx-auto flex gap-3">
-                <button onClick={handleCutAndReset} className="flex-1 bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold py-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[15px] active:scale-[0.98]">
-                  <Icon name="Refresh" size={20} className="mr-2" /> 새 게임 시작 (리셋)
+                <button onClick={handleSegmentReset} className="flex-[1] bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-4 rounded-[20px] transition duration-200 shadow-sm flex items-center justify-center text-[14px] active:scale-[0.98]">
+                  중간 정산
+                </button>
+                <button onClick={handleFullReset} className="flex-[1.5] bg-[#1e293b] hover:bg-[#0f172a] text-white font-bold py-4 rounded-[20px] transition duration-200 shadow-md flex items-center justify-center text-[14px] active:scale-[0.98]">
+                  <Icon name="Refresh" size={20} className="mr-2" /> 새 게임 시작
                 </button>
               </div>
             </div>
+            {renderConfirmModal()}
           </div>
         );
       }
