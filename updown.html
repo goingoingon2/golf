@@ -2,7 +2,6 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <!-- 💡 모바일 최적화: 확대 방지 및 Safe Area(노치) 대응 -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>편먹고 UpDown 스코어보드 (LIVE)</title>
     <!-- React 및 라이브러리 로드 -->
@@ -12,22 +11,16 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* 💡 모바일 최적화 CSS */
         body { 
             font-family: 'Noto Sans KR', sans-serif; 
             background-color: #cbd5e1; 
-            /* 1. 당겨서 새로고침 방지 */
             overscroll-behavior-y: none; 
-            /* 2. 빠른 터치 시 화면 줌(더블탭) 방지 */
             touch-action: manipulation; 
-            /* 3. 텍스트 드래그(선택) 방지 (입력창 제외) */
             -webkit-user-select: none;
             user-select: none;
-            /* 4. 터치 하이라이트 깜빡임 제거 */
             -webkit-tap-highlight-color: transparent; 
         }
         
-        /* input 요소는 텍스트 선택 및 입력이 가능하도록 예외 처리 */
         input {
             -webkit-user-select: auto;
             user-select: auto;
@@ -38,17 +31,15 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
         
-        /* 커스텀 스크롤바 숨기기 (모바일 앱 느낌) */
         ::-webkit-scrollbar { display: none; }
         
-        /* 💡 100dvh 지원 기기 최적화 및 하단 Safe Area 적용 */
         .app-container { 
             height: 100dvh; 
             display: flex; 
             flex-direction: column; 
             overflow: hidden; 
             width: 100%;
-            max-width: 480px; /* 모바일 최적화 너비 */
+            max-width: 480px; 
             margin: 0 auto;
             box-shadow: 0 0 20px rgba(0,0,0,0.15);
         }
@@ -58,7 +49,7 @@
         }
     </style>
 
-    <!-- Firebase SDK 안전한 동적 로드 방식 -->
+    <!-- Firebase SDK 동적 로드 -->
     <script type="module">
         (async () => {
             try {
@@ -94,21 +85,19 @@
     <script type="text/babel">
         const { useState, useMemo, useEffect, useRef } = React;
 
-        // ⛳️ 사용자님의 Firebase 설정값이 입력된 부분입니다!
         const appId = 'my-golf-updown-1'; 
         const firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-};
+            apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+            authDomain: "left-right-6da31.firebaseapp.com",
+            projectId: "left-right-6da31",
+            storageBucket: "left-right-6da31.firebasestorage.app",
+            messagingSenderId: "128347797181",
+            appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+        };
         const initialAuthToken = null;
 
         let db, auth;
 
-        // 아이콘 컴포넌트
         const Icon = ({ name, size = 20, className = "" }) => {
             const icons = {
                 trophy: <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22h10c0-1.76-.85-3.25-2.03-3.79-.5-.23-.97-.66-.97-1.21v-2.34M12 2a5 5 0 0 0-5 5c0 3.5 3 5.5 5 5.5s5-2 5-5.5a5 5 0 0 0-5-5z"/>,
@@ -146,35 +135,40 @@
         };
 
         function App() {
-            // 방 코드(Room ID) 생성 및 파싱
+            // 💡 방 코드(Room ID) 생성 및 파싱 (자동 복구 로직 추가)
             const [roomId] = useState(() => {
                 const searchParams = new URLSearchParams(window.location.search);
                 let rid = searchParams.get('room');
                 
+                // URL에 없으면 기기(로컬스토리지)에서 마지막으로 사용했던 방 코드를 불러옴
+                if (!rid) {
+                    rid = localStorage.getItem(`golf_last_room_${appId}`);
+                }
+                
+                // 그래도 없으면 완전 새로 생성
                 if (!rid) {
                     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
                     rid = Array.from({length: 6}, () => chars.charAt(Math.floor(Math.random() * chars.length))).join('');
-                    try {
-                        const newUrl = new URL(window.location.href);
-                        newUrl.searchParams.set('room', rid);
-                        window.history.pushState({ path: newUrl.href }, '', newUrl.href);
-                    } catch (e) {
-                        console.warn("History API 변경 불가:", e);
-                    }
+                }
+                
+                try {
+                    localStorage.setItem(`golf_last_room_${appId}`, rid);
+                    const newUrl = new URL(window.location.href);
+                    newUrl.searchParams.set('room', rid);
+                    window.history.replaceState({ path: newUrl.href }, '', newUrl.href);
+                } catch (e) {
+                    console.warn("History API 변경 불가:", e);
                 }
                 return rid;
             });
 
-            // Firebase 연동 상태
+            const [isInitialLoading, setIsInitialLoading] = useState(true); // 💡 서버 데이터 초기 로딩 상태
+
             const [user, setUser] = useState(null);
             const [isDbReady, setIsDbReady] = useState(false);
             const [isSyncing, setIsSyncing] = useState(false);
             const [dbError, setDbError] = useState('');
 
-            // 권한 상태
-            const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem(`golf_auth_${appId}_${roomId}`) === 'true');
-
-            // 로컬 UI 상태
             const [showToast, setShowToast] = useState(false);
             const [toastMessage, setToastMessage] = useState('');
             const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
@@ -186,16 +180,13 @@
             const [editValue, setEditValue] = useState('');
             const editInputRef = useRef(null);
 
-            // 스코어 보기 모드
             const [scoreViewMode, setScoreViewMode] = useState('CURRENT'); 
 
-            // 클라우드 동기화 타겟 상태
             const [gameState, setGameState] = useState('SETUP');
             const [caddyIdx, setCaddyIdx] = useState(0); 
             const [joinedPlayers, setJoinedPlayers] = useState([]); 
             const [players, setPlayers] = useState(['타이어 우즈', '로리 맥일로이', '스코티 셔플러', '필 미친손']);
             
-            // 내기 옵션 상태
             const [betMode, setBetMode] = useState('none');
             const [betItem, setBetItem] = useState('');
             const [swapFreq, setSwapFreq] = useState(3);
@@ -204,11 +195,9 @@
             const [holes, setHoles] = useState(Array.from({ length: 18 }, (_, i) => ({ number: i + 1, winners: [], points: 1, isDraw: false, teamA: [0,1], teamB: [2,3] })));
             const [currentHoleIdx, setCurrentHoleIdx] = useState(0);
 
-            // 게임 타이머
             const [startedAt, setStartedAt] = useState(null);
             const [currentTime, setCurrentTime] = useState(Date.now());
 
-            // Firebase 초기화
             useEffect(() => {
                 if (!firebaseConfig) return;
                 let isMounted = true;
@@ -225,6 +214,7 @@
 
                     if (window.FirebaseSDKError || !window.FirebaseSDK) {
                         setDbError("통신 지연 (새로고침 해주세요)");
+                        setIsInitialLoading(false);
                         return;
                     }
                     
@@ -249,6 +239,7 @@
                     } catch (e) { 
                         console.error("Auth Error", e);
                         setDbError(e.code || "도메인 승인 필요");
+                        setIsInitialLoading(false);
                     }
                 };
                 
@@ -256,7 +247,6 @@
                 return () => { isMounted = false; };
             }, []);
 
-            // 실시간 데이터 리스너
             useEffect(() => {
                 if (!isDbReady || !user || !roomId) return;
                 const { doc, onSnapshot } = window.FirebaseSDK;
@@ -277,12 +267,15 @@
                         if (data.currentHoleIdx !== undefined) setCurrentHoleIdx(data.currentHoleIdx);
                         if (data.startedAt !== undefined) setStartedAt(data.startedAt); 
                     }
-                }, (error) => console.error("Sync Error:", error));
+                    setIsInitialLoading(false); // 💡 데이터 동기화 완료 후 로딩 해제
+                }, (error) => {
+                    console.error("Sync Error:", error);
+                    setIsInitialLoading(false);
+                });
                 
                 return () => unsubscribe();
             }, [isDbReady, user, roomId]);
 
-            // 동기화 함수
             const updateGameState = async (updates) => {
                 if (updates.gameState !== undefined) setGameState(updates.gameState);
                 if (updates.caddyIdx !== undefined) setCaddyIdx(updates.caddyIdx);
@@ -324,7 +317,6 @@
                 }
             }, [editingIdx]);
 
-            // 타이머 로직
             useEffect(() => {
                 let interval;
                 if (gameState === 'PLAYING' && startedAt) {
@@ -343,7 +335,6 @@
                 return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
             };
 
-            // 스코어 계산 로직
             const periodScores = useMemo(() => {
                 const periods = [];
                 const numPeriods = Math.ceil(18 / swapFreq);
@@ -387,7 +378,6 @@
                 setShowToast(true);
             };
 
-            // 방 생성 (대기실로 이동)
             const handleCreateRoom = () => {
                 const finalBetItem = betMode !== 'none' && betItem.trim() === '' ? '캐디피' : betItem;
                 updateGameState({
@@ -403,12 +393,11 @@
                 setIsInviteModalOpen(true); 
             };
 
-            // 자동 스케줄 및 1번 홀 시작
             const handleStartGame = () => {
                 const TEAM_COMBINATIONS = [
-                    { a: [0, 1], b: [2, 3] }, // 좌우
-                    { a: [0, 2], b: [1, 3] }, // 징검
-                    { a: [0, 3], b: [1, 2] }  // 하이로우
+                    { a: [0, 1], b: [2, 3] },
+                    { a: [0, 2], b: [1, 3] },
+                    { a: [0, 3], b: [1, 2] }
                 ];
                 
                 const numPeriods = Math.ceil(18 / swapFreq);
@@ -557,7 +546,6 @@
                 document.body.removeChild(textArea);
             };
 
-            // 공통 초대 모달 렌더링
             const renderInviteModal = () => (
                 <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in">
                     <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden relative">
@@ -593,6 +581,18 @@
             );
 
             // -------------------------------------------------------------
+            // 0. 로딩 화면 (자동 복구 시 깜빡임 방지용)
+            // -------------------------------------------------------------
+            if (isInitialLoading) {
+                return (
+                    <div className="app-container bg-emerald-600 flex flex-col items-center justify-center text-white relative">
+                        <Icon name="trophy" size={48} className="mb-4 animate-bounce" />
+                        <div className="font-bold tracking-widest animate-pulse text-sm">기존 방 정보 불러오는 중...</div>
+                    </div>
+                );
+            }
+
+            // -------------------------------------------------------------
             // 1. 설정 (SETUP) 화면
             // -------------------------------------------------------------
             const hasProgress = holes.some(h => h.winners.length > 0 || h.isDraw || h.points > 1);
@@ -602,7 +602,7 @@
                     <div className="app-container">
                         {showToast && <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[150] bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl animate-in text-sm font-bold flex items-center gap-2 whitespace-nowrap"><Icon name="check" size={16} className="text-emerald-400"/>{toastMessage}</div>}
 
-                        <div className="bg-emerald-600 pt-12 pb-8 px-6 text-white text-center relative flex-shrink-0">
+                        <div className="bg-emerald-600 pt-12 pb-8 px-6 text-white text-center relative flex-shrink-0 flex flex-col items-center justify-center">
                             {isDbReady ? (
                                 <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold tracking-wider border border-white/20 bg-emerald-500/90">
                                     <Icon name="check" size={10} className="text-white"/> <span className="opacity-90">LIVE</span>
@@ -616,9 +616,17 @@
                                     <span className="opacity-90">OFFLINE</span>
                                 </div>
                             )}
-                            <Icon name="trophy" size={50} className="mx-auto mb-3 drop-shadow-md" strokeWidth={1.5} />
+                            <Icon name="trophy" size={50} className="mb-3 drop-shadow-md" strokeWidth={1.5} />
                             <h1 className="text-4xl font-black italic tracking-tighter uppercase drop-shadow-md">편먹고 UpDown</h1>
                             <p className="text-emerald-100 text-sm mt-1.5 font-medium opacity-90">실시간 동기화 스코어보드</p>
+                            
+                            {/* 💡 새로운 방 파기 버튼 */}
+                            <button onClick={() => {
+                                localStorage.removeItem(`golf_last_room_${appId}`);
+                                window.location.href = window.location.origin + window.location.pathname;
+                            }} className="mt-4 text-emerald-200 text-[11px] underline active:opacity-70">
+                                완전 새로운 코드로 방 만들기
+                            </button>
                         </div>
                         
                         <div className="flex-1 bg-white rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] w-full mx-auto overflow-y-auto px-6 py-8 flex flex-col -mt-4 z-10">
@@ -653,7 +661,6 @@
                                                     </div>
                                                 )}
                                                 
-                                                {/* 방장(캐디) 펜 아이콘 (모바일 터치 보정) */}
                                                 {caddyIdx === i && (
                                                     <button 
                                                         onClick={(e) => { e.stopPropagation(); setIsCaddyModalOpen(true); }}
@@ -831,7 +838,6 @@
                             </button>
                         </div>
 
-                        {/* 초대 모달 적용 */}
                         {isInviteModalOpen && renderInviteModal()}
                     </div>
                 )
@@ -899,7 +905,7 @@
                         </div>
                     )}
 
-                    {/* 💡 전체 스코어보드를 팝업 모달 형식으로 변경 */}
+                    {/* 전체 스코어보드 팝업 모달 */}
                     {isScoreboardOpen && (
                         <div className="absolute inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in">
                             <div className="bg-[#f8fafc] w-full max-w-md rounded-[2rem] shadow-2xl flex flex-col overflow-hidden max-h-[85vh]">
