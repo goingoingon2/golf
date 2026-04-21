@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>좌탄우탄 스코어보드 (LIVE)</title>
+    <!-- React 및 라이브러리 로드 -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; -webkit-tap-highlight-color: transparent; background-color: #f8fafc; }
+        .animate-in { animation: fadeIn 0.2s ease-out; }
+        .animate-slide-up { animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* 커스텀 스크롤바 숨기기 */
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        /* 뷰포트 높이 안정화 */
+        .app-container { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+    </style>
+
+    <!-- Firebase SDK 안전한 동적 로드 방식 -->
+    <script type="module">
+        (async () => {
+            try {
+                const [app, auth, firestore] = await Promise.all([
+                    import('https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js'),
+                    import('https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js'),
+                    import('https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js')
+                ]);
+                window.FirebaseSDK = {
+                    initializeApp: app.initializeApp,
+                    getAuth: auth.getAuth,
+                    signInAnonymously: auth.signInAnonymously,
+                    signInWithCustomToken: auth.signInWithCustomToken,
+                    onAuthStateChanged: auth.onAuthStateChanged,
+                    getFirestore: firestore.getFirestore,
+                    doc: firestore.doc,
+                    setDoc: firestore.setDoc,
+                    onSnapshot: firestore.onSnapshot,
+                    collection: firestore.collection
+                };
+            } catch (err) {
+                console.error("Firebase SDK Load Error:", err);
+                window.FirebaseSDKError = err.message || "스크립트 로드 실패";
+            } finally {
+                window.dispatchEvent(new Event('firebaseLoaded'));
+            }
+        })();
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect, useRef } = React;
+
+        // ⛳️ 사용자님의 Firebase 설정값이 입력된 부분입니다!
+        const appId = 'my-golf-group-1';
+        const firebaseConfig = {
+            apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+            authDomain: "left-right-6da31.firebaseapp.com",
+            projectId: "left-right-6da31",
+            storageBucket: "left-right-6da31.firebasestorage.app",
+            messagingSenderId: "128347797181",
+            appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+        };
+        const initialAuthToken = null;
+
+        let db, auth;
+
+        // 아이콘 컴포넌트
+        const Icon = ({ name, size = 20, className = "" }) => {
+            const icons = {
+                trophy: <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22h10c0-1.76-.85-3.25-2.03-3.79-.5-.23-.97-.66-.97-1.21v-2.34M12 2a5 5 0 0 0-5 5c0 3.5 3 5.5 5 5.5s5-2 5-5.5a5 5 0 0 0-5-5z"/>,
+                users: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>,
+                rotate: <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8M3 3v5h5"/>,
+                share: <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M16 6l-4-4-4 4M12 2v13"/>,
+                wallet: <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4M3 5v14a2 2 0 0 0 2 2h16v-5M18 12a2 2 0 0 0 0 4h4v-4Z"/>,
+                settings: <><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2Z"/><circle cx="12" cy="12" r="3"/></>,
+                check: <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14M22 4L12 14.01l-3-3"/>,
+                minus: <line x1="5" y1="12" x2="19" y2="12"/>,
+                chevronDown: <polyline points="6 9 12 15 18 9"/>,
+                chevronUp: <polyline points="18 15 12 9 6 15"/>,
+                chevronLeft: <polyline points="15 18 9 12 15 6"/>,
+                chevronRight: <polyline points="9 18 15 12 9 6"/>,
+                close: <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
+                list: <><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></>,
+                kakao: <path d="M12 3C7.03 3 3 6.06 3 9.83c0 2.43 1.66 4.56 4.14 5.76-.17.63-.61 2.29-.7 2.63-.12.43.14.43.3.33.12-.08 1.95-1.32 2.73-1.85.83.1 1.68.16 2.53.16 4.97 0 9-3.06 9-6.83C21 6.06 16.97 3 12 3Z" fill="currentColor" stroke="none"/>,
+                alert: <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
+                lock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></>,
+                unlock: <><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></>
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name]}
+                </svg>
+            );
+        };
+
+        function App() {
+            // Firebase 연동 상태
+            const [user, setUser] = useState(null);
+            const [isDbReady, setIsDbReady] = useState(false);
+            const [isSyncing, setIsSyncing] = useState(false);
+            const [dbError, setDbError] = useState(''); // 서버 접속 에러 표시용
+
+            // 권한(비밀번호) 상태
+            const [isAuthenticated, setIsAuthenticated] = useState(() => localStorage.getItem(`golf_auth_${appId}`) === 'true');
+
+            // 로컬 UI 상태
+            const [showToast, setShowToast] = useState(false);
+            const [toastMessage, setToastMessage] = useState('');
+            const [isSettingOpen, setIsSettingOpen] = useState(false);
+            const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false);
+            const [isScoreboardOpen, setIsScoreboardOpen] = useState(false);
+            const [editingIdx, setEditingIdx] = useState(-1);
+            const editInputRef = useRef(null);
+
+            // 권한 인증 모달 상태 추가
+            const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+            const [authPassword, setAuthPassword] = useState('');
+            const pendingActionRef = useRef(null);
+
+            // 클라우드 동기화 타겟 상태들
+            const defaultPlayers = ['쌉드래곤', '달화백', '싱글댕이', '공나방의뒷땅'];
+            const [players, setPlayers] = useState(defaultPlayers);
+            const [isStarted, setIsStarted] = useState(false);
+            const [feeMode, setFeeMode] = useState('morning');
+            const [feeSettings, setFeeSettings] = useState({ morning: [0, 15000, 25000, 40000], afternoon: [0, 17000, 37000, 54000] });
+            const [holes, setHoles] = useState(Array.from({ length: 18 }, (_, i) => ({ number: i + 1, winners: [], points: 1, isDraw: false })));
+            const [currentHoleIdx, setCurrentHoleIdx] = useState(0);
+
+            // Firebase 초기화 및 인증
+            useEffect(() => {
+                if (!firebaseConfig) return;
+                let isMounted = true;
+                
+                const initFirebase = async () => {
+                    // SDK 다운로드 완료 대기 (최대 8초)
+                    if (!window.FirebaseSDK && !window.FirebaseSDKError) {
+                        await Promise.race([
+                            new Promise(r => window.addEventListener('firebaseLoaded', r)),
+                            new Promise(r => setTimeout(r, 8000))
+                        ]);
+                    }
+                    
+                    if (!isMounted) return;
+
+                    // 스크립트 로드 실패 처리
+                    if (window.FirebaseSDKError || !window.FirebaseSDK) {
+                        setDbError("통신 지연 (새로고침 해주세요)");
+                        return;
+                    }
+                    
+                    const { initializeApp, getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, getFirestore } = window.FirebaseSDK;
+                    
+                    try {
+                        if (!auth) {
+                            const app = initializeApp(firebaseConfig);
+                            auth = getAuth(app);
+                            db = getFirestore(app);
+                        }
+
+                        // 익명 로그인 인증 시도 (이 부분에서 도메인 제한 시 에러 발생)
+                        if (initialAuthToken) await signInWithCustomToken(auth, initialAuthToken);
+                        else await signInAnonymously(auth);
+
+                        onAuthStateChanged(auth, (u) => {
+                            if (isMounted) {
+                                setUser(u);
+                                setIsDbReady(!!u);
+                            }
+                        });
+                    } catch (e) { 
+                        console.error("Auth Error", e);
+                        // 도메인 승인 오류 등을 화면에 구체적으로 표시
+                        setDbError(e.code || "도메인 승인 필요");
+                    }
+                };
+                
+                initFirebase();
+                return () => { isMounted = false; };
+            }, []);
+
+            // 실시간 데이터 리스너 (Firestore -> Local)
+            useEffect(() => {
+                if (!isDbReady || !user) return;
+                const { doc, onSnapshot } = window.FirebaseSDK;
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'gameState', 'current');
+                
+                const unsubscribe = onSnapshot(docRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        if (data.players) setPlayers(data.players);
+                        if (data.isStarted !== undefined) setIsStarted(data.isStarted);
+                        if (data.feeMode) setFeeMode(data.feeMode);
+                        if (data.feeSettings) setFeeSettings(data.feeSettings);
+                        if (data.holes) setHoles(data.holes);
+                        if (data.currentHoleIdx !== undefined) setCurrentHoleIdx(data.currentHoleIdx);
+                    }
+                }, (error) => console.error("Sync Error:", error));
+                
+                return () => unsubscribe();
+            }, [isDbReady, user]);
+
+            // 상태 업데이트 및 동기화 함수 (Local -> Firestore)
+            const updateGameState = async (updates) => {
+                // 1. 내 화면(로컬) 즉각 반영
+                if (updates.players !== undefined) setPlayers(updates.players);
+                if (updates.isStarted !== undefined) setIsStarted(updates.isStarted);
+                if (updates.feeMode !== undefined) setFeeMode(updates.feeMode);
+                if (updates.feeSettings !== undefined) setFeeSettings(updates.feeSettings);
+                if (updates.holes !== undefined) setHoles(updates.holes);
+                if (updates.currentHoleIdx !== undefined) setCurrentHoleIdx(updates.currentHoleIdx);
+
+                // 2. 권한 체크 (비밀번호 미입력자는 서버에 데이터를 덮어쓰지 못하도록 차단)
+                if (!isAuthenticated) return; 
+
+                // 3. 서버(Firebase) 전송
+                if (!isDbReady || !user) return;
+                setIsSyncing(true);
+                try {
+                    const { doc, setDoc } = window.FirebaseSDK;
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'gameState', 'current');
+                    await setDoc(docRef, updates, { merge: true });
+                } catch (e) { console.error("Save Error", e); }
+                finally { setTimeout(() => setIsSyncing(false), 500); }
+            };
+
+            // 비밀번호 확인 및 권한 요청 래퍼 함수 (isStartAction = Game Start 여부)
+            const handleAuthAction = (actionFn, isStartAction = false) => {
+                if (isAuthenticated) {
+                    if (actionFn) actionFn();
+                    return;
+                }
+                pendingActionRef.current = { fn: actionFn, isStartAction };
+                setAuthPassword('');
+                setIsAuthModalOpen(true);
+            };
+
+            // 비밀번호 입력 제출 핸들러
+            const handleAuthSubmit = (e) => {
+                if (e) e.preventDefault();
+                if (authPassword === '7905') {
+                    setIsAuthenticated(true);
+                    localStorage.setItem(`golf_auth_${appId}`, 'true');
+                    setToastMessage('인증 성공! 권한이 부여되었습니다.');
+                    setShowToast(true);
+                    setIsAuthModalOpen(false);
+                    if (pendingActionRef.current?.fn) {
+                        pendingActionRef.current.fn();
+                    }
+                    pendingActionRef.current = null;
+                } else {
+                    setToastMessage('비밀번호가 일치하지 않습니다.');
+                    setShowToast(true);
+                    setAuthPassword('');
+                }
+            };
+
+            // 홀 이동 핸들러 (확인 모드일 경우 내 화면만 넘김)
+            const changeHole = (newIdx) => {
+                setCurrentHoleIdx(newIdx); // 항상 로컬 화면은 즉시 변경
+                if (isAuthenticated) {
+                    updateGameState({ currentHoleIdx: newIdx }); // 관리자면 서버도 변경하여 모두 동기화
+                }
+            };
+
+            useEffect(() => {
+                if (showToast) {
+                    const timer = setTimeout(() => setShowToast(false), 2000);
+                    return () => clearTimeout(timer);
+                }
+            }, [showToast]);
+
+            useEffect(() => {
+                if (editingIdx !== -1 && editInputRef.current) {
+                    editInputRef.current.focus();
+                    editInputRef.current.select();
+                }
+            }, [editingIdx]);
+
+            // 계산 로직
+            const totals = useMemo(() => {
+                const scores = [0, 0, 0, 0];
+                holes.forEach(hole => {
+                    if (hole.winners.length === 2 && !hole.isDraw) {
+                        for (let i = 0; i < 4; i++) {
+                            if (hole.winners.includes(i)) scores[i] += hole.points;
+                            else scores[i] -= hole.points;
+                        }
+                    }
+                });
+                return scores;
+            }, [holes]);
+
+            const rankingInfo = useMemo(() => {
+                if (feeMode === 'none') return null;
+                const playerData = players.map((name, index) => ({ index, name, score: totals[index] })).sort((a, b) => b.score - a.score);
+                const fees = new Array(4).fill(0);
+                const config = feeSettings[feeMode];
+                if (!config) return null;
+
+                const groups = [];
+                playerData.forEach(p => {
+                    if (groups.length > 0 && groups[groups.length - 1][0].score === p.score) groups[groups.length - 1].push(p);
+                    else groups.push([p]);
+                });
+                let currentRank = 0;
+                groups.forEach(group => {
+                    const count = group.length;
+                    let sumFee = 0;
+                    for (let i = 0; i < count; i++) sumFee += config[currentRank + i] || 0;
+                    const avgFee = Math.round(sumFee / count);
+                    group.forEach(p => fees[p.index] = avgFee);
+                    currentRank += count;
+                });
+                return fees;
+            }, [totals, feeMode, players, feeSettings]);
+
+            const executeReset = () => {
+                const resetHoles = Array.from({ length: 18 }, (_, i) => ({ number: i + 1, winners: [], points: 1, isDraw: false }));
+                updateGameState({ holes: resetHoles, isStarted: false, feeMode: 'morning', currentHoleIdx: 0, players: defaultPlayers });
+                setIsResetConfirmOpen(false);
+                setToastMessage('모든 화면이 초기화되었습니다.');
+                setShowToast(true);
+            };
+
+            const handlePlayerToggle = (holeIndex, playerIndex) => {
+                const newHoles = [...holes];
+                for (let i = 0; i < holeIndex; i++) {
+                    if (newHoles[i].winners.length === 0 && !newHoles[i].isDraw) newHoles[i] = { ...newHoles[i], isDraw: true };
+                }
+                const hole = { ...newHoles[holeIndex] };
+                hole.isDraw = false;
+                
+                const isWinner = hole.winners.includes(playerIndex);
+                const isHoleDone = hole.winners.length === 2;
+
+                if (isWinner) {
+                    if (hole.points < 10) hole.points += 1;
+                    else {
+                        hole.winners = hole.winners.filter(id => id !== playerIndex);
+                        if (hole.winners.length === 0) hole.points = 1;
+                    }
+                } else if (!isHoleDone) {
+                    hole.winners = [...hole.winners, playerIndex];
+                } else {
+                    if (hole.points > 1) {
+                        hole.points -= 1;
+                    } else {
+                        hole.winners = [];
+                        hole.points = 1;
+                    }
+                }
+                newHoles[holeIndex] = hole;
+                updateGameState({ holes: newHoles });
+            };
+
+            const handleShare = async () => {
+                const currentUrl = window.location.href;
+                let lastHole = 0;
+                holes.forEach(h => { if(h.isDraw || h.winners.length === 2) lastHole = h.number; });
+                
+                const summary = players.map((p, i) => {
+                    const score = totals[i];
+                    return `${p}: ${score > 0 ? '+' : ''}${score}점${rankingInfo ? ` (${rankingInfo[i].toLocaleString()}원)` : ''}`;
+                }).join('\n');
+
+                const feeLabel = feeMode === 'none' ? '' : ` [${feeMode === 'morning' ? '오전' : '오후'} 내기]`;
+                const text = `⛳️ [좌탄우탄 LIVE 스코어] ${lastHole}홀 진행${feeLabel}\n\n${summary}\n\n👇 아래 링크로 들어오시면 실시간 점수판을 같이 볼 수 있습니다.\n${currentUrl}`;
+
+                if (navigator.share) {
+                    try { await navigator.share({ title: '좌탄우탄 스코어', text: text }); } 
+                    catch (err) { copyToClipboard(text); }
+                } else { copyToClipboard(text); }
+            };
+
+            const copyToClipboard = (text) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    setToastMessage('복사되었습니다! 카톡에 붙여넣으세요.');
+                    setShowToast(true);
+                } catch (e) {
+                    setToastMessage('공유 기능을 지원하지 않는 브라우저입니다.');
+                    setShowToast(true);
+                }
+                document.body.removeChild(textArea);
+            };
+
+            const handlePlayerChangeLocal = (idx, val) => { const n = [...players]; n[idx] = val; setPlayers(n); };
+            const handleFeeChangeLocal = (mode, rankIdx, value) => {
+                const numValue = parseInt(value) || 0;
+                setFeeSettings(prev => ({ ...prev, [mode]: prev[mode].map((v, i) => i === rankIdx ? numValue : v) }));
+            };
+
+            // -------------------------------------------------------------
+            // 1. 시작 화면
+            // -------------------------------------------------------------
+            if (!isStarted) {
+                return (
+                    <div className="app-container bg-emerald-600 relative">
+                        {/* 시작 화면 토스트 및 비밀번호 모달 */}
+                        {showToast && <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[150] bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl animate-in text-sm font-bold flex items-center gap-2 whitespace-nowrap"><Icon name="check" size={16} className="text-emerald-400"/>{toastMessage}</div>}
+                        
+                        {isAuthModalOpen && (
+                            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in">
+                                <div className="bg-white w-full max-w-xs rounded-3xl shadow-2xl p-6 text-center">
+                                    <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Icon name="lock" size={32} />
+                                    </div>
+                                    <h3 className="text-xl font-bold mb-2 text-slate-800">관리자 인증</h3>
+                                    <p className="text-xs text-slate-500 leading-relaxed mb-4">점수 입력 및 수정을 위해<br/>비밀번호를 입력해주세요.</p>
+                                    <form onSubmit={handleAuthSubmit}>
+                                        <input type="password" inputMode="numeric" pattern="\d*" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="비밀번호(7905)" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-emerald-500 mb-6" autoFocus />
+                                        <div className="flex gap-3">
+                                            <button type="button" onClick={() => {
+                                                setIsAuthModalOpen(false);
+                                                if (pendingActionRef.current?.isStartAction && pendingActionRef.current?.fn) {
+                                                    pendingActionRef.current.fn();
+                                                }
+                                                pendingActionRef.current = null;
+                                            }} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-[13px] active:scale-95 transition-transform">
+                                                {pendingActionRef.current?.isStartAction ? '확인 모드로 입장' : '취소 (보기 유지)'}
+                                            </button>
+                                            <button type="submit" className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-[13px] active:scale-95 shadow-md transition-transform">관리자 확인</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="pt-16 pb-8 px-6 text-white text-center relative flex-shrink-0">
+                            {isDbReady ? (
+                                <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold tracking-wider border border-white/20 bg-emerald-500/90">
+                                    <Icon name="check" size={10} className="text-white"/> <span className="opacity-90">LIVE</span>
+                                </div>
+                            ) : dbError ? (
+                                <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold tracking-wider border border-white/20 bg-rose-500/90 shadow-md">
+                                    <span className="opacity-90">ERROR</span>
+                                </div>
+                            ) : (
+                                <div className="absolute top-6 right-6 flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold tracking-wider border border-white/20 bg-slate-500/90">
+                                    <span className="opacity-90">OFFLINE</span>
+                                </div>
+                            )}
+                            <Icon name="trophy" size={56} className="mx-auto mb-4 drop-shadow-md" strokeWidth={1.5} />
+                            <h1 className="text-4xl font-black italic tracking-tighter uppercase drop-shadow-md">Left & Right</h1>
+                            <p className="text-emerald-100 text-sm mt-2 font-medium opacity-90">실시간 동기화 스코어보드</p>
+                        </div>
+                        
+                        <div className="flex-1 bg-white rounded-t-[2.5rem] shadow-[0_-10px_40px_rgba(0,0,0,0.1)] w-full max-w-md mx-auto overflow-y-auto px-6 py-8 flex flex-col">
+                            <div className="space-y-8 flex-1">
+                                <div>
+                                    <label className="text-sm font-bold text-slate-700 flex items-center mb-4">
+                                        <Icon name="users" size={18} className="mr-1.5 text-slate-400" /> 플레이어 명단
+                                    </label>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {players.map((p, i) => (
+                                            <input key={i} type="text" value={p} onFocus={e => e.target.select()} 
+                                                onChange={e => handlePlayerChangeLocal(i, e.target.value)}
+                                                onBlur={() => updateGameState({ players })}
+                                                className="w-full px-4 py-4 rounded-2xl bg-white shadow-[0_2px_10px_rgba(0,0,0,0.06)] border border-slate-100 text-center font-bold text-slate-800 outline-none focus:ring-2 focus:ring-emerald-500 transition-all" />
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="text-sm font-bold text-slate-700 flex items-center mb-4">
+                                        <Icon name="wallet" size={18} className="mr-1.5 text-slate-400" /> 게임비 내기 옵션
+                                    </label>
+                                    <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+                                        {['none', 'morning', 'afternoon'].map(m => (
+                                            <button key={m} onClick={() => updateGameState({ feeMode: m })} 
+                                                className={`flex-1 py-3.5 rounded-xl font-bold text-sm transition-all duration-200 ${feeMode === m ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-600'}`}>
+                                                {m === 'none' ? '안함' : m === 'morning' ? '오전' : '오후'}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+                                    <button onClick={() => setIsSettingOpen(!isSettingOpen)} className="w-full px-5 py-4 flex items-center justify-between text-sm font-bold text-slate-600 hover:bg-slate-100 transition-colors">
+                                        <span className="flex items-center"><Icon name="settings" size={18} className="mr-1.5 text-slate-400" /> 금액 상세 설정</span>
+                                        <Icon name={isSettingOpen ? "chevronUp" : "chevronDown"} size={16} className="text-slate-400" />
+                                    </button>
+                                    {isSettingOpen && (
+                                        <div className="p-5 pt-1 space-y-5 animate-in">
+                                            <div className="space-y-3">
+                                                <p className="text-[11px] font-bold text-emerald-600 border-l-2 border-emerald-600 pl-2 uppercase tracking-wider">Morning Fees</p>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {feeSettings.morning.map((val, i) => (
+                                                        <div key={i} className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 px-3 py-1">
+                                                            <span className="text-[10px] text-slate-400 font-bold mr-2">{i+1}위</span>
+                                                            <input type="number" value={val} onChange={e => handleFeeChangeLocal('morning', i, e.target.value)} onBlur={() => updateGameState({ feeSettings })} className="w-full py-2 text-sm font-bold outline-none bg-transparent text-slate-700" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <div className="space-y-3">
+                                                <p className="text-[11px] font-bold text-amber-500 border-l-2 border-amber-500 pl-2 uppercase tracking-wider">Afternoon Fees</p>
+                                                <div className="grid grid-cols-2 gap-2">
+                                                    {feeSettings.afternoon.map((val, i) => (
+                                                        <div key={i} className="flex items-center bg-white rounded-xl shadow-sm border border-slate-100 px-3 py-1">
+                                                            <span className="text-[10px] text-slate-400 font-bold mr-2">{i+1}위</span>
+                                                            <input type="number" value={val} onChange={e => handleFeeChangeLocal('afternoon', i, e.target.value)} onBlur={() => updateGameState({ feeSettings })} className="w-full py-2 text-sm font-bold outline-none bg-transparent text-slate-700" />
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <button onClick={() => {
+                                handleAuthAction(() => {
+                                    if (dbError) {
+                                        setToastMessage(`[통신 에러] ${dbError}`);
+                                        setShowToast(true);
+                                        return;
+                                    }
+                                    if (!isDbReady && firebaseConfig) {
+                                        setToastMessage('서버에 연결 중입니다. 잠시 후 다시 눌러주세요.');
+                                        setShowToast(true);
+                                        return;
+                                    }
+                                    updateGameState({ isStarted: true, players, feeMode, feeSettings, holes, currentHoleIdx: 0 });
+                                }, true);
+                            }} className="w-full bg-emerald-600 text-white font-black py-5 rounded-2xl shadow-[0_8px_20px_rgba(5,150,105,0.3)] active:scale-95 transition-transform text-lg uppercase tracking-widest mt-6 flex-shrink-0">
+                                Game Start
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            const currentHoleData = holes[currentHoleIdx];
+            const isCurrentHoleDone = currentHoleData.winners.length === 2 || currentHoleData.isDraw;
+
+            // -------------------------------------------------------------
+            // 2. 메인 & 스코어보드 뷰
+            // -------------------------------------------------------------
+            return (
+                <div className="app-container bg-[#f8fafc] text-slate-900 relative">
+                    {showToast && <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[150] bg-slate-800 text-white px-6 py-3 rounded-full shadow-2xl animate-in text-sm font-bold flex items-center gap-2 whitespace-nowrap"><Icon name="check" size={16} className="text-emerald-400"/>{toastMessage}</div>}
+                    
+                    {/* 초기화 확인 모달 */}
+                    {isResetConfirmOpen && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in">
+                            <div className="bg-white w-full max-w-xs rounded-3xl shadow-2xl p-6 text-center">
+                                <div className="w-16 h-16 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Icon name="alert" size={32} />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2 text-slate-800">초기화하시겠습니까?</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed">참여 중인 모든 사람의<br/>화면이 초기화됩니다.</p>
+                                <div className="flex gap-3 mt-6">
+                                    <button onClick={() => setIsResetConfirmOpen(false)} className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-bold active:scale-95 transition-transform">취소</button>
+                                    <button onClick={() => handleAuthAction(executeReset)} className="flex-1 py-4 bg-rose-500 text-white rounded-2xl font-bold active:scale-95 shadow-md transition-transform">확인</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 메인 화면 비밀번호 인증 모달 */}
+                    {isAuthModalOpen && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in">
+                            <div className="bg-white w-full max-w-xs rounded-3xl shadow-2xl p-6 text-center">
+                                <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <Icon name="lock" size={32} />
+                                </div>
+                                <h3 className="text-xl font-bold mb-2 text-slate-800">관리자 인증</h3>
+                                <p className="text-xs text-slate-500 leading-relaxed mb-4">점수 입력 및 수정을 위해<br/>비밀번호를 입력해주세요.</p>
+                                <form onSubmit={handleAuthSubmit}>
+                                    <input type="password" inputMode="numeric" pattern="\d*" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="비밀번호(7905)" className="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-center font-bold tracking-widest outline-none focus:ring-2 focus:ring-emerald-500 mb-6" autoFocus />
+                                    <div className="flex gap-3">
+                                        <button type="button" onClick={() => {
+                                            setIsAuthModalOpen(false);
+                                            if (pendingActionRef.current?.isStartAction && pendingActionRef.current?.fn) {
+                                                pendingActionRef.current.fn();
+                                            }
+                                            pendingActionRef.current = null;
+                                        }} className="flex-1 py-3.5 bg-slate-100 text-slate-600 rounded-xl font-bold text-[13px] active:scale-95 transition-transform">
+                                            {pendingActionRef.current?.isStartAction ? '확인 모드로 입장' : '취소 (보기 유지)'}
+                                        </button>
+                                        <button type="submit" className="flex-1 py-3.5 bg-emerald-600 text-white rounded-xl font-bold text-[13px] active:scale-95 shadow-md transition-transform">관리자 확인</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 전체 스코어보드 모달 */}
+                    {isScoreboardOpen && (
+                        <div className="fixed inset-0 z-[100] bg-[#f8fafc] flex flex-col animate-slide-up">
+                            <div className="bg-emerald-600 text-white px-5 py-4 flex justify-between items-center shadow-md shrink-0">
+                                <h2 className="font-bold text-lg">전체 스코어보드</h2>
+                                <button onClick={() => setIsScoreboardOpen(false)} className="w-8 h-8 flex items-center justify-center bg-white/20 rounded-full active:scale-90 transition-transform">
+                                    <Icon name="close" size={18} />
+                                </button>
+                            </div>
+                            
+                            <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr] bg-white border-b border-slate-200 shrink-0 shadow-sm z-10">
+                                <div className="flex items-center justify-center font-bold text-slate-400 text-[10px] uppercase">TOTAL</div>
+                                {players.map((p, i) => (
+                                    <div key={i} className="py-3 border-l border-slate-100 flex flex-col items-center justify-center bg-white">
+                                        <span className="text-[11px] font-bold text-slate-700 truncate w-full text-center px-1">{p}</span>
+                                        <span className={`text-2xl font-black leading-none my-1.5 ${totals[i]>0?'text-[#3b82f6]':totals[i]<0?'text-[#ef4444]':'text-slate-800'}`}>
+                                            {totals[i]>0?`+${totals[i]}`:totals[i]}
+                                        </span>
+                                        {rankingInfo && <span className="text-[9px] font-medium text-slate-400">{rankingInfo[i].toLocaleString()}원</span>}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f8fafc]">
+                                {holes.map((h, i) => {
+                                    const done = h.winners.length === 2;
+                                    const isCurrent = currentHoleIdx === i;
+                                    return (
+                                        <div key={h.number} onClick={() => { changeHole(i); setIsScoreboardOpen(false); }}
+                                             className={`flex rounded-2xl shadow-[0_2px_8px_rgba(0,0,0,0.04)] border p-1.5 transition-all cursor-pointer bg-white ${isCurrent ? 'border-emerald-500 bg-emerald-50/30 ring-1 ring-emerald-500 ring-opacity-30' : h.isDraw ? 'border-slate-200' : 'border-transparent'}`}>
+                                            
+                                            <div className="w-12 flex flex-col items-center justify-center font-black italic text-slate-600 shrink-0">
+                                                <span className="text-[10px] opacity-60 leading-tight">H</span>
+                                                <span className="text-lg leading-tight">{h.number}</span>
+                                            </div>
+
+                                            <div className="flex-1 grid grid-cols-4 gap-1.5 items-center">
+                                                {h.isDraw ? <div className="col-span-4 flex items-center justify-center h-full min-h-[44px] rounded-xl bg-slate-50 border border-slate-100 text-sm font-bold text-slate-500 tracking-widest uppercase">DRAW</div> : 
+                                                    [0,1,2,3].map(pi => {
+                                                        const win = h.winners.includes(pi);
+                                                        const lose = done && !win;
+                                                        if (!done && !win) return <div key={pi} className="flex items-center justify-center h-full min-h-[44px] text-slate-300 font-bold">-</div>;
+                                                        
+                                                        let pillClass = "flex items-center justify-center h-full min-h-[44px] rounded-xl text-sm font-black ";
+                                                        if (win) pillClass += "bg-[#f59e0b] text-white";
+                                                        else pillClass += "bg-[#1e293b] text-white";
+
+                                                        return (
+                                                            <div key={pi} className={pillClass}>
+                                                                {win?`+${h.points}`:lose?`-${h.points}`:'-'}
+                                                            </div>
+                                                        )
+                                                    })
+                                                }
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* 상단 화이트 헤더 & TOTAL 바 */}
+                    <div className="bg-white shrink-0 shadow-sm z-10">
+                        <div className="flex justify-between items-center px-5 py-3.5">
+                            <div className="flex items-center">
+                                <h1 className="font-black italic text-[22px] tracking-tight text-slate-900 mr-2">LEFT & RIGHT</h1>
+                                {isDbReady ? (
+                                    <div className="flex items-center gap-1 bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider">
+                                        <span className={`w-1.5 h-1.5 rounded-full ${isSyncing ? 'bg-amber-400 animate-pulse' : 'bg-emerald-500'}`}></span>
+                                        LIVE
+                                    </div>
+                                ) : dbError ? (
+                                    <div className="flex items-center gap-1 bg-rose-100 text-rose-600 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider shadow-sm">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        ERROR
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1 bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider">
+                                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                                        OFFLINE
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex gap-2.5 text-slate-800 items-center">
+                                <button onClick={() => {
+                                    if (isAuthenticated) {
+                                        setIsAuthenticated(false);
+                                        localStorage.removeItem(`golf_auth_${appId}`);
+                                        setToastMessage('확인 모드로 전환되었습니다.');
+                                        setShowToast(true);
+                                    } else {
+                                        handleAuthAction();
+                                    }
+                                }} className="active:scale-90 transition-transform flex items-center justify-center p-1.5" title="권한 설정">
+                                    <Icon name={isAuthenticated ? "unlock" : "lock"} size={22} className={isAuthenticated ? "text-emerald-600" : "text-slate-300"} />
+                                </button>
+                                <button onClick={handleShare} className="active:scale-90 transition-transform p-1.5"><Icon name="share" size={22} /></button>
+                                <button onClick={() => handleAuthAction(() => setIsResetConfirmOpen(true))} className="active:scale-90 transition-transform p-1.5"><Icon name="rotate" size={22} /></button>
+                            </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-[60px_1fr_1fr_1fr_1fr] border-t border-b border-slate-100 pb-2">
+                            <div className="flex items-center justify-center font-bold text-slate-400 text-[10px] uppercase">TOTAL</div>
+                            {players.map((p, i) => (
+                                <div key={i} className="py-2 border-l border-slate-100 flex flex-col items-center justify-center relative">
+                                    {editingIdx === i ? (
+                                        <input ref={editInputRef} defaultValue={p} 
+                                            onBlur={e => {
+                                                const n = [...players]; n[i] = e.target.value || p; 
+                                                updateGameState({ players: n }); 
+                                                setEditingIdx(-1);
+                                            }} 
+                                            onKeyDown={e => e.key === 'Enter' && e.target.blur()} className="w-full text-[11px] text-center bg-slate-100 text-slate-800 outline-none font-bold rounded" />
+                                    ) : (
+                                        <span onClick={() => handleAuthAction(() => setEditingIdx(i))} className="text-[11px] font-bold text-slate-700 truncate w-full text-center px-1 cursor-pointer">{p}</span>
+                                    )}
+                                    <span className={`text-[22px] font-black leading-none my-1.5 ${totals[i]>0?'text-[#3b82f6]':totals[i]<0?'text-[#ef4444]':'text-slate-800'}`}>
+                                        {totals[i]>0?`+${totals[i]}`:totals[i]}
+                                    </span>
+                                    {rankingInfo && <span className="text-[9px] font-medium text-slate-400 bg-slate-50 px-1.5 rounded-sm">{rankingInfo[i].toLocaleString()}원</span>}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 단일 홀 입력 메인 뷰 */}
+                    <div className="flex-1 overflow-y-auto p-5 flex flex-col justify-center relative">
+                        <div className="bg-white rounded-3xl shadow-[0_8px_30px_rgba(0,0,0,0.06)] border border-slate-100 p-6 relative">
+                            
+                            <div className="flex justify-between items-center mb-8 relative">
+                                <button onClick={() => changeHole(currentHoleIdx - 1)} disabled={currentHoleIdx === 0} 
+                                    className={`w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-slate-600 transition-all ${currentHoleIdx === 0 ? 'opacity-30' : 'hover:bg-slate-100 active:scale-90'}`}>
+                                    <Icon name="chevronLeft" size={20} />
+                                </button>
+                                <div className="text-center">
+                                    <p className="text-xs font-bold text-emerald-600 mb-[-6px] tracking-wide">CURRENT HOLE</p>
+                                    <h2 className="text-[3.5rem] leading-none font-black italic text-slate-800">{currentHoleData.number}</h2>
+                                </div>
+                                <button onClick={() => changeHole(currentHoleIdx + 1)} disabled={currentHoleIdx === 17} 
+                                    className={`w-10 h-10 flex items-center justify-center rounded-full bg-slate-50 border border-slate-100 text-slate-600 transition-all ${currentHoleIdx === 17 ? 'opacity-30' : 'hover:bg-slate-100 active:scale-90'}`}>
+                                    <Icon name="chevronRight" size={20} />
+                                </button>
+                            </div>
+
+                            {currentHoleData.isDraw ? (
+                                <div className="py-16 flex flex-col items-center justify-center bg-[#f8fafc] rounded-3xl border-2 border-dashed border-slate-300">
+                                    <p className="text-2xl font-black text-slate-500 tracking-widest uppercase">Draw Game</p>
+                                    <p className="text-sm text-slate-400 mt-2 font-bold">비김 처리된 홀입니다.</p>
+                                </div>
+                            ) : (
+                                <div className="grid grid-cols-2 gap-3.5">
+                                    {players.map((p, pi) => {
+                                        const win = currentHoleData.winners.includes(pi);
+                                        const lose = isCurrentHoleDone && !win;
+                                        
+                                        let btnClass = "relative h-28 rounded-2xl transition-transform active:scale-95 flex flex-col items-center justify-center shadow-sm overflow-hidden ";
+                                        
+                                        if (win) {
+                                            btnClass += "bg-[#f59e0b] text-white shadow-[0_6px_15px_rgba(245,158,11,0.3)] border-b-[6px] border-[#d97706]";
+                                        } else if (lose) {
+                                            btnClass += "bg-[#1e293b] text-white shadow-[0_6px_15px_rgba(30,41,59,0.3)] border-b-[6px] border-[#0f172a]";
+                                        } else {
+                                            btnClass += "bg-white border-2 border-slate-100 text-slate-400 hover:border-slate-200 hover:bg-slate-50";
+                                        }
+
+                                        return (
+                                            <button key={pi} onClick={() => handleAuthAction(() => handlePlayerToggle(currentHoleIdx, pi))} className={btnClass}>
+                                                <span className={`text-[13px] font-bold mb-1 ${win || lose ? 'opacity-80' : 'text-slate-500'}`}>{p}</span>
+                                                <span className="text-[2.2rem] leading-none font-black">{win ? `+${currentHoleData.points}` : lose ? `-${currentHoleData.points}` : 'WIN'}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            <div className="mt-7 flex gap-3">
+                                <button onClick={() => handleAuthAction(() => {
+                                    const n = [...holes]; 
+                                    n[currentHoleIdx].isDraw = !n[currentHoleIdx].isDraw; 
+                                    n[currentHoleIdx].winners=[]; 
+                                    n[currentHoleIdx].points=1; 
+                                    updateGameState({ holes: n });
+                                })} className={`flex-1 py-3.5 rounded-2xl font-bold text-[15px] border-2 transition-all ${currentHoleData.isDraw ? 'bg-slate-100 border-slate-200 text-slate-500' : 'bg-white border-emerald-500 text-emerald-600 active:bg-emerald-50'}`}>
+                                    {currentHoleData.isDraw ? '비김 취소' : '비김 (DRAW) 처리'}
+                                </button>
+                                
+                                {isCurrentHoleDone && currentHoleIdx < 17 && (
+                                    <button onClick={() => changeHole(currentHoleIdx + 1)} className="flex-1 py-3.5 rounded-2xl font-bold text-[15px] bg-emerald-600 text-white shadow-[0_4px_14px_rgba(5,150,105,0.4)] active:scale-95 flex items-center justify-center">
+                                        다음 홀 입력 <Icon name="chevronRight" size={18} className="ml-1"/>
+                                    </button>
+                                )}
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {/* 전체 스코어보드 보기 (하단 고정 바) */}
+                    <div className="bg-[#1e293b] text-white shrink-0">
+                        <button onClick={() => setIsScoreboardOpen(true)} className="w-full py-5 font-bold text-[15px] active:bg-[#0f172a] transition-colors flex items-center justify-center gap-2">
+                            <Icon name="list" size={18} />
+                            전체 스코어보드 보기
+                        </button>
+                    </div>
+
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
