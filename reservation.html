@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>골프장 예약 관리 시스템 (aRP)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f0f2f5; }
+        /* 스크롤바 커스텀 및 숨김 */
+        .scrollbar-hide::-webkit-scrollbar { width: 6px; height: 6px; }
+        .scrollbar-hide::-webkit-scrollbar-track { background: transparent; }
+        .scrollbar-hide::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .scrollbar-hide:hover::-webkit-scrollbar-thumb { background: #94a3b8; }
+        
+        .accent-blue-600 { accent-color: #2563eb; }
+        .accent-red-600 { accent-color: #dc2626; }
+        
+        /* 테이블 헤더/셀 보더 설정 */
+        th, td { border-color: #e2e8f0; }
+        
+        /* 입력창 공통 스타일 */
+        .form-input { border: 1px solid #d1d5db; border-radius: 2px; padding: 2px 6px; outline: none; }
+        .form-input:focus { border-color: #3b82f6; }
+        .form-label { text-align: right; color: #4b5563; font-weight: 500; white-space: nowrap; }
+    </style>
+</head>
+<body class="flex h-screen w-full text-gray-800 text-[11px] overflow-hidden select-none">
+
+    <!-- 1. Left Sidebar -->
+    <div class="bg-white flex flex-col flex-shrink-0 z-20 shadow-[2px_0_8px_rgba(0,0,0,0.05)] w-[220px] border-r border-gray-200">
+        <!-- Sidebar Header -->
+        <div class="h-[50px] bg-[#2a3042] text-white flex items-center px-4 justify-between shrink-0">
+            <div class="flex items-center gap-2">
+                <div class="bg-white text-[#2a3042] text-[10px] font-black px-1.5 py-0.5 rounded-sm tracking-tighter">ELIM-I</div>
+                <div class="text-sm font-bold tracking-wide">aRP Admin</div>
+            </div>
+            <button class="text-gray-300 hover:text-white transition-colors"><i data-lucide="menu" class="w-4 h-4"></i></button>
+        </div>
+
+        <!-- Sidebar Search -->
+        <div class="p-3 border-b border-gray-100 shrink-0">
+            <div class="relative">
+                <input type="text" placeholder="사원검색" class="w-full bg-white text-gray-700 placeholder-gray-400 border border-gray-300 rounded px-8 py-1.5 text-xs outline-none focus:border-blue-400">
+                <i data-lucide="search" class="absolute left-2.5 top-2 w-3.5 h-3.5 text-gray-400"></i>
+            </div>
+        </div>
+
+        <!-- Sidebar Menu List -->
+        <div class="flex-1 overflow-y-auto scrollbar-hide py-2 text-xs font-medium text-gray-600">
+            <div class="mb-2">
+                <div class="flex items-center justify-between px-4 py-2 bg-yellow-50/50 text-yellow-700 cursor-pointer border-l-2 border-yellow-400">
+                    <div class="flex items-center gap-2">
+                        <i data-lucide="star" class="w-4 h-4 fill-yellow-400 text-yellow-400"></i>
+                        <span class="font-bold">즐겨찾기 (구자매기)</span>
+                    </div>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                </div>
+                <ul class="pl-10 pr-4 py-1 space-y-1.5 text-[11px] text-gray-500">
+                    <li class="flex items-center gap-2 cursor-pointer hover:text-blue-600 py-1"><i data-lucide="file-text" class="w-3 h-3 text-gray-400"></i> 실적업무관리</li>
+                    <li class="flex items-center gap-2 cursor-pointer hover:text-blue-600 py-1"><i data-lucide="calendar" class="w-3 h-3 text-gray-400"></i> 항목수기</li>
+                    <li class="flex items-center gap-2 cursor-pointer hover:text-blue-600 py-1 text-blue-600 font-bold"><i data-lucide="bar-chart-2" class="w-3 h-3 text-blue-500"></i> * 영업실적</li>
+                </ul>
+            </div>
+
+            <!-- Menu Categories -->
+            <ul class="space-y-0.5">
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="bar-chart-2" class="w-4 h-4 text-gray-400"></i> GS</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="users" class="w-4 h-4 text-gray-400"></i> 미화</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4 text-gray-400"></i> 여신</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="monitor" class="w-4 h-4 text-gray-400"></i> 프론트</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                
+                <!-- Expanded Category -->
+                <li>
+                    <div class="flex items-center justify-between px-4 py-2.5 bg-[#eef2f9] text-blue-700 font-bold border-l-2 border-blue-600">
+                        <div class="flex items-center gap-2"><i data-lucide="edit-3" class="w-4 h-4 text-blue-600"></i> 수기</div>
+                        <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-blue-600"></i>
+                    </div>
+                    <ul class="pl-10 pr-4 py-2 space-y-2 text-[11px] bg-gray-50/50">
+                        <li class="flex items-center gap-2 hover:text-blue-600 text-gray-500"><i data-lucide="file-text" class="w-3 h-3 text-gray-400"></i> 실시간현황관리</li>
+                        <li class="flex items-center gap-2 hover:text-blue-600 text-gray-500"><i data-lucide="calendar" class="w-3 h-3 text-gray-400"></i> 예약정보관리</li>
+                        <li class="flex items-center gap-2 hover:text-blue-600 text-blue-600 font-bold"><i data-lucide="activity" class="w-3 h-3 text-blue-500"></i> 스포츠시설관리</li>
+                    </ul>
+                </li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="shopping-cart" class="w-4 h-4 text-gray-400"></i> 구매</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="store" class="w-4 h-4 text-gray-400"></i> 매장</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="box" class="w-4 h-4 text-gray-400"></i> 재고</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="check-circle" class="w-4 h-4 text-gray-400"></i> 마신</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="map" class="w-4 h-4 text-gray-400"></i> GIS</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="activity" class="w-4 h-4 text-gray-400"></i> 로드</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+                <li class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50"><div class="flex items-center gap-2"><i data-lucide="settings" class="w-4 h-4 text-gray-400"></i> 시스템</div><i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400"></i></li>
+            </ul>
+        </div>
+
+        <div class="p-3 border-t border-gray-200 shrink-0 flex items-center justify-between text-gray-500 bg-gray-50">
+            <div class="flex items-center gap-1.5">
+                <div class="w-6 h-6 rounded-full bg-gray-300 flex items-center justify-center text-white"><i data-lucide="user" class="w-3.5 h-3.5"></i></div>
+                <div class="flex flex-col">
+                    <span class="text-[10px] font-bold text-gray-700">최고관리자</span>
+                    <span class="text-[9px]">(admin)</span>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button class="hover:text-blue-600"><i data-lucide="settings" class="w-3.5 h-3.5"></i></button>
+                <button class="hover:text-red-500"><i data-lucide="log-out" class="w-3.5 h-3.5"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Main Content Area -->
+    <div class="flex-1 flex flex-col min-w-0">
+        
+        <!-- 2-1. Top Header -->
+        <div class="h-[50px] bg-white border-b border-gray-200 flex items-center justify-between px-4 flex-shrink-0 z-10 relative">
+            <div class="flex items-center gap-4">
+                <div class="text-xl font-black text-blue-900 tracking-tighter">aRP</div>
+                <div class="flex items-center gap-1 bg-white border border-gray-300 rounded px-2 py-1 cursor-pointer shadow-sm">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5 text-gray-400"></i>
+                    <span class="text-xs font-bold text-gray-700">A 코스만</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400"></i>
+                </div>
+            </div>
+            <div class="flex items-center gap-4 text-gray-600">
+                <div class="flex items-center gap-1.5 text-xs">
+                    <i data-lucide="calendar" class="w-4 h-4 text-gray-400"></i>
+                    <span>영업일자: <strong>2023-02-11</strong></span>
+                </div>
+                <button class="relative hover:text-blue-600">
+                    <i data-lucide="bell" class="w-4.5 h-4.5"></i>
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full border border-white">5</span>
+                </button>
+                <div class="flex items-center gap-1.5 cursor-pointer hover:text-blue-600 border pl-3 rounded-full py-1 pr-2 bg-gray-50">
+                    <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center text-gray-400 border border-gray-200"><i data-lucide="user" class="w-3.5 h-3.5"></i></div>
+                    <span class="text-[11px] font-bold">사용자</span>
+                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-gray-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2-2. Tab Navigation -->
+        <div class="bg-[#e4e8ec] border-b border-gray-200 flex px-2 pt-1.5 flex-shrink-0">
+            <div class="flex items-center gap-2 px-4 py-1.5 bg-white border-t-[3px] border-t-blue-600 border-x border-gray-200 rounded-t text-blue-700 font-bold mr-1 relative -bottom-[1px] shadow-sm">
+                <span>예약관리</span>
+            </div>
+        </div>
+
+        <!-- 2-3. Filter Bar & Legend -->
+        <div class="flex-shrink-0 bg-white shadow-sm z-10 relative">
+            <div class="flex items-center justify-between p-2 px-4 border-b border-gray-200 bg-white">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <select class="form-input w-28 bg-white font-bold text-gray-700 shadow-sm"><option>사업장 플랜지CC</option></select>
+                    </div>
+                    <div class="flex items-center border border-gray-300 rounded bg-white shadow-sm overflow-hidden">
+                        <button class="px-2 py-1 border-r border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100"><i data-lucide="chevron-left" class="w-3 h-3"></i></button>
+                        <input type="text" value="2023-02-11" readonly class="w-24 p-1 text-center font-bold text-gray-700 outline-none bg-transparent"/>
+                        <i data-lucide="calendar" class="w-3 h-3 mr-2 ml-0.5 text-gray-500"></i>
+                        <button class="px-2 py-1 border-l border-gray-300 bg-gray-50 text-gray-500 hover:bg-gray-100"><i data-lucide="chevron-right" class="w-3 h-3"></i></button>
+                    </div>
+                    <div class="relative shadow-sm">
+                        <input type="text" placeholder="예약자명" class="form-input w-40"/>
+                        <i data-lucide="search" class="absolute right-2 top-[5px] w-3 h-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5">
+                    <button class="bg-white border border-gray-300 text-gray-600 w-6 h-6 rounded flex items-center justify-center shadow-sm"><i data-lucide="refresh-cw" class="w-3 h-3"></i></button>
+                    <div class="flex items-center gap-1 border border-gray-300 rounded px-1.5 py-[3px] bg-white shadow-sm">
+                        <input type="number" value="10" class="w-8 text-right outline-none text-xs font-bold text-blue-600"/>
+                        <span class="text-[10px] text-gray-500 pr-1">초</span>
+                    </div>
+                    <button class="border border-gray-300 px-2 py-[3px] rounded text-[10px] bg-white text-gray-600 shadow-sm">자동 새로고침 OFF</button>
+                    <button class="flex items-center gap-1 bg-white border border-gray-300 text-gray-700 px-2 py-[3px] rounded text-[10px] font-bold shadow-sm">
+                        <i data-lucide="file-text" class="w-3 h-3 text-gray-500"></i> 예약(전체)로그
+                    </button>
+                </div>
+            </div>
+            <div class="flex items-center gap-3 p-1.5 px-4 bg-[#f8fafc] border-b border-gray-200 text-[11px] font-bold">
+                <span class="border border-gray-300 bg-white px-2 py-0.5 rounded shadow-sm text-gray-600">필터</span>
+                <button class="bg-gray-700 text-white px-2 py-0.5 rounded shadow-sm">전체</button>
+                <button class="flex items-center gap-1 text-gray-600"><span class="w-2.5 h-2.5 rounded-full border border-gray-300 bg-white"></span>예약가능</button>
+                <button class="flex items-center gap-1 text-gray-600"><span class="w-2.5 h-2.5 rounded-full bg-[#cbd5e1]"></span>예약완료</button>
+                <button class="flex items-center gap-1 text-gray-600"><span class="w-2.5 h-2.5 rounded-full bg-[#e9d5ff]"></span>조인</button>
+                <button class="flex items-center gap-1 text-gray-600"><span class="w-2.5 h-2.5 rounded-full bg-[#fef08a]"></span>단체</button>
+            </div>
+        </div>
+
+        <!-- 2-4. Data Grids Area -->
+        <div class="flex-1 flex gap-2 p-2 overflow-hidden bg-[#e2e8f0]">
+            
+            <!-- Left: Date Picker List (이미지 디자인 적용) -->
+            <div class="bg-white border border-gray-300 flex flex-col flex-shrink-0 shadow-sm rounded overflow-hidden w-[170px]">
+                <div class="bg-white border-b border-gray-300 p-2 font-bold text-gray-700 flex items-center justify-between">
+                    <div class="flex items-center gap-1"><span class="text-xs">영업일자</span><i data-lucide="calendar" class="w-3.5 h-3.5 text-gray-500"></i></div>
+                    <button class="p-0.5 rounded hover:bg-gray-100"><i data-lucide="chevron-left" class="w-4 h-4 text-gray-600"></i></button>
+                </div>
+                <div class="overflow-y-auto h-full bg-white scrollbar-hide text-[10px]">
+                    <!-- Date Items -->
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-09 (월)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">0</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">0</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-10 (화)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">0</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">0</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-11 (수)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">0</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">0</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-12 (목)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">0</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">0</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-13 (금)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">0</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">0</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold text-blue-600">02-14 (토) <span class="text-[8px] px-1 font-normal border border-red-200 text-red-500 rounded">휴</span></div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">65</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">5</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold text-red-600">02-15 (일) <span class="text-[8px] px-1 font-normal border border-red-200 text-red-500 rounded">휴</span></div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">52</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">18</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-16 (월)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">20</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">50</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-17 (화)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">15</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">55</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-18 (수)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">18</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">52</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-19 (목)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">22</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">48</strong></span></div>
+                    </div>
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center text-gray-700 cursor-pointer">
+                        <div class="flex items-center gap-1 font-bold">02-20 (금)</div>
+                        <div class="flex gap-1.5 text-gray-500"><span>예약<strong class="ml-0.5 text-gray-800">30</strong></span><span>잔여<strong class="ml-0.5 text-blue-600">40</strong></span></div>
+                    </div>
+                    <!-- Selected Date -->
+                    <div class="px-2.5 py-1.5 border-b border-gray-200 flex justify-between items-center bg-blue-500 text-white cursor-pointer relative z-10">
+                        <div class="flex items-center gap-1 font-bold">02-21 (토) <span class="text-[8px] px-1 font-normal border border-red-400 bg-red-500 text-white rounded">휴</span></div>
+                        <div class="flex gap-1.5 text-blue-100"><span>예약<strong class="ml-0.5 text-white">70</strong></span><span>잔여<strong class="ml-0.5 text-white">0</strong></span></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- COURSE A -->
+            <div class="flex-1 bg-white border border-gray-300 rounded shadow-sm flex flex-col min-w-0 overflow-hidden">
+                <div class="flex justify-between items-center bg-[#f8fafc] border-b border-gray-200 px-3 py-1.5 shrink-0">
+                    <span class="font-bold text-blue-700 text-xs">COURSE A</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-gray-500 border border-gray-300 bg-white px-1.5 rounded">예약: <span class="text-blue-600 font-bold">10/2</span></span>
+                        <i data-lucide="maximize-2" class="w-3 h-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto scrollbar-hide">
+                    <table class="w-full text-center table-fixed border-collapse text-[10px]">
+                        <colgroup><col class="w-6"><col class="w-10"><col class="w-14"><col class="w-12"><col class="w-20"><col class="w-10"><col class="w-6"><col class="w-14"><col class="w-6"></colgroup>
+                        <thead class="bg-[#f1f5f9] sticky top-0 border-b border-gray-300 text-gray-600 shadow-sm z-10">
+                            <tr><th class="py-1 border-r">No</th><th class="py-1 border-r">시간</th><th class="py-1 border-r">채널</th><th class="py-1 border-r">예약자명</th><th class="py-1 border-r">전화번호</th><th class="py-1 border-r">연단체</th><th class="py-1 border-r">인</th><th class="py-1 border-r">요금</th><th class="py-1"><input type="checkbox" class="accent-blue-600"></th></tr>
+                        </thead>
+                        <tbody>
+                            <!-- White -->
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-1.5 border-r text-gray-400">1</td><td class="py-1.5 border-r font-medium">06:00</td>
+                                <td class="py-1.5 border-r flex justify-center gap-0.5"><i data-lucide="monitor" class="w-3 h-3 text-gray-400"></i><i data-lucide="phone" class="w-3 h-3 text-gray-400"></i><i data-lucide="zap" class="w-3 h-3 text-gray-400"></i></td>
+                                <td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r text-gray-400 text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <!-- Booked -->
+                            <tr class="border-b border-gray-200 bg-[#f1f5f9]">
+                                <td class="py-1.5 border-r text-gray-400">2</td><td class="py-1.5 border-r font-bold">06:07</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">전화</div></td>
+                                <td class="py-1.5 border-r font-bold">강호동</td><td class="py-1.5 border-r">010-4560-1567</td><td class="py-1.5 border-r text-[9px]">연단체</td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">150,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f1f5f9]">
+                                <td class="py-1.5 border-r text-gray-400">3</td><td class="py-1.5 border-r font-bold">06:14</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">모바일</div></td>
+                                <td class="py-1.5 border-r font-bold">엄영식</td><td class="py-1.5 border-r">010-1000-1234</td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">190,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-1.5 border-r text-gray-400">4</td><td class="py-1.5 border-r font-medium">06:21</td>
+                                <td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r text-gray-400 text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f1f5f9]">
+                                <td class="py-1.5 border-r text-gray-400">5</td><td class="py-1.5 border-r font-bold">06:28</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">실시간</div></td>
+                                <td class="py-1.5 border-r font-bold">송지인</td><td class="py-1.5 border-r">010-1235-1664</td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <!-- Green -->
+                            <tr class="border-b border-gray-200 bg-[#dcfce7]">
+                                <td class="py-1.5 border-r text-gray-400">6</td><td class="py-1.5 border-r font-bold">06:36</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">모바일</div></td>
+                                <td class="py-1.5 border-r font-bold">백아린</td><td class="py-1.5 border-r">010-2280-6462</td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">150,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f1f5f9]">
+                                <td class="py-1.5 border-r text-gray-400">7</td><td class="py-1.5 border-r font-bold">06:44</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">전화</div></td>
+                                <td class="py-1.5 border-r font-bold">강호동</td><td class="py-1.5 border-r">010-3560-1107</td><td class="py-1.5 border-r text-[9px]">연단체</td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">130,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <!-- Yellow -->
+                            <tr class="border-b border-gray-200 bg-[#fef9c3]">
+                                <td class="py-1.5 border-r text-gray-400">8</td><td class="py-1.5 border-r font-bold">06:45</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">매니저</div></td>
+                                <td class="py-1.5 border-r font-bold">강호동</td><td class="py-1.5 border-r">010-3560-1107</td><td class="py-1.5 border-r text-[9px]">연단체</td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">130,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f1f5f9]">
+                                <td class="py-1.5 border-r text-gray-400">9</td><td class="py-1.5 border-r font-bold">06:55</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">직원</div></td>
+                                <td class="py-1.5 border-r font-bold">김승수</td><td class="py-1.5 border-r">010-2570-0185</td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">130,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <!-- Green -->
+                            <tr class="border-b border-gray-200 bg-[#dcfce7]">
+                                <td class="py-1.5 border-r text-gray-400">10</td><td class="py-1.5 border-r font-bold">07:05</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">실시간</div></td>
+                                <td class="py-1.5 border-r font-bold">정준희</td><td class="py-1.5 border-r">010-2357-0595</td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">150,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- COURSE B -->
+            <div class="flex-1 bg-white border border-gray-300 rounded shadow-sm flex flex-col min-w-0 overflow-hidden">
+                <div class="flex justify-between items-center bg-[#f8fafc] border-b border-gray-200 px-3 py-1.5 shrink-0">
+                    <span class="font-bold text-blue-700 text-xs">COURSE B</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-gray-500 border border-gray-300 bg-white px-1.5 rounded">예약: <span class="text-blue-600 font-bold">8/2</span></span>
+                        <i data-lucide="maximize-2" class="w-3 h-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto scrollbar-hide">
+                    <table class="w-full text-center table-fixed border-collapse text-[10px]">
+                        <colgroup><col class="w-6"><col class="w-10"><col class="w-14"><col class="w-12"><col class="w-20"><col class="w-10"><col class="w-6"><col class="w-14"><col class="w-6"></colgroup>
+                        <thead class="bg-[#f1f5f9] sticky top-0 border-b border-gray-300 text-gray-600 shadow-sm z-10">
+                            <tr><th class="py-1 border-r">No</th><th class="py-1 border-r">시간</th><th class="py-1 border-r">채널</th><th class="py-1 border-r">예약자명</th><th class="py-1 border-r">전화번호</th><th class="py-1 border-r">연단체</th><th class="py-1 border-r">인</th><th class="py-1 border-r">요금</th><th class="py-1"><input type="checkbox" class="accent-blue-600"></th></tr>
+                        </thead>
+                        <tbody>
+                            <!-- Green -->
+                            <tr class="border-b border-gray-200 bg-[#dcfce7]">
+                                <td class="py-1.5 border-r text-gray-400">1</td><td class="py-1.5 border-r font-bold">11:00</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">모바일</div></td>
+                                <td class="py-1.5 border-r font-bold">장용수</td><td class="py-1.5 border-r">010-6300-8081</td><td class="py-1.5 border-r text-[9px]">단종택</td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#dcfce7]">
+                                <td class="py-1.5 border-r text-gray-400">2</td><td class="py-1.5 border-r font-bold">11:35</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">실시간</div></td>
+                                <td class="py-1.5 border-r font-bold">장소동</td><td class="py-1.5 border-r">010-4300-4431</td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <!-- Locked -->
+                            <tr class="border-b border-gray-200 bg-[#f1f5f9] text-gray-400 opacity-60">
+                                <td class="py-1.5 border-r relative">3 <i data-lucide="lock" class="w-2.5 h-2.5 absolute left-0.5 top-2"></i></td><td class="py-1.5 border-r font-medium">11:31</td>
+                                <td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r text-right pr-2">130,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-1.5 border-r text-gray-400">4</td><td class="py-1.5 border-r font-medium">11:33</td>
+                                <td class="py-1.5 border-r flex justify-center gap-0.5"><i data-lucide="monitor" class="w-3 h-3 text-gray-400"></i><i data-lucide="zap" class="w-3 h-3 text-gray-400"></i></td>
+                                <td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r text-gray-400 text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#dcfce7]">
+                                <td class="py-1.5 border-r text-gray-400">5</td><td class="py-1.5 border-r font-bold">11:34</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">모바일</div></td>
+                                <td class="py-1.5 border-r font-bold">손영길</td><td class="py-1.5 border-r">010-1311-1452</td><td class="py-1.5 border-r text-[9px]">연단체</td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f1f5f9]">
+                                <td class="py-1.5 border-r text-gray-400">6</td><td class="py-1.5 border-r font-bold">11:35</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">전화</div></td>
+                                <td class="py-1.5 border-r font-bold">김민수</td><td class="py-1.5 border-r">010-1333-0379</td><td class="py-1.5 border-r text-[9px]">단종택</td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            
+                            <!-- Selected Row Highlight -->
+                            <tr class="border-b border-gray-200 bg-[#e0e7ff] border-blue-400 shadow-sm relative z-10">
+                                <td class="py-1.5 border-r border-blue-200 text-blue-500 font-bold">7</td><td class="py-1.5 border-r border-blue-200 font-bold text-gray-800">11:35</td>
+                                <td class="py-1.5 border-r border-blue-200"><div class="bg-blue-600 text-white rounded text-[9px] mx-1 shadow-sm">실시간</div></td>
+                                <td class="py-1.5 border-r border-blue-200 font-bold">강호동</td><td class="py-1.5 border-r border-blue-200">010-6350-1475</td><td class="py-1.5 border-r border-blue-200"></td><td class="py-1.5 border-r border-blue-200">4</td><td class="py-1.5 border-r border-blue-200 text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5 border-blue-200 relative"><input type="checkbox" checked class="accent-blue-600"></td>
+                            </tr>
+                            
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-1.5 border-r text-gray-400">8</td><td class="py-1.5 border-r font-medium">11:50</td>
+                                <td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r text-gray-400 text-right pr-2">190,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-1.5 border-r text-gray-400">9</td><td class="py-1.5 border-r font-medium">11:55</td>
+                                <td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r text-gray-400 text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- COURSE C -->
+            <div class="flex-1 bg-white border border-gray-300 rounded shadow-sm flex flex-col min-w-0 overflow-hidden">
+                <div class="flex justify-between items-center bg-[#f8fafc] border-b border-gray-200 px-3 py-1.5 shrink-0">
+                    <span class="font-bold text-blue-700 text-xs">COURSE C</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-gray-500 border border-gray-300 bg-white px-1.5 rounded">예약: <span class="text-blue-600 font-bold">12/2</span></span>
+                        <i data-lucide="maximize-2" class="w-3 h-3 text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto scrollbar-hide">
+                    <table class="w-full text-center table-fixed border-collapse text-[10px]">
+                        <colgroup><col class="w-6"><col class="w-10"><col class="w-14"><col class="w-12"><col class="w-20"><col class="w-10"><col class="w-6"><col class="w-14"><col class="w-6"></colgroup>
+                        <thead class="bg-[#f1f5f9] sticky top-0 border-b border-gray-300 text-gray-600 shadow-sm z-10">
+                            <tr><th class="py-1 border-r">No</th><th class="py-1 border-r">시간</th><th class="py-1 border-r">채널</th><th class="py-1 border-r">예약자명</th><th class="py-1 border-r">전화번호</th><th class="py-1 border-r">연단체</th><th class="py-1 border-r">인</th><th class="py-1 border-r">요금</th><th class="py-1"><input type="checkbox" class="accent-blue-600"></th></tr>
+                        </thead>
+                        <tbody>
+                            <!-- Yellow -->
+                            <tr class="border-b border-gray-200 bg-[#fef9c3]">
+                                <td class="py-1.5 border-r text-gray-400">1</td><td class="py-1.5 border-r font-bold">15:00</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">전화</div></td>
+                                <td class="py-1.5 border-r font-bold">정광수</td><td class="py-1.5 border-r">010-8586-7114</td><td class="py-1.5 border-r text-[9px]"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-1.5 border-r text-gray-400">2</td><td class="py-1.5 border-r font-medium">15:07</td>
+                                <td class="py-1.5 border-r flex justify-center gap-0.5"><i data-lucide="monitor" class="w-3 h-3 text-gray-400"></i><i data-lucide="phone" class="w-3 h-3 text-gray-400"></i></td>
+                                <td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r text-gray-400 text-right pr-2">190,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            
+                            <!-- Purple (Join) -->
+                            <tr class="border-b border-gray-200 bg-[#f3e8ff]">
+                                <td class="py-1.5 border-r text-gray-400">3</td><td class="py-1.5 border-r font-bold">15:14</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">실시간</div></td>
+                                <td class="py-1.5 border-r font-bold">소율진</td><td class="py-1.5 border-r">010-5586-8832</td><td class="py-1.5 border-r text-[9px]"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f3e8ff]">
+                                <td class="py-1.5 border-r text-gray-400">4</td><td class="py-1.5 border-r font-bold">15:21</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">매니저</div></td>
+                                <td class="py-1.5 border-r font-bold">배지일</td><td class="py-1.5 border-r">010-8264-9573</td><td class="py-1.5 border-r text-[9px]"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f3e8ff]">
+                                <td class="py-1.5 border-r text-gray-400">5</td><td class="py-1.5 border-r font-bold">15:28</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">전화</div></td>
+                                <td class="py-1.5 border-r font-bold">송윤진</td><td class="py-1.5 border-r">010-6176-6780</td><td class="py-1.5 border-r text-[9px]"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f3e8ff]">
+                                <td class="py-1.5 border-r text-gray-400">6</td><td class="py-1.5 border-r font-bold">15:35</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">전화</div></td>
+                                <td class="py-1.5 border-r font-bold">정일훈</td><td class="py-1.5 border-r">010-4176-6770</td><td class="py-1.5 border-r text-[9px]"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f3e8ff]">
+                                <td class="py-1.5 border-r text-gray-400">7</td><td class="py-1.5 border-r font-bold">15:42</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">전화</div></td>
+                                <td class="py-1.5 border-r font-bold">정승수</td><td class="py-1.5 border-r">010-6876-6770</td><td class="py-1.5 border-r text-[9px]"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            
+                            <!-- Divider -->
+                            <tr class="bg-[#e2e8f0] border-y border-gray-300">
+                                <td colspan="9" class="py-1 text-center font-bold text-gray-500 tracking-widest text-[9px]">PART 1 시행</td>
+                            </tr>
+                            
+                            <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                <td class="py-1.5 border-r text-gray-400">8</td><td class="py-1.5 border-r font-medium">11:00</td>
+                                <td class="py-1.5 border-r flex justify-center gap-0.5"><i data-lucide="monitor" class="w-3 h-3 text-gray-400"></i><i data-lucide="phone" class="w-3 h-3 text-gray-400"></i></td>
+                                <td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r"></td><td class="py-1.5 border-r text-gray-400 text-right pr-2">190,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                            <tr class="border-b border-gray-200 bg-[#f1f5f9]">
+                                <td class="py-1.5 border-r text-gray-400">9</td><td class="py-1.5 border-r font-bold">11:25</td>
+                                <td class="py-1.5 border-r"><div class="bg-blue-600 text-white rounded text-[9px] mx-1">모바일</div></td>
+                                <td class="py-1.5 border-r font-bold">배지훈</td><td class="py-1.5 border-r">010-5558-4072</td><td class="py-1.5 border-r text-[9px]"></td><td class="py-1.5 border-r">4</td><td class="py-1.5 border-r text-red-600 font-bold text-right pr-2">170,000</td><td class="py-1.5"><input type="checkbox" class="accent-blue-600"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- 2-5. Bottom Detail Panel -->
+        <div class="bg-white border-t-2 border-gray-300 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] flex flex-col z-20 shrink-0 relative h-[155px]">
+            
+            <!-- Panel Toggle Button -->
+            <div class="absolute right-6 -top-[14px] z-30">
+                <button class="w-[60px] h-[14px] bg-[#f8f9fa] border border-gray-300 border-b-0 rounded-t-lg flex flex-col items-center justify-center gap-[2px] hover:bg-gray-100 transition-colors shadow-sm">
+                    <div class="w-6 h-[2px] bg-gray-400 rounded-full"></div>
+                    <div class="w-6 h-[2px] bg-gray-400 rounded-full"></div>
+                </button>
+            </div>
+
+            <!-- Panel Header -->
+            <div class="flex items-center justify-between border-b border-gray-200 bg-[#f8fafc] shrink-0 h-[40px]">
+                <div class="flex items-center gap-2 pl-2">
+                    <button class="bg-blue-600 text-white px-5 py-1.5 rounded text-xs font-bold shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-1.5">
+                        <i data-lucide="save" class="w-3.5 h-3.5"></i> 저장(F4)
+                    </button>
+                    <span class="bg-gray-700 text-white px-2 py-1 text-[10px] font-bold rounded-sm shadow-sm tracking-wide">예약 정보 수정</span>
+                    <span class="font-bold text-blue-900 text-[11px] tracking-tight pl-1">2026-02-21 | COURSE A | 07:24</span>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="flex items-center gap-1.5 pr-4">
+                    <button class="border border-red-300 text-red-600 bg-white px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1 shadow-sm"><i data-lucide="x-circle" class="w-3.5 h-3.5"></i> 예약취소</button>
+                    <button class="border border-gray-300 bg-white text-gray-700 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 shadow-sm"><i data-lucide="plus" class="w-3.5 h-3.5"></i> 추가</button>
+                    <button class="border border-gray-300 bg-white text-gray-700 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 shadow-sm"><i data-lucide="copy" class="w-3.5 h-3.5"></i> 복사</button>
+                    <div class="w-px h-4 bg-gray-300 mx-0.5"></div>
+                    <button class="border border-gray-300 bg-white text-gray-700 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 shadow-sm"><i data-lucide="eye-off" class="w-3.5 h-3.5"></i> 숨김</button>
+                    <button class="border border-gray-300 bg-white text-gray-700 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 shadow-sm"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 삭제</button>
+                    <div class="w-px h-4 bg-gray-300 mx-0.5"></div>
+                    <button class="border border-blue-300 bg-blue-50 text-blue-700 px-2.5 py-1 rounded text-xs font-bold flex items-center gap-1 shadow-sm"><i data-lucide="users" class="w-3.5 h-3.5"></i> 단체등록</button>
+                    <button class="border border-gray-300 bg-white text-gray-700 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 shadow-sm"><i data-lucide="list-plus" class="w-3.5 h-3.5"></i> 다중등록</button>
+                    <button class="border border-gray-300 bg-white text-gray-700 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 shadow-sm"><i data-lucide="corner-down-right" class="w-3.5 h-3.5"></i> 넘도기</button>
+                    <button class="border border-gray-300 bg-white text-gray-700 px-2.5 py-1 rounded text-xs font-medium flex items-center gap-1 shadow-sm"><i data-lucide="file-clock" class="w-3.5 h-3.5"></i> 로그</button>
+                </div>
+            </div>
+
+            <!-- Form Grid Area -->
+            <div class="flex-1 bg-white p-4 flex gap-6 overflow-hidden">
+                <!-- Col 1: Profile -->
+                <div class="flex flex-col gap-2 w-[220px] shrink-0">
+                    <div class="flex gap-3">
+                        <div class="w-16 h-20 bg-gray-100 border border-gray-300 rounded flex items-center justify-center text-gray-300 shadow-inner">
+                            <i data-lucide="user" class="w-10 h-10"></i>
+                        </div>
+                        <div class="flex-1 flex flex-col gap-1.5 justify-center">
+                            <div class="flex items-center gap-2"><span class="form-label w-12">성명</span><input class="form-input flex-1 w-full bg-gray-50 text-gray-800 font-bold" value="강호동"/></div>
+                            <div class="flex items-center gap-2"><span class="form-label w-12">전화번호</span><input class="form-input flex-1 w-full" value="010-45600"/></div>
+                            <div class="flex items-center gap-2"><span class="form-label w-12">회원정보</span><input class="form-input flex-1 w-full text-blue-600 font-bold bg-blue-50 border-blue-200" value="정기점회원" readonly/></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1"><span class="form-label w-16 text-left pl-1">장애인</span><input class="form-input flex-1" /></div>
+                </div>
+
+                <!-- Col 2: Info -->
+                <div class="flex flex-col gap-2.5 w-[240px] shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14 text-red-600">회원정보</span>
+                        <input class="form-input w-16 font-bold" value="강호동"/>
+                        <div class="flex border border-gray-300 rounded bg-white overflow-hidden flex-1 shadow-sm focus-within:border-blue-400">
+                            <button class="bg-gray-100 px-1 text-gray-500 border-r border-gray-300"><i data-lucide="search" class="w-3 h-3"></i></button>
+                            <input class="w-full px-1.5 outline-none text-[10px]" value="901723000"/>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14 text-red-600">전화번호</span>
+                        <input class="form-input flex-1 font-bold" value="010-4260-1575"/>
+                        <button class="bg-blue-600 text-white rounded px-2 py-0.5 text-[9px] shadow-sm flex items-center gap-1 font-bold"><i data-lucide="message-square" class="w-2.5 h-2.5"></i> SMS</button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">단체팀명</span>
+                        <div class="flex border border-gray-300 rounded bg-white overflow-hidden flex-1 shadow-sm focus-within:border-blue-400">
+                            <input class="w-full px-1.5 outline-none text-[10px]"/>
+                            <button class="bg-gray-100 px-1.5 text-gray-500 border-l border-gray-300"><i data-lucide="search" class="w-3 h-3"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                        <span class="form-label w-14">시간</span>
+                        <input class="form-input w-16 bg-gray-100 font-bold text-center" value="11:42" readonly/>
+                        <button class="border border-gray-300 rounded px-3 py-0.5 text-[10px] bg-gray-50 text-gray-600 shadow-sm">변경</button>
+                    </div>
+                </div>
+
+                <!-- Col 3: Detail -->
+                <div class="flex flex-col gap-2.5 w-[200px] shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">위임자명</span>
+                        <div class="flex border border-gray-300 rounded bg-white overflow-hidden flex-1 shadow-sm focus-within:border-blue-400">
+                            <input class="w-full px-1.5 outline-none text-[10px]"/>
+                            <button class="bg-gray-100 px-1 text-gray-500 border-l border-gray-300"><i data-lucide="search" class="w-3 h-3"></i></button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">전화번호</span>
+                        <input class="form-input flex-1"/>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">캐디</span>
+                        <select class="form-input flex-1"><option>동주모디번</option></select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14 text-red-600">홀</span>
+                        <select class="form-input flex-1"><option>18홀</option></select>
+                    </div>
+                </div>
+
+                <!-- Col 4: Additional -->
+                <div class="flex flex-col gap-2.5 w-[160px] shrink-0">
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14 text-gray-700">인원</span>
+                        <select class="form-input flex-1"><option>4</option></select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">주주환</span>
+                        <select class="form-input flex-1"><option>13급</option></select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">특별할인</span>
+                        <select class="form-input flex-1"><option>모두가</option></select>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">오픈회명<br><span class="text-[9px] text-gray-400">(선택)</span></span>
+                        <input class="form-input flex-1"/>
+                    </div>
+                </div>
+
+                <!-- Col 5: Settings -->
+                <div class="flex flex-col gap-2.5 w-[160px] shrink-0 border-r border-gray-200 pr-6">
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">오픈조건</span>
+                        <input class="form-input flex-1 bg-gray-50" value="정보" readonly/>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">오픈/기</span>
+                        <input class="form-input flex-1"/>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="form-label w-14">카트</span>
+                        <select class="form-input flex-1"><option>1</option></select>
+                    </div>
+                </div>
+
+                <!-- Col 6: Price & Status -->
+                <div class="flex flex-col gap-2.5 flex-1 min-w-[200px]">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-1">
+                            <span class="form-label w-14 text-blue-600 font-bold">예약/TCG</span>
+                            <select class="form-input flex-1 border-blue-300 bg-blue-50 font-bold"><option>TCG</option></select>
+                        </div>
+                        <label class="flex items-center gap-1 cursor-pointer ml-4"><input type="checkbox" class="accent-blue-600 w-3.5 h-3.5"/> 우천</label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-1">
+                            <span class="form-label w-14 text-blue-600 font-bold">예약요금</span>
+                            <input class="form-input w-20 text-right text-red-600 font-bold" value="210,000"/>
+                            <input class="form-input w-16 text-right text-red-600 font-bold bg-red-50 border-red-200" value="50,000"/>
+                        </div>
+                        <label class="flex items-center gap-1 cursor-pointer text-red-600 font-bold ml-4"><input type="checkbox" class="accent-red-600 w-3.5 h-3.5"/> NoShow</label>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-1">
+                            <span class="form-label w-14 text-gray-700">예약자명</span>
+                            <input class="form-input w-12 bg-gray-100 text-center font-mono" value="0014" readonly/>
+                            <label class="flex items-center gap-1 cursor-pointer ml-2"><input type="checkbox" class="accent-blue-600 w-3 h-3"/> 조인</label>
+                        </div>
+                        <span class="text-blue-600 font-bold ml-4 cursor-pointer hover:underline">예약AG</span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1 w-full justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="form-label w-14 text-gray-700">주차장</span>
+                            <select class="form-input w-16"><option>입고</option></select>
+                            <label class="flex items-center gap-1 cursor-pointer ml-2 text-gray-600"><input type="checkbox" class="accent-blue-600 w-3 h-3"/> 표시</label>
+                        </div>
+                        <span class="text-[10px] text-gray-400 font-mono tracking-tighter">예약일시: 2023-02-21 07:15:17</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Lucide Icon Initialization -->
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>
