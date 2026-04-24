@@ -155,6 +155,7 @@
       const [adminKey, setAdminKey] = useState(initAdminKey);
       
       const [isAdmin, setIsAdmin] = useState(() => {
+        if (!initRoomId) return true; // 방을 새로 파는 경우 무조건 방장 권한 부여
         if (initAdminKey) {
           if (initRoomId) localStorage.setItem(`golf_admin_${initRoomId}`, 'true');
           return true;
@@ -348,7 +349,47 @@
         return () => clearTimeout(timer);
       }, [step, players, holes, currentHole, startTime, gaepyungRate, isRoundThousand, birdieRule, eagleRule, nearRule, longestRule, currentPar, currentScores, currentNear, isReverseNear, currentLongest, isReverseLongest, multiplier, multiplierReason, hasManualMultiplier, currentExcluded, isHoleExcluded, user, roomId, isAdmin, adminKey]);
 
-      // 계산 로직들
+      // =====================================================================
+      // ★ 비즈니스 로직 및 계산 ★
+      // =====================================================================
+      const checkAutoDouble = (targetScores, targetPar, rules, prevHoleForTie, excludedArr) => {
+        if (!targetScores) return { isDbl: false, reason: '' };
+        let isDbl = false;
+        let reason = '';
+        const excluded = excludedArr || [false, false, false, false];
+        const activeScores = targetScores.filter((_, idx) => !excluded[idx]);
+        
+        if (activeScores.length === 0) return { isDbl: false, reason: '' };
+        
+        if (rules.birdie && activeScores.some(s => s <= targetPar - 1)) { isDbl = true; reason = '버디이상'; }
+        else if (rules.triple && targetPar >= 4 && activeScores.some(s => s >= targetPar + 3)) { isDbl = true; reason = '트리플이상'; }
+        else if (rules.doublePar3 && targetPar === 3 && activeScores.some(s => s >= targetPar + 2)) { isDbl = true; reason = '더블이상'; }
+        else if (rules.threeTie) {
+          const counts = {};
+          activeScores.forEach(s => counts[s] = (counts[s] || 0) + 1);
+          if (Object.values(counts).some(c => c === 3 && activeScores.length >= 4)) { isDbl = true; reason = '3인동타'; }
+        }
+        
+        if (!isDbl && rules.prevTie && prevHoleForTie) {
+          const prevExcluded = prevHoleForTie.excluded || [false, false, false, false];
+          const prevActiveScores = prevHoleForTie.scores.filter((_, idx) => !prevExcluded[idx]);
+          if (prevActiveScores.length > 1) {
+            const allTied = prevActiveScores.every(s => s === prevActiveScores[0]);
+            if (allTied) { isDbl = true; reason = '이전홀무승부'; }
+          }
+        }
+        return { isDbl, reason };
+      };
+
+      useEffect(() => {
+        if (!hasManualMultiplier && doubleRules.timing === 'current' && step === 'play' && !isHoleExcluded) {
+          const prevHole = currentHole > 0 ? holes[currentHole - 1] : null;
+          const result = checkAutoDouble(currentScores, currentPar, doubleRules, prevHole, currentExcluded);
+          setMultiplier(result.isDbl ? 2 : 1);
+          setMultiplierReason(result.reason);
+        }
+      }, [currentScores, currentPar, currentExcluded, doubleRules, hasManualMultiplier, currentHole, step, holes, isHoleExcluded]);
+
       const actualCourseName = selectedCourseId === 'custom' ? customCourseName : (GOLF_COURSES.find(c => c.id === selectedCourseId)?.name || '');
       const actualFrontName = selectedCourseId === 'custom' ? customFrontName : frontNineId;
       const actualBackName = selectedCourseId === 'custom' ? customBackName : backNineId;
@@ -572,14 +613,29 @@
         const ex = holes[idx];
         if (ex) {
           setCurrentPar(ex.par); setCurrentScores([...ex.scores]);
-          setMultiplier(ex.multiplier||1); setCurrentExcluded(ex.excluded||[false,false,false,false]);
+          setMultiplier(ex.multiplier||1); setMultiplierReason(ex.multiplierReason||''); setCurrentExcluded(ex.excluded||[false,false,false,false]);
           setIsHoleExcluded(ex.isHoleExcluded||false); setCurrentNear(ex.near); setIsReverseNear(ex.isReverseNear);
           setCurrentLongest(ex.longest); setIsReverseLongest(ex.isReverseLongest);
+          setHasManualMultiplier(ex.hasManualMultiplier||false);
         } else {
           const p = coursePars[idx]||4;
           setCurrentPar(p); setCurrentScores([p,p,p,p]);
-          setMultiplier(1); setCurrentExcluded([...globalExcluded]); setIsHoleExcluded(false);
+          
+          let initialMultiplier = 1;
+          let initialReason = '';
+          const prevHole = idx > 0 ? holes[idx - 1] : null;
+          if (doubleRules.timing === 'prev' && prevHole) {
+              const autoDbl = checkAutoDouble(prevHole.scores, prevHole.par, doubleRules, prevHole, prevHole.excluded);
+              if (autoDbl.isDbl) {
+                  initialMultiplier = 2;
+                  initialReason = autoDbl.reason;
+              }
+          }
+          
+          setMultiplier(initialMultiplier); setMultiplierReason(initialReason);
+          setCurrentExcluded([...globalExcluded]); setIsHoleExcluded(false);
           setCurrentNear(null); setIsReverseNear(false); setCurrentLongest(null); setIsReverseLongest(false);
+          setHasManualMultiplier(false);
         }
       };
 
@@ -668,10 +724,12 @@
                           onBlur={(e)=>{if(!e.target.value.trim()) updatePlayerName(idx, DEFAULT_PLAYERS[idx]);}} 
                           className="w-full bg-transparent text-[15px] font-bold text-gray-800 placeholder-gray-400 outline-none truncate" 
                           placeholder={DEFAULT_PLAYERS[idx]} 
+                          onTouchStart={(e) => e.stopPropagation()} 
+                          onMouseDown={(e) => e.stopPropagation()} 
                         />
                       </div>
                       <div className="relative w-24 shrink-0 bg-white border border-gray-200 rounded-[12px] flex items-center px-3 py-2">
-                        <input type="text" inputMode="numeric" value={initialBalances[idx] === 0 ? '' : Number(initialBalances[idx]).toLocaleString()} onChange={(e)=>updateInitialBalance(idx, e.target.value)} className="w-full bg-transparent text-right text-[14px] font-bold text-gray-600 outline-none pr-1" placeholder="0" />
+                        <input type="text" inputMode="numeric" value={initialBalances[idx] === 0 ? '' : Number(initialBalances[idx]).toLocaleString()} onChange={(e)=>updateInitialBalance(idx, e.target.value)} className="w-full bg-transparent text-right text-[14px] font-bold text-gray-600 outline-none pr-1" placeholder="0" onTouchStart={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()} />
                         <span className="text-gray-400 text-[12px] font-bold ml-1">P</span>
                       </div>
                     </div>
