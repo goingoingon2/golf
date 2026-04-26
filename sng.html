@@ -27,6 +27,8 @@
 
     let firebaseConfig = null;
     try {
+      // =================================================================================
+      // ⬇️ 여기에 본인의 파이어베이스(Firebase) 설정 코드를 넣어주세요! ⬇️
       const MY_FIREBASE_CONFIG = {
   apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
   authDomain: "left-right-6da31.firebaseapp.com",
@@ -35,6 +37,7 @@
   messagingSenderId: "128347797181",
   appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
       };
+      // =================================================================================
       if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } 
       else { firebaseConfig = MY_FIREBASE_CONFIG; }
     } catch (e) {}
@@ -703,7 +706,6 @@
               {players.length < 20 && (<button onClick={handleAddTeam} className="w-full mt-2 bg-slate-50 border border-dashed border-slate-300 py-3 rounded-xl text-slate-500 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors active:scale-[0.98]"><Icons.Plus className="w-4 h-4" /> 다음 조 추가하기</button>)}
             </div>
 
-            {/* Action Buttons moved into normal document flow to eliminate empty space */}
             <div className="flex flex-col gap-2 pt-2 pb-8">
               {isRoundStarted && (
                 <div className="flex gap-2 mb-1">
@@ -723,7 +725,7 @@
               <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setConfirmModal(null)} />
               <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up">
                 <h3 className="text-slate-800 font-black text-lg mb-2">{confirmModal === 'reset' ? '새 게임 시작' : '게임 종료'}</h3>
-                <p className="text-slate-600 text-sm mb-6 leading-relaxed">{confirmModal === 'reset' ? '모든 스코어가 초기화됩니다. 정말 새 게임 시작하시겠습니까?' : '진행 중인 게임 조기 종료하고 결과 화면으로 이동하시겠습니까?'}</p>
+                <p className="text-slate-600 text-sm mb-6 leading-relaxed">{confirmModal === 'reset' ? '모든 스코어가 초기화됩니다. 정말 새 게임을 시작하시겠습니까?' : '진행 중인 게임 조기 종료하고 결과 화면으로 이동하시겠습니까?'}</p>
                 <div className="flex gap-3"><button onClick={() => setConfirmModal(null)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl transition-colors">취소</button><button onClick={() => { if (confirmModal === 'reset') onResetGame(); else onEndGame(); setConfirmModal(null); }} className={`flex-1 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors active:scale-95 ${confirmModal === 'reset' ? 'bg-red-500' : 'bg-slate-800'}`}>확인</button></div>
               </div>
             </div>
@@ -768,44 +770,45 @@
       const urlParams = new URLSearchParams(window.location.search);
       const isInviteLink = !!urlParams.get('roomId');
 
-      const [currentView, setCurrentView] = usePersistentState('golf_currentView_v12', isInviteLink ? 'waitingRoom' : 'settings');
-      const [handicapType, setHandicapType] = usePersistentState('golf_handicapType_v12', 'strokes');
-      const [eventName, setEventName] = usePersistentState('golf_eventName_v12', '2026 세대 춘계 라운드');
-      const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo_v12', { name: '청평 마이다스', front: '마이다스 코스', back: '밸리 코스' });
-      const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse_v12', false);
-      const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses_v12', Array(20).fill({front: '마이다스 코스', back: '밸리 코스'}));
+      // 🔥 V13 접미사를 사용하여 유저의 로컬 캐시를 강제 초기화하고 새로운 기본값을 적용합니다.
+      const [currentView, setCurrentView] = usePersistentState('golf_currentView_v13', isInviteLink ? 'waitingRoom' : 'settings');
+      const [handicapType, setHandicapType] = usePersistentState('golf_handicapType_v13', 'strokes');
+      const [eventName, setEventName] = usePersistentState('golf_eventName_v13', '2026 SNG 춘계 라운드');
+      const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo_v13', { name: '청평 마이다스', front: '마이다스 코스', back: '밸리 코스' });
+      const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse_v13', false);
+      const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses_v13', Array(20).fill({front: '마이다스 코스', back: '밸리 코스'}));
       
-      const [isRoundStarted, setIsRoundStarted] = usePersistentState('golf_isRoundStarted_v12', false);
+      const [isRoundStarted, setIsRoundStarted] = usePersistentState('golf_isRoundStarted_v13', false);
       
-      const [teamNames, setTeamNames] = usePersistentState('golf_teamNames_v12', ['1조', '2조', '3조', '4조']);
-      const [teamData, setTeamData] = usePersistentState('golf_teamData_v12', getInitialTeams());
-      const [enableTeamComp, setEnableTeamComp] = usePersistentState('golf_enableTeamComp_v12', true);
-      const [enableGroupComp, setEnableGroupComp] = usePersistentState('golf_enableGroupComp_v12', true);
-      const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('golf_teamBalanceMode_v12', 'average');
-      const [customGroups, setCustomGroups] = usePersistentState('golf_customGroups_v12', getInitialGroups());
-      const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('golf_groupBalanceMode_v12', 'average');
-      const [selectedAwards, setSelectedAwards] = usePersistentState('golf_selectedAwards_v12', ALL_AWARDS_KEYS);
-      const [stablefordTitle, setStablefordTitle] = usePersistentState('golf_stablefordTitle_v12', '변형스테이블포드');
-      const [stablefordConfig, setStablefordConfig] = usePersistentState('golf_stablefordConfig_v12', [{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
-      const [specialHoles, setSpecialHoles] = usePersistentState('golf_specialHoles_v12', { nearest: null, longest: null, requirePar: true });
-      const [specialRecords, setSpecialRecords] = usePersistentState('golf_specialRecords_v12', Array(18).fill(null).map(() => ({})));
-      const [currentHole, setCurrentHole] = usePersistentState('golf_currentHole_v12', 1);
+      const [teamNames, setTeamNames] = usePersistentState('golf_teamNames_v13', ['1조', '2조', '3조', '4조']);
+      const [teamData, setTeamData] = usePersistentState('golf_teamData_v13', getInitialTeams());
+      const [enableTeamComp, setEnableTeamComp] = usePersistentState('golf_enableTeamComp_v13', true);
+      const [enableGroupComp, setEnableGroupComp] = usePersistentState('golf_enableGroupComp_v13', true);
+      const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('golf_teamBalanceMode_v13', 'average');
+      const [customGroups, setCustomGroups] = usePersistentState('golf_customGroups_v13', getInitialGroups());
+      const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('golf_groupBalanceMode_v13', 'average');
+      const [selectedAwards, setSelectedAwards] = usePersistentState('golf_selectedAwards_v13', ALL_AWARDS_KEYS);
+      const [stablefordTitle, setStablefordTitle] = usePersistentState('golf_stablefordTitle_v13', '변형스테이블포드');
+      const [stablefordConfig, setStablefordConfig] = usePersistentState('golf_stablefordConfig_v13', [{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
+      const [specialHoles, setSpecialHoles] = usePersistentState('golf_specialHoles_v13', { nearest: null, longest: null, requirePar: true });
+      const [specialRecords, setSpecialRecords] = usePersistentState('golf_specialRecords_v13', Array(18).fill(null).map(() => ({})));
+      const [currentHole, setCurrentHole] = usePersistentState('golf_currentHole_v13', 1);
       
-      const [allPars, setAllPars] = usePersistentState('golf_allPars_v12', []);
-      const [allScores, setAllScores] = usePersistentState('golf_allScores_v12', []);
-      const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam_v12', 0);
-      const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened_v12', false);
-      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole_v12', isInviteLink ? 'guest' : 'host');
-      const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo_v12', null);
-      const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus_v12', []);
-      const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors_v12', {});
-      const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission_v12', 'all');
-      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers_v12', []);
+      const [allPars, setAllPars] = usePersistentState('golf_allPars_v13', []);
+      const [allScores, setAllScores] = usePersistentState('golf_allScores_v13', []);
+      const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam_v13', 0);
+      const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened_v13', false);
+      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole_v13', isInviteLink ? 'guest' : 'host');
+      const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo_v13', null);
+      const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus_v13', []);
+      const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors_v13', {});
+      const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission_v13', 'host');
+      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers_v13', []);
 
       const [previousView, setPreviousView] = useState('scoreInput');
       const [detailModal, setDetailModal] = useState(null);
       const [isAwardInfoOpen, setIsAwardInfoOpen] = useState(false);
-      const [roomId, setRoomId] = usePersistentState('golf_roomId_v12', null);
+      const [roomId, setRoomId] = usePersistentState('golf_roomId_v13', null);
       const manuallyClearedRef = useRef({});
       const [isDbConnected, setIsDbConnected] = useState(false);
       const [user, setUser] = useState(null);
