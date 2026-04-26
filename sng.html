@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>제5회 SNG 자진 골프대회</title>
+  <title>단체팀 스코어보드 프로</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -27,10 +27,6 @@
 
     let firebaseConfig = null;
     try {
-      // =================================================================================
-      // ⬇️ 여기에 본인의 파이어베이스(Firebase) 설정 코드를 넣어주세요! ⬇️
-      // Firebase 콘솔 -> 프로젝트 설정 -> 내 앱 -> SDK 설정 및 구성에서 복사한 후 덮어씌웁니다.
-      // =================================================================================
       const MY_FIREBASE_CONFIG = {
   apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
   authDomain: "left-right-6da31.firebaseapp.com",
@@ -39,16 +35,8 @@
   messagingSenderId: "128347797181",
   appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
       };
-      // =================================================================================
-      // ⬆️ 여기까지 ⬆️
-      // =================================================================================
-
-      if (typeof __firebase_config !== 'undefined') { 
-        firebaseConfig = JSON.parse(__firebase_config); 
-      } 
-      else {
-        firebaseConfig = MY_FIREBASE_CONFIG;
-      }
+      if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } 
+      else { firebaseConfig = MY_FIREBASE_CONFIG; }
     } catch (e) {}
 
     const isConfigValid = firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
@@ -74,11 +62,10 @@
       return [state, setState];
     }
 
-    const RANDOM_NAMES_POOL = ["박핀비","고지능영","김쎄영","박쾅현","전온지","김효핀","이정확","유해롱란","박민집중","이글원","박핀경","임정타","홍조준","방롱실","성핀진","황집중민","최정밀","권파워","신나이스","윤정타"];
     const ALL_AWARDS_KEYS = ['전체 순위','신페리오','변형스테이블포드','니어리스트','롱기스트','다버디','다파','다보기','다찐파','다찐보기','다찐양파','널뛰기','시몬스','일취월장','낙차큰커브'];
     const GOLF_COURSES_DATA = [
       { name: "표준 파72 (일반 코스)", courses: { "OUT 코스": [4,4,3,5,4,4,3,5,4], "IN 코스": [4,5,3,4,4,4,5,3,4] } },
-      { name: "청평 마이다스", courses: { "마이다스 코스": [4,5,4,3,4,3,5,4,4], "밸리 코스": [4,4,5,3,4,4,3,5,4] } },
+      { name: "청평 마이다스", courses: { "마이다스 코스": [4,5,3,4,5,4,3,4,4], "밸리 코스": [4,3,4,4,5,4,3,5,4] } },
       { name: "이천 마이다스", courses: { "올림푸스 코스": [4,5,3,4,4,4,3,5,4], "타이탄 코스": [4,4,3,5,4,4,5,3,4], "마이다스 코스": [4,5,4,3,4,3,5,4,4] } },
       { name: "양평TPC", courses: { "루나 코스": [4,4,3,5,4,4,3,5,4], "솔라리스 코스": [4,5,3,4,4,4,5,3,4], "스텔라 코스": [5,4,3,4,4,4,3,5,4] } }
     ];
@@ -129,9 +116,12 @@
       [{ name: "황의홍", handicap: "102" }, { name: "김종빈", handicap: "103" }, { name: "조영광", handicap: "106" }, { name: "피진철", handicap: "110" }],
       [{ name: "이경민", handicap: "112" }, { name: "김형묵", handicap: "100" }, { name: "김휘동", handicap: "115" }, { name: "성기용", handicap: "127" }]
     ];
-    const getInitialGroups = () => [ { id: 'g94', name: '94', members: ['0-0', '1-0', '1-1', '2-2', '3-1'] }, { id: 'g92', name: '92', members: ['0-1', '0-2', '1-3', '2-0', '3-2', '3-3'] }, { id: 'g93', name: '93', members: ['0-3', '1-2', '2-1', '2-3', '3-0'] } ];
-    
-    const getRandomHandicap = () => String(Math.floor(Math.random() * 31) + 80);
+    const getInitialGroups = () => [ 
+      { id: 'g94', name: '94', members: ['0-0', '1-0', '1-1', '2-2', '3-1'] }, 
+      { id: 'g92', name: '92', members: ['0-1', '0-2', '1-3', '2-0', '3-2', '3-3'] }, 
+      { id: 'g93', name: '93', members: ['0-3', '1-2', '2-1', '2-3', '3-0'] } 
+    ];
+
     const safeDisplayDiff = diff => { if (diff == null || isNaN(diff)) return '-'; if (diff === 0) return 'E'; return diff > 0 ? `+${Math.round(diff)}` : String(Math.round(diff)); };
     const safeDisplayNet = netDiff => { if (netDiff == null || isNaN(netDiff)) return '-'; const val = parseFloat(netDiff).toFixed(1); if (val === "0.0" || val === "-0.0") return 'E'; return netDiff > 0 ? `+${val}` : String(val); };
 
@@ -170,6 +160,54 @@
       );
     }
 
+    function ScorePasteModal({ isOpen, onClose, allScores, setAllScores, teamData, syncToDB }) {
+      const [jsonStr, setJsonStr] = useState('');
+      
+      if (!isOpen) return null;
+
+      const handleApply = () => {
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const newAllScores = [...allScores];
+          if (!parsed.scores || !Array.isArray(parsed.scores)) throw new Error("Invalid format");
+
+          parsed.scores.forEach(playerData => {
+             let foundTIdx = -1, foundPIdx = -1;
+             (teamData || []).forEach((team, tIdx) => { (team || []).forEach((p, pIdx) => { if (p.name === playerData.name) { foundTIdx = tIdx; foundPIdx = pIdx; } }); });
+             
+             if (foundTIdx !== -1 && foundPIdx !== -1) {
+               (playerData.holeScores || []).forEach((score, hIdx) => {
+                 if (hIdx >= 18) return; 
+                 if (score !== null && score !== undefined && typeof score === 'number') {
+                   if (!newAllScores[hIdx]) newAllScores[hIdx] = teamData.map(t => Array(t.length).fill(null));
+                   if (!newAllScores[hIdx][foundTIdx]) newAllScores[hIdx][foundTIdx] = Array(teamData[foundTIdx].length).fill(null);
+                   newAllScores[hIdx][foundTIdx][foundPIdx] = score;
+                 }
+               });
+             }
+          });
+          setAllScores(newAllScores);
+          if(syncToDB) syncToDB({ allScores: newAllScores });
+          alert("스코어가 성공적으로 적용되었습니다!");
+          onClose(); setJsonStr('');
+        } catch(e) {
+          alert("올바르지 않은 형식입니다. AI가 만들어준 JSON 코드를 그대로 붙여넣었는지 확인해주세요.");
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center px-4 font-sans font-pretendard">
+          <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up text-left">
+            <div className="flex items-center justify-between mb-4"><h3 className="text-slate-800 font-black text-lg flex items-center gap-2"><Icons.Zap className="w-5 h-5 text-emerald-500" /> AI 스코어 일괄 입력</h3><button onClick={onClose} className="p-1.5 text-slate-400"><Icons.X className="w-5 h-5" /></button></div>
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed">제미나이(AI)가 추출해준 <b>JSON 코드</b>를 아래 빈칸에 붙여넣고 적용하기를 누르세요. 기존 스코어에 안전하게 덮어씌워집니다.</p>
+            <textarea className="w-full h-40 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0D8A5E]" placeholder='{\n  "scores": [\n    { "name": "진호", "holeScores": [4, 5, 3] }\n  ]\n}' value={jsonStr} onChange={e => setJsonStr(e.target.value)} />
+            <div className="flex gap-3 mt-4"><button onClick={onClose} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl">취소</button><button onClick={handleApply} className="flex-1 bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md active:scale-95 transition-all">적용하기</button></div>
+          </div>
+        </div>
+      );
+    }
+
     function DetailModal({ isOpen, onClose, config }) {
       const [overallTab, setOverallTab] = useState('realtime');
       if (!isOpen || !config) return null;
@@ -179,7 +217,7 @@
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose} />
           <div className="bg-white w-full sm:rounded-[32px] rounded-t-[32px] max-h-[85vh] p-6 relative z-10 shadow-2xl flex flex-col animate-fade-in-up">
             <div className="flex items-center justify-between mb-4 shrink-0"><h3 className="text-slate-800 font-black text-lg flex items-center gap-2"><Icons.Award className="w-5 h-5 text-[#0D8A5E]" /> {String(config.title || '')}</h3><button onClick={onClose} className="p-1.5 text-slate-400 hover:bg-slate-50 rounded-full"><Icons.X className="w-5 h-5" /></button></div>
-            {config.title?.includes('신페리오') && <div className="bg-blue-50 p-4 rounded-xl mb-4 border border-blue-100 text-[11px] text-blue-600 leading-relaxed text-left">임의의 12개 홀 스코어 합산 후 가상 핸디캡(HDCP)을 산출하여 그로스에서 차감합니다.<br/><b>NET = GROSS - HDCP</b></div>}
+            {config.title?.includes('신페리오') && <div className="bg-blue-50 p-4 rounded-xl mb-4 border border-blue-100 text-[11px] text-blue-600 leading-relaxed text-left">임의의 12개 홀 스코어 합산 후 가상 핸디캡(HDCP)을 산출하여 그로스에서 차감합니다.<br/><b>NET = GROSS - 초보자용 임의 적용 핸디캡(HDCP)</b></div>}
             {config.isOverall ? (
               <>
                 <div className="flex bg-slate-100 p-1 rounded-xl mb-3 shrink-0">{['realtime', 'sync', 'prediction'].map(t => (<button key={t} onClick={() => setOverallTab(t)} className={`flex-1 py-2 text-[11px] font-bold rounded-lg transition-colors ${overallTab === t ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500'}`}>{t === 'realtime' ? '실시간' : t === 'sync' ? '동기화' : '예상 기준'}</button>))}</div>
@@ -197,24 +235,20 @@
               <div className="overflow-y-auto flex-1 pr-1 space-y-4 pb-4 no-scrollbar">
                 {config.enableGroupComp && config.groupList && config.groupList.length > 0 && (
                   <div><h4 className="font-bold text-slate-700 text-sm mb-2 flex items-center gap-1.5"><Icons.Users className="w-4 h-4 text-purple-600"/> 그룹별 분석</h4><div className="space-y-3">{config.groupList.map((st, idx) => (
-                        <div key={idx} className="flex flex-col p-4 bg-white border border-slate-100 shadow-sm rounded-xl gap-3 text-left">
-                          <div className="flex items-center gap-2 border-b border-slate-50 pb-2"><span className="font-bold text-sm text-slate-800 shrink-0 truncate">{String(st.name || st.teamName || '-')}</span><span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">평균 {Number(st.avgGross || 0).toFixed(1)}타</span></div>
+                        <div key={idx} className="flex flex-col p-4 bg-white border border-slate-100 shadow-sm rounded-xl gap-3 text-left"><div className="flex items-center gap-2 border-b border-slate-50 pb-2"><span className="font-bold text-sm text-slate-800 shrink-0 truncate">{String(st.name || st.teamName || '-')}</span><span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">평균 {Number(st.avgGross || 0).toFixed(1)}타</span></div>
                           <div className="flex flex-col gap-2 text-xs text-slate-600 min-w-0">
                             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Zap className="w-3.5 h-3.5 text-emerald-500 shrink-0"/> <span className="text-slate-500 font-medium">하드캐리</span> <b className="text-slate-800">{String(st.hardCarry?.name || '-')}</b></span><span className="font-bold text-[#0D8A5E] bg-emerald-50 px-2 py-0.5 rounded">{st.hardCarry?.score || 0}타 ({safeDisplayNet(st.hardCarry?.diffFromAvg)})</span></div>
                             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Coffee className="w-3.5 h-3.5 text-amber-600 shrink-0"/> <span className="text-slate-500 font-medium">국밥말아</span> <b className="text-slate-800">{String(st.bomb?.name || '-')}</b></span><span className="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{st.bomb?.score || 0}타 ({safeDisplayNet(st.bomb?.diffFromAvg)})</span></div>
-                          </div>
-                        </div>
+                          </div></div>
                       ))}</div></div>
                 )}
                 {config.enableTeamComp && config.teamList && config.teamList.length > 0 && (
                   <div><h4 className="font-bold text-slate-700 text-sm mb-2 flex items-center gap-1.5"><Icons.Users className="w-4 h-4 text-[#0D8A5E]"/> 조별 분석</h4><div className="space-y-3">{config.teamList.map((st, idx) => (
-                        <div key={idx} className="flex flex-col p-4 bg-white border border-slate-100 shadow-sm rounded-xl gap-3 text-left">
-                          <div className="flex items-center gap-2 border-b border-slate-50 pb-2"><span className="font-bold text-sm text-slate-800 shrink-0 truncate">{String(st.teamName || st.name || '-')}</span><span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">평균 {Number(st.avgGross || 0).toFixed(1)}타</span></div>
+                        <div key={idx} className="flex flex-col p-4 bg-white border border-slate-100 shadow-sm rounded-xl gap-3 text-left"><div className="flex items-center gap-2 border-b border-slate-50 pb-2"><span className="font-bold text-sm text-slate-800 shrink-0 truncate">{String(st.teamName || st.name || '-')}</span><span className="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded">평균 {Number(st.avgGross || 0).toFixed(1)}타</span></div>
                           <div className="flex flex-col gap-2 text-xs text-slate-600 min-w-0">
                             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Zap className="w-3.5 h-3.5 text-emerald-500 shrink-0"/> <span className="text-slate-500 font-medium">하드캐리</span> <b className="text-slate-800">{String(st.hardCarry?.name || '-')}</b></span><span className="font-bold text-[#0D8A5E] bg-emerald-50 px-2 py-0.5 rounded">{st.hardCarry?.score || 0}타 ({safeDisplayNet(st.hardCarry?.diffFromAvg)})</span></div>
                             <div className="flex items-center justify-between"><span className="flex items-center gap-1.5"><Icons.Coffee className="w-3.5 h-3.5 text-amber-600 shrink-0"/> <span className="text-slate-500 font-medium">국밥말아</span> <b className="text-slate-800">{String(st.bomb?.name || '-')}</b></span><span className="font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded">{st.bomb?.score || 0}타 ({safeDisplayNet(st.bomb?.diffFromAvg)})</span></div>
-                          </div>
-                        </div>
+                          </div></div>
                       ))}</div></div>
                 )}
               </div>
@@ -238,7 +272,7 @@
       );
     }
 
-    function WaitingRoomView({ teamData, currentUserRole, myPlayerInfo, setMyPlayerInfo, joinedStatus, setJoinedStatus, isRoundStarted, onBack, eventName, onStartRound, customGroups, roomId, syncToDB, userUid, scoreInputPermission, scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers, setHostSelectedTeam }) {
+    function WaitingRoomView({ teamData, currentUserRole, myPlayerInfo, setMyPlayerInfo, joinedStatus, setJoinedStatus, isRoundStarted, onBack, eventName, onStartRound, customGroups, roomId, syncToDB, userUid, scoreInputPermission, scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers, setHostSelectedTeam, onSpectate }) {
       const [isModalOpen, setIsModalOpen] = useState(false);
       const pressTimer = useRef(null); const isLongPressRef = useRef(false);
 
@@ -258,41 +292,31 @@
       
       const toggleJoinStatus = (tIdx, pIdx) => {
         if (isLongPressRef.current) { isLongPressRef.current = false; return; }
-        
         if (currentUserRole === 'guest') {
-          const newStatus = joinedStatus.map(row => [...row]); // Deep copy
-          
+          const newStatus = joinedStatus.map(row => [...row]); 
           if (myPlayerInfo && myPlayerInfo.tIdx === tIdx && myPlayerInfo.pIdx === pIdx) {
-            // 본인 선택 취소
-            newStatus[tIdx][pIdx] = null;
-            setJoinedStatus(newStatus);
-            setMyPlayerInfo(null);
-            if(syncToDB) syncToDB({ joinedStatus: newStatus });
+            newStatus[tIdx][pIdx] = null; setJoinedStatus(newStatus); setMyPlayerInfo(null); if(syncToDB) syncToDB({ joinedStatus: newStatus });
           } else {
-            // 💡 [추가] 이미 다른 사람이 선택한 자리면 무시 (가로채기 방지)
-            if (joinedStatus[tIdx]?.[pIdx]) return;
-
-            // 새로운 사람 선택 (기존 선택 해제 후 적용)
+            const slotStatus = joinedStatus[tIdx]?.[pIdx]; if (slotStatus && slotStatus !== 'host_approved') return;
             if (myPlayerInfo) newStatus[myPlayerInfo.tIdx][myPlayerInfo.pIdx] = null;
-            newStatus[tIdx][pIdx] = userUid || 'guest_user';
-            setJoinedStatus(newStatus);
-            setMyPlayerInfo({ tIdx, pIdx });
-            setHostSelectedTeam(tIdx); // 💡 참여자 본인 조 탭으로 초기 세팅
-            if(syncToDB) syncToDB({ joinedStatus: newStatus });
+            newStatus[tIdx][pIdx] = userUid || 'guest_user'; setJoinedStatus(newStatus); setMyPlayerInfo({ tIdx, pIdx }); setHostSelectedTeam(tIdx); if(syncToDB) syncToDB({ joinedStatus: newStatus });
           }
         } else {
-          // 방장 로직 (다수 선택 및 해제 가능)
-          const newStatus = joinedStatus.map(row => [...row]);
-          newStatus[tIdx][pIdx] = newStatus[tIdx][pIdx] ? null : 'host_approved';
-          setJoinedStatus(newStatus);
-          if(syncToDB) syncToDB({ joinedStatus: newStatus });
+          const newStatus = joinedStatus.map(row => [...row]); newStatus[tIdx][pIdx] = newStatus[tIdx][pIdx] ? null : 'host_approved'; setJoinedStatus(newStatus); if(syncToDB) syncToDB({ joinedStatus: newStatus });
         }
       };
 
       return (
         <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] overflow-x-hidden font-sans font-pretendard">
+          <div className="bg-[#0D8A5E] pt-12 pb-10 px-5 text-center rounded-b-[30px] shadow-sm shrink-0">
+            <h1 className="text-2xl font-black text-white tracking-tight truncate px-10">{String(eventName)}</h1><p className="text-emerald-100 text-sm font-medium mt-1">라운드 대기실</p>
+          </div>
           <div className="px-4 pt-6 flex-1 overflow-y-auto no-scrollbar text-left">
-            {isRoundStarted && currentUserRole === 'guest' && <div className="mb-4 bg-amber-50 text-amber-800 p-4 rounded-2xl text-sm text-center border border-amber-200 shadow-sm font-bold animate-pulse">방장이 라운드를 시작했습니다! 본인 이름을 클릭하여 입장하세요.</div>}
+            <div className="mb-6 bg-slate-800 border border-slate-700 p-5 rounded-2xl text-center shadow-lg">
+              <p className="text-slate-300 font-bold text-[13px] mb-3">선수 명단에 없는 갤러리(관전자)이신가요?</p>
+              <button onClick={() => { setMyPlayerInfo(null); if (onSpectate) onSpectate(); }} className="w-full bg-[#0D8A5E] text-white font-black py-4 rounded-xl active:scale-[0.98] transition-all shadow-md flex items-center justify-center gap-2 text-[15px]"><Icons.Activity className="w-5 h-5"/>👀 게스트로 경기 관전하기</button>
+            </div>
+            {isRoundStarted && currentUserRole === 'guest' && <div className="mb-4 bg-amber-50 text-amber-800 p-4 rounded-2xl text-sm text-center border border-amber-200 shadow-sm font-bold animate-pulse">선수 명단에서 본인 이름을 클릭하고 입장하세요.</div>}
             {currentUserRole === 'host' && scoreInputPermission === 'selected' && <div className="mb-4 bg-blue-50 text-blue-800 p-4 rounded-2xl text-xs text-center border border-blue-200 shadow-sm font-bold animate-fade-in-up"><Icons.Info className="w-4 h-4 inline mr-1 -mt-0.5" />권한을 줄 플레이어를 길게 눌러(Long Press) 점수 입력 권한을 부여하세요.</div>}
             <button onClick={() => setIsModalOpen(true)} className="w-full flex items-center justify-center gap-2 bg-white border border-[#A7F3D0] text-[#0D8A5E] font-bold py-4 rounded-2xl mb-6 shadow-sm transition-colors active:scale-[0.98]"><Icons.List className="w-5 h-5" /> 방 초대 코드 / URL 열기</button>
             {(teamData || []).map((team, tIdx) => (
@@ -300,11 +324,7 @@
                 <h3 className="text-slate-500 font-bold text-sm mb-3 pl-2 flex items-center gap-2"><span className="w-1.5 h-1.5 rounded-full bg-slate-300"></span>{tIdx + 1}조</h3>
                 <div className="grid grid-cols-2 gap-3">
                   {(team || []).map((player, pIdx) => {
-                    const isJoined = !!joinedStatus[tIdx]?.[pIdx]; 
-                    const isMe = currentUserRole === 'guest' && myPlayerInfo && tIdx === myPlayerInfo.tIdx && pIdx === myPlayerInfo.pIdx; 
-                    const isAuth = scoreInputPermission === 'selected' && scoreInputAuthorizedPlayers.includes(`${tIdx}-${pIdx}`);
-                    const isTakenByOther = currentUserRole === 'guest' && isJoined && !isMe;
-                    
+                    const slotStatus = joinedStatus[tIdx]?.[pIdx]; const isJoined = !!slotStatus; const isMe = currentUserRole === 'guest' && myPlayerInfo && tIdx === myPlayerInfo.tIdx && pIdx === myPlayerInfo.pIdx; const isAuth = scoreInputPermission === 'selected' && scoreInputAuthorizedPlayers.includes(`${tIdx}-${pIdx}`); const isTakenByOther = currentUserRole === 'guest' && isJoined && !isMe && slotStatus !== 'host_approved';
                     return (
                       <div key={pIdx} onPointerDown={() => handlePointerDown(tIdx, pIdx)} onPointerUp={handlePointerUpOrLeave} onPointerLeave={handlePointerUpOrLeave} onContextMenu={e => e.preventDefault()} onClick={() => toggleJoinStatus(tIdx, pIdx)} className={`relative p-4 rounded-2xl flex flex-col items-center justify-center gap-2 transition-all border-2 select-none ${isJoined ? 'bg-[#F0FDF4] border-[#0D8A5E] shadow-sm' : 'bg-white border-dashed border-slate-200'} ${isMe ? 'ring-2 ring-emerald-400' : ''} ${isTakenByOther ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`} style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}>
                         {isAuth && <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm flex items-center gap-0.5 z-10"><Icons.Edit2 className="w-2.5 h-2.5"/>입력</div>}
@@ -319,20 +339,11 @@
             ))}
           </div>
           <div className="absolute bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-100 flex gap-3 z-10 shadow-up">
-            {currentUserRole === 'host' && <button onClick={onBack} className="flex-1 bg-[#F1F3F5] text-slate-600 font-bold py-4 rounded-2xl hover:bg-slate-200 transition-colors">설정으로</button>}
-            
+            {currentUserRole === 'host' && <button onClick={onBack} className="flex-1 bg-[#F1F3F5] text-slate-600 font-bold py-4 rounded-2xl hover:bg-slate-200 transition-colors shadow-sm active:scale-95">설정으로</button>}
             {currentUserRole === 'host' ? (
-              <button onClick={onStartRound} className="flex-[2] bg-[#0D8A5E] text-white shadow-lg font-bold py-4 rounded-2xl active:scale-95 transition-all">
-                {isRoundStarted ? '스코어 입력으로 돌아가기' : `${joinedCount}/${totalPlayers} 명 라운드 시작`}
-              </button>
+              <button onClick={onStartRound} className="flex-[2] bg-[#0D8A5E] text-white shadow-lg font-bold py-4 rounded-2xl active:scale-95 transition-all">{isRoundStarted ? '스코어 화면으로 입장하기' : `${joinedCount}/${totalPlayers} 명 라운드 시작`}</button>
             ) : (
-              <button 
-                onClick={() => { if (myPlayerInfo) onStartRound(); }} 
-                disabled={!myPlayerInfo} 
-                className={`flex-[2] font-bold py-4 rounded-2xl transition-all ${myPlayerInfo ? 'bg-[#0D8A5E] text-white shadow-lg active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}
-              >
-                {isRoundStarted && myPlayerInfo ? '스코어 입력으로 돌아가기' : '라운드 참여하기'}
-              </button>
+              <div className="flex gap-2 w-full"><button onClick={() => { setMyPlayerInfo(null); if (onSpectate) onSpectate(); }} className="flex-1 bg-[#F1F3F5] text-slate-600 font-bold py-4 rounded-2xl hover:bg-slate-200 transition-colors shadow-sm active:scale-95 text-sm">구경하기</button><button onClick={() => { if (myPlayerInfo) onStartRound(); }} disabled={!myPlayerInfo} className={`flex-[2] font-bold py-4 rounded-2xl transition-all text-sm ${myPlayerInfo ? 'bg-[#0D8A5E] text-white shadow-lg active:scale-95' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>{isRoundStarted && myPlayerInfo ? '선수로 입장' : '이름 선택 후 입장'}</button></div>
             )}
           </div>
           <ShareModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} roomId={roomId} />
@@ -340,22 +351,17 @@
       );
     }
 
-    function ScoreInputView({ teamNames, teamData, isMultiCourse, teamCourses, courseInfo, currentUserRole, myPlayerInfo, hostSelectedTeam, setHostSelectedTeam, allPars, setAllPars, allScores, setAllScores, specialHoles, specialRecords, setSpecialRecords, eventName, scoreInputPermission, scoreInputAuthorizedPlayers, lastEditors, setLastEditors, customGroups, onGoToSettings, onGoToWaitingRoom, onOpenScoreboard, onOpenAwards, currentHole, setCurrentHole, manuallyClearedRef, syncToDB }) {
-      const isHost = currentUserRole === 'host'; 
-      // 💡 [조회 및 렌더링 기준 조]: 방장이 선택한 조 또는 게스트가 직접 탭으로 선택한 조
-      const teamIndex = hostSelectedTeam; 
-      const myTeam = teamData[teamIndex] || []; 
-      const scores = allScores[currentHole-1]?.[teamIndex] || Array(myTeam.length).fill(null); 
-      const par = allPars[teamIndex]?.[currentHole-1] || 4;
-      
-      // 💡 [권한 체크]: 방장이거나, 현재 보고 있는 화면이 '본인 조'이면서 권한이 있는 경우에만 수정 가능
+    function ScoreInputView({ teamNames, teamData, isMultiCourse, teamCourses, courseInfo, currentUserRole, myPlayerInfo, hostSelectedTeam, setHostSelectedTeam, allPars, setAllPars, allScores, setAllScores, specialHoles, specialRecords, setSpecialRecords, eventName, scoreInputPermission, scoreInputAuthorizedPlayers, lastEditors, setLastEditors, customGroups, onGoToSettings, onGoToWaitingRoom, onOpenScoreboard, onOpenAwards, currentHole, setCurrentHole, manuallyClearedRef, syncToDB, isRoundStarted }) {
+      const isHost = currentUserRole === 'host'; const teamIndex = hostSelectedTeam; const myTeam = teamData[teamIndex] || []; const scores = allScores[currentHole-1]?.[teamIndex] || Array(myTeam.length).fill(null); const par = allPars[teamIndex]?.[currentHole-1] || 4;
       const canEdit = isHost || (myPlayerInfo && teamIndex === myPlayerInfo.tIdx && (scoreInputPermission === 'all' || (scoreInputPermission === 'selected' && scoreInputAuthorizedPlayers.includes(`${myPlayerInfo.tIdx}-${myPlayerInfo.pIdx}`))));
-      
-      const tCourse = isMultiCourse ? teamCourses[teamIndex] : courseInfo; 
-      const currentPhysicalCourse = currentHole <= 9 ? tCourse.front : tCourse.back; 
-      const currentPhysicalHole = currentHole <= 9 ? currentHole : currentHole - 9;
-      const isNearestHole = specialHoles.nearest && specialHoles.nearest.course === currentPhysicalCourse && specialHoles.nearest.hole === currentPhysicalHole;
-      const isLongestHole = specialHoles.longest && specialHoles.longest.course === currentPhysicalCourse && specialHoles.longest.hole === currentPhysicalHole;
+      const tCourse = isMultiCourse ? teamCourses[teamIndex] : courseInfo; const currentPhysicalCourse = currentHole <= 9 ? tCourse.front : tCourse.back; const currentPhysicalHole = currentHole <= 9 ? currentHole : currentHole - 9;
+      const isNearestHole = specialHoles.nearest && specialHoles.nearest.course === currentPhysicalCourse && specialHoles.nearest.hole === currentPhysicalHole; const isLongestHole = specialHoles.longest && specialHoles.longest.course === currentPhysicalCourse && specialHoles.longest.hole === currentPhysicalHole;
+
+      if (!isRoundStarted || !allPars || allPars.length === 0) {
+         return (
+           <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8F9FA] px-6 text-center font-sans font-pretendard"><Icons.Flag className="w-16 h-16 text-slate-300 mb-4" /><h2 className="text-xl font-bold text-slate-700 mb-2">라운드 준비 중입니다</h2><p className="text-slate-500 text-sm mb-8">방장이 아직 라운드를 시작하지 않았습니다.<br/>잠시 후 다시 확인해주세요.</p><button onClick={onGoToWaitingRoom} className="bg-[#0D8A5E] text-white px-6 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all">대기실로 돌아가기</button></div>
+         );
+      }
 
       useEffect(() => {
         if (!canEdit || !allScores[currentHole - 1]) return;
@@ -392,12 +398,10 @@
       const nRec = teamSpecials.nearest; const nScoreDiff = nRec?.pIdx != null && scores[nRec.pIdx] !== null ? scores[nRec.pIdx] - par : null; const nIsInvalid = specialHoles.requirePar && nScoreDiff > 0 && nRec?.isPar !== true;
       const lRec = teamSpecials.longest; const lScoreDiff = lRec?.pIdx != null && scores[lRec.pIdx] !== null ? scores[lRec.pIdx] - par : null; const lIsInvalid = specialHoles.requirePar && lScoreDiff > 0 && lRec?.isPar !== true;
 
-      // 💡 hostSelectedTeam 변수명을 상태 관리와 독립적으로 활용 (게스트도 탭을 눌러 다른 조 열람)
-      // 게스트 시점에서는 렌더링용 임시 변수로 사용하기 위해 useEffect로 myPlayerInfo.tIdx 초기화
-      useEffect(() => { if (!isHost && myPlayerInfo) { setHostSelectedTeam(myPlayerInfo.tIdx); } }, [isHost, myPlayerInfo]);
+      useEffect(() => { if (!isHost && myPlayerInfo && hostSelectedTeam === 0 && myPlayerInfo.tIdx !== 0) { setHostSelectedTeam(myPlayerInfo.tIdx); } }, [isHost, myPlayerInfo]);
 
       return (
-        <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] font-sans">
+        <div className="flex flex-col min-h-screen pb-24 relative bg-[#F8F9FA] font-sans font-pretendard">
           <div className="bg-[#0D8A5E] pt-12 pb-16 px-5 text-center rounded-b-[30px] shrink-0 relative flex items-start justify-between shadow-lg">
             <button onClick={onOpenAwards} className="p-2 -ml-1 mt-1 hover:bg-black/10 rounded-lg relative z-20 transition-colors"><Icons.Award className="w-6 h-6 text-amber-400"/></button>
             <div className="flex flex-col items-center absolute left-1/2 -translate-x-1/2 top-11 text-center"><span className="text-emerald-100/90 text-[11px] font-bold truncate max-w-[140px] mb-0.5">{String(eventName)}</span><div className="flex items-center gap-2 justify-center"><span className="text-3xl font-black text-white">{currentHole}H</span>{canEdit && <button onClick={handleResetCurrentHole} className="text-[10px] bg-white/20 text-white font-bold px-2.5 py-1 rounded-full hover:bg-white/30 transition-colors active:scale-95 ml-1 border border-white/20">초기화</button>}</div></div>
@@ -421,7 +425,7 @@
               <div className="bg-white rounded-[16px] p-1 shadow-sm flex flex-1 min-w-0 overflow-hidden">
                 <div className="flex justify-start gap-1 overflow-x-auto no-scrollbar w-full h-full pr-1">
                   {(teamNames || []).map((name, idx) => (
-                    <button key={idx} onClick={() => setHostSelectedTeam(idx)} className={`h-full px-2.5 rounded-lg font-bold text-[13px] whitespace-nowrap flex items-center justify-center transition-all shrink-0 ${teamIndex === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-transparent text-slate-500 hover:bg-slate-100'}`}>
+                    <button key={idx} onClick={() => setHostSelectedTeam(idx)} className={`h-full px-2.5 rounded-lg font-bold text-[13px] whitespace-nowrap flex-1 flex items-center justify-center transition-all shrink-0 min-w-[60px] ${teamIndex === idx ? 'bg-slate-800 text-white shadow-md' : 'bg-transparent text-slate-500 hover:bg-slate-100'}`}>
                       {String(name)} {!isHost && myPlayerInfo?.tIdx === idx && ' (MY)'}
                     </button>
                   ))}
@@ -455,8 +459,15 @@
       );
     }
 
-    function ScoreboardView({ teamNames, teamData, currentUserRole, myPlayerInfo, hostSelectedTeam, isMultiCourse, teamCourses, courseInfo, allPars, allScores, handicapType, eventName, customGroups, onGoToSettings, onBack, onGoToInput, onOpenAwards }) {
+    function ScoreboardView({ teamNames, teamData, currentUserRole, myPlayerInfo, hostSelectedTeam, isMultiCourse, teamCourses, courseInfo, allPars, allScores, handicapType, eventName, customGroups, onGoToSettings, onBack, onGoToInput, onOpenAwards, isRoundStarted, onGoToWaitingRoom }) {
       const isHost = currentUserRole === 'host'; const [vTeamIdx, setVTeamIdx] = useState(isHost ? hostSelectedTeam : (myPlayerInfo?.tIdx || 0)); const myTeam = teamData[vTeamIdx] || []; const [activeTab, setActiveTab] = useState('front'); const vTeamCourse = isMultiCourse ? teamCourses[vTeamIdx] : courseInfo;
+
+      if (!isRoundStarted || !allPars || allPars.length === 0) {
+         return (
+           <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8F9FA] px-6 text-center font-sans font-pretendard"><Icons.Flag className="w-16 h-16 text-slate-300 mb-4" /><h2 className="text-xl font-bold text-slate-700 mb-2">라운드 준비 중입니다</h2><p className="text-slate-500 text-sm mb-8">방장이 아직 라운드를 시작하지 않았습니다.<br/>잠시 후 다시 확인해주세요.</p><button onClick={onGoToWaitingRoom} className="bg-[#0D8A5E] text-white px-6 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all">대기실로 돌아가기</button></div>
+         );
+      }
+
       const getStats = (pIdx) => {
         let score = 0, diff = 0, holes = 0;
         (allScores || []).forEach((hs, hIdx) => { if (hs[vTeamIdx] && hs[vTeamIdx][pIdx] != null) { score += hs[vTeamIdx][pIdx]; diff += (hs[vTeamIdx][pIdx] - allPars[vTeamIdx][hIdx]); holes++; } });
@@ -484,14 +495,16 @@
       );
     }
 
-    function AwardsPageViewMain({ stats, syncStats, predictionStats, totalPar, teamNames, teamData, eventName, isAwardOpen, isAwardsManuallyOpened, setIsAwardsManuallyOpened, currentUserRole, customGroups, enableGroupComp, enableTeamComp, teamBalanceMode, groupBalanceMode, selectedAwards, stablefordTitle, allPars, onBack, setDetailModal, setIsAwardInfoOpen, specialRankings, onRefresh }) {
+    function AwardsPageViewMain({ stats, syncStats, predictionStats, totalPar, teamNames, teamData, eventName, isAwardOpen, isAwardsManuallyOpened, setIsAwardsManuallyOpened, currentUserRole, customGroups, enableGroupComp, enableTeamComp, teamBalanceMode, groupBalanceMode, selectedAwards, stablefordTitle, allPars, onBack, setDetailModal, setIsAwardInfoOpen, specialRankings, onRefresh, isRoundStarted, onGoToWaitingRoom }) {
       const [isSpinning, setIsSpinning] = useState(false);
       
-      const handleRefresh = () => {
-        setIsSpinning(true);
-        if (onRefresh) onRefresh();
-        setTimeout(() => setIsSpinning(false), 800);
-      };
+      const handleRefresh = () => { setIsSpinning(true); if (onRefresh) onRefresh(); setTimeout(() => setIsSpinning(false), 800); };
+
+      if (!isRoundStarted || !allPars || allPars.length === 0) {
+         return (
+           <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8F9FA] px-6 text-center font-sans font-pretendard"><Icons.Flag className="w-16 h-16 text-slate-300 mb-4" /><h2 className="text-xl font-bold text-slate-700 mb-2">라운드 준비 중입니다</h2><p className="text-slate-500 text-sm mb-8">방장이 아직 라운드를 시작하지 않았습니다.<br/>잠시 후 다시 확인해주세요.</p><button onClick={onGoToWaitingRoom} className="bg-[#0D8A5E] text-white px-6 py-3 rounded-xl font-bold shadow-md active:scale-95 transition-all">대기실로 돌아가기</button></div>
+         );
+      }
 
       const getCompStats = (type) => {
         const list = type === 'group' ? (customGroups || []) : (teamData || []).map((_, i) => ({ id: i, name: teamNames[i], members: (teamData[i] || []).map((__, pi) => `${i}-${pi}`) }));
@@ -513,9 +526,7 @@
         
         const sorted = [...validList].sort((a,b) => isAscending ? a[valueKey] - b[valueKey] : b[valueKey] - a[valueKey]);
         const hasNoRecord = sorted.length === 0 || (sorted[0][valueKey] === 0 && ['다버디', '다파', '다보기', '다찐파', '다찐보기', '다찐양파', '변형스테이블포드', '널뛰기'].includes(checkKey));
-        const topScore = hasNoRecord ? 0 : sorted[0][valueKey];
-        const tiedPlayers = hasNoRecord ? [] : sorted.filter(p => p[valueKey] === topScore); 
-        const topPlayer = tiedPlayers[0]; 
+        const topScore = hasNoRecord ? 0 : sorted[0][valueKey]; const tiedPlayers = hasNoRecord ? [] : sorted.filter(p => p[valueKey] === topScore); const topPlayer = tiedPlayers[0]; 
         const displayName = hasNoRecord ? "아직 기록이 없습니다" : (tiedPlayers.length > 1 ? `${topPlayer.name} 외 ${tiedPlayers.length - 1}명` : topPlayer.name);
 
         return (
@@ -532,10 +543,7 @@
               </div>
             </div>
             <div className="flex items-center justify-end gap-2 shrink-0 ml-2">
-              <div className="flex flex-col items-end leading-none">
-                <span className={`font-black text-xl text-right min-w-[2rem] ${hasNoRecord ? 'text-slate-300' : customText}`}>{hasNoRecord ? '-' : String(formatFn(topScore, topPlayer))}</span>
-                {!hasNoRecord && (title === '일취월장' || title === '낙차큰커브') && <span className="text-[10px] font-bold text-slate-400 mt-1 opacity-70">HDCP:{topPlayer?.handicap || 0}</span>}
-              </div>
+              <div className="flex flex-col items-end leading-none"><span className={`font-black text-xl text-right min-w-[2rem] ${hasNoRecord ? 'text-slate-300' : customText}`}>{hasNoRecord ? '-' : String(formatFn(topScore, topPlayer))}</span>{!hasNoRecord && (title === '일취월장' || title === '낙차큰커브') && <span className="text-[10px] font-bold text-slate-400 mt-1 opacity-70">HDCP:{topPlayer?.handicap || 0}</span>}</div>
               <button onClick={() => { if(!hasNoRecord) setDetailModal({ title: `${title} 순위`, list: sorted, valueKey, formatFn, detailKey, customGroups: enableGroupComp?customGroups:null, teamNames, totalPar }) }} className={`p-1.5 rounded-lg transition-colors ${hasNoRecord ? 'text-slate-200 bg-transparent' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`} disabled={hasNoRecord}><Icons.ChevronRight className="w-4 h-4" /></button>
             </div>
           </div>
@@ -560,9 +568,7 @@
                 <button onClick={() => setIsAwardInfoOpen(true)} className="ml-1 p-0.5 text-slate-300 hover:text-white transition-colors"><Icons.Info className="w-4 h-4"/></button>
               </div>
             </div>
-            <button onClick={handleRefresh} className="p-2 -mr-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors" title="새로고침">
-              <Icons.RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} />
-            </button>
+            <button onClick={handleRefresh} className="p-2 -mr-2 mt-1.5 text-white hover:bg-white/10 rounded-full transition-colors" title="새로고침"><Icons.RefreshCcw className={`w-5 h-5 ${isSpinning ? 'animate-spin' : ''}`} /></button>
           </div>
           <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-24 mt-2 no-scrollbar">
             {currentUserRole === 'host' && !isAwardsManuallyOpened && (<button onClick={()=>setIsAwardsManuallyOpened(true)} className="w-full bg-emerald-50 border border-emerald-200 text-[#0D8A5E] p-4 rounded-2xl font-bold flex items-center justify-center gap-2 mb-2 active:scale-95 transition-all shadow-sm"><Icons.Award className="w-5 h-5"/> 모든 시상 결과 오픈하기 (게스트 공개)</button>)}
@@ -602,8 +608,9 @@
       );
     }
 
-    function SettingsView({ teamNames, setTeamNames, initialData, setTeamData, initialHandicapType, setHandicapType, eventName, setEventName, courseInfo, setCourseInfo, selectedAwards, setSelectedAwards, stablefordTitle, setStablefordTitle, stablefordConfig, setStablefordConfig, specialHoles, setSpecialHoles, isMultiCourse, setIsMultiCourse, teamCourses, setTeamCourses, onComplete, onResetGame, onEndGame, isRoundStarted, enableTeamComp, setEnableTeamComp, enableGroupComp, setEnableGroupComp, teamBalanceMode, setTeamBalanceMode, customGroups, setCustomGroups, groupBalanceMode, setGroupBalanceMode, scoreInputPermission, setScoreInputPermission, onGoToWaitingRoom }) {
+    function SettingsView({ teamNames, setTeamNames, initialData, setTeamData, initialHandicapType, setHandicapType, eventName, setEventName, courseInfo, setCourseInfo, selectedAwards, setSelectedAwards, stablefordTitle, setStablefordTitle, stablefordConfig, setStablefordConfig, specialHoles, setSpecialHoles, isMultiCourse, setIsMultiCourse, teamCourses, setTeamCourses, onComplete, onResetGame, onEndGame, isRoundStarted, enableTeamComp, setEnableTeamComp, enableGroupComp, setEnableGroupComp, teamBalanceMode, setTeamBalanceMode, customGroups, setCustomGroups, groupBalanceMode, setGroupBalanceMode, scoreInputPermission, setScoreInputPermission, onGoToWaitingRoom, allScores, setAllScores, syncToDB }) {
       const [compTab, setCompTab] = useState('team'); const [isCompSettingsOpen, setIsCompSettingsOpen] = useState(false); const [isAwardSettingsOpen, setIsAwardSettingsOpen] = useState(false); const [showSearchList, setShowSearchList] = useState(false); const [filteredCourses, setFilteredCourses] = useState([]); const [showStablefordModal, setShowStablefordModal] = useState(false); const [showSpecialHoleModal, setShowSpecialHoleModal] = useState(false); const [confirmModal, setConfirmModal] = useState(null);
+      const [isPasteModalOpen, setIsPasteModalOpen] = useState(false);
       const [players, setPlayers] = useState(initialData || []); const [currentHandicapType, setCurrentHandicapType] = useState(initialHandicapType); const [tempCustomGroups, setTempCustomGroups] = useState(customGroups || []); const [tempGroupBalanceMode, setTempGroupBalanceMode] = useState(groupBalanceMode); const [tempSpecialHoles, setTempSpecialHoles] = useState(specialHoles); const [tempStablefordTitle, setTempStablefordTitle] = useState(stablefordTitle); const [tempStablefordConfig, setTempStablefordConfig] = useState(stablefordConfig || []);
 
       const currentCourseData = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0]; const courseOptions = Object.keys(currentCourseData?.courses || {});
@@ -664,6 +671,23 @@
               )}
             </div>
 
+            {/* 💡 [신규 추가] AI 스코어 자동 입력 UI */}
+            {isRoundStarted && (
+              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-4 text-left animate-fade-in-up">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-slate-800">
+                    <Icons.Zap className="w-5 h-5 text-emerald-500" /> AI 스코어 일괄 붙여넣기
+                  </div>
+                  <button onClick={() => setIsPasteModalOpen(true)} className="bg-emerald-50 text-[#0D8A5E] font-bold text-[11px] px-3 py-1.5 rounded-lg border border-emerald-200 active:scale-95 transition-all shadow-sm">
+                    코드 붙여넣기
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                  라운드 중 종이 스코어카드를 사진 찍어 제미나이(AI)에게 전달하면 한 번에 입력할 수 있는 코드를 만들어 줍니다.
+                </p>
+              </div>
+            )}
+
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 no-scrollbar text-left">
               {players.map((team, tIdx) => (
                 <div key={tIdx} className="mb-6 last:mb-0">
@@ -692,12 +716,14 @@
             </div>
           </div>
 
+          <ScorePasteModal isOpen={isPasteModalOpen} onClose={() => setIsPasteModalOpen(false)} allScores={allScores} setAllScores={setAllScores} teamData={players} syncToDB={syncToDB} />
+
           {confirmModal && (
             <div className="fixed inset-0 z-[120] flex items-center justify-center px-4 font-sans text-center">
               <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={() => setConfirmModal(null)} />
               <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up">
                 <h3 className="text-slate-800 font-black text-lg mb-2">{confirmModal === 'reset' ? '새 게임 시작' : '게임 종료'}</h3>
-                <p className="text-slate-600 text-sm mb-6 leading-relaxed">{confirmModal === 'reset' ? '모든 스코어가 초기화됩니다. 정말 새 게임을 시작하시겠습니까?' : '진행 중인 게임 조기 종료하고 결과 화면으로 이동하시겠습니까?'}</p>
+                <p className="text-slate-600 text-sm mb-6 leading-relaxed">{confirmModal === 'reset' ? '모든 스코어가 초기화됩니다. 정말 새 게임 시작하시겠습니까?' : '진행 중인 게임 조기 종료하고 결과 화면으로 이동하시겠습니까?'}</p>
                 <div className="flex gap-3"><button onClick={() => setConfirmModal(null)} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl transition-colors">취소</button><button onClick={() => { if (confirmModal === 'reset') onResetGame(); else onEndGame(); setConfirmModal(null); }} className={`flex-1 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors active:scale-95 ${confirmModal === 'reset' ? 'bg-red-500' : 'bg-slate-800'}`}>확인</button></div>
               </div>
             </div>
@@ -739,45 +765,47 @@
     }
 
     function App() {
-      // 💡 [게스트/방장 자동 분류]: URL에 roomId(초대코드)가 포함되어 있으면 게스트, 없으면 방장으로 초기값 설정
       const urlParams = new URLSearchParams(window.location.search);
       const isInviteLink = !!urlParams.get('roomId');
 
-      const [currentView, setCurrentView] = usePersistentState('golf_currentView', isInviteLink ? 'waitingRoom' : 'settings');
-      const [handicapType, setHandicapType] = usePersistentState('golf_handicapType', 'strokes');
-      const [eventName, setEventName] = usePersistentState('golf_eventName', '제5회 SNG 자진 골프대회');
-      const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo', { name: '표준 파72 (일반 코스)', front: 'OUT 코스', back: 'IN 코스' });
-      const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse', false);
-      const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses', Array(20).fill({front: 'OUT 코스', back: 'IN 코스'}));
-      const [isRoundStarted, setIsRoundStarted] = usePersistentState('golf_isRoundStarted', false);
-      const [teamNames, setTeamNames] = usePersistentState('golf_teamNames_v2', ['1조', '2조', '3조', '4조']);
-      const [teamData, setTeamData] = usePersistentState('golf_teamData_v2', getInitialTeams());
-      const [enableTeamComp, setEnableTeamComp] = usePersistentState('golf_enableTeamComp', true);
-      const [enableGroupComp, setEnableGroupComp] = usePersistentState('golf_enableGroupComp_v2', true);
-      const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('golf_teamBalanceMode', 'average');
-      const [customGroups, setCustomGroups] = usePersistentState('golf_customGroups_v2', getInitialGroups());
-      const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('golf_groupBalanceMode', 'average');
-      const [selectedAwards, setSelectedAwards] = usePersistentState('golf_selectedAwards', ALL_AWARDS_KEYS);
-      const [stablefordTitle, setStablefordTitle] = usePersistentState('golf_stablefordTitle', '변형스테이블포드');
-      const [stablefordConfig, setStablefordConfig] = usePersistentState('golf_stablefordConfig', [{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
-      const [specialHoles, setSpecialHoles] = usePersistentState('golf_specialHoles', { nearest: null, longest: null, requirePar: true });
-      const [specialRecords, setSpecialRecords] = usePersistentState('golf_specialRecords', Array(18).fill(null).map(() => ({})));
-      const [currentHole, setCurrentHole] = usePersistentState('golf_currentHole', 1);
-      const [allPars, setAllPars] = usePersistentState('golf_allPars', []);
-      const [allScores, setAllScores] = usePersistentState('golf_allScores', []);
-      const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam', 0);
-      const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened', false);
-      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole', isInviteLink ? 'guest' : 'host');
-      const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo', null);
-      const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus', []);
-      const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors', {});
-      const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission', 'all');
-      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers', []);
+      const [currentView, setCurrentView] = usePersistentState('golf_currentView_v12', isInviteLink ? 'waitingRoom' : 'settings');
+      const [handicapType, setHandicapType] = usePersistentState('golf_handicapType_v12', 'strokes');
+      const [eventName, setEventName] = usePersistentState('golf_eventName_v12', '2026 세대 춘계 라운드');
+      const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo_v12', { name: '청평 마이다스', front: '마이다스 코스', back: '밸리 코스' });
+      const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse_v12', false);
+      const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses_v12', Array(20).fill({front: '마이다스 코스', back: '밸리 코스'}));
+      
+      const [isRoundStarted, setIsRoundStarted] = usePersistentState('golf_isRoundStarted_v12', false);
+      
+      const [teamNames, setTeamNames] = usePersistentState('golf_teamNames_v12', ['1조', '2조', '3조', '4조']);
+      const [teamData, setTeamData] = usePersistentState('golf_teamData_v12', getInitialTeams());
+      const [enableTeamComp, setEnableTeamComp] = usePersistentState('golf_enableTeamComp_v12', true);
+      const [enableGroupComp, setEnableGroupComp] = usePersistentState('golf_enableGroupComp_v12', true);
+      const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('golf_teamBalanceMode_v12', 'average');
+      const [customGroups, setCustomGroups] = usePersistentState('golf_customGroups_v12', getInitialGroups());
+      const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('golf_groupBalanceMode_v12', 'average');
+      const [selectedAwards, setSelectedAwards] = usePersistentState('golf_selectedAwards_v12', ALL_AWARDS_KEYS);
+      const [stablefordTitle, setStablefordTitle] = usePersistentState('golf_stablefordTitle_v12', '변형스테이블포드');
+      const [stablefordConfig, setStablefordConfig] = usePersistentState('golf_stablefordConfig_v12', [{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
+      const [specialHoles, setSpecialHoles] = usePersistentState('golf_specialHoles_v12', { nearest: null, longest: null, requirePar: true });
+      const [specialRecords, setSpecialRecords] = usePersistentState('golf_specialRecords_v12', Array(18).fill(null).map(() => ({})));
+      const [currentHole, setCurrentHole] = usePersistentState('golf_currentHole_v12', 1);
+      
+      const [allPars, setAllPars] = usePersistentState('golf_allPars_v12', []);
+      const [allScores, setAllScores] = usePersistentState('golf_allScores_v12', []);
+      const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam_v12', 0);
+      const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened_v12', false);
+      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole_v12', isInviteLink ? 'guest' : 'host');
+      const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo_v12', null);
+      const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus_v12', []);
+      const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors_v12', {});
+      const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission_v12', 'all');
+      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers_v12', []);
 
       const [previousView, setPreviousView] = useState('scoreInput');
       const [detailModal, setDetailModal] = useState(null);
       const [isAwardInfoOpen, setIsAwardInfoOpen] = useState(false);
-      const [roomId, setRoomId] = usePersistentState('golf_roomId', null);
+      const [roomId, setRoomId] = usePersistentState('golf_roomId_v12', null);
       const manuallyClearedRef = useRef({});
       const [isDbConnected, setIsDbConnected] = useState(false);
       const [user, setUser] = useState(null);
@@ -869,7 +897,7 @@
 
       const handleStartRound = () => {
         let newPars = allPars; let newScores = allScores;
-        if (allPars.length === 0) {
+        if (allPars.length === 0 || typeof allPars[0] === 'number') {
           const d = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0];
           newPars = teamData.map((_, tIdx) => { const tc = isMultiCourse ? teamCourses[tIdx] : courseInfo; return [...d.courses[tc.front], ...d.courses[tc.back]]; });
           setAllPars(newPars); newScores = Array(18).fill(null).map(() => (teamData || []).map(t => (t || []).map(() => null))); setAllScores(newScores);
@@ -944,22 +972,18 @@
       };
 
       const stats = getAwardStats('realtime'); const syncStats = getAwardStats('min_hole_sync'); const predictionStats = getPredictionStats(); const totalPar = allPars.length > 0 && allPars[0] ? allPars[0].reduce((a,b)=>a+b, 0) : 72;
-
       const isAwardOpenFlag = currentUserRole === 'host' || isAwardsManuallyOpened;
 
       const renderCurrentView = () => {
         let viewToRender = currentView;
-        // 💡 [보안 보강]: 게스트(참여자)가 비정상적으로 설정 페이지에 접근/잔류하려 할 경우 대기실로 강제 이동
-        if (viewToRender === 'settings' && currentUserRole !== 'host') {
-          viewToRender = 'waitingRoom';
-        }
+        if (viewToRender === 'settings' && currentUserRole !== 'host') { viewToRender = 'waitingRoom'; }
 
         switch(viewToRender) {
-          case 'settings': return <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} setTeamData={setTeamData} initialHandicapType={handicapType} setHandicapType={setHandicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} isMultiCourse={isMultiCourse} setIsMultiCourse={setIsMultiCourse} teamCourses={teamCourses} setTeamCourses={setTeamCourses} onComplete={handleCompleteSettings} isRoundStarted={isRoundStarted} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} onEndGame={handleEndGame} onResetGame={handleResetGame} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} />;
-          case 'waitingRoom': return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={user?.uid} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} setScoreInputAuthorizedPlayers={setScoreInputAuthorizedPlayers} setHostSelectedTeam={setHostSelectedTeam} />;
-          case 'scoreInput': return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} />;
-          case 'scoreboard': return <ScoreboardView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} allPars={allPars} allScores={allScores} handicapType={handicapType} eventName={eventName} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onBack={() => setCurrentView('scoreInput')} onGoToInput={(h, t) => { setCurrentHole(h); setHostSelectedTeam(t); setCurrentView('scoreInput'); }} onOpenAwards={() => { setPreviousView('scoreboard'); setCurrentView('awards'); }} />;
-          case 'awards': return <AwardsPageViewMain stats={stats} syncStats={syncStats} predictionStats={predictionStats} totalPar={totalPar} teamNames={teamNames} teamData={teamData} eventName={eventName} isAwardOpen={isAwardOpenFlag} isAwardsManuallyOpened={isAwardsManuallyOpened} setIsAwardsManuallyOpened={setIsAwardsManuallyOpened} currentUserRole={currentUserRole} customGroups={customGroups} enableGroupComp={enableGroupComp} enableTeamComp={enableTeamComp} teamBalanceMode={teamBalanceMode} groupBalanceMode={groupBalanceMode} selectedAwards={selectedAwards} stablefordTitle={stablefordTitle} allPars={allPars} onBack={() => setCurrentView(previousView)} setDetailModal={setDetailModal} setIsAwardInfoOpen={setIsAwardInfoOpen} onRefresh={handleManualRefresh} specialRankings={{ nearest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.nearest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.nearest.pIdx].name, tIdx: parseInt(tI), pIdx: r.nearest.pIdx, distance: r.nearest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.nearest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.nearest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? a.distance - b.distance : (a.isInvalid ? 1 : -1)), longest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.longest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.longest.pIdx].name, tIdx: parseInt(tI), pIdx: r.longest.pIdx, distance: r.longest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.longest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.longest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? b.distance - a.distance : (a.isInvalid ? 1 : -1)) }} />;
+          case 'settings': return <SettingsView teamNames={teamNames} setTeamNames={setTeamNames} initialData={teamData} setTeamData={setTeamData} initialHandicapType={handicapType} setHandicapType={setHandicapType} eventName={eventName} setEventName={setEventName} courseInfo={courseInfo} setCourseInfo={setCourseInfo} selectedAwards={selectedAwards} setSelectedAwards={setSelectedAwards} stablefordTitle={stablefordTitle} setStablefordTitle={setStablefordTitle} stablefordConfig={stablefordConfig} setStablefordConfig={setStablefordConfig} specialHoles={specialHoles} setSpecialHoles={setSpecialHoles} isMultiCourse={isMultiCourse} setIsMultiCourse={setIsMultiCourse} teamCourses={teamCourses} setTeamCourses={setTeamCourses} onComplete={handleCompleteSettings} isRoundStarted={isRoundStarted} enableTeamComp={enableTeamComp} setEnableTeamComp={setEnableTeamComp} enableGroupComp={enableGroupComp} setEnableGroupComp={setEnableGroupComp} teamBalanceMode={teamBalanceMode} setTeamBalanceMode={setTeamBalanceMode} customGroups={customGroups} setCustomGroups={setCustomGroups} groupBalanceMode={groupBalanceMode} setGroupBalanceMode={setGroupBalanceMode} scoreInputPermission={scoreInputPermission} setScoreInputPermission={setScoreInputPermission} onEndGame={handleEndGame} onResetGame={handleResetGame} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} allScores={allScores} setAllScores={setAllScores} syncToDB={syncToDB} />;
+          case 'waitingRoom': return <WaitingRoomView teamData={teamData} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} setMyPlayerInfo={setMyPlayerInfo} joinedStatus={joinedStatus} setJoinedStatus={setJoinedStatus} isRoundStarted={isRoundStarted} onBack={() => setCurrentView('settings')} eventName={eventName} onStartRound={handleStartRound} customGroups={customGroups} roomId={roomId} syncToDB={syncToDB} userUid={user?.uid} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} setScoreInputAuthorizedPlayers={setScoreInputAuthorizedPlayers} setHostSelectedTeam={setHostSelectedTeam} onSpectate={() => setCurrentView('scoreInput')} />;
+          case 'scoreInput': return <ScoreInputView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} setHostSelectedTeam={setHostSelectedTeam} allPars={allPars} setAllPars={setAllPars} allScores={allScores} setAllScores={setAllScores} specialHoles={specialHoles} specialRecords={specialRecords} setSpecialRecords={setSpecialRecords} eventName={eventName} scoreInputPermission={scoreInputPermission} scoreInputAuthorizedPlayers={scoreInputAuthorizedPlayers} lastEditors={lastEditors} setLastEditors={setLastEditors} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} onOpenScoreboard={() => setCurrentView('scoreboard')} onOpenAwards={() => { setPreviousView('scoreInput'); setCurrentView('awards'); }} currentHole={currentHole} setCurrentHole={setCurrentHole} manuallyClearedRef={manuallyClearedRef} syncToDB={syncToDB} isRoundStarted={isRoundStarted} />;
+          case 'scoreboard': return <ScoreboardView teamNames={teamNames} teamData={teamData} isMultiCourse={isMultiCourse} teamCourses={teamCourses} courseInfo={courseInfo} currentUserRole={currentUserRole} myPlayerInfo={myPlayerInfo} hostSelectedTeam={hostSelectedTeam} allPars={allPars} allScores={allScores} handicapType={handicapType} eventName={eventName} customGroups={customGroups} onGoToSettings={() => setCurrentView('settings')} onBack={() => setCurrentView('scoreInput')} onGoToInput={(h, t) => { setCurrentHole(h); setHostSelectedTeam(t); setCurrentView('scoreInput'); }} onOpenAwards={() => { setPreviousView('scoreboard'); setCurrentView('awards'); }} isRoundStarted={isRoundStarted} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} />;
+          case 'awards': return <AwardsPageViewMain stats={stats} syncStats={syncStats} predictionStats={predictionStats} totalPar={totalPar} teamNames={teamNames} teamData={teamData} eventName={eventName} isAwardOpen={isAwardOpenFlag} isAwardsManuallyOpened={isAwardsManuallyOpened} setIsAwardsManuallyOpened={setIsAwardsManuallyOpened} currentUserRole={currentUserRole} customGroups={customGroups} enableGroupComp={enableGroupComp} enableTeamComp={enableTeamComp} teamBalanceMode={teamBalanceMode} groupBalanceMode={groupBalanceMode} selectedAwards={selectedAwards} stablefordTitle={stablefordTitle} allPars={allPars} onBack={() => setCurrentView(previousView)} setDetailModal={setDetailModal} setIsAwardInfoOpen={setIsAwardInfoOpen} onRefresh={handleManualRefresh} isRoundStarted={isRoundStarted} onGoToWaitingRoom={() => setCurrentView('waitingRoom')} specialRankings={{ nearest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.nearest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.nearest.pIdx].name, tIdx: parseInt(tI), pIdx: r.nearest.pIdx, distance: r.nearest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.nearest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.nearest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? a.distance - b.distance : (a.isInvalid ? 1 : -1)), longest: specialRecords.flatMap((hr, hI) => hr ? Object.entries(hr).filter(([_,r]) => r.longest?.pIdx != null).map(([tI, r]) => ({ name: teamData[tI][r.longest.pIdx].name, tIdx: parseInt(tI), pIdx: r.longest.pIdx, distance: r.longest.distance, hIdx: hI, isInvalid: specialHoles.requirePar && allScores[hI]?.[tI]?.[r.longest.pIdx] - (allPars[tI]?.[hI]||4) > 0 && !r.longest.isPar })) : []).sort((a,b) => a.isInvalid === b.isInvalid ? b.distance - a.distance : (a.isInvalid ? 1 : -1)) }} />;
           default: return null;
         }
       };
