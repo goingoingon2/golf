@@ -861,7 +861,9 @@
             } else {
               await auth.signInAnonymously();
             }
-          } catch (e) {}
+          } catch (e) {
+            console.error("🔥 Firebase Auth 에러: Firebase 콘솔에서 '익명 로그인'이 활성화되어 있는지 확인하세요.", e);
+          }
         };
         initAuth();
         const unsubscribe = auth.onAuthStateChanged((u) => {
@@ -884,7 +886,7 @@
             if (data.specialRecords) setSpecialRecords(data.specialRecords);
             if (data.lastEditors) setLastEditors(data.lastEditors); if (data.isRoundStarted !== undefined) setIsRoundStarted(data.isRoundStarted); if (data.eventName) setEventName(data.eventName); if (data.scoreInputAuthorizedPlayers) setScoreInputAuthorizedPlayers(data.scoreInputAuthorizedPlayers);
           }
-        }, (err) => console.error("Firebase Sync Error:", err));
+        }, (err) => console.error("🔥 Firebase Sync Error: Firestore 보안 규칙 설정을 확인하세요.", err));
         return () => unsubscribe();
       }, [roomId, isDbConnected, user]);
 
@@ -899,7 +901,9 @@
           if (formattedUpdates.joinedStatus) formattedUpdates.joinedStatus = JSON.stringify(formattedUpdates.joinedStatus);
           if (formattedUpdates.teamData) formattedUpdates.teamData = JSON.stringify(formattedUpdates.teamData);
           await roomRef.set(formattedUpdates, { merge: true }); 
-        } catch (e) {} 
+        } catch (e) {
+          console.error("🔥 Sync Error: DB 쓰기 권한이 없습니다. Firestore 규칙을 확인하세요.", e);
+        } 
       };
 
       const handleManualRefresh = async () => {
