@@ -41,13 +41,9 @@
 
     let firebaseConfig = null;
     try {
-      const stored = window.localStorage.getItem('golf_custom_firebase_config');
-      if (stored) firebaseConfig = JSON.parse(stored);
-    } catch(e) {}
-
-    if (!firebaseConfig) {
-      try { if (typeof __firebase_config !== 'undefined') firebaseConfig = JSON.parse(__firebase_config); else firebaseConfig = MY_FIREBASE_CONFIG; } catch (e) {}
-    }
+      if (typeof __firebase_config !== 'undefined') firebaseConfig = JSON.parse(__firebase_config); 
+      else firebaseConfig = MY_FIREBASE_CONFIG;
+    } catch (e) {}
 
     const isConfigValid = firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "" && firebaseConfig.apiKey !== "YOUR_API_KEY";
     let app = null, auth = null, db = null;
@@ -89,37 +85,38 @@
       { badge: 'bg-teal-100 text-teal-700 border-teal-200', card: 'bg-teal-50/50 border-teal-100', input: 'text-teal-800 border-teal-200 focus:border-teal-500', btnActive: 'bg-teal-600 text-white border-teal-600' },
     ];
 
+    // 엣지 브라우저 호환성을 위해 xmlns 속성 강제 추가
     const Icons = {
-      AlertCircle: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>,
-      ArrowLeft: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19 12H5m7 7l-7-7 7-7"/></svg>,
-      ArrowRight: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14m-7-7l7 7-7 7"/></svg>,
-      Award: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>,
-      Check: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 6L9 17l-5-5"/></svg>,
-      ChevronDown: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M6 9l6 6 6-6"/></svg>,
-      ChevronRight: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M9 18l6-6-6-6"/></svg>,
-      Edit2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
-      Flag: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg>,
-      Info: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>,
-      List: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>,
-      Lock: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
-      MapPin: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-      Minus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14"/></svg>,
-      Plus: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 5v14M5 12h14"/></svg>,
-      Search: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>,
-      Settings: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
-      Share2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>,
-      Star: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
-      Target: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
-      Trash2: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>,
-      UserIcon: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
-      Users: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
-      Activity: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
-      Zap: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
-      Coffee: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>,
-      TrendingUp: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
-      TrendingDown: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
-      RefreshCcw: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"/><path d="M3.51 15A9 9 0 0 0 18.36 18.36L23 14"/></svg>,
-      X: p => <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      AlertCircle: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>,
+      ArrowLeft: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19 12H5m7 7l-7-7 7-7"/></svg>,
+      ArrowRight: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14m-7-7l7 7-7 7"/></svg>,
+      Award: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="8" r="7"/><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/></svg>,
+      Check: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 6L9 17l-5-5"/></svg>,
+      ChevronDown: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M6 9l6 6 6-6"/></svg>,
+      ChevronRight: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M9 18l6-6-6-6"/></svg>,
+      Edit2: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg>,
+      Flag: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7"/></svg>,
+      Info: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h.01"/></svg>,
+      List: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>,
+      Lock: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
+      MapPin: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+      Minus: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14"/></svg>,
+      Plus: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 5v14M5 12h14"/></svg>,
+      Search: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>,
+      Settings: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z" /><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+      Share2: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.59 13.51l6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>,
+      Star: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+      Target: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+      Trash2: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>,
+      UserIcon: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>,
+      Users: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,
+      Activity: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+      Zap: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+      Coffee: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>,
+      TrendingUp: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
+      TrendingDown: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
+      RefreshCcw: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"/><path d="M3.51 15A9 9 0 0 0 18.36 18.36L23 14"/></svg>,
+      X: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
     };
 
     const getInitialTeams = () => [
@@ -153,19 +150,6 @@
 
     function ShareModal({ isOpen, onClose, roomId }) {
       if (!isOpen) return null;
-      if (typeof isConfigValid !== 'undefined' && !isConfigValid) {
-        return (
-          <div className="fixed inset-0 z-[130] flex items-center justify-center px-4 text-center font-sans">
-            <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" onClick={onClose} />
-            <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up text-left">
-              <div className="flex items-center justify-between mb-4"><div className="flex items-center gap-2 text-slate-800 font-bold text-lg"><Icons.AlertCircle className="w-5 h-5 text-red-500" /> 동기화 비활성화됨</div><button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 rounded-full transition-colors"><Icons.X className="w-5 h-5" /></button></div>
-              <div className="text-sm text-slate-600 leading-relaxed mb-6">다른 기기와 실시간으로 스코어를 연동하려면 소스 코드 내에 <b>파이어베이스(Firebase) 설정</b>을 입력하셔야 합니다.<br/><br/>현재는 설정이 비어있어 <b>오프라인(단일 기기 전용) 모드</b>로만 작동 중입니다. 하단의 "실시간 동기화 설정" 메뉴를 통해 정보를 입력해주세요.</div>
-              <button onClick={onClose} className="w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors active:scale-95">확인</button>
-            </div>
-          </div>
-        );
-      }
-      
       const inviteUrl = roomId ? `${window.location.origin}${window.location.pathname}?roomId=${roomId}` : window.location.href;
       const handleCopy = () => {
         try { const el = document.createElement('textarea'); el.value = inviteUrl; el.setAttribute('readonly', ''); el.style.position = 'absolute'; el.style.left = '-9999px'; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); alert('URL이 복사되었습니다.'); } 
@@ -804,48 +788,51 @@
       const urlParams = new URLSearchParams(window.location.search);
       const isInviteLink = !!urlParams.get('roomId');
 
-      const [currentView, setCurrentView] = usePersistentState('golf_currentView_v23', isInviteLink ? 'waitingRoom' : 'settings');
-      const [handicapType, setHandicapType] = usePersistentState('golf_handicapType_v23', 'strokes');
-      const [eventName, setEventName] = usePersistentState('golf_eventName_v23', '2026 SNG 춘계 라운드');
-      const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo_v23', { name: '청평 마이다스', front: '마이다스 코스', back: '밸리 코스' });
-      const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse_v23', false);
-      const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses_v23', Array(20).fill({front: '마이다스 코스', back: '밸리 코스'}));
+      const [currentView, setCurrentView] = usePersistentState('golf_currentView_v24', isInviteLink ? 'waitingRoom' : 'settings');
+      const [handicapType, setHandicapType] = usePersistentState('golf_handicapType_v24', 'strokes');
+      const [eventName, setEventName] = usePersistentState('golf_eventName_v24', '2026 SNG 춘계 라운드');
+      const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo_v24', { name: '청평 마이다스', front: '마이다스 코스', back: '밸리 코스' });
+      const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse_v24', false);
+      const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses_v24', Array(20).fill({front: '마이다스 코스', back: '밸리 코스'}));
       
-      const [isRoundStarted, setIsRoundStarted] = usePersistentState('golf_isRoundStarted_v23', false);
+      const [isRoundStarted, setIsRoundStarted] = usePersistentState('golf_isRoundStarted_v24', false);
       
-      const [teamNames, setTeamNames] = usePersistentState('golf_teamNames_v23', ['1조', '2조', '3조', '4조']);
-      const [teamData, setTeamData] = usePersistentState('golf_teamData_v23', getInitialTeams());
-      const [enableTeamComp, setEnableTeamComp] = usePersistentState('golf_enableTeamComp_v23', true);
-      const [enableGroupComp, setEnableGroupComp] = usePersistentState('golf_enableGroupComp_v23', true);
-      const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('golf_teamBalanceMode_v23', 'average');
-      const [customGroups, setCustomGroups] = usePersistentState('golf_customGroups_v23', getInitialGroups());
-      const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('golf_groupBalanceMode_v23', 'average');
-      const [selectedAwards, setSelectedAwards] = usePersistentState('golf_selectedAwards_v23', ALL_AWARDS_KEYS);
-      const [stablefordTitle, setStablefordTitle] = usePersistentState('golf_stablefordTitle_v23', '변형스테이블포드');
-      const [stablefordConfig, setStablefordConfig] = usePersistentState('golf_stablefordConfig_v23', [{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
-      const [specialHoles, setSpecialHoles] = usePersistentState('golf_specialHoles_v23', { nearest: null, longest: null, requirePar: true });
-      const [specialRecords, setSpecialRecords] = usePersistentState('golf_specialRecords_v23', Array(18).fill(null).map(() => ({})));
-      const [currentHole, setCurrentHole] = usePersistentState('golf_currentHole_v23', 1);
+      const [teamNames, setTeamNames] = usePersistentState('golf_teamNames_v24', ['1조', '2조', '3조', '4조']);
+      const [teamData, setTeamData] = usePersistentState('golf_teamData_v24', getInitialTeams());
+      const [enableTeamComp, setEnableTeamComp] = usePersistentState('golf_enableTeamComp_v24', true);
+      const [enableGroupComp, setEnableGroupComp] = usePersistentState('golf_enableGroupComp_v24', true);
+      const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('golf_teamBalanceMode_v24', 'average');
+      const [customGroups, setCustomGroups] = usePersistentState('golf_customGroups_v24', getInitialGroups());
+      const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('golf_groupBalanceMode_v24', 'average');
+      const [selectedAwards, setSelectedAwards] = usePersistentState('golf_selectedAwards_v24', ALL_AWARDS_KEYS);
+      const [stablefordTitle, setStablefordTitle] = usePersistentState('golf_stablefordTitle_v24', '변형스테이블포드');
+      const [stablefordConfig, setStablefordConfig] = usePersistentState('golf_stablefordConfig_v24', [{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
+      const [specialHoles, setSpecialHoles] = usePersistentState('golf_specialHoles_v24', { nearest: null, longest: null, requirePar: true });
+      const [specialRecords, setSpecialRecords] = usePersistentState('golf_specialRecords_v24', Array(18).fill(null).map(() => ({})));
+      const [currentHole, setCurrentHole] = usePersistentState('golf_currentHole_v24', 1);
       
-      const [allPars, setAllPars] = usePersistentState('golf_allPars_v23', []);
-      const [allScores, setAllScores] = usePersistentState('golf_allScores_v23', []);
-      const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam_v23', 0);
-      const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened_v23', false);
-      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole_v23', isInviteLink ? 'guest' : 'host');
-      const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo_v23', null);
-      const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus_v23', []);
-      const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors_v23', {});
-      const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission_v23', 'host');
-      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers_v23', []);
+      const [allPars, setAllPars] = usePersistentState('golf_allPars_v24', []);
+      const [allScores, setAllScores] = usePersistentState('golf_allScores_v24', []);
+      const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam_v24', 0);
+      const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened_v24', false);
+      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole_v24', isInviteLink ? 'guest' : 'host');
+      const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo_v24', null);
+      const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus_v24', []);
+      const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors_v24', {});
+      const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission_v24', 'host');
+      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers_v24', []);
 
       const [previousView, setPreviousView] = useState('scoreInput');
       const [detailModal, setDetailModal] = useState(null);
       const [isAwardInfoOpen, setIsAwardInfoOpen] = useState(false);
-      const [roomId, setRoomId] = usePersistentState('golf_roomId_v23', null);
+      const [roomId, setRoomId] = usePersistentState('golf_roomId_v24', null);
       const manuallyClearedRef = useRef({});
       const [isDbConnected, setIsDbConnected] = useState(false);
       const [user, setUser] = useState(null);
       const [refreshTrigger, setRefreshTrigger] = useState(0);
+      
+      // ✅ [디버깅 헬퍼] 에러 메시지 표시용
+      const [firebaseError, setFirebaseError] = useState('');
 
       useEffect(() => { 
         try { if (window.localStorage.getItem('golf_host_verified') === 'true') setCurrentUserRole('host'); } catch(e) {} 
@@ -862,7 +849,8 @@
               await auth.signInAnonymously();
             }
           } catch (e) {
-            console.error("🔥 Firebase Auth 에러: Firebase 콘솔에서 '익명 로그인'이 활성화되어 있는지 확인하세요.", e);
+            console.error("🔥 Firebase Auth 에러", e);
+            setFirebaseError("Firebase 인증 실패: 도메인 승인이 필요하거나 로컬(file://) 환경입니다. 파이어베이스 콘솔 설정을 확인하세요.");
           }
         };
         initAuth();
@@ -874,9 +862,12 @@
       }, []);
 
       useEffect(() => {
-        if (!db || !roomId || !isDbConnected || !user) return;
+        if (!db || !roomId) return;
+        
+        // 규칙 문제가 있어도 일단 읽기를 시도하도록 설정
         const roomRef = db.doc(`artifacts/${appId}/public/data/golf_rooms/${roomId}`);
         const unsubscribe = roomRef.onSnapshot((docSnap) => {
+          setFirebaseError(''); // 성공하면 에러 지움
           if (docSnap.exists) {
             const data = docSnap.data();
             if (data.allScores) { try { setAllScores(typeof data.allScores === 'string' ? JSON.parse(data.allScores) : data.allScores); } catch(e) { setAllScores(data.allScores); } }
@@ -886,13 +877,16 @@
             if (data.specialRecords) setSpecialRecords(data.specialRecords);
             if (data.lastEditors) setLastEditors(data.lastEditors); if (data.isRoundStarted !== undefined) setIsRoundStarted(data.isRoundStarted); if (data.eventName) setEventName(data.eventName); if (data.scoreInputAuthorizedPlayers) setScoreInputAuthorizedPlayers(data.scoreInputAuthorizedPlayers);
           }
-        }, (err) => console.error("🔥 Firebase Sync Error: Firestore 보안 규칙 설정을 확인하세요.", err));
+        }, (err) => {
+          console.error("🔥 Firebase Sync Error", err);
+          setFirebaseError("Firebase DB 읽기 실패: 데이터베이스 보안 규칙을 '허용(allow read, write: if true;)'으로 변경하셔야 합니다.");
+        });
         return () => unsubscribe();
-      }, [roomId, isDbConnected, user]);
+      }, [roomId]);
 
       const syncToDB = async (updates, explicitRoomId) => { 
         const targetRoom = explicitRoomId || roomId;
-        if (!db || !targetRoom || !isDbConnected || !user) return; 
+        if (!db || !targetRoom) return; 
         try { 
           const roomRef = db.doc(`artifacts/${appId}/public/data/golf_rooms/${targetRoom}`);
           const formattedUpdates = { ...updates };
@@ -901,18 +895,21 @@
           if (formattedUpdates.joinedStatus) formattedUpdates.joinedStatus = JSON.stringify(formattedUpdates.joinedStatus);
           if (formattedUpdates.teamData) formattedUpdates.teamData = JSON.stringify(formattedUpdates.teamData);
           await roomRef.set(formattedUpdates, { merge: true }); 
+          setFirebaseError(''); // 성공 시 에러 지움
         } catch (e) {
-          console.error("🔥 Sync Error: DB 쓰기 권한이 없습니다. Firestore 규칙을 확인하세요.", e);
+          console.error("🔥 DB 쓰기 에러", e);
+          setFirebaseError("Firebase DB 쓰기 실패: 데이터베이스 보안 규칙을 '허용(allow read, write: if true;)'으로 변경하셔야 합니다.");
         } 
       };
 
       const handleManualRefresh = async () => {
         setRefreshTrigger(prev => prev + 1);
-        if (!db || !roomId || !isDbConnected || !user) return;
+        if (!db || !roomId) return;
         try {
           const roomRef = db.doc(`artifacts/${appId}/public/data/golf_rooms/${roomId}`);
           const docSnap = await roomRef.get();
           if (docSnap.exists) {
+            setFirebaseError('');
             const data = docSnap.data();
             if (data.allScores) { try { setAllScores(typeof data.allScores === 'string' ? JSON.parse(data.allScores) : data.allScores); } catch(e) { setAllScores(data.allScores); } }
             if (data.allPars) { try { setAllPars(typeof data.allPars === 'string' ? JSON.parse(data.allPars) : data.allPars); } catch(e) { setAllPars(data.allPars); } }
@@ -1030,6 +1027,17 @@
 
       return (
         <div className="min-h-screen bg-gray-50 text-[#1E293B] sm:max-w-md sm:mx-auto sm:border-x sm:shadow-2xl relative overflow-x-hidden font-pretendard">
+          {firebaseError && (
+            <div className="bg-red-500 text-white text-[11px] font-bold px-4 py-3 text-center sticky top-0 z-[500] shadow-md animate-fade-in-up flex items-center justify-center gap-2">
+              <Icons.AlertCircle className="w-4 h-4 shrink-0" />
+              <span className="text-left">{firebaseError}</span>
+            </div>
+          )}
+          {!isConfigValid && (
+            <div className="bg-slate-700 text-slate-200 text-[10px] font-bold px-4 py-1.5 text-center sticky top-0 z-[500] flex items-center justify-center gap-1.5 shadow-md">
+              <Icons.AlertCircle className="w-3.5 h-3.5" /> 오프라인 모드 (DB가 연결되지 않았습니다.)
+            </div>
+          )}
           {renderCurrentView()}
           <DetailModal isOpen={!!detailModal} onClose={() => setDetailModal(null)} config={detailModal} />
           {isAwardInfoOpen && (
