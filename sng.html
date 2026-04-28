@@ -477,7 +477,7 @@
       const getStats = (pIdx) => {
         let score = 0, diff = 0, holes = 0;
         (allScores || []).forEach((hs, hIdx) => { if (hs[vTeamIdx] && hs[vTeamIdx][pIdx] != null) { score += hs[vTeamIdx][pIdx]; diff += (hs[vTeamIdx][pIdx] - allPars[vTeamIdx][hIdx]); holes++; } });
-        const handi = parseInt(String(myTeam[pIdx]?.handicap || "").replace(/[^0-9+\-]/g, '')) || 0; const expOver = (handicapType === 'strokes' ? handi - 72 : handi) * (holes / 18);
+        const handi = parseInt(String(myTeam[pIdx]?.handicap || "").replace(/[^0-9+\-.]/g, '')) || 0; const expOver = (handicapType === 'strokes' ? handi - 72 : handi) * (holes / 18);
         return { score, diff, holes, net: holes > 0 ? (diff - expOver) : 0 };
       };
       return (
@@ -717,7 +717,7 @@
                   </div>)}
                   <div className="grid grid-cols-2 gap-2">
                     {(team || []).map((p,pI)=>(
-                      <div key={pI} className="relative flex bg-[#F8F9FA] rounded-xl border overflow-hidden shadow-sm"><div className="flex-1 flex items-center pl-3 py-1.5 min-w-0 pr-1 gap-1"><input type="text" value={p.name} onChange={(e)=>handlePlayerChange(tIdx,pI,'name',e.target.value)} className="w-full flex-1 text-sm font-medium focus:outline-none bg-transparent min-w-0" />{enableGroupComp && <GroupBadges tIdx={tIdx} pIdx={pI} customGroups={tempCustomGroups} />}</div><div className="w-16 border-l flex items-center pr-2 bg-slate-200/30 shrink-0"><input type="text" value={p.handicap} onChange={(e)=>handlePlayerChange(tIdx,pI,'handicap',e.target.value.replace(/[^0-9+\-]/g,''))} className="w-full bg-transparent py-1 text-xs text-center font-bold focus:outline-none" />{currentHandicapType==='strokes'&&<span className="text-[11px] text-slate-500 font-bold">타</span>}</div></div>
+                      <div key={pI} className="relative flex bg-[#F8F9FA] rounded-xl border overflow-hidden shadow-sm"><div className="flex-1 flex items-center pl-3 py-1.5 min-w-0 pr-1 gap-1"><input type="text" value={p.name} onChange={(e)=>handlePlayerChange(tIdx,pI,'name',e.target.value)} className="w-full flex-1 text-sm font-medium focus:outline-none bg-transparent min-w-0" />{enableGroupComp && <GroupBadges tIdx={tIdx} pIdx={pI} customGroups={tempCustomGroups} />}</div><div className="w-16 border-l flex items-center pr-2 bg-slate-200/30 shrink-0"><input type="text" value={p.handicap} onChange={(e)=>handlePlayerChange(tIdx,pI,'handicap',e.target.value.replace(/[^0-9+\-.]/g,''))} className="w-full bg-transparent py-1 text-xs text-center font-bold focus:outline-none" />{currentHandicapType==='strokes'&&<span className="text-[11px] text-slate-500 font-bold">타</span>}</div></div>
                     ))}
                   </div>
                 </div>
@@ -979,7 +979,7 @@
               if (sfDelta !== 0) details.stableford.push(`${hName}(${sfDelta})`);
             }
           });
-          const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-]/g, '')) || 0; const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi;
+          const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-.]/g, '')) || 0; const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi;
           const handiTrend = handicapOverPar / 18; const expectedDiffNow = handiTrend * holes; const diffVsExpected = actualDiff - expectedDiffNow;
           let perfText = '';
           if (holes > 0) {
@@ -999,7 +999,7 @@
         return (teamData || []).flatMap((team, tIdx) => (team || []).map((player, pIdx) => {
           let actualDiff = 0, playedHoles = 0, score = 0;
           allScores.forEach((hs, hI) => { if (hs[tIdx]?.[pIdx] != null) { score += hs[tIdx][pIdx]; actualDiff += (hs[tIdx][pIdx] - (allPars[tIdx]?.[hI] || 4)); playedHoles++; } });
-          const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-]/g, '')) || 0; const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi; const handiTrend = handicapOverPar / 18; const currentTrend = playedHoles > 0 ? actualDiff / playedHoles : handiTrend;
+          const handi = parseInt(String(player.handicap || "0").replace(/[^0-9+\-.]/g, '')) || 0; const handicapOverPar = handicapType === 'strokes' ? handi - 72 : handi; const handiTrend = handicapOverPar / 18; const currentTrend = playedHoles > 0 ? actualDiff / playedHoles : handiTrend;
           let predictedDiff = actualDiff;
           for (let i = 0; i < 18; i++) { if (allScores[i]?.[tIdx]?.[pIdx] == null) { const tc = isMultiCourse ? teamCourses[tIdx] : courseInfo; const cName = i < 9 ? tc.front : tc.back; const cHole = i < 9 ? i + 1 : i - 8; const key = `${cName}-${cHole}`; const holeDiff = physicalHoleDiffs[key] || 0; predictedDiff += (currentTrend * 0.5) + (holeDiff * 0.3) + (handiTrend * 0.2); } }
           return { ...player, tIdx, pIdx, diff: predictedDiff, score, playedHoles, actualDiff, predictedScore: Math.round(72 + predictedDiff) };
