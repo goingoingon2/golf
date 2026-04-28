@@ -133,6 +133,13 @@
 
     const safeDisplayDiff = diff => { if (diff == null || isNaN(diff)) return '-'; if (diff === 0) return 'E'; return diff > 0 ? `+${Math.round(diff)}` : String(Math.round(diff)); };
     const safeDisplayNet = netDiff => { if (netDiff == null || isNaN(netDiff)) return '-'; const val = parseFloat(netDiff).toFixed(1); if (val === "0.0" || val === "-0.0") return 'E'; return netDiff > 0 ? `+${val}` : String(val); };
+const smartDisplay = v => {
+  if (v == null || isNaN(v)) return '-';
+  const rounded = parseFloat(v.toFixed(1));
+  const str = Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  if (rounded === 0) return 'E';
+  return rounded > 0 ? `+${str}` : str;
+};
     const getRandomHandicap = () => String(Math.floor(Math.random() * 31) + 80);
 
     function RankBadge({ rank }) {
@@ -983,9 +990,9 @@
           const handiTrend = handicapOverPar / 18; const expectedDiffNow = handiTrend * holes; const diffVsExpected = actualDiff - expectedDiffNow;
           let perfText = '';
           if (holes > 0) {
-            if (diffVsExpected < 0) perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (${Math.abs(Math.round(diffVsExpected))}타 이득)`;
-            else if (diffVsExpected > 0) perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (${Math.round(diffVsExpected)}타 손해)`;
-            else perfText = `예상 ${safeDisplayDiff(expectedDiffNow)} → 실제 ${safeDisplayDiff(actualDiff)} (기대치 부합)`;
+if (diffVsExpected < 0) perfText = `예상 ${smartDisplay(expectedDiffNow)} → 실제 ${smartDisplay(actualDiff)} (${Math.abs(parseFloat(diffVsExpected.toFixed(1)))}타 이득)`;
+else if (diffVsExpected > 0) perfText = `예상 ${smartDisplay(expectedDiffNow)} → 실제 ${smartDisplay(actualDiff)} (${parseFloat(diffVsExpected.toFixed(1))}타 손해)`;
+else perfText = `예상 ${smartDisplay(expectedDiffNow)} → 실제 ${smartDisplay(actualDiff)} (기대치 부합)`;
             details.perfText = [perfText];
           }
           return { ...player, tIdx, pIdx, score, actualDiff, diff: actualDiff, birdies: birds, daPaScore: daPa, daBogeyScore: daBogey, realPars, realBogeys, realDoublePars, details, netDiff: holes > 0 ? (actualDiff - (handicapOverPar * (holes/18))) : 0, ilchiScore: holes > 0 ? diffVsExpected : 9999, nakchaScore: holes > 0 ? diffVsExpected : -9999, stablefordScore: sfScore, mockNewPeoriaNet: holes > 0 ? (score - (actualDiff * 0.8)) : 0, playedHoles: holes, variance: vari };
