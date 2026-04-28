@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>단체팀 스코어보드 프로</title>
+  <title>2026 SNG 춘계 라운드</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
@@ -13,7 +13,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
   <style>
     @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
-    *, body, button, input, select, textarea { font-family: 'Pretendard', sans-serif !important; }
+    *, body, button, input, select, textarea { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif !important; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .animate-fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -25,27 +25,27 @@
   <script type="text/babel">
     const { useState, useEffect, useRef } = React;
 
-    // =================================================================================
-    // ⬇️ [실시간 연동] 본인의 파이어베이스(Firebase) 설정 코드를 아래에 넣어주세요! ⬇️
-    // 설정이 비어있으면 자동으로 '오프라인 모드(단독 기기용)'로 동작합니다.
-    // =================================================================================
-    const MY_FIREBASE_CONFIG = {
+    let firebaseConfig = null;
+    try {
+      // =================================================================================
+      // ⬇️ 여기에 본인의 파이어베이스(Firebase) 설정 코드를 넣어주세요! ⬇️
+      // Firebase 콘솔 -> 프로젝트 설정 -> 내 앱 -> SDK 설정 및 구성에서 복사한 후 덮어씌웁니다.
+      // =================================================================================
+      const MY_FIREBASE_CONFIG = {
   apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
   authDomain: "left-right-6da31.firebaseapp.com",
   projectId: "left-right-6da31",
   storageBucket: "left-right-6da31.firebasestorage.app",
   messagingSenderId: "128347797181",
   appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
-    };
-    // =================================================================================
+      };
+      // =================================================================================
 
-    let firebaseConfig = null;
-    try {
-      if (typeof __firebase_config !== 'undefined') firebaseConfig = JSON.parse(__firebase_config); 
-      else firebaseConfig = MY_FIREBASE_CONFIG;
+      if (typeof __firebase_config !== 'undefined') { firebaseConfig = JSON.parse(__firebase_config); } 
+      else { firebaseConfig = MY_FIREBASE_CONFIG; }
     } catch (e) {}
 
-    const isConfigValid = firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "" && firebaseConfig.apiKey !== "YOUR_API_KEY";
+    const isConfigValid = firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY";
     let app = null, auth = null, db = null;
     if (isConfigValid && window.firebase) {
       app = firebase.apps.length === 0 ? firebase.initializeApp(firebaseConfig) : firebase.app();
@@ -70,6 +70,7 @@
       return [state, setState];
     }
 
+    const RANDOM_NAMES_POOL = ["박핀비","고지능영","김쎄영","박쾅현","전온지","김효핀","이정확","유해롱란","박민집중","이글원","박핀경","임정타","홍조준","방롱실","성핀진","황집중민","최정밀","권파워","신나이스","윤정타"];
     const ALL_AWARDS_KEYS = ['전체 순위','신페리오','변형스테이블포드','니어리스트','롱기스트','다버디','다파','다보기','다찐파','다찐보기','다찐양파','널뛰기','시몬스','일취월장','낙차큰커브'];
     const GOLF_COURSES_DATA = [
       { name: "표준 파72 (일반 코스)", courses: { "OUT 코스": [4,4,3,5,4,4,3,5,4], "IN 코스": [4,5,3,4,4,4,5,3,4] } },
@@ -85,7 +86,6 @@
       { badge: 'bg-teal-100 text-teal-700 border-teal-200', card: 'bg-teal-50/50 border-teal-100', input: 'text-teal-800 border-teal-200 focus:border-teal-500', btnActive: 'bg-teal-600 text-white border-teal-600' },
     ];
 
-    // 엣지 브라우저 호환성을 위해 xmlns 속성 강제 추가
     const Icons = {
       AlertCircle: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>,
       ArrowLeft: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M19 12H5m7 7l-7-7 7-7"/></svg>,
@@ -115,8 +115,8 @@
       Coffee: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M18 8h1a4 4 0 0 1 0 8h-1M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8zM6 1v3M10 1v3M14 1v3"/></svg>,
       TrendingUp: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>,
       TrendingDown: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>,
-      RefreshCcw: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"/><path d="M3.51 15A9 9 0 0 0 18.36 18.36L23 14"/></svg>,
       X: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      RefreshCcw: p => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"/><path d="M3.51 15A9 9 0 0 0 18.36 18.36L23 14"/></svg>,
     };
 
     const getInitialTeams = () => [
@@ -133,6 +133,7 @@
 
     const safeDisplayDiff = diff => { if (diff == null || isNaN(diff)) return '-'; if (diff === 0) return 'E'; return diff > 0 ? `+${Math.round(diff)}` : String(Math.round(diff)); };
     const safeDisplayNet = netDiff => { if (netDiff == null || isNaN(netDiff)) return '-'; const val = parseFloat(netDiff).toFixed(1); if (val === "0.0" || val === "-0.0") return 'E'; return netDiff > 0 ? `+${val}` : String(val); };
+    const getRandomHandicap = () => String(Math.floor(Math.random() * 31) + 80);
 
     function RankBadge({ rank }) {
       if (rank === 0) return <span className="text-[22px]">🥇</span>;
@@ -159,9 +160,9 @@
       return (
         <div className="fixed inset-0 z-[130] flex items-center justify-center px-4 text-center font-sans">
           <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" onClick={onClose} />
-          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up text-left">
+          <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up text-left font-pretendard">
             <div className="flex items-center justify-between mb-6"><div className="flex items-center gap-2 text-slate-800 font-bold text-lg"><Icons.Share2 className="w-5 h-5 text-[#0D8A5E]" /> 방 초대하기</div><button onClick={onClose} className="p-2 text-slate-400"><Icons.X className="w-5 h-5" /></button></div>
-            <div className="bg-[#F8F9FA] rounded-3xl p-6 flex items-center justify-center mb-6 border"><Icons.Share2 className="w-20 h-20 text-slate-300" strokeWidth={1.5} /></div>
+            <div className="bg-[#F8F9FA] rounded-3xl p-6 flex items-center justify-center mb-6 border border-slate-100"><Icons.Share2 className="w-20 h-20 text-slate-300" strokeWidth={1.5} /></div>
             <div className="mb-6"><label className="block text-slate-500 text-xs font-bold mb-2 pl-1">초대 URL</label><div className="bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-600 text-sm truncate font-medium select-all">{inviteUrl}</div></div>
             <div className="flex gap-3"><button onClick={handleCopy} className="flex-1 bg-white border border-[#0D8A5E] text-[#0D8A5E] font-bold py-3.5 rounded-xl">URL 복사</button><button onClick={() => { if(navigator.share) navigator.share({ title: '골프 스코어보드', url: inviteUrl }); onClose(); }} className="flex-1 bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md">공유하기</button></div>
           </div>
@@ -171,19 +172,15 @@
 
     function ScorePasteModal({ isOpen, onClose, allScores, setAllScores, teamData, syncToDB }) {
       const [jsonStr, setJsonStr] = useState('');
-      
       if (!isOpen) return null;
-
       const handleApply = () => {
         try {
           const parsed = JSON.parse(jsonStr);
           const newAllScores = [...allScores];
           if (!parsed.scores || !Array.isArray(parsed.scores)) throw new Error("Invalid format");
-
           parsed.scores.forEach(playerData => {
              let foundTIdx = -1, foundPIdx = -1;
              (teamData || []).forEach((team, tIdx) => { (team || []).forEach((p, pIdx) => { if (p.name === playerData.name) { foundTIdx = tIdx; foundPIdx = pIdx; } }); });
-             
              if (foundTIdx !== -1 && foundPIdx !== -1) {
                (playerData.holeScores || []).forEach((score, hIdx) => {
                  if (hIdx >= 18) return; 
@@ -209,7 +206,7 @@
           <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={onClose} />
           <div className="bg-white w-full max-w-sm rounded-[32px] p-6 relative z-10 shadow-2xl animate-fade-in-up text-left">
             <div className="flex items-center justify-between mb-4"><h3 className="text-slate-800 font-black text-lg flex items-center gap-2"><Icons.Zap className="w-5 h-5 text-emerald-500" /> AI 스코어 일괄 입력</h3><button onClick={onClose} className="p-1.5 text-slate-400"><Icons.X className="w-5 h-5" /></button></div>
-            <p className="text-xs text-slate-500 mb-4 leading-relaxed">제미나이(AI)가 추출해준 <b>JSON 코드</b>를 아래 빈칸에 붙여넣고 적용하기를 누르세요. 기존 스코어에 안전하게 덮어씌워집니다.</p>
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed">제미나이(AI)가 추출해준 <b>JSON 코드</b>를 아래 빈칸에 붙여넣고 적용하기를 누르세요.</p>
             <textarea className="w-full h-40 bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-[#0D8A5E]" placeholder={`{\n  "scores": [\n    { "name": "진호", "holeScores": [4, 5, 3] }\n  ]\n}`} value={jsonStr} onChange={e => setJsonStr(e.target.value)} />
             <div className="flex gap-3 mt-4"><button onClick={onClose} className="flex-1 bg-slate-100 text-slate-600 font-bold py-3.5 rounded-xl">취소</button><button onClick={handleApply} className="flex-1 bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md active:scale-95 transition-all">적용하기</button></div>
           </div>
@@ -625,7 +622,7 @@
 
       const currentCourseData = GOLF_COURSES_DATA.find(c => c.name === courseInfo.name) || GOLF_COURSES_DATA[0]; const courseOptions = Object.keys(currentCourseData?.courses || {});
 
-      const handleAddTeam = () => { if (players.length < 20) { const nt = players.length + 1; const usedNames = players.flat().map(p => p.name); const availableNames = ["타이거", "로리", "욘람", "스코티", "고진영", "박세리", "박인비", "김효주", "유소연", "전인지", "최나연", "신지애", "김아림", "이정은", "최혜진", "김세영"].filter(n => !usedNames.includes(n)).sort(() => 0.5 - Math.random()); const newTeam = Array.from({length: 4}).map((_, i) => ({ name: availableNames.length > i ? availableNames[i] : `선수 ${nt}-${i+1}`, handicap: String(Math.floor(Math.random() * 31) + 70) })); setPlayers(prev => [...(prev || []), newTeam]); setTeamNames(prev => [...(prev || []), `${nt}조`]); } };
+      const handleAddTeam = () => { if (players.length < 20) { const nt = players.length + 1; const usedNames = players.flat().map(p => p.name); const availableNames = RANDOM_NAMES_POOL.filter(n => !usedNames.includes(n)).sort(() => 0.5 - Math.random()); const newTeam = Array.from({length: 4}).map((_, i) => ({ name: availableNames.length > i ? availableNames[i] : `선수 ${nt}-${i+1}`, handicap: getRandomHandicap() })); setPlayers(prev => [...(prev || []), newTeam]); setTeamNames(prev => [...(prev || []), `${nt}조`]); } };
       const handleRemoveTeam = (index) => { if (players.length <= 2) return; setPlayers(prev => (prev || []).filter((_, i) => i !== index)); setTeamNames(prev => (prev || []).filter((_, i) => i !== index)); };
       const handlePlayerChange = (tIdx, pIdx, field, val) => { const np = [...players]; np[tIdx] = [...(np[tIdx] || [])]; np[tIdx][pIdx] = { ...(np[tIdx][pIdx] || {}), [field]: val }; setPlayers(np); };
       const handleCourseInput = (v) => { setCourseInfo({...courseInfo, name: v}); if (v.length > 0) { setFilteredCourses(GOLF_COURSES_DATA.filter(c => c.name.includes(v))); setShowSearchList(true); } else { setShowSearchList(false); } };
@@ -685,21 +682,25 @@
             </div>
 
             {/* 💡 [신규 추가] AI 스코어 자동 입력 UI */}
-            {isRoundStarted && (
-              <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-4 text-left animate-fade-in-up">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 font-bold text-slate-800">
-                    <Icons.Zap className="w-5 h-5 text-emerald-500" /> AI 스코어 일괄 붙여넣기
-                  </div>
-                  <button onClick={() => setIsPasteModalOpen(true)} className="bg-emerald-50 text-[#0D8A5E] font-bold text-[11px] px-3 py-1.5 rounded-lg border border-emerald-200 active:scale-95 transition-all shadow-sm">
-                    코드 붙여넣기
-                  </button>
+            <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-4 text-left animate-fade-in-up">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 font-bold text-slate-800">
+                  <Icons.Zap className="w-5 h-5 text-emerald-500" /> AI 스코어 일괄 붙여넣기
                 </div>
-                <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
-                  라운드 중 종이 스코어카드를 사진 찍어 제미나이(AI)에게 전달하면 한 번에 입력할 수 있는 코드를 만들어 줍니다.
-                </p>
+                <button onClick={() => {
+                  if (!isRoundStarted) {
+                    alert("대기실에서 '라운드 시작'을 먼저 누른 후 스코어를 입력해주세요.");
+                  } else {
+                    setIsPasteModalOpen(true);
+                  }
+                }} className="bg-emerald-50 text-[#0D8A5E] font-bold text-[11px] px-3 py-1.5 rounded-lg border border-emerald-200 active:scale-95 transition-all shadow-sm">
+                  코드 붙여넣기
+                </button>
               </div>
-            )}
+              <p className="text-[11px] text-slate-500 mt-2 leading-relaxed">
+                라운드 중 종이 스코어카드를 사진 찍어 제미나이(AI)에게 전달하면 한 번에 입력할 수 있는 코드를 만들어 줍니다.
+              </p>
+            </div>
 
             <div className="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 no-scrollbar text-left">
               {players.map((team, tIdx) => (
@@ -788,50 +789,49 @@
       const urlParams = new URLSearchParams(window.location.search);
       const isInviteLink = !!urlParams.get('roomId');
 
-      const [currentView, setCurrentView] = usePersistentState('golf_currentView_v24', isInviteLink ? 'waitingRoom' : 'settings');
-      const [handicapType, setHandicapType] = usePersistentState('golf_handicapType_v24', 'strokes');
-      const [eventName, setEventName] = usePersistentState('golf_eventName_v24', '2026 SNG 춘계 라운드');
-      const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo_v24', { name: '청평 마이다스', front: '마이다스 코스', back: '밸리 코스' });
-      const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse_v24', false);
-      const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses_v24', Array(20).fill({front: '마이다스 코스', back: '밸리 코스'}));
+      const [currentView, setCurrentView] = usePersistentState('golf_currentView_v25', isInviteLink ? 'waitingRoom' : 'settings');
+      const [handicapType, setHandicapType] = usePersistentState('golf_handicapType_v25', 'strokes');
+      const [eventName, setEventName] = usePersistentState('golf_eventName_v25', '2026 SNG 춘계 라운드');
+      const [courseInfo, setCourseInfo] = usePersistentState('golf_courseInfo_v25', { name: '청평 마이다스', front: '마이다스 코스', back: '밸리 코스' });
+      const [isMultiCourse, setIsMultiCourse] = usePersistentState('golf_isMultiCourse_v25', false);
+      const [teamCourses, setTeamCourses] = usePersistentState('golf_teamCourses_v25', Array(20).fill({front: '마이다스 코스', back: '밸리 코스'}));
       
-      const [isRoundStarted, setIsRoundStarted] = usePersistentState('golf_isRoundStarted_v24', false);
+      const [isRoundStarted, setIsRoundStarted] = usePersistentState('golf_isRoundStarted_v25', false);
       
-      const [teamNames, setTeamNames] = usePersistentState('golf_teamNames_v24', ['1조', '2조', '3조', '4조']);
-      const [teamData, setTeamData] = usePersistentState('golf_teamData_v24', getInitialTeams());
-      const [enableTeamComp, setEnableTeamComp] = usePersistentState('golf_enableTeamComp_v24', true);
-      const [enableGroupComp, setEnableGroupComp] = usePersistentState('golf_enableGroupComp_v24', true);
-      const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('golf_teamBalanceMode_v24', 'average');
-      const [customGroups, setCustomGroups] = usePersistentState('golf_customGroups_v24', getInitialGroups());
-      const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('golf_groupBalanceMode_v24', 'average');
-      const [selectedAwards, setSelectedAwards] = usePersistentState('golf_selectedAwards_v24', ALL_AWARDS_KEYS);
-      const [stablefordTitle, setStablefordTitle] = usePersistentState('golf_stablefordTitle_v24', '변형스테이블포드');
-      const [stablefordConfig, setStablefordConfig] = usePersistentState('golf_stablefordConfig_v24', [{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
-      const [specialHoles, setSpecialHoles] = usePersistentState('golf_specialHoles_v24', { nearest: null, longest: null, requirePar: true });
-      const [specialRecords, setSpecialRecords] = usePersistentState('golf_specialRecords_v24', Array(18).fill(null).map(() => ({})));
-      const [currentHole, setCurrentHole] = usePersistentState('golf_currentHole_v24', 1);
+      const [teamNames, setTeamNames] = usePersistentState('golf_teamNames_v25', ['1조', '2조', '3조', '4조']);
+      const [teamData, setTeamData] = usePersistentState('golf_teamData_v25', getInitialTeams());
+      const [enableTeamComp, setEnableTeamComp] = usePersistentState('golf_enableTeamComp_v25', true);
+      const [enableGroupComp, setEnableGroupComp] = usePersistentState('golf_enableGroupComp_v25', true);
+      const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('golf_teamBalanceMode_v25', 'average');
+      const [customGroups, setCustomGroups] = usePersistentState('golf_customGroups_v25', getInitialGroups());
+      const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('golf_groupBalanceMode_v25', 'average');
+      const [selectedAwards, setSelectedAwards] = usePersistentState('golf_selectedAwards_v25', ALL_AWARDS_KEYS);
+      const [stablefordTitle, setStablefordTitle] = usePersistentState('golf_stablefordTitle_v25', '변형스테이블포드');
+      const [stablefordConfig, setStablefordConfig] = usePersistentState('golf_stablefordConfig_v25', [{ id: 'albatross', label: '알바트로스', score: 8 }, { id: 'eagle', label: '이글', score: 5 }, { id: 'birdie', label: '버디', score: 2 }, { id: 'par', label: '파', score: 0 }, { id: 'bogey', label: '보기', score: -1 }, { id: 'doubleBogey', label: '더블보기 이상', score: -3 }]);
+      const [specialHoles, setSpecialHoles] = usePersistentState('golf_specialHoles_v25', { nearest: null, longest: null, requirePar: true });
+      const [specialRecords, setSpecialRecords] = usePersistentState('golf_specialRecords_v25', Array(18).fill(null).map(() => ({})));
+      const [currentHole, setCurrentHole] = usePersistentState('golf_currentHole_v25', 1);
       
-      const [allPars, setAllPars] = usePersistentState('golf_allPars_v24', []);
-      const [allScores, setAllScores] = usePersistentState('golf_allScores_v24', []);
-      const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam_v24', 0);
-      const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened_v24', false);
-      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole_v24', isInviteLink ? 'guest' : 'host');
-      const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo_v24', null);
-      const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus_v24', []);
-      const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors_v24', {});
-      const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission_v24', 'host');
-      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers_v24', []);
+      const [allPars, setAllPars] = usePersistentState('golf_allPars_v25', []);
+      const [allScores, setAllScores] = usePersistentState('golf_allScores_v25', []);
+      const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('golf_hostSelectedTeam_v25', 0);
+      const [isAwardsManuallyOpened, setIsAwardsManuallyOpened] = usePersistentState('golf_isAwardsManuallyOpened_v25', false);
+      const [currentUserRole, setCurrentUserRole] = usePersistentState('golf_currentUserRole_v25', isInviteLink ? 'guest' : 'host');
+      const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('golf_myPlayerInfo_v25', null);
+      const [joinedStatus, setJoinedStatus] = usePersistentState('golf_joinedStatus_v25', []);
+      const [lastEditors, setLastEditors] = usePersistentState('golf_lastEditors_v25', {});
+      const [scoreInputPermission, setScoreInputPermission] = usePersistentState('golf_scoreInputPermission_v25', 'host');
+      const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('golf_scoreInputAuthorizedPlayers_v25', []);
 
       const [previousView, setPreviousView] = useState('scoreInput');
       const [detailModal, setDetailModal] = useState(null);
       const [isAwardInfoOpen, setIsAwardInfoOpen] = useState(false);
-      const [roomId, setRoomId] = usePersistentState('golf_roomId_v24', null);
+      const [roomId, setRoomId] = usePersistentState('golf_roomId_v25', null);
       const manuallyClearedRef = useRef({});
       const [isDbConnected, setIsDbConnected] = useState(false);
       const [user, setUser] = useState(null);
       const [refreshTrigger, setRefreshTrigger] = useState(0);
       
-      // ✅ [디버깅 헬퍼] 에러 메시지 표시용
       const [firebaseError, setFirebaseError] = useState('');
 
       useEffect(() => { 
@@ -863,11 +863,9 @@
 
       useEffect(() => {
         if (!db || !roomId) return;
-        
-        // 규칙 문제가 있어도 일단 읽기를 시도하도록 설정
         const roomRef = db.doc(`artifacts/${appId}/public/data/golf_rooms/${roomId}`);
         const unsubscribe = roomRef.onSnapshot((docSnap) => {
-          setFirebaseError(''); // 성공하면 에러 지움
+          setFirebaseError(''); 
           if (docSnap.exists) {
             const data = docSnap.data();
             if (data.allScores) { try { setAllScores(typeof data.allScores === 'string' ? JSON.parse(data.allScores) : data.allScores); } catch(e) { setAllScores(data.allScores); } }
@@ -882,7 +880,7 @@
           setFirebaseError("Firebase DB 읽기 실패: 데이터베이스 보안 규칙을 '허용(allow read, write: if true;)'으로 변경하셔야 합니다.");
         });
         return () => unsubscribe();
-      }, [roomId]);
+      }, [roomId, db]);
 
       const syncToDB = async (updates, explicitRoomId) => { 
         const targetRoom = explicitRoomId || roomId;
@@ -895,7 +893,7 @@
           if (formattedUpdates.joinedStatus) formattedUpdates.joinedStatus = JSON.stringify(formattedUpdates.joinedStatus);
           if (formattedUpdates.teamData) formattedUpdates.teamData = JSON.stringify(formattedUpdates.teamData);
           await roomRef.set(formattedUpdates, { merge: true }); 
-          setFirebaseError(''); // 성공 시 에러 지움
+          setFirebaseError(''); 
         } catch (e) {
           console.error("🔥 DB 쓰기 에러", e);
           setFirebaseError("Firebase DB 쓰기 실패: 데이터베이스 보안 규칙을 '허용(allow read, write: if true;)'으로 변경하셔야 합니다.");
