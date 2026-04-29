@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>좌탄우탄 스코어보드 5인</title>
+    <title>좌탄우탄 스코어보드 (LIVE)</title>
     <!-- React 및 라이브러리 로드 -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -292,8 +292,8 @@
             const totals = useMemo(() => {
                 const scores = [0, 0, 0, 0, 0];
                 holes.forEach(hole => {
-                    // 1인(Solo) 점수 누적
-                    if (hole.soloIndex !== null && hole.soloIndex !== undefined && !hole.isDraw) {
+                    // 1인(Solo) 점수 누적 (비김 처리 여부와 무관하게 적용)
+                    if (hole.soloIndex !== null && hole.soloIndex !== undefined) {
                         scores[hole.soloIndex] += (hole.soloPoints || 0);
                     }
                     // 나머지 4명(2:2) 점수 누적
@@ -310,6 +310,20 @@
                 });
                 return scores;
             }, [holes]);
+
+            // 1인 전용 점수 합계 (별도 표기용)
+            const soloTotals = useMemo(() => {
+                const scores = [0, 0, 0, 0, 0];
+                holes.forEach(hole => {
+                    if (hole.soloIndex !== null && hole.soloIndex !== undefined) {
+                        scores[hole.soloIndex] += (hole.soloPoints || 0);
+                    }
+                });
+                return scores;
+            }, [holes]);
+
+            // 전체 1인 점수의 총합 (좌측 헤더 표기용)
+            const totalSoloSum = useMemo(() => soloTotals.reduce((a, b) => a + b, 0), [soloTotals]);
 
             const rankingInfo = useMemo(() => {
                 if (feeMode === 'none') return null;
@@ -429,8 +443,7 @@
                     const n = [...holes]; 
                     const h = n[currentHoleIdx];
                     h.isDraw = !h.isDraw; 
-                    h.soloIndex = null;
-                    h.soloPoints = 0;
+                    // 1인(Solo) 기록은 지우지 않고 유지함
                     h.winners = []; 
                     h.points = 1; 
                     updateGameState({ holes: n });
@@ -444,7 +457,11 @@
                 
                 const summary = players.slice(0, 5).map((p, i) => {
                     const score = totals[i];
-                    return `${p}: ${score > 0 ? '+' : ''}${score}점${rankingInfo ? ` (${rankingInfo[i].toLocaleString()}원)` : ''}`;
+                    const soloScore = soloTotals[i];
+                    let text = `${p}: ${score > 0 ? '+' : ''}${score}점`;
+                    if (soloScore !== 0) text += ` (1인 합계 ${soloScore > 0 ? '+' : ''}${soloScore})`;
+                    if (rankingInfo) text += ` / ${rankingInfo[i].toLocaleString()}원`;
+                    return text;
                 }).join('\n');
 
                 const feeLabel = feeMode === 'none' ? '' : ` [${feeMode === 'morning' ? '오전' : '오후'} 내기]`;
@@ -704,13 +721,27 @@
                             
                             {/* 모달 내 5인 TOTAL 영역 */}
                             <div className="grid grid-cols-[45px_repeat(5,minmax(0,1fr))] bg-white border-b border-slate-200 shrink-0 shadow-sm z-10">
-                                <div className="flex flex-col items-center justify-center font-bold text-slate-400 text-[9px] uppercase leading-tight">TOTAL<br/>SCORE</div>
+                                <div className="flex flex-col items-center justify-center font-bold text-slate-400 text-[9px] uppercase leading-tight">
+                                    <span>TOTAL</span>
+                                    <span className="text-[8px] text-purple-400 mt-2">1인</span>
+                                    <span className={`text-[10px] font-black mt-0.5 ${totalSoloSum !== 0 ? 'text-purple-600' : 'text-purple-300'}`}>
+                                        {totalSoloSum > 0 ? `+${totalSoloSum}` : totalSoloSum}
+                                    </span>
+                                </div>
                                 {players.slice(0, 5).map((p, i) => (
-                                    <div key={i} className="py-2 border-l border-slate-100 flex flex-col items-center justify-center bg-white px-0.5">
+                                    <div key={i} className="py-2 border-l border-slate-100 flex flex-col items-center justify-center bg-white px-1">
                                         <span className="text-[10px] font-bold text-slate-700 truncate w-full text-center">{p}</span>
-                                        <span className={`text-[18px] font-black leading-none my-1 ${totals[i]>0?'text-[#3b82f6]':totals[i]<0?'text-[#ef4444]':'text-slate-800'}`}>
+                                        <span className={`text-[18px] font-black leading-none mt-1.5 mb-1.5 ${totals[i]>0?'text-[#3b82f6]':totals[i]<0?'text-[#ef4444]':'text-slate-800'}`}>
                                             {totals[i]>0?`+${totals[i]}`:totals[i]}
                                         </span>
+                                        
+                                        {/* 1인 스코어 전용 고정 줄 */}
+                                        <div className="w-full bg-purple-50 rounded flex justify-center items-center py-0.5 mb-0.5 border border-purple-100">
+                                            <span className={`text-[9px] font-black ${soloTotals[i] !== 0 ? 'text-purple-600' : 'text-purple-300'}`}>
+                                                {soloTotals[i] > 0 ? `+${soloTotals[i]}` : soloTotals[i]}
+                                            </span>
+                                        </div>
+
                                         {rankingInfo && <span className="text-[8px] font-medium text-slate-400 bg-slate-50 w-full text-center rounded-sm py-0.5">{rankingInfo[i].toLocaleString()}</span>}
                                     </div>
                                 ))}
@@ -731,13 +762,16 @@
                                             </div>
 
                                             <div className="flex-1 grid grid-cols-5 gap-1 items-center">
-                                                {isHoleDraw ? <div className="col-span-5 flex items-center justify-center h-full min-h-[36px] rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-bold text-slate-500 tracking-widest uppercase">DRAW</div> : 
+                                                {isHoleDraw && (h.soloIndex === null || h.soloIndex === undefined) ? (
+                                                    <div className="col-span-5 flex items-center justify-center h-full min-h-[36px] rounded-lg bg-slate-50 border border-slate-100 text-[11px] font-bold text-slate-500 tracking-widest uppercase">DRAW</div> 
+                                                ) : (
                                                     [0,1,2,3,4].map(pi => {
                                                         const isSolo = h.soloIndex === pi;
-                                                        const win = h.winners.includes(pi);
-                                                        const lose = done && !win && !isSolo;
+                                                        const win = !isHoleDraw && h.winners.includes(pi);
+                                                        const lose = !isHoleDraw && done && !win && !isSolo;
                                                         
-                                                        if (!done && !win && !isSolo) return <div key={pi} className="flex items-center justify-center h-full min-h-[36px] text-slate-300 font-bold text-[11px]">-</div>;
+                                                        if (!done && !win && !isSolo && !isHoleDraw) return <div key={pi} className="flex items-center justify-center h-full min-h-[36px] text-slate-300 font-bold text-[11px]">-</div>;
+                                                        if (isHoleDraw && !isSolo) return <div key={pi} className="flex items-center justify-center h-full min-h-[36px] text-slate-400 font-bold text-[10px] bg-slate-100 rounded-lg">D</div>;
                                                         
                                                         let pillClass = "flex items-center justify-center h-full min-h-[36px] rounded-lg text-[11px] font-black ";
                                                         let content = "-";
@@ -759,7 +793,7 @@
                                                             </div>
                                                         )
                                                     })
-                                                }
+                                                )}
                                             </div>
                                         </div>
                                     )
@@ -809,9 +843,15 @@
                         </div>
                         
                         <div className="grid grid-cols-[45px_repeat(5,minmax(0,1fr))] border-t border-b border-slate-100 pb-1.5">
-                            <div className="flex flex-col items-center justify-center font-bold text-slate-400 text-[9px] uppercase leading-tight">TOTAL<br/>SCORE</div>
+                            <div className="flex flex-col items-center justify-center font-bold text-slate-400 text-[9px] uppercase leading-tight pt-1">
+                                <span>TOTAL</span>
+                                <span className="text-[8px] text-purple-400 mt-3">1인</span>
+                                <span className={`text-[11px] font-black mt-0.5 ${totalSoloSum !== 0 ? 'text-purple-600' : 'text-purple-300'}`}>
+                                    {totalSoloSum > 0 ? `+${totalSoloSum}` : totalSoloSum}
+                                </span>
+                            </div>
                             {players.slice(0, 5).map((p, i) => (
-                                <div key={i} className="pt-2 pb-1 border-l border-slate-100 flex flex-col items-center justify-center relative px-0.5">
+                                <div key={i} className="pt-2 pb-1 border-l border-slate-100 flex flex-col items-center justify-center relative px-1">
                                     {editingIdx === i ? (
                                         <input ref={editInputRef} defaultValue={p} 
                                             onBlur={e => {
@@ -823,9 +863,17 @@
                                     ) : (
                                         <span onClick={() => handleAuthAction(() => setEditingIdx(i))} className="text-[10px] font-bold text-slate-700 truncate w-full text-center cursor-pointer">{p}</span>
                                     )}
-                                    <span className={`text-[19px] font-black leading-none my-1.5 ${totals[i]>0?'text-[#3b82f6]':totals[i]<0?'text-[#ef4444]':'text-slate-800'}`}>
+                                    <span className={`text-[19px] font-black leading-none mt-1.5 mb-1.5 ${totals[i]>0?'text-[#3b82f6]':totals[i]<0?'text-[#ef4444]':'text-slate-800'}`}>
                                         {totals[i]>0?`+${totals[i]}`:totals[i]}
                                     </span>
+                                    
+                                    {/* 1인 스코어 전용 고정 줄 */}
+                                    <div className="w-full bg-purple-50 rounded flex justify-center items-center py-0.5 mb-0.5 border border-purple-100">
+                                        <span className={`text-[9px] font-black ${soloTotals[i] !== 0 ? 'text-purple-600' : 'text-purple-300'}`}>
+                                            {soloTotals[i] > 0 ? `+${soloTotals[i]}` : soloTotals[i]}
+                                        </span>
+                                    </div>
+
                                     {rankingInfo && <span className="text-[8px] font-medium text-slate-400 bg-slate-50 w-full text-center rounded-sm py-0.5">{rankingInfo[i].toLocaleString()}</span>}
                                 </div>
                             ))}
@@ -854,7 +902,14 @@
                             {currentHoleData.isDraw ? (
                                 <div className="py-12 flex flex-col items-center justify-center bg-[#f8fafc] rounded-2xl border-2 border-dashed border-slate-300">
                                     <p className="text-xl font-black text-slate-500 tracking-widest uppercase">Draw Game</p>
-                                    <p className="text-[13px] text-slate-400 mt-1.5 font-bold">비김 처리된 홀입니다.</p>
+                                    <p className="text-[13px] text-slate-400 mt-1.5 font-bold">2:2 비김 처리된 홀입니다.</p>
+                                    {isSoloSelected && currentHoleData.soloPoints !== 0 && (
+                                        <div className="mt-4 px-5 py-2 bg-purple-100 rounded-xl border border-purple-200 shadow-sm">
+                                            <span className="text-purple-600 font-bold text-sm tracking-wide">
+                                                {players[currentHoleData.soloIndex]} (1인) : {currentHoleData.soloPoints > 0 ? `+${currentHoleData.soloPoints}` : currentHoleData.soloPoints}
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-2 gap-3">
@@ -918,7 +973,7 @@
                                     {currentHoleData.isDraw ? '비김 취소' : '비김 (DRAW) 처리'}
                                 </button>
                                 
-                                {isCurrentHoleDone && currentHoleIdx < 17 && (
+                                {(isCurrentHoleDone || currentHoleData.isDraw) && currentHoleIdx < 17 && (
                                     <button onClick={() => changeHole(currentHoleIdx + 1)} className="flex-1 py-3.5 rounded-xl font-bold text-[14px] bg-emerald-600 text-white shadow-[0_4px_12px_rgba(5,150,105,0.4)] active:scale-95 flex items-center justify-center">
                                         다음 홀 <Icon name="chevronRight" size={16} className="ml-0.5"/>
                                     </button>
