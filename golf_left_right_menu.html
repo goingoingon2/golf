@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>좌로 굴러 우로 굴러 좌탄우탄</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: #f0ede6;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1.25rem;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .golf-title {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 38px;
+      font-weight: 400;
+      color: #1a1a1a;
+      text-align: center;
+      letter-spacing: -1px;
+      margin-bottom: 8px;
+    }
+
+    .golf-sub {
+      text-align: center;
+      font-size: 15px;
+      color: #888;
+      letter-spacing: 5px;
+      margin-bottom: 2.5rem;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 2rem;
+    }
+    .divider-line { flex: 1; height: 1px; background: #ccc; }
+    .divider-ball { width: 8px; height: 8px; border-radius: 50%; background: #aaa; }
+
+    .golf-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .golf-card {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 1.4rem 1.5rem;
+      background: #ffffff;
+      border: 2px solid #ddd;
+      border-radius: 18px;
+      text-decoration: none;
+      transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+      box-shadow: 0 3px 0 #ccc;
+    }
+    .golf-card:hover {
+      border-color: #aaa;
+      box-shadow: 0 5px 18px rgba(0,0,0,0.12);
+      transform: translateY(-2px);
+    }
+    .golf-card:active {
+      transform: translateY(1px);
+      box-shadow: 0 1px 0 #ccc;
+    }
+
+    .golf-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 2px solid rgba(0,0,0,0.07);
+    }
+    .icon-4 { background: #dceeff; }
+    .icon-5 { background: #d6f0db; }
+    .icon-6 { background: #fde8c8; }
+
+    .golf-icon svg { width: 28px; height: 28px; }
+
+    .golf-label {
+      font-size: 13px;
+      color: #999;
+      margin-bottom: 4px;
+      font-weight: 400;
+    }
+    .golf-name {
+      font-size: 20px;
+      font-weight: 700;
+      color: #1a1a1a;
+      letter-spacing: -0.5px;
+    }
+
+    .golf-arrow {
+      margin-left: auto;
+      font-size: 26px;
+      color: #ccc;
+      font-weight: 300;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="golf-title">⛳ 좌로 굴러 우로 굴러</h1>
+    <p class="golf-sub">좌 탄 우 탄</p>
+
+    <div class="divider">
+      <div class="divider-line"></div>
+      <div class="divider-ball"></div>
+      <div class="divider-line"></div>
+    </div>
+
+    <div class="golf-grid">
+
+      <!-- 4인 -->
+      <a class="golf-card" href="https://goingoingon2.github.io/golf/left_right.html">
+        <div class="golf-icon icon-4">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="7"  cy="8" r="2.5" fill="#185FA5"/>
+            <circle cx="12" cy="8" r="2.5" fill="#185FA5"/>
+            <circle cx="17" cy="8" r="2.5" fill="#185FA5"/>
+            <circle cx="9.5"  cy="15" r="2.5" fill="#378ADD"/>
+            <circle cx="14.5" cy="15" r="2.5" fill="#378ADD"/>
+            <path d="M12 20v-3" stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M9 20h6"   stroke="#185FA5" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="golf-label">전통의</p>
+          <p class="golf-name">4명 플레이</p>
+        </div>
+        <span class="golf-arrow">›</span>
+      </a>
+
+      <!-- 5인 -->
+      <a class="golf-card" href="https://goingoingon2.github.io/golf/left_right_5.html">
+        <div class="golf-icon icon-5">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="5"    cy="8"  r="2.2" fill="#3B6D11"/>
+            <circle cx="10"   cy="8"  r="2.2" fill="#3B6D11"/>
+            <circle cx="14.5" cy="8"  r="2.2" fill="#3B6D11"/>
+            <circle cx="19"   cy="8"  r="2.2" fill="#3B6D11"/>
+            <circle cx="7"    cy="15" r="2.2" fill="#639922"/>
+            <circle cx="12"   cy="15" r="2.2" fill="#639922"/>
+            <circle cx="17"   cy="15" r="2.2" fill="#639922"/>
+            <path d="M12 20v-2.8" stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M9.5 20h5"   stroke="#3B6D11" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="golf-label">더 신나는</p>
+          <p class="golf-name">5인 플레이</p>
+        </div>
+        <span class="golf-arrow">›</span>
+      </a>
+
+      <!-- 6인 3on3 -->
+      <a class="golf-card" href="https://goingoingon2.github.io/golf/left_right_3_on_3.html">
+        <div class="golf-icon icon-6">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="5"  cy="7" r="2.2" fill="#854F0B"/>
+            <circle cx="12" cy="7" r="2.2" fill="#854F0B"/>
+            <circle cx="19" cy="7" r="2.2" fill="#854F0B"/>
+            <rect x="2"  y="11" width="7" height="5" rx="2.5" fill="#EF9F27"/>
+            <rect x="15" y="11" width="7" height="5" rx="2.5" fill="#EF9F27"/>
+            <path d="M9 13.5h6" stroke="#BA7517" stroke-width="1" stroke-linecap="round" stroke-dasharray="1.5 1.5"/>
+            <path d="M12 16v3"  stroke="#854F0B" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M10 19h4"  stroke="#854F0B" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          <p class="golf-label">팀 대결</p>
+          <p class="golf-name">3on3 · 6인 플레이</p>
+        </div>
+        <span class="golf-arrow">›</span>
+      </a>
+
+    </div>
+  </div>
+</body>
+</html>
