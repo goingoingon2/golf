@@ -689,7 +689,7 @@
               : `<span class="font-bold text-emerald-500 text-sm tracking-tight bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100 shadow-sm">${s.items.length}건 찬조</span>`
             }
           </div>
-          ${s.cash > 0 ? `<div class="text-[11px] font-bold text-pink-500/80 mb-2 mt-[-4px]">대회 총상금 전액 스폰 (찬스상 제외)</div>` : ''}
+          ${s.cash > 0 ? `<div class="text-[11px] font-bold text-pink-500/80 mb-2 mt-[-4px]">대회 총상금 전액 스폰</div>` : ''}
           ${s.items.length > 0 ? `
             <div class="flex flex-wrap gap-1.5 mt-1">
               ${s.items.map(item => `<span class="text-[11px] font-medium px-2 py-1 bg-white border border-slate-200 rounded-md text-slate-600 shadow-sm leading-tight">${item}</span>`).join('')}
