@@ -16,16 +16,10 @@
     body {
       font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
       background-color: #f4f6f8;
-      color: #1e293b; /* text-slate-800 */
+      color: #1e293b;
     }
-    /* Scrollbar 숨기기 */
-    .no-scrollbar::-webkit-scrollbar {
-      display: none;
-    }
-    .no-scrollbar {
-      -ms-overflow-style: none;
-      scrollbar-width: none;
-    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .modal-hidden { display: none !important; }
     .modal-visible { display: flex !important; }
   </style>
@@ -50,9 +44,7 @@
           <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
-      <div id="modal-content" class="overflow-y-auto p-4 flex-1">
-        <!-- Modal rows injected here -->
-      </div>
+      <div id="modal-content" class="overflow-y-auto p-4 flex-1"></div>
     </div>
   </div>
 
@@ -74,6 +66,34 @@
       </div>
     </div>
 
+    <!-- ★ Sponsor Standalone Panel (스폰서 전용 특수 패널 - 블랙 & 메탈릭 골드 콘셉트) -->
+    <div class="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white p-5 rounded-2xl shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center gap-4 relative overflow-hidden">
+      <!-- 배경 미세 광원 효과 -->
+      <div class="absolute -right-16 -bottom-16 w-32 h-32 bg-yellow-500/10 rounded-full blur-2xl"></div>
+      
+      <!-- 독자적인 형태의 배너 타이틀 -->
+      <div class="flex items-center gap-2 font-black text-xs shrink-0 bg-yellow-500/15 border border-yellow-500/30 text-yellow-500 px-3.5 py-2 rounded-xl shadow-sm tracking-widest uppercase">
+        <i data-lucide="megaphone" class="w-4 h-4 text-yellow-500 fill-yellow-500/10"></i> OFFICIAL SPONSORS
+      </div>
+      
+      <!-- 입체적인 배너 버튼 레이아웃 -->
+      <div class="flex flex-wrap gap-2 items-center">
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">DAEJANG</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">BENZ KOREA</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">CJ FOOD</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">NANOBOOK SYSTEM</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">92 SUNG</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">HOYA VISION CARE</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">YUHAN</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">ENTAS</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">PUMA KOREA</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">PLAN G</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">ODOORI</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">SEL INTERNATIONAL</span>
+        <span class="px-2.5 py-1 text-[11px] bg-slate-800 hover:bg-slate-750 border border-slate-700/60 rounded-md text-slate-200 hover:text-yellow-400 font-extrabold shadow-sm transition-all duration-300 cursor-default">KIMCHONGMOO</span>
+      </div>
+    </div>
+
     <!-- 3 Summary Cards -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       
@@ -90,9 +110,7 @@
             <span class="text-sm font-medium opacity-90">대회 전체 평균</span>
             <span id="global-avg-display" class="text-2xl font-black">-타</span>
           </div>
-          <div id="round-avg-list" class="flex flex-col w-full">
-            <!-- Injected via JS -->
-          </div>
+          <div id="round-avg-list" class="flex flex-col w-full"></div>
         </div>
       </div>
 
@@ -107,9 +125,7 @@
             <i data-lucide="chevron-right" class="w-5 h-5 opacity-70 group-hover:opacity-100"></i>
           </button>
         </div>
-        <div id="break100-top5-list" class="relative z-10 space-y-2 w-full mt-auto">
-          <!-- Injected via JS -->
-        </div>
+        <div id="break100-top5-list" class="relative z-10 space-y-2 w-full mt-auto"></div>
       </div>
 
       <!-- Card 3: Top 5 Finish -->
@@ -123,28 +139,24 @@
             <i data-lucide="chevron-right" class="w-5 h-5 opacity-70 group-hover:opacity-100"></i>
           </button>
         </div>
-        <div id="top5finish-top5-list" class="relative z-10 space-y-2 w-full mt-auto">
-          <!-- Injected via JS -->
-        </div>
+        <div id="top5finish-top5-list" class="relative z-10 space-y-2 w-full mt-auto"></div>
       </div>
 
     </div>
 
-    <!-- ★ Sponsor Section (기부자 및 스폰서 명예의 전당) -->
+    <!-- Sponsor Section (명예의 전당: 기부 및 찬조) -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
       <div class="flex items-center gap-2 mb-6">
         <i data-lucide="heart-handshake" class="w-6 h-6 text-pink-500"></i>
         <h2 class="text-lg font-bold text-slate-800">명예의 전당: 기부 및 찬조 <span class="text-sm font-medium text-slate-400 ml-1">(상금 스폰서 및 물품 찬조자)</span></h2>
       </div>
-      <div id="sponsor-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <!-- Injected via JS -->
-      </div>
+      <div id="sponsor-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
       
       <!-- 숨은 스폰서 감사 멘트 -->
-      <div class="mt-5 p-4 bg-pink-50/60 rounded-xl border border-pink-100 text-center shadow-sm">
+      <div class="mt-5 p-5 bg-pink-50/60 rounded-xl border border-pink-100 text-center shadow-sm">
         <p class="text-sm font-medium text-slate-600 leading-relaxed">
-          <span class="text-pink-500 font-bold mr-1">✨ And...</span> 이 외에도 위 기록에 다 담지 못할 만큼, 알게 모르게 내기를 빙자한 보탬과 스치듯 상금과 오늘을 기다린 쌈짓돈을 털어<br class="hidden sm:block"/> 모임의 텐션을 우주 끝까지 끌어올려 주신 <span class="font-bold text-slate-800">모든 찬조자분들께 압도적 감사를 드립니다! 🙇‍♂️💸</span><br/>
-          <span class="text-[11px] text-slate-400 mt-1.5 inline-block font-semibold">(여러분의 은밀한 통큰 쾌척... 술깨고 기억하겠습니다!)</span>
+          <span class="text-pink-500 font-bold mr-1">✨ And...</span> 이 외에도 위 기록에 다 담지 못할 만큼, 알게 모르게 내기를 빙자한 보탬과 스치듯 상금과 오늘을 기다린 쌈짓돈을 털어<br/>
+          모임의 텐션을 우주 끝까지 끌어올려 주신 <span class="font-bold text-slate-800">모든 찬조자분들께 압도적 감사를 드립니다! 🙇‍♂️💸</span>
         </p>
       </div>
     </div>
@@ -155,9 +167,7 @@
         <i data-lucide="trophy" class="w-6 h-6 text-yellow-500"></i>
         <h2 class="text-lg font-bold text-slate-800">종합 메달 순위 <span class="text-sm font-medium text-slate-400 ml-1">(전체 회차 1~3위 누적)</span></h2>
       </div>
-      <div id="medal-ranking-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        <!-- Injected via JS -->
-      </div>
+      <div id="medal-ranking-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
     </div>
 
     <!-- Prizes Section -->
@@ -166,9 +176,7 @@
         <i data-lucide="medal" class="w-6 h-6 text-yellow-500"></i>
         <h2 class="text-lg font-bold text-slate-800">누적 상금 랭킹 및 내역</h2>
       </div>
-      <div id="prize-ranking-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Injected via JS -->
-      </div>
+      <div id="prize-ranking-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
     <!-- Class Ranking Section -->
@@ -177,9 +185,7 @@
         <i data-lucide="crown" class="w-6 h-6 text-purple-500"></i>
         <h2 class="text-lg font-bold text-slate-800">학번별 종합 성과 <span class="text-sm font-medium text-slate-400 ml-1">(누적 상금 및 메달 합산)</span></h2>
       </div>
-      <div id="class-summary-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Injected via JS -->
-      </div>
+      <div id="class-summary-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5"></div>
     </div>
 
     <!-- Gifts Section -->
@@ -188,42 +194,27 @@
         <i data-lucide="gift" class="w-6 h-6 text-emerald-500"></i>
         <h2 class="text-lg font-bold text-slate-800">회차별 상품 찬조 및 수여 내역 <span class="text-sm font-medium text-slate-400 ml-1">(공통/다수 지급 및 개인 수여)</span></h2>
       </div>
-      <div id="gift-ranking-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <!-- Injected via JS -->
-      </div>
+      <div id="gift-ranking-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
     </div>
 
-    <!-- Trend Block (Score & Rank Combined) -->
+    <!-- Trend Block -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <h2 class="text-lg font-bold text-slate-800">개인별 회차 변동 추이 (타수 & 순위)</h2>
         <div class="flex items-center gap-3">
           <span id="player-select-count" class="text-xs font-semibold text-slate-400">비교 인원 (17명)</span>
-          <button onclick="toggleAllPlayers()" id="toggle-all-btn" class="text-xs text-[#528af2] hover:bg-blue-50 px-3 py-1.5 rounded-full font-bold transition-colors">
-            전체 해제
-          </button>
+          <button onclick="toggleAllPlayers()" id="toggle-all-btn" class="text-xs text-[#528af2] hover:bg-blue-50 px-3 py-1.5 rounded-full font-bold transition-colors">전체 해제</button>
         </div>
       </div>
-      
-      <div id="player-pills-container" class="flex flex-wrap gap-1.5 mb-6 pb-4 border-b border-slate-100">
-        <!-- Injected via JS -->
-      </div>
-
+      <div id="player-pills-container" class="flex flex-wrap gap-1.5 mb-6 pb-4 border-b border-slate-100"></div>
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-4">
-        <!-- Chart 1: 타수 추이 -->
         <div class="flex flex-col">
           <h3 class="text-sm font-bold text-slate-500 mb-4 text-center">타수 변동 추이 <span class="text-xs font-normal ml-1">(낮을수록 좋음)</span></h3>
-          <div class="flex-1 min-h-[280px] w-full relative">
-             <canvas id="scoreTrendChart"></canvas>
-          </div>
+          <div class="flex-1 min-h-[280px] w-full relative"><canvas id="scoreTrendChart"></canvas></div>
         </div>
-
-        <!-- Chart 2: 순위 추이 -->
         <div class="flex flex-col">
           <h3 class="text-sm font-bold text-slate-500 mb-4 text-center">순위 변동 추이 <span class="text-xs font-normal ml-1">(1위에 가까울수록 좋음)</span></h3>
-          <div class="flex-1 min-h-[280px] w-full relative">
-            <canvas id="rankTrendChart"></canvas>
-          </div>
+          <div class="flex-1 min-h-[280px] w-full relative"><canvas id="rankTrendChart"></canvas></div>
         </div>
       </div>
     </div>
@@ -232,16 +223,11 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
         <h2 class="text-lg font-bold text-slate-800 mb-6">개인별 평균 타수 랭킹</h2>
-        <div class="h-[480px] w-full relative">
-          <canvas id="avgRankBarChart"></canvas>
-        </div>
+        <div class="h-[480px] w-full relative"><canvas id="avgRankBarChart"></canvas></div>
       </div>
-      
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
         <h2 class="text-lg font-bold text-slate-800 mb-2">학번별 평균 타수 변동 추이</h2>
-        <div class="flex-1 w-full min-h-[440px] relative">
-          <canvas id="classTrendChart"></canvas>
-        </div>
+        <div class="flex-1 w-full min-h-[440px] relative"><canvas id="classTrendChart"></canvas></div>
       </div>
     </div>
 
@@ -249,11 +235,8 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
         <h2 class="text-lg font-bold text-slate-800 mb-6">학번별 전체 평균 타수</h2>
-        <div class="flex-1 w-full min-h-[260px] relative">
-          <canvas id="classAvgBarChart"></canvas>
-        </div>
+        <div class="flex-1 w-full min-h-[260px] relative"><canvas id="classAvgBarChart"></canvas></div>
       </div>
-
       <div class="flex flex-col gap-6">
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex-1 relative">
           <div class="flex justify-between items-center mb-3">
@@ -265,11 +248,8 @@
               <i data-lucide="chevron-right" class="w-5 h-5"></i>
             </button>
           </div>
-          <div id="rollercoaster-list" class="space-y-2">
-            <!-- Injected via JS -->
-          </div>
+          <div id="rollercoaster-list" class="space-y-2"></div>
         </div>
-
         <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex-1 relative">
           <div class="flex justify-between items-center mb-3">
             <div class="flex items-center gap-2">
@@ -280,9 +260,7 @@
               <i data-lucide="chevron-right" class="w-5 h-5"></i>
             </button>
           </div>
-          <div id="simmons-list" class="space-y-2">
-            <!-- Injected via JS -->
-          </div>
+          <div id="simmons-list" class="space-y-2"></div>
         </div>
       </div>
     </div>
@@ -292,16 +270,12 @@
       <div class="p-5 border-b border-slate-100 bg-white relative z-30">
         <h2 class="text-lg font-bold text-slate-800">종합 스코어 보드</h2>
       </div>
-
       <div class="overflow-x-auto no-scrollbar relative z-20">
         <table class="w-full text-sm text-center min-w-[700px]">
           <thead class="bg-[#f8fafc] text-slate-600 font-bold border-b border-slate-200">
             <tr>
-              <!-- 순위 칼럼 (틀 고정) -->
               <th class="py-4 px-4 whitespace-nowrap sticky left-0 z-20 w-[70px] min-w-[70px] bg-[#f8fafc]">순위</th>
-              <!-- 이름 칼럼 (틀 고정) -->
               <th class="py-4 px-4 whitespace-nowrap text-center sticky left-[70px] z-20 bg-[#f8fafc] shadow-[inset_-1px_0_0_#e2e8f0]">이름</th>
-              
               <th class="py-4 px-4 whitespace-nowrap">평균타수</th>
               <th class="py-4 px-4 whitespace-nowrap border-r border-slate-100 bg-blue-50/30">최근 추세</th>
               <th class="py-4 px-4 whitespace-nowrap">5회</th>
@@ -311,9 +285,7 @@
               <th class="py-4 px-4 whitespace-nowrap">1회</th>
             </tr>
           </thead>
-          <tbody id="score-table-body" class="divide-y divide-slate-100">
-            <!-- Injected via JS -->
-          </tbody>
+          <tbody id="score-table-body" class="divide-y divide-slate-100"></tbody>
         </table>
       </div>
       <div class="p-3 bg-slate-50 text-right text-[10px] text-slate-400 font-medium">
@@ -324,9 +296,7 @@
   </div>
 
   <script>
-    // -------------------------------------------------------------
-    // 1. 데이터 정의 및 가공
-    // -------------------------------------------------------------
+    // 1. RAW DATA DEFINITIONS
     const rawData = [
       { name: '유영호', classOfYear: '94', prizes: [{desc: '3회 우승', amt: 30}, {desc: '3회 버디', amt: 10}, {desc: '4회 롱기', amt: 10}, {desc: '5회 우승', amt: 50}], r5: 92, r4: 97, r3: 91, r2: 0, r1: 0 },
       { name: '진호', classOfYear: '94', prizes: [{desc: '3회 신페리오2위', amt: 20}, {desc: '3회 버디', amt: 10}, {desc: '4회 우승', amt: 50}, {desc: '5회 준우승', amt: 20}], r5: 97, r4: 92, r3: 95, r2: 0, r1: 0 },
@@ -347,13 +317,14 @@
       { name: '조영광', classOfYear: '94', prizes: [], r5: 107, r4: 106, r3: 107, r2: 0, r1: 0 }
     ];
 
+    // 개인별 구글 차트 핀 색상 매핑용 글로벌 COLORS 정의 (ReferenceError 해결)
     const COLORS = [
       '#4a78d6', '#e06555', '#45b866', '#d69e4a', '#a262d4', 
       '#4ab0d6', '#e05597', '#6c5ce7', '#d67a4a', '#20b2aa',
       '#3498db', '#e74c3c', '#2ecc71', '#e67e22', '#9b59b6', '#34495e', '#ffb8b8'
     ];
 
-    // ★ 신규: 회차별 상품 찬조 및 수여 데이터
+    // 회차별 상품 찬조 및 수여 원본 데이터 리스트 정의 (ReferenceError 해결)
     const giftData = [
       {
         round: 5,
@@ -428,16 +399,12 @@
       }
     ];
 
-    // ★ 신규: 기부 및 스폰서 데이터 가공 (상금 스폰 + 물품 기부)
     const sponsorData = {};
     let cashSponsorTotal = 0;
     rawData.forEach(p => {
       if (p.prizes) {
         p.prizes.forEach(prize => {
-          // 찬스상을 제외한 나머지 상금의 총합이 장윤호 님의 스폰액
-          if (!prize.desc.includes('찬스')) {
-            cashSponsorTotal += prize.amt;
-          }
+          cashSponsorTotal += prize.amt;
         });
       }
     });
@@ -445,7 +412,7 @@
     sponsorData['장윤호'] = { name: '장윤호', cash: cashSponsorTotal, items: [] };
 
     giftData.forEach(g => {
-      const roundStr = g.title.split(' ')[0]; // "제5회"
+      const roundStr = g.title.split(' ')[0];
       const addGift = (provider, item) => {
         if (!sponsorData[provider]) sponsorData[provider] = { name: provider, cash: 0, items: [] };
         sponsorData[provider].items.push(`<span class="font-bold text-slate-700">${roundStr}</span> ${item}`);
@@ -528,7 +495,6 @@
       .map(p => ({ ...p, totalPrize: p.prizes.reduce((sum, prize) => sum + prize.amt, 0) }))
       .sort((a, b) => b.totalPrize - a.totalPrize);
 
-    // 상금 공동 순위 계산
     let currentPrizeRank = 1;
     let prevPrizeAmount = null;
     prizeData.forEach((p, idx) => {
@@ -560,7 +526,6 @@
     const medalRanking = Object.entries(medals).map(([name, m]) => ({ name, ...m, total: m.gold + m.silver + m.bronze }))
       .filter(m => m.total > 0).sort((a, b) => b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze);
 
-    // 메달 공동 순위 계산
     let currentMedalRank = 1;
     let prevMedal = { gold: -1, silver: -1, bronze: -1 };
     medalRanking.forEach((m, idx) => {
@@ -579,7 +544,6 @@
       5: { loc: '청평마이다스CC', date: '25.05.15(금)' },
     };
 
-    // 학번별 메달 및 상금 합산
     const classSummary = {
       '94': { classOfYear: '94', gold: 0, silver: 0, bronze: 0, totalPrize: 0, players: [] },
       '93': { classOfYear: '93', gold: 0, silver: 0, bronze: 0, totalPrize: 0, players: [] },
@@ -633,15 +597,11 @@
     let scoreChartInst = null;
     let rankChartInst = null;
 
-    // -------------------------------------------------------------
-    // 2. DOM 렌더링 함수들
-    // -------------------------------------------------------------
+    // 3. UI RENDERING HANDLERS
     function renderStaticUI() {
-      // Header
       document.getElementById('header-participants').innerHTML = `<i data-lucide="users" class="w-4 h-4"></i> 참가 인원: ${processedData.length}명`;
       document.getElementById('global-avg-display').textContent = `${globalAvg}타`;
 
-      // Round Avgs
       document.getElementById('round-avg-list').innerHTML = roundAvgs.map(r => `
         <div class="flex justify-between items-center py-2 border-b border-white/10 last:border-0">
           <div class="flex flex-col gap-1">
@@ -660,7 +620,6 @@
         </div>
       `).join('');
 
-      // Top 5 Cards
       document.getElementById('break100-top5-list').innerHTML = break100Top5.map((p, idx) => `
         <div class="flex justify-between items-center text-sm border-b border-white/10 last:border-0 pb-1.5 last:pb-0">
           <span class="font-bold flex items-center gap-2"><span class="text-xs opacity-70 w-3">${idx + 1}</span> ${p.name}</span>
@@ -673,23 +632,22 @@
           <span class="font-black">${p.top5Rate.toFixed(0)}% <span class="text-xs font-medium opacity-75 ml-1">(${p.top5Count}/${p.validScoresCount})</span></span>
         </div>`).join('');
 
-      // ★ Sponsor Section (기부자 및 스폰서 명예의 전당)
       document.getElementById('sponsor-grid').innerHTML = sponsorList.map((s, idx) => `
-        <div class="flex flex-col p-4 rounded-2xl border ${s.cash > 0 ? 'border-pink-200 bg-pink-50/40 shadow-sm' : 'border-slate-100 bg-[#fafafa] shadow-sm'}">
+        <div class="flex flex-col p-5 rounded-2xl border ${s.cash > 0 ? 'border-pink-200 bg-pink-50/40 shadow-sm' : 'border-slate-100 bg-[#fafafa] shadow-sm'}">
           <div class="flex justify-between items-center mb-3">
             <div class="flex items-center gap-2.5">
               ${s.cash > 0 
-                ? `<div class="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 text-white shadow-md flex items-center justify-center"><i data-lucide="heart" class="w-3.5 h-3.5 fill-white"></i></div>` 
-                : `<div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center"><i data-lucide="gift" class="w-4 h-4"></i></div>`
+                ? `<div class="w-8 h-8 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 text-white shadow-md flex items-center justify-center"><i data-lucide="heart" class="w-4 h-4 fill-white"></i></div>` 
+                : `<div class="w-8 h-8 rounded-full bg-slate-200 text-slate-650 flex items-center justify-center"><i data-lucide="gift" class="w-4.5 h-4.5"></i></div>`
               }
               <span class="font-extrabold text-slate-800 text-lg">${s.name}</span>
             </div>
             ${s.cash > 0 
-              ? `<span class="font-black text-pink-600 text-lg tracking-tight">${s.cash}만+α<span class="text-sm font-bold ml-0.5">지원</span></span>` 
-              : `<span class="font-bold text-emerald-500 text-sm tracking-tight bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100 shadow-sm">${s.items.length}건 찬조</span>`
+              ? `<span class="font-black text-pink-600 text-lg tracking-tight">${s.cash}만+α<span class="text-xs font-bold ml-0.5 text-pink-400">지원</span></span>` 
+              : `<span class="font-bold text-emerald-600 text-xs tracking-tight bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 shadow-sm">${s.items.length}건 찬조</span>`
             }
           </div>
-          ${s.cash > 0 ? `<div class="text-[11px] font-bold text-pink-500/80 mb-2 mt-[-4px]">대회 총상금 전액 스폰</div>` : ''}
+          ${s.cash > 0 ? `<div class="text-[11px] font-bold text-pink-500/80 mb-2 mt-[-4px]">SNG 대회 스코어 및 순위 총상금 전액 스폰</div>` : ''}
           ${s.items.length > 0 ? `
             <div class="flex flex-wrap gap-1.5 mt-1">
               ${s.items.map(item => `<span class="text-[11px] font-medium px-2 py-1 bg-white border border-slate-200 rounded-md text-slate-600 shadow-sm leading-tight">${item}</span>`).join('')}
@@ -698,7 +656,6 @@
         </div>
       `).join('');
 
-      // Medal Ranking
       document.getElementById('medal-ranking-grid').innerHTML = medalRanking.map((m, idx) => `
         <div class="flex justify-between items-center p-4 rounded-2xl border border-slate-100 bg-[#fafafa] shadow-sm">
           <div class="flex items-center gap-3">
@@ -712,7 +669,6 @@
           </div>
         </div>`).join('');
 
-      // Prize Ranking
       document.getElementById('prize-ranking-grid').innerHTML = prizeData.map((p, idx) => `
         <div class="flex flex-col p-4 rounded-2xl border border-slate-100 bg-[#fafafa] shadow-sm">
           <div class="flex justify-between items-center mb-3">
@@ -727,7 +683,6 @@
           </div>
         </div>`).join('');
 
-      // Class Ranking (학번별 종합 성과)
       document.getElementById('class-summary-grid').innerHTML = classRanking.map((c, idx) => {
         const badgeClass = c.classOfYear === '94' ? 'bg-emerald-100 text-emerald-700' : c.classOfYear === '93' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700';
         return `
@@ -739,7 +694,7 @@
                 <span class="font-bold text-slate-800 text-base">학번</span>
               </div>
               <div class="text-right flex flex-col">
-                <span class="font-black text-purple-600 text-2xl tracking-tight leading-none">${c.totalPrize}<span class="text-sm font-bold text-purple-400 ml-0.5">만원</span></span>
+                <span class="font-black text-purple-600 text-2xl tracking-tight leading-none">${c.totalPrize}<span class="text-xs font-bold text-purple-400 ml-0.5">만원</span></span>
               </div>
             </div>
             <div class="flex gap-2 text-sm font-bold bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm mb-4 justify-center">
@@ -766,7 +721,6 @@
         `;
       }).join('');
 
-      // Gift Ranking (상품 찬조 내역)
       document.getElementById('gift-ranking-grid').innerHTML = giftData.map(g => `
         <div class="flex flex-col p-5 rounded-2xl border border-slate-100 bg-[#fafafa] shadow-sm">
           <h3 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-2 mb-3 flex justify-between items-end">
@@ -809,7 +763,6 @@
         </div>
       `).join('');
 
-      // Rollercoaster & Simmons
       document.getElementById('rollercoaster-list').innerHTML = rollercoasterTop5.map((p, idx) => `
         <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl">
           <div class="flex items-center gap-3"><span class="text-slate-400 font-bold text-xs w-4">${idx + 1}</span><span class="font-bold text-slate-800 text-sm">${p.name}</span></div>
@@ -822,7 +775,6 @@
           <span class="text-xs font-semibold text-blue-600">평균 ${p.volatility.toFixed(1)}타 변동</span>
         </div>`).join('');
 
-      // Data Table (순위와 이름 칼럼 틀 고정 처리 적용)
       document.getElementById('score-table-body').innerHTML = processedData.map(row => {
         let trendHtml = '-';
         if (row.recentDiff !== null) {
@@ -874,11 +826,9 @@
         `;
       }).join('');
 
-      // 다시 한 번 Lucide 아이콘 초기화 (innerHTML 로 새로 생성된 부분 때문)
       lucide.createIcons();
     }
 
-    // 플레이어 선택 버튼 렌더링
     function renderPlayerPills() {
       document.getElementById('player-select-count').textContent = `비교 인원 (${selectedPlayers.length}명)`;
       document.getElementById('toggle-all-btn').textContent = selectedPlayers.length === processedData.length ? '전체 해제' : '전체 선택';
@@ -888,19 +838,16 @@
         const isSelected = selectedPlayers.includes(player.name);
         const color = COLORS[idx % COLORS.length];
         const style = isSelected ? `color: ${color}; border-color: ${color};` : '';
-        const classes = isSelected ? 'bg-white shadow-sm' : 'bg-slate-50 text-slate-400 border-transparent hover:bg-slate-100';
-        return `<button onclick="togglePlayer('${player.name}')" class="text-[11px] font-bold px-3 py-1.5 rounded-full border transition-all duration-200 ${classes}" style="${style}">${player.name}</button>`;
+        const classes = isSelected ? 'bg-white shadow-sm border' : 'bg-slate-50 text-slate-400 border border-transparent hover:bg-slate-100';
+        return `<button onclick="togglePlayer('${player.name}')" class="text-[11px] font-bold px-3 py-1.5 rounded-full transition-all duration-200 ${classes}" style="${style}">${player.name}</button>`;
       }).join('');
     }
 
-    // -------------------------------------------------------------
-    // 3. Chart.js 렌더링 함수들
-    // -------------------------------------------------------------
+    // 4. CHART.JS CONFIGURATIONS
     Chart.defaults.font.family = "'Pretendard', sans-serif";
     Chart.defaults.color = '#94a3b8';
 
     function initStaticCharts() {
-      // 3-1. 개인별 평균 바 차트
       const avgCtx = document.getElementById('avgRankBarChart').getContext('2d');
       const barData = [...processedData].sort((a, b) => b.avg - a.avg);
       new Chart(avgCtx, {
@@ -931,7 +878,6 @@
         }
       });
 
-      // 3-2. 학번별 트렌드
       const classTrendCtx = document.getElementById('classTrendChart').getContext('2d');
       const rounds = ['1회', '2회', '3회', '4회', '5회'];
       const classKeys = ['94', '93', '92'];
@@ -968,7 +914,6 @@
         }
       });
 
-      // 3-3. 학번별 평균 바 차트
       const classAvgCtx = document.getElementById('classAvgBarChart').getContext('2d');
       const classesData = { '94': {sum:0, c:0}, '93': {sum:0, c:0}, '92': {sum:0, c:0} };
       processedData.forEach(p => { roundsArr.forEach(r => { if(p[r]>0){ classesData[p.classOfYear].sum+=p[r]; classesData[p.classOfYear].c++; }}) });
@@ -994,10 +939,9 @@
     function updateDynamicCharts() {
       const rounds = ['1회', '2회', '3회', '4회', '5회'];
       
-      // 타수 트렌드
       const scoreDatasets = selectedPlayers.map(pName => {
         const pObj = processedData.find(p => p.name === pName);
-        const originalIdx = processedData.findIndex(p => p.name === pName);
+        const originalIdx = rawData.findIndex(p => p.name === pName);
         return {
           label: pName,
           data: roundsArr.map(r => pObj[r] > 0 ? pObj[r] : null),
@@ -1027,7 +971,6 @@
         }
       });
 
-      // 순위 트렌드
       const ranksMap = { r1: {}, r2: {}, r3: {}, r4: {}, r5: {} };
       roundsArr.forEach(r => {
         const parts = processedData.filter(p => p[r] > 0).sort((a, b) => a[r] - b[r]);
@@ -1036,7 +979,7 @@
       });
 
       const rankDatasets = selectedPlayers.map(pName => {
-        const originalIdx = processedData.findIndex(p => p.name === pName);
+        const originalIdx = rawData.findIndex(p => p.name === pName);
         return {
           label: pName,
           data: roundsArr.map(r => ranksMap[r][pName] || null),
@@ -1067,9 +1010,6 @@
       });
     }
 
-    // -------------------------------------------------------------
-    // 4. 이벤트 및 액션 함수
-    // -------------------------------------------------------------
     window.togglePlayer = function(name) {
       if (selectedPlayers.includes(name)) {
         selectedPlayers = selectedPlayers.filter(p => p !== name);
@@ -1134,7 +1074,7 @@
               <span class="font-bold w-5 text-center ${idx < 3 ? 'text-rose-500' : 'text-slate-400'}">${idx + 1}</span>
               <span class="font-bold text-slate-800">${p.name}</span>
             </div>
-            <span class="font-black text-rose-500">${p.volatility.toFixed(1)}타 변동</span>
+            <span class="font-black text-rose-500">평균 ${p.volatility.toFixed(1)}타 변동</span>
           </div>`;
       } else if (type === 'simmons') {
         title = '전체 시몬스 랭킹 (안정적인 순)';
@@ -1145,7 +1085,7 @@
               <span class="font-bold w-5 text-center ${idx < 3 ? 'text-blue-600' : 'text-slate-400'}">${idx + 1}</span>
               <span class="font-bold text-slate-800">${p.name}</span>
             </div>
-            <span class="font-black text-blue-600">${p.volatility.toFixed(1)}타 변동</span>
+            <span class="font-black text-blue-600">평균 ${p.volatility.toFixed(1)}타 변동</span>
           </div>`;
       }
 
@@ -1166,16 +1106,13 @@
 
     document.getElementById('modal-backdrop').addEventListener('click', window.closeModal);
 
-    // -------------------------------------------------------------
-    // 5. 초기화
-    // -------------------------------------------------------------
+    // 6. INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
       renderStaticUI();
       renderPlayerPills();
       initStaticCharts();
       updateDynamicCharts();
     });
-
   </script>
 </body>
 </html>
