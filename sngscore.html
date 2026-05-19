@@ -389,6 +389,15 @@
       .map(p => ({ ...p, totalPrize: p.prizes.reduce((sum, prize) => sum + prize.amt, 0) }))
       .sort((a, b) => b.totalPrize - a.totalPrize);
 
+    // 상금 공동 순위 계산
+    let currentPrizeRank = 1;
+    let prevPrizeAmount = null;
+    prizeData.forEach((p, idx) => {
+      if (p.totalPrize !== prevPrizeAmount) currentPrizeRank = idx + 1;
+      p.rank = currentPrizeRank;
+      prevPrizeAmount = p.totalPrize;
+    });
+
     const roundMedals = { r1: {}, r2: {}, r3: {}, r4: {}, r5: {} };
     roundsArr.forEach(r => {
       const scores = processedData.filter(p => p[r] > 0).map(p => p[r]);
@@ -411,6 +420,17 @@
     });
     const medalRanking = Object.entries(medals).map(([name, m]) => ({ name, ...m, total: m.gold + m.silver + m.bronze }))
       .filter(m => m.total > 0).sort((a, b) => b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze);
+
+    // 메달 공동 순위 계산
+    let currentMedalRank = 1;
+    let prevMedal = { gold: -1, silver: -1, bronze: -1 };
+    medalRanking.forEach((m, idx) => {
+      if (m.gold !== prevMedal.gold || m.silver !== prevMedal.silver || m.bronze !== prevMedal.bronze) {
+        currentMedalRank = idx + 1;
+      }
+      m.rank = currentMedalRank;
+      prevMedal = { gold: m.gold, silver: m.silver, bronze: m.bronze };
+    });
 
     const roundDetails = {
       1: { loc: '윈체스트CC', date: '24.07.04(목)' },
@@ -563,7 +583,7 @@
       document.getElementById('medal-ranking-grid').innerHTML = medalRanking.map((m, idx) => `
         <div class="flex justify-between items-center p-4 rounded-2xl border border-slate-100 bg-[#fafafa] shadow-sm">
           <div class="flex items-center gap-3">
-            <span class="font-bold text-slate-400 text-sm w-4">${idx + 1}</span>
+            <span class="font-bold text-slate-400 text-sm w-4">${m.rank}</span>
             <span class="font-extrabold text-slate-800 text-lg">${m.name}</span>
           </div>
           <div class="flex gap-2 text-sm font-bold bg-white px-2.5 py-1.5 rounded-full border border-slate-200 shadow-sm">
@@ -578,7 +598,7 @@
         <div class="flex flex-col p-4 rounded-2xl border border-slate-100 bg-[#fafafa] shadow-sm">
           <div class="flex justify-between items-center mb-3">
             <div class="flex items-center gap-3">
-              <span class="${idx === 0 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-white shadow-md' : 'bg-slate-200 text-slate-500'} w-7 h-7 rounded-full flex items-center justify-center text-xs font-black">${idx + 1}</span>
+              <span class="${p.rank === 1 ? 'bg-gradient-to-br from-yellow-300 to-yellow-500 text-white shadow-md' : 'bg-slate-200 text-slate-500'} w-7 h-7 rounded-full flex items-center justify-center text-xs font-black">${p.rank}</span>
               <span class="font-extrabold text-slate-800 text-lg">${p.name}</span>
             </div>
             <span class="font-black text-blue-600 text-xl tracking-tight">${p.totalPrize}만원</span>
