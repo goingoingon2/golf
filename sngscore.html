@@ -152,12 +152,23 @@
       </div>
     </div>
 
+    <!-- Gifts Section (신규: 상품 내역) -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
+      <div class="flex items-center gap-2 mb-6">
+        <i data-lucide="gift" class="w-6 h-6 text-emerald-500"></i>
+        <h2 class="text-lg font-bold text-slate-800">회차별 상품 찬조 및 수여 내역 <span class="text-sm font-medium text-slate-400 ml-1">(공통/다수 지급 및 개인 수여)</span></h2>
+      </div>
+      <div id="gift-ranking-grid" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
     <!-- Trend Block (Score & Rank Combined) -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
         <h2 class="text-lg font-bold text-slate-800">개인별 회차 변동 추이 (타수 & 순위)</h2>
         <div class="flex items-center gap-3">
-          <span id="player-select-count" class="text-xs font-semibold text-slate-400">비교 인원 (5명)</span>
+          <span id="player-select-count" class="text-xs font-semibold text-slate-400">비교 인원 (17명)</span>
           <button onclick="toggleAllPlayers()" id="toggle-all-btn" class="text-xs text-[#528af2] hover:bg-blue-50 px-3 py-1.5 rounded-full font-bold transition-colors">
             전체 해제
           </button>
@@ -257,7 +268,7 @@
           <thead class="bg-[#f8fafc] text-slate-600 font-bold border-b border-slate-200">
             <tr>
               <th class="py-4 px-4 whitespace-nowrap">순위</th>
-              <th class="py-4 px-4 whitespace-nowrap text-left pl-6">이름</th>
+              <th class="py-4 px-4 whitespace-nowrap text-center">이름</th>
               <th class="py-4 px-4 whitespace-nowrap">평균타수</th>
               <th class="py-4 px-4 whitespace-nowrap border-r border-slate-100 bg-blue-50/30">최근 추세</th>
               <th class="py-4 px-4 whitespace-nowrap">5회</th>
@@ -284,23 +295,23 @@
     // 1. 데이터 정의 및 가공
     // -------------------------------------------------------------
     const rawData = [
-      { name: '유영호', classOfYear: '94', prizes: [{desc: '3회 우승', amt: 30}, {desc: '4회 롱기', amt: 10}, {desc: '5회 우승', amt: 50}], r5: 92, r4: 97, r3: 91, r2: 0, r1: 0 },
-      { name: '진호', classOfYear: '94', prizes: [{desc: '4회 우승', amt: 50}, {desc: '5회 준우승', amt: 30}], r5: 97, r4: 92, r3: 95, r2: 0, r1: 0 },
-      { name: '김승욱', classOfYear: '92', prizes: [], r5: 102, r4: 102, r3: 94, r2: 102, r1: 87 },
-      { name: '이장현', classOfYear: '92', prizes: [], r5: 98, r4: 95, r3: 98, r2: 102, r1: 95 },
+      { name: '유영호', classOfYear: '94', prizes: [{desc: '3회 우승', amt: 30}, {desc: '3회 버디', amt: 10}, {desc: '4회 롱기', amt: 10}, {desc: '5회 우승', amt: 50}], r5: 92, r4: 97, r3: 91, r2: 0, r1: 0 },
+      { name: '진호', classOfYear: '94', prizes: [{desc: '3회 신페리오2위', amt: 20}, {desc: '3회 버디', amt: 10}, {desc: '4회 우승', amt: 50}, {desc: '5회 준우승', amt: 20}], r5: 97, r4: 92, r3: 95, r2: 0, r1: 0 },
+      { name: '김승욱', classOfYear: '92', prizes: [{desc: '1회 우승', amt: 20}, {desc: '3회 준우승', amt: 10}, {desc: '5회 신페리오우승', amt: 30}, {desc: '5회 찬스', amt: 10}], r5: 102, r4: 102, r3: 94, r2: 102, r1: 87 },
+      { name: '김종빈', classOfYear: '93', prizes: [{desc: '2회 우승', amt: 20}, {desc: '2회 롱기', amt: 10}, {desc: '2회 니어', amt: 5}, {desc: '3회 신페리오우승', amt: 30}], r5: 101, r4: 103, r3: 99, r2: 96, r1: 0 },
+      { name: '박욱정', classOfYear: '93', prizes: [{desc: '2회 준우승', amt: 10}, {desc: '3회 신페리오3위', amt: 10}, {desc: '5회 신페리오2위', amt: 20}], r5: 99, r4: 98, r3: 100, r2: 97, r1: 0 },
+      { name: '이장현', classOfYear: '92', prizes: [{desc: '4회 준우승', amt: 20}, {desc: '5회 신페리오3위', amt: 10}], r5: 98, r4: 95, r3: 98, r2: 102, r1: 95 },
+      { name: '곽용일', classOfYear: '93', prizes: [{desc: '4회 신페리오우승', amt: 30}], r5: 101, r4: 96, r3: 102, r2: 103, r1: 96 },
+      { name: '황의홍', classOfYear: '92', prizes: [{desc: '4회 신페리오2위', amt: 20}, {desc: '4회 노력상', amt: 10}], r5: 111, r4: 102, r3: 118, r2: 120, r1: 0 },
+      { name: '김무성', classOfYear: '94', prizes: [{desc: '2회 깍두기', amt: 10}, {desc: '4회 감투상', amt: 10}, {desc: '5회 찬스', amt: 10}], r5: 104, r4: 98, r3: 101, r2: 101, r1: 0 },
+      { name: '이경민', classOfYear: '93', prizes: [{desc: '3회 노력상', amt: 10}, {desc: '4회 신페리오3위', amt: 10}, {desc: '5회 노력상', amt: 10}], r5: 102, r4: 112, r3: 109, r2: 118, r1: 107 },
+      { name: '김휘동', classOfYear: '92', prizes: [{desc: '2회 신페리오우승', amt: 20}], r5: 111, r4: 115, r3: 112, r2: 111, r1: 112 },
+      { name: '피진철', classOfYear: '93', prizes: [{desc: '2회 신페리오2위', amt: 10}, {desc: '3회 버디', amt: 10}], r5: 104, r4: 110, r3: 97, r2: 104, r1: 90 },
+      { name: '성기용', classOfYear: '92', prizes: [{desc: '4회 꼴찌상', amt: 10}], r5: 117, r4: 127, r3: 121, r2: 114, r1: 110 },
+      { name: '양재모', classOfYear: '94', prizes: [{desc: '3회 롱기', amt: 10}], r5: 0, r4: 113, r3: 105, r2: 0, r1: 0 },
       { name: '장윤호', classOfYear: '92', prizes: [], r5: 97, r4: 96, r3: 98, r2: 101, r1: 97 },
-      { name: '박욱정', classOfYear: '93', prizes: [], r5: 99, r4: 98, r3: 100, r2: 97, r1: 0 },
-      { name: '곽용일', classOfYear: '93', prizes: [], r5: 101, r4: 96, r3: 102, r2: 103, r1: 96 },
-      { name: '김종빈', classOfYear: '93', prizes: [], r5: 101, r4: 103, r3: 99, r2: 96, r1: 0 },
-      { name: '김무성', classOfYear: '94', prizes: [], r5: 104, r4: 98, r3: 101, r2: 101, r1: 0 },
-      { name: '피진철', classOfYear: '93', prizes: [], r5: 104, r4: 110, r3: 97, r2: 104, r1: 90 },
       { name: '김형묵', classOfYear: '94', prizes: [], r5: 104, r4: 0, r3: 0, r2: 0, r1: 0 },
-      { name: '조영광', classOfYear: '94', prizes: [], r5: 107, r4: 106, r3: 107, r2: 0, r1: 0 },
-      { name: '양재모', classOfYear: '94', prizes: [], r5: 0, r4: 113, r3: 105, r2: 0, r1: 0 },
-      { name: '이경민', classOfYear: '93', prizes: [], r5: 102, r4: 112, r3: 109, r2: 118, r1: 107 },
-      { name: '김휘동', classOfYear: '92', prizes: [], r5: 111, r4: 115, r3: 112, r2: 111, r1: 112 },
-      { name: '황의홍', classOfYear: '92', prizes: [], r5: 111, r4: 102, r3: 118, r2: 120, r1: 0 },
-      { name: '성기용', classOfYear: '92', prizes: [], r5: 117, r4: 127, r3: 121, r2: 114, r1: 110 }
+      { name: '조영광', classOfYear: '94', prizes: [], r5: 107, r4: 106, r3: 107, r2: 0, r1: 0 }
     ];
 
     const COLORS = [
@@ -312,7 +323,6 @@
     const roundsArr = ['r1', 'r2', 'r3', 'r4', 'r5'];
     const ranks = { r1: {}, r2: {}, r3: {}, r4: {}, r5: {} };
     
-    // 회차별 참가자 순위 계산
     roundsArr.forEach(r => {
       const participants = rawData.filter(p => p[r] > 0).sort((a, b) => a[r] - b[r]);
       let currentRank = 1;
@@ -362,23 +372,19 @@
       };
     }).sort((a, b) => a.avg - b.avg).map((player, index) => ({ ...player, rank: index + 1 }));
 
-    // 상위 확률 랭킹 추출
     const break100Full = [...processedData].filter(p => p.validScoresCount > 0).sort((a, b) => b.break100Rate - a.break100Rate || b.validScoresCount - a.validScoresCount || a.avg - b.avg);
     const break100Top5 = break100Full.slice(0, 5);
 
     const top5FinishFull = [...processedData].filter(p => p.validScoresCount > 0).sort((a, b) => b.top5Rate - a.top5Rate || b.validScoresCount - a.validScoresCount || a.avg - b.avg);
     const top5FinishTop5 = top5FinishFull.slice(0, 5);
 
-    // 기복 랭킹
     const volatilityFull = [...processedData].filter(p => p.validScoresCount >= 2).sort((a, b) => b.volatility - a.volatility);
     const rollercoasterTop5 = volatilityFull.slice(0, 5);
     const simmonsFull = [...volatilityFull].reverse();
     const simmonsTop5 = simmonsFull.slice(0, 5);
 
-    // 전역 상태 (선택된 플레이어)
-    let selectedPlayers = processedData.slice(0, 5).map(p => p.name);
+    let selectedPlayers = processedData.map(p => p.name);
 
-    // 통계 및 메달 데이터
     const prizeData = [...processedData].filter(p => p.prizes && p.prizes.length > 0)
       .map(p => ({ ...p, totalPrize: p.prizes.reduce((sum, prize) => sum + prize.amt, 0) }))
       .sort((a, b) => b.totalPrize - a.totalPrize);
@@ -406,7 +412,6 @@
     const medalRanking = Object.entries(medals).map(([name, m]) => ({ name, ...m, total: m.gold + m.silver + m.bronze }))
       .filter(m => m.total > 0).sort((a, b) => b.gold - a.gold || b.silver - a.silver || b.bronze - a.bronze);
 
-    // 전체 요약 통계
     const roundDetails = {
       1: { loc: '윈체스트CC', date: '24.07.04(목)' },
       2: { loc: '춘천베어크리크GC', date: '24.11.04(월)' },
@@ -436,7 +441,81 @@
     processedData.forEach(p => { roundsArr.forEach(r => { if (p[r] > 0) { totalScore += p[r]; totalCount++; } }); });
     const globalAvg = (totalScore / totalCount).toFixed(1);
 
-    // Chart.js 인스턴스 저장소
+    // ★ 신규: 회차별 상품 찬조 및 수여 데이터
+    const giftData = [
+      {
+        round: 5,
+        title: '제5회 (청평마이다스CC)',
+        commons: [
+          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
+          { provider: '진호', item: '건바나나 4박스', receiver: '조별 1개' }
+        ],
+        individuals: [
+          { provider: '이장현', item: '벤츠 보스턴백', receiver: '피진철, 곽용일' },
+          { provider: '이장현', item: '벤츠 접이식 보스턴백', receiver: '김종빈, 박희정' },
+          { provider: '김승욱', item: '골프볼', receiver: '김형묵, 권지현, 김휘동' },
+          { provider: '김형묵', item: '관절편환', receiver: '박욱정, 유영호' },
+          { provider: '곽용일', item: '감사패', receiver: '장윤호' },
+          { provider: '이장현', item: '벤츠 아이언 세트', receiver: '장윤호' },
+          { provider: '박욱정', item: '호야렌즈', receiver: '이장현' },
+          { provider: '이장현', item: '벤츠 캐리어', receiver: '조영광' },
+          { provider: '성기용', item: '웨지 52도', receiver: '조영광' },
+          { provider: '이경민', item: '엔타스외식상품권', receiver: '박욱정' }
+        ]
+      },
+      {
+        round: 4,
+        title: '제4회 (동촌GC)',
+        commons: [
+          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
+          { provider: '피진철', item: '생활용품세트 15set', receiver: '참가자 전원' },
+          { provider: '진호', item: '견과류세트', receiver: '참가자 전원' }
+        ],
+        individuals: [
+          { provider: '진호', item: '이더리움 볼마커', receiver: '김휘동, 성기용, 이장현, 양재모' },
+          { provider: '김종빈', item: '코브라 우드/유틸세트', receiver: '김무성' },
+          { provider: '김종빈', item: '코브라 드라이버', receiver: '이경민' },
+          { provider: '박욱정', item: '호야렌즈', receiver: '성기용' },
+          { provider: '이장현', item: '벤츠 웨건', receiver: '김종빈' },
+          { provider: '김승욱', item: '골프볼', receiver: '황의홍' },
+          { provider: '양재모', item: '비타민', receiver: '김승욱' },
+          { provider: '김휘동', item: '골프화', receiver: '장윤호' },
+          { provider: '김무성', item: '연습용퍼터', receiver: '성기용' },
+          { provider: '황의홍', item: '맥스봉 1박스', receiver: '곽용일' },
+          { provider: '황의홍', item: '단백질음료 1박스', receiver: '박욱정' },
+          { provider: '곽용일', item: '영어책', receiver: '이장현' },
+          { provider: '진호', item: '소설/에세이', receiver: '유영호' }
+        ]
+      },
+      {
+        round: 3,
+        title: '제3회 (포천힐마루CC)',
+        commons: [
+          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
+          { provider: '곽용일', item: '그린자켓', receiver: '1위' }
+        ],
+        individuals: [
+          { provider: '이장현', item: '벤츠 접이식 보스턴백', receiver: '유영호, 김무성' },
+          { provider: '진호', item: '견과류세트', receiver: '곽용일, 김휘동' },
+          { provider: '김종빈', item: '코브라 드라이버', receiver: '황의홍' },
+          { provider: '이장현', item: '벤츠 캐디백', receiver: '김무성' },
+          { provider: '이장현', item: '벤츠 보스턴 백', receiver: '조영광' },
+          { provider: '박욱정', item: '호야렌즈', receiver: '유영호' }
+        ]
+      },
+      {
+        round: 2,
+        title: '제2회 (춘천베어크리크GC)',
+        commons: [
+          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
+          { provider: '피진철', item: '생활용품세트 11set', receiver: '참가자 전원' }
+        ],
+        individuals: [
+          { provider: '이장현', item: '벤츠 캐디백', receiver: '곽용일' }
+        ]
+      }
+    ];
+
     let scoreChartInst = null;
     let rankChartInst = null;
 
@@ -509,6 +588,49 @@
           </div>
         </div>`).join('');
 
+      // ★ Gift Ranking (상품 찬조 내역)
+      document.getElementById('gift-ranking-grid').innerHTML = giftData.map(g => `
+        <div class="flex flex-col p-5 rounded-2xl border border-slate-100 bg-[#fafafa] shadow-sm">
+          <h3 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-2 mb-3 flex justify-between items-end">
+            ${g.title}
+            <span class="text-[10px] font-bold text-slate-400 border border-slate-200 bg-white px-2 py-0.5 rounded-full">상품 지원</span>
+          </h3>
+          <div class="space-y-4">
+            ${g.commons.length > 0 ? `
+              <div>
+                <div class="text-[12px] font-bold text-emerald-600 mb-2 flex items-center gap-1.5">
+                  <i data-lucide="users" class="w-3.5 h-3.5"></i> 공통 및 다수 제공
+                </div>
+                <ul class="space-y-2 pl-1">
+                  ${g.commons.map(c => `
+                    <li class="text-[12px] text-slate-600 flex items-start gap-2.5">
+                      <span class="shrink-0 text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-md font-bold leading-none mt-0.5">${c.provider} 제공</span>
+                      <span class="leading-tight break-keep"><span class="font-bold text-slate-800">${c.item}</span> <span class="text-slate-400">(${c.receiver})</span></span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+            
+            ${g.individuals.length > 0 ? `
+              <div>
+                <div class="text-[12px] font-bold text-blue-600 mb-2 flex items-center gap-1.5">
+                  <i data-lucide="user" class="w-3.5 h-3.5"></i> 개별 수여
+                </div>
+                <ul class="space-y-2 pl-1">
+                  ${g.individuals.map(i => `
+                    <li class="text-[12px] text-slate-600 flex items-start gap-2.5">
+                      <span class="shrink-0 text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-bold leading-none mt-0.5">${i.provider} ➔ ${i.receiver}</span>
+                      <span class="font-bold text-slate-800 leading-tight break-keep">${i.item}</span>
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      `).join('');
+
       // Rollercoaster & Simmons
       document.getElementById('rollercoaster-list').innerHTML = rollercoasterTop5.map((p, idx) => `
         <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded-xl">
@@ -571,6 +693,9 @@
           </tr>
         `;
       }).join('');
+
+      // 다시 한 번 Lucide 아이콘 초기화 (innerHTML 로 새로 생성된 부분 때문)
+      lucide.createIcons();
     }
 
     // 플레이어 선택 버튼 렌더링
@@ -597,7 +722,7 @@
     function initStaticCharts() {
       // 3-1. 개인별 평균 바 차트
       const avgCtx = document.getElementById('avgRankBarChart').getContext('2d');
-      const barData = [...processedData].sort((a, b) => b.avg - a.avg); // Chart.js horizontal needs reverse order to show top at top
+      const barData = [...processedData].sort((a, b) => b.avg - a.avg);
       new Chart(avgCtx, {
         type: 'bar',
         data: {
@@ -859,7 +984,6 @@
       modalBg.classList.add('modal-hidden');
     };
 
-    // 모달 배경 클릭 시 닫기
     document.getElementById('modal-backdrop').addEventListener('click', window.closeModal);
 
     // -------------------------------------------------------------
@@ -870,7 +994,6 @@
       renderPlayerPills();
       initStaticCharts();
       updateDynamicCharts();
-      lucide.createIcons(); // SVG 아이콘 렌더링
     });
 
   </script>
