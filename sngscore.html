@@ -130,6 +130,17 @@
 
     </div>
 
+    <!-- ★ Sponsor Section (신규: 기부자 및 스폰서 명예의 전당) -->
+    <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
+      <div class="flex items-center gap-2 mb-6">
+        <i data-lucide="heart-handshake" class="w-6 h-6 text-pink-500"></i>
+        <h2 class="text-lg font-bold text-slate-800">명예의 전당: 기부 및 찬조 <span class="text-sm font-medium text-slate-400 ml-1">(상금 스폰서 및 물품 찬조자)</span></h2>
+      </div>
+      <div id="sponsor-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+
     <!-- Medal Ranking Section -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
       <div class="flex items-center gap-2 mb-6">
@@ -152,7 +163,7 @@
       </div>
     </div>
 
-    <!-- Class Ranking Section (신규: 학번별 성과) -->
+    <!-- Class Ranking Section -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
       <div class="flex items-center gap-2 mb-6">
         <i data-lucide="crown" class="w-6 h-6 text-purple-500"></i>
@@ -163,7 +174,7 @@
       </div>
     </div>
 
-    <!-- Gifts Section (신규: 상품 내역) -->
+    <!-- Gifts Section -->
     <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col">
       <div class="flex items-center gap-2 mb-6">
         <i data-lucide="gift" class="w-6 h-6 text-emerald-500"></i>
@@ -334,6 +345,112 @@
       '#3498db', '#e74c3c', '#2ecc71', '#e67e22', '#9b59b6', '#34495e', '#ffb8b8'
     ];
 
+    // ★ 신규: 회차별 상품 찬조 및 수여 데이터
+    const giftData = [
+      {
+        round: 5,
+        title: '제5회 (청평마이다스CC)',
+        commons: [
+          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
+          { provider: '진호', item: '건바나나 4박스', receiver: '조별 1개' }
+        ],
+        individuals: [
+          { provider: '이장현', item: '벤츠 보스턴백', receiver: '피진철, 곽용일' },
+          { provider: '이장현', item: '벤츠 접이식 보스턴백', receiver: '김종빈, 박희정' },
+          { provider: '김승욱', item: '골프볼', receiver: '김형묵, 권지현, 김휘동' },
+          { provider: '김형묵', item: '관절편환', receiver: '박욱정, 유영호' },
+          { provider: '곽용일', item: '감사패', receiver: '장윤호' },
+          { provider: '이장현', item: '벤츠 아이언 세트', receiver: '장윤호' },
+          { provider: '박욱정', item: '호야렌즈', receiver: '이장현' },
+          { provider: '이장현', item: '벤츠 캐리어', receiver: '조영광' },
+          { provider: '성기용', item: '웨지 52도', receiver: '조영광' },
+          { provider: '이경민', item: '엔타스외식상품권', receiver: '박욱정' }
+        ]
+      },
+      {
+        round: 4,
+        title: '제4회 (동촌GC)',
+        commons: [
+          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
+          { provider: '피진철', item: '생활용품세트 15set', receiver: '참가자 전원' },
+          { provider: '진호', item: '견과류세트', receiver: '참가자 전원' }
+        ],
+        individuals: [
+          { provider: '진호', item: '이더리움 볼마커', receiver: '김휘동, 성기용, 이장현, 양재모' },
+          { provider: '김종빈', item: '코브라 우드/유틸세트', receiver: '김무성' },
+          { provider: '김종빈', item: '코브라 드라이버', receiver: '이경민' },
+          { provider: '박욱정', item: '호야렌즈', receiver: '성기용' },
+          { provider: '이장현', item: '벤츠 웨건', receiver: '김종빈' },
+          { provider: '김승욱', item: '골프볼', receiver: '황의홍' },
+          { provider: '양재모', item: '비타민', receiver: '김승욱' },
+          { provider: '김휘동', item: '골프화', receiver: '장윤호' },
+          { provider: '김무성', item: '연습용퍼터', receiver: '성기용' },
+          { provider: '황의홍', item: '맥스봉 1박스', receiver: '곽용일' },
+          { provider: '황의홍', item: '단백질음료 1박스', receiver: '박욱정' },
+          { provider: '곽용일', item: '영어책', receiver: '이장현' },
+          { provider: '진호', item: '소설/에세이', receiver: '유영호' }
+        ]
+      },
+      {
+        round: 3,
+        title: '제3회 (포천힐마루CC)',
+        commons: [
+          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
+          { provider: '곽용일', item: '그린자켓', receiver: '1위' }
+        ],
+        individuals: [
+          { provider: '이장현', item: '벤츠 접이식 보스턴백', receiver: '유영호, 김무성' },
+          { provider: '진호', item: '견과류세트', receiver: '곽용일, 김휘동' },
+          { provider: '김종빈', item: '코브라 드라이버', receiver: '황의홍' },
+          { provider: '이장현', item: '벤츠 캐디백', receiver: '김무성' },
+          { provider: '이장현', item: '벤츠 보스턴 백', receiver: '조영광' },
+          { provider: '박욱정', item: '호야렌즈', receiver: '유영호' }
+        ]
+      },
+      {
+        round: 2,
+        title: '제2회 (춘천베어크리크GC)',
+        commons: [
+          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
+          { provider: '피진철', item: '생활용품세트 11set', receiver: '참가자 전원' }
+        ],
+        individuals: [
+          { provider: '이장현', item: '벤츠 캐디백', receiver: '곽용일' }
+        ]
+      }
+    ];
+
+    // ★ 신규: 기부 및 스폰서 데이터 가공 (상금 스폰 + 물품 기부)
+    const sponsorData = {};
+    let cashSponsorTotal = 0;
+    rawData.forEach(p => {
+      if (p.prizes) {
+        p.prizes.forEach(prize => {
+          // 찬스상을 제외한 나머지 상금의 총합이 장윤호 님의 스폰액
+          if (!prize.desc.includes('찬스')) {
+            cashSponsorTotal += prize.amt;
+          }
+        });
+      }
+    });
+
+    sponsorData['장윤호'] = { name: '장윤호', cash: cashSponsorTotal, items: [] };
+
+    giftData.forEach(g => {
+      const roundStr = g.title.split(' ')[0]; // "제5회"
+      const addGift = (provider, item) => {
+        if (!sponsorData[provider]) sponsorData[provider] = { name: provider, cash: 0, items: [] };
+        sponsorData[provider].items.push(`<span class="font-bold text-slate-700">${roundStr}</span> ${item}`);
+      };
+      g.commons.forEach(c => addGift(c.provider, c.item));
+      g.individuals.forEach(i => addGift(i.provider, i.item));
+    });
+
+    const sponsorList = Object.values(sponsorData).sort((a, b) => {
+      if (b.cash !== a.cash) return b.cash - a.cash;
+      return b.items.length - a.items.length;
+    });
+
     const roundsArr = ['r1', 'r2', 'r3', 'r4', 'r5'];
     const ranks = { r1: {}, r2: {}, r3: {}, r4: {}, r5: {} };
     
@@ -454,7 +571,7 @@
       5: { loc: '청평마이다스CC', date: '25.05.15(금)' },
     };
 
-    // ★ 신규: 학번별 메달 및 상금 합산
+    // 학번별 메달 및 상금 합산
     const classSummary = {
       '94': { classOfYear: '94', gold: 0, silver: 0, bronze: 0, totalPrize: 0, players: [] },
       '93': { classOfYear: '93', gold: 0, silver: 0, bronze: 0, totalPrize: 0, players: [] },
@@ -505,81 +622,6 @@
     processedData.forEach(p => { roundsArr.forEach(r => { if (p[r] > 0) { totalScore += p[r]; totalCount++; } }); });
     const globalAvg = (totalScore / totalCount).toFixed(1);
 
-    // ★ 신규: 회차별 상품 찬조 및 수여 데이터
-    const giftData = [
-      {
-        round: 5,
-        title: '제5회 (청평마이다스CC)',
-        commons: [
-          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
-          { provider: '진호', item: '건바나나 4박스', receiver: '조별 1개' }
-        ],
-        individuals: [
-          { provider: '이장현', item: '벤츠 보스턴백', receiver: '피진철, 곽용일' },
-          { provider: '이장현', item: '벤츠 접이식 보스턴백', receiver: '김종빈, 박희정' },
-          { provider: '김승욱', item: '골프볼', receiver: '김형묵, 권지현, 김휘동' },
-          { provider: '김형묵', item: '관절편환', receiver: '박욱정, 유영호' },
-          { provider: '곽용일', item: '감사패', receiver: '장윤호' },
-          { provider: '이장현', item: '벤츠 아이언 세트', receiver: '장윤호' },
-          { provider: '박욱정', item: '호야렌즈', receiver: '이장현' },
-          { provider: '이장현', item: '벤츠 캐리어', receiver: '조영광' },
-          { provider: '성기용', item: '웨지 52도', receiver: '조영광' },
-          { provider: '이경민', item: '엔타스외식상품권', receiver: '박욱정' }
-        ]
-      },
-      {
-        round: 4,
-        title: '제4회 (동촌GC)',
-        commons: [
-          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
-          { provider: '피진철', item: '생활용품세트 15set', receiver: '참가자 전원' },
-          { provider: '진호', item: '견과류세트', receiver: '참가자 전원' }
-        ],
-        individuals: [
-          { provider: '진호', item: '이더리움 볼마커', receiver: '김휘동, 성기용, 이장현, 양재모' },
-          { provider: '김종빈', item: '코브라 우드/유틸세트', receiver: '김무성' },
-          { provider: '김종빈', item: '코브라 드라이버', receiver: '이경민' },
-          { provider: '박욱정', item: '호야렌즈', receiver: '성기용' },
-          { provider: '이장현', item: '벤츠 웨건', receiver: '김종빈' },
-          { provider: '김승욱', item: '골프볼', receiver: '황의홍' },
-          { provider: '양재모', item: '비타민', receiver: '김승욱' },
-          { provider: '김휘동', item: '골프화', receiver: '장윤호' },
-          { provider: '김무성', item: '연습용퍼터', receiver: '성기용' },
-          { provider: '황의홍', item: '맥스봉 1박스', receiver: '곽용일' },
-          { provider: '황의홍', item: '단백질음료 1박스', receiver: '박욱정' },
-          { provider: '곽용일', item: '영어책', receiver: '이장현' },
-          { provider: '진호', item: '소설/에세이', receiver: '유영호' }
-        ]
-      },
-      {
-        round: 3,
-        title: '제3회 (포천힐마루CC)',
-        commons: [
-          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
-          { provider: '곽용일', item: '그린자켓', receiver: '1위' }
-        ],
-        individuals: [
-          { provider: '이장현', item: '벤츠 접이식 보스턴백', receiver: '유영호, 김무성' },
-          { provider: '진호', item: '견과류세트', receiver: '곽용일, 김휘동' },
-          { provider: '김종빈', item: '코브라 드라이버', receiver: '황의홍' },
-          { provider: '이장현', item: '벤츠 캐디백', receiver: '김무성' },
-          { provider: '이장현', item: '벤츠 보스턴 백', receiver: '조영광' },
-          { provider: '박욱정', item: '호야렌즈', receiver: '유영호' }
-        ]
-      },
-      {
-        round: 2,
-        title: '제2회 (춘천베어크리크GC)',
-        commons: [
-          { provider: '곽용일', item: '플래카드', receiver: '참가자 전원' },
-          { provider: '피진철', item: '생활용품세트 11set', receiver: '참가자 전원' }
-        ],
-        individuals: [
-          { provider: '이장현', item: '벤츠 캐디백', receiver: '곽용일' }
-        ]
-      }
-    ];
-
     let scoreChartInst = null;
     let rankChartInst = null;
 
@@ -623,6 +665,31 @@
           <span class="font-black">${p.top5Rate.toFixed(0)}% <span class="text-xs font-medium opacity-75 ml-1">(${p.top5Count}/${p.validScoresCount})</span></span>
         </div>`).join('');
 
+      // ★ Sponsor Section (기부자 및 스폰서 명예의 전당)
+      document.getElementById('sponsor-grid').innerHTML = sponsorList.map((s, idx) => `
+        <div class="flex flex-col p-4 rounded-2xl border ${s.cash > 0 ? 'border-pink-200 bg-pink-50/40 shadow-sm' : 'border-slate-100 bg-[#fafafa] shadow-sm'}">
+          <div class="flex justify-between items-center mb-3">
+            <div class="flex items-center gap-2.5">
+              ${s.cash > 0 
+                ? `<div class="w-7 h-7 rounded-full bg-gradient-to-br from-pink-400 to-pink-600 text-white shadow-md flex items-center justify-center"><i data-lucide="heart" class="w-3.5 h-3.5 fill-white"></i></div>` 
+                : `<div class="w-7 h-7 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center"><i data-lucide="gift" class="w-4 h-4"></i></div>`
+              }
+              <span class="font-extrabold text-slate-800 text-lg">${s.name}</span>
+            </div>
+            ${s.cash > 0 
+              ? `<span class="font-black text-pink-600 text-lg tracking-tight">${s.cash}만<span class="text-sm font-bold ml-0.5">지원</span></span>` 
+              : `<span class="font-bold text-emerald-500 text-sm tracking-tight bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100 shadow-sm">${s.items.length}건 찬조</span>`
+            }
+          </div>
+          ${s.cash > 0 ? `<div class="text-[11px] font-bold text-pink-500/80 mb-2 mt-[-4px]">대회 총상금 전액 스폰 (찬스상 제외)</div>` : ''}
+          ${s.items.length > 0 ? `
+            <div class="flex flex-wrap gap-1.5 mt-1">
+              ${s.items.map(item => `<span class="text-[11px] font-medium px-2 py-1 bg-white border border-slate-200 rounded-md text-slate-600 shadow-sm leading-tight">${item}</span>`).join('')}
+            </div>
+          ` : ''}
+        </div>
+      `).join('');
+
       // Medal Ranking
       document.getElementById('medal-ranking-grid').innerHTML = medalRanking.map((m, idx) => `
         <div class="flex justify-between items-center p-4 rounded-2xl border border-slate-100 bg-[#fafafa] shadow-sm">
@@ -652,7 +719,7 @@
           </div>
         </div>`).join('');
 
-      // ★ Class Ranking (학번별 종합 성과)
+      // Class Ranking (학번별 종합 성과)
       document.getElementById('class-summary-grid').innerHTML = classRanking.map((c, idx) => {
         const badgeClass = c.classOfYear === '94' ? 'bg-emerald-100 text-emerald-700' : c.classOfYear === '93' ? 'bg-blue-100 text-blue-700' : 'bg-rose-100 text-rose-700';
         return `
@@ -691,7 +758,7 @@
         `;
       }).join('');
 
-      // ★ Gift Ranking (상품 찬조 내역)
+      // Gift Ranking (상품 찬조 내역)
       document.getElementById('gift-ranking-grid').innerHTML = giftData.map(g => `
         <div class="flex flex-col p-5 rounded-2xl border border-slate-100 bg-[#fafafa] shadow-sm">
           <h3 class="font-bold text-lg text-slate-800 border-b border-slate-200 pb-2 mb-3 flex justify-between items-end">
