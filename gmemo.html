@@ -1,0 +1,3183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>진심골프메모</title>
+  
+  <!-- 1. Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 2. FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- 3. React & ReactDOM -->
+  <script crossorigin="anonymous" src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
+  <script crossorigin="anonymous" src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+  
+  <!-- 4. Babel (JSX 컴파일러) -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+    const { useState, useRef, useEffect, useCallback } = React;
+    
+    // === 글로벌 Toast 시스템 ===
+    window.showToast = (msg) => {
+        const event = new CustomEvent('show-toast', { detail: msg });
+        window.dispatchEvent(event);
+    };
+
+    // === 아이콘 매핑 시스템 ===
+    const Icon = ({ name, size = 20, className = "", fill = false, style }) => {
+      let faClass = "";
+      switch(name) {
+        case "Plus": faClass = "fa-solid fa-plus"; break;
+        case "Search": faClass = "fa-solid fa-magnifying-glass"; break;
+        case "ChevronLeft": faClass = "fa-solid fa-chevron-left"; break;
+        case "ChevronRight": faClass = "fa-solid fa-chevron-right"; break;
+        case "Calendar": faClass = "fa-regular fa-calendar"; break;
+        case "CheckSquare": faClass = fill ? "fa-solid fa-square-check" : "fa-regular fa-square-check"; break;
+        case "LinkIcon": faClass = "fa-solid fa-link"; break;
+        case "Edit3": faClass = "fa-solid fa-pen"; break;
+        case "Trash2": faClass = "fa-regular fa-trash-can"; break;
+        case "PenTool": faClass = "fa-solid fa-pen-nib"; break;
+        case "LayoutList": faClass = "fa-solid fa-list-ul"; break;
+        case "Settings": faClass = "fa-solid fa-gear"; break;
+        case "ImageIcon": faClass = "fa-regular fa-image"; break;
+        case "Heart": faClass = (fill && fill !== "none") ? "fa-solid fa-heart text-red-500" : "fa-regular fa-heart"; break;
+        case "MessageSquare": faClass = "fa-regular fa-comment"; break;
+        case "Users": faClass = "fa-solid fa-user-group"; break;
+        case "Share2": faClass = "fa-solid fa-share-nodes"; break;
+        case "MoreVertical": faClass = "fa-solid fa-ellipsis-vertical"; break;
+        case "Send": faClass = "fa-solid fa-paper-plane"; break;
+        case "Dices": faClass = "fa-solid fa-dice"; break;
+        case "Target": faClass = "fa-solid fa-bullseye"; break;
+        case "RefreshCw": faClass = "fa-solid fa-rotate-right"; break;
+        case "Eye": faClass = "fa-regular fa-eye"; break;
+        case "PlayCircle": faClass = "fa-regular fa-circle-play"; break;
+        case "Trophy": faClass = "fa-solid fa-trophy"; break;
+        case "MapPin": faClass = "fa-solid fa-location-dot"; break;
+        case "Gamepad2": faClass = "fa-solid fa-gamepad"; break;
+        case "Save": faClass = "fa-regular fa-floppy-disk"; break;
+        case "BarChart3": faClass = "fa-solid fa-chart-simple"; break;
+        case "Pin": faClass = "fa-solid fa-thumbtack"; break;
+        case "Sparkles": faClass = "fa-solid fa-wand-magic-sparkles"; break;
+        case "Loader2": faClass = "fa-solid fa-spinner fa-spin"; break;
+        case "Instagram": faClass = "fa-brands fa-instagram"; break;
+        case "Bold": faClass = "fa-solid fa-bold"; break;
+        case "Italic": faClass = "fa-solid fa-italic"; break;
+        case "Underline": faClass = "fa-solid fa-underline"; break;
+        case "Strikethrough": faClass = "fa-solid fa-strikethrough"; break;
+        case "AlignLeft": faClass = "fa-solid fa-align-left"; break;
+        case "AlignCenter": faClass = "fa-solid fa-align-center"; break;
+        case "AlignRight": faClass = "fa-solid fa-align-right"; break;
+        case "ListIcon": faClass = "fa-solid fa-list"; break;
+        case "Layers": faClass = "fa-solid fa-layer-group"; break;
+        case "Check": faClass = "fa-solid fa-check"; break;
+        case "Timer": faClass = "fa-solid fa-stopwatch"; break;
+        case "Flag": faClass = "fa-solid fa-flag"; break;
+        case "Play": faClass = "fa-solid fa-play"; break;
+        case "Pause": faClass = "fa-solid fa-pause"; break;
+        case "Minus": faClass = "fa-solid fa-minus"; break;
+        case "User": faClass = "fa-regular fa-user"; break;
+        case "Camera": faClass = "fa-solid fa-camera"; break;
+        case "ChevronDown": faClass = "fa-solid fa-chevron-down"; break;
+        case "ChevronUp": faClass = "fa-solid fa-chevron-up"; break;
+        case "Share": faClass = "fa-solid fa-share"; break;
+        case "Menu": faClass = "fa-solid fa-bars"; break;
+        case "X": faClass = "fa-solid fa-xmark"; break;
+        case "Mail": faClass = "fa-regular fa-envelope"; break;
+        case "Lock": faClass = "fa-solid fa-lock"; break;
+        case "UserCircle": faClass = "fa-regular fa-circle-user"; break;
+        case "Copy": faClass = "fa-regular fa-copy"; break;
+        case "Crown": faClass = "fa-solid fa-crown"; break;
+        case "QrCode": faClass = "fa-solid fa-qrcode"; break;
+        case "RotateCcw": faClass = "fa-solid fa-arrow-rotate-left"; break;
+        case "RotateCw": faClass = "fa-solid fa-arrow-rotate-right"; break;
+        default: faClass = "fa-solid fa-circle";
+      }
+      return <i className={`${faClass} ${className} flex items-center justify-center shrink-0`} style={{ fontSize: size, width: size, height: size, ...style }}></i>;
+    };
+
+    // === [FIREBASE 설정] ===
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+    // ============================================================================
+    // [🔥 FIREBASE 연동 설정 (GitHub 배포용) 🔥]
+    // 깃허브 페이지 등에 올려서 실제로 방 만들기 및 메모 동기화 기능을 사용하시려면
+    // 파이어베이스(firebase.google.com) 프로젝트를 생성하고 웹 앱을 추가한 뒤
+    // 아래 설정값(YOUR_...)을 본인의 Firebase Config 값으로 교체해주세요!
+    // ============================================================================
+    const myFirebaseConfig = {
+const firebaseConfig = {
+  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+  authDomain: "left-right-6da31.firebaseapp.com",
+  projectId: "left-right-6da31",
+  storageBucket: "left-right-6da31.firebasestorage.app",
+  messagingSenderId: "128347797181",
+  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+    };
+
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    
+    // 💡 데이터베이스 저장 경로 식별자입니다. 본인만의 앱 이름으로 변경해 주세요 (예: my-golf-memo-2024)
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'golf-memo-app';
+
+    // --- Global Styles ---
+    const GlobalStyle = () => (
+      <style>{`
+        @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+        
+        html, body {
+          margin: 0; padding: 0; width: 100%; height: 100dvh; min-height: 100vh;
+          overflow: hidden; background-color: #c8c3b7; -webkit-tap-highlight-color: transparent; 
+          overscroll-behavior: none; -webkit-text-size-adjust: 100%;
+        }
+        * { font-family: "Pretendard Variable", Pretendard, sans-serif; }
+        
+        .kraft-bg {
+          background-color: #E2D9C8;
+          background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.07'/%3E%3C/svg%3E");
+        }
+        .stamped-text { color: #1a4314; text-shadow: 0.5px 1px 0px rgba(255,255,255,0.4); mix-blend-mode: multiply; }
+        
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Metronome Styles */
+        .metro-scrollbar::-webkit-scrollbar { width: 4px; }
+        .metro-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .metro-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes zoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .animate-in { animation-duration: 0.3s; animation-fill-mode: forwards; animation-timing-function: ease-out; }
+        .fade-in { animation-name: fadeIn; }
+        .zoom-in { animation-name: zoomIn; }
+        .slide-in-from-bottom-4 { animation-name: slideUp; animation-duration: 0.5s; }
+      `}</style>
+    );
+
+    // --- Helpers ---
+    const getYoutubeId = (url) => {
+      const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+      const match = url.match(regExp);
+      return (match && match[2].length === 11) ? match[2] : null;
+    };
+    const getInstagramId = (url) => {
+      const regExp = /(?:https?:\/\/)?(?:www\.)?instagram\.com\/(?:p|reel|tv)\/([^\/?#&]+)/;
+      const match = url.match(regExp);
+      return match ? match[1] : null;
+    };
+
+    // --- Initial Data ---
+    const INITIAL_CATEGORIES = [
+      { name: "전체" }, { name: "필드/라운드" }, { name: "스크린" },
+      { name: "연습장" }, { name: "스윙 분석" },
+      { name: "레슨/루틴" }, { name: "장비 관련" }, { name: "기타" }
+    ];
+
+    const INITIAL_MEMOS = [
+      {
+        id: "25", author: "나", category: "장비 관련", date: "방금 전",
+        content: "타이틀리스트 Vokey SM9 웨지 50도, 54도, 58도 세팅 완료! ✨<br/>확실히 그루브가 살아있어서 스핀량이 장난 아니다. 숏게임 자신감이 뿜뿜. 주말 라운드가 기대됨.",
+        imageUrl: "https://images.pexels.com/photos/54123/pexels-photo-54123.jpeg?auto=compress&cs=tinysrgb&w=800",
+        checklist: [{id: 1, text: "웨지 네임택 스티커 붙이기", completed: false}], urls: []
+      },
+      {
+        id: "24", author: "나", category: "필드/라운드", date: "어제",
+        content: "<b>⛳️ 가평 베네스트 CC 후기</b><br/><br/>전반에는 아이언이 안 맞아서 고생했는데 후반부터 영점이 잡히기 시작함. 확실히 산악 지형이라 라이가 안 좋은 곳이 많아서 트러블 샷 연습이 많이 필요할 듯.<br/><br/>- 파3 니어리스트 먹음! (8번 아이언, 135m)<br/>- 그린 스피드는 2.8 정도로 약간 빠른 편.<br/>- 캐디님 진행이 너무 좋아서 즐겁게 쳤다.",
+        imageUrl: "https://images.pexels.com/photos/2828723/pexels-photo-2828723.jpeg?auto=compress&cs=tinysrgb&w=800", 
+        checklist: [], urls: []
+      },
+      {
+        id: "23", author: "나", category: "연습장", date: "2일 전",
+        content: "드라이버 백스윙 탑에서 크로스오버 되는 현상 교정 중.<br/><br/>테이크백 때 손목을 너무 일찍 쓰지 말고, 어깨 턴으로만 명치 앞까지 가져가는 느낌으로 하니까 훨씬 궤도가 좋아짐. 내일 스크린에서 써먹어봐야지. 🏌️‍♂️",
+        imageUrl: null, checklist: [], urls: []
+      },
+      {
+        id: "19", author: "나", category: "스윙 분석", date: "3일 전",
+        content: "오늘 연습장 스윙 영상 ⛳️ 백스윙 탑에서 멈칫하는 동작이 생겼다. 리듬이 끊기는 느낌인데, 하나-둘 템포로 다시 맞춰보자.",
+        imageUrl: null, checklist: [], urls: ["https://www.youtube.com/watch?v=dQw4w9WgXcQ"]
+      },
+      {
+        id: "8", author: "나", isPinned: true, category: "레슨/루틴", date: "4일 전",
+        content: "<b>[AI 영상 요약]</b><br/>• 지면 반력을 활용하기 위해 다운스윙 시 왼발을 강하게 딛어주세요.<br/>• 임팩트 순간 손목 코킹을 유지하며(래깅) 헤드 스피드를 늘려야 합니다.",
+        imageUrl: null, checklist: [{id: 803, text: "테이크백 천천히 빼기", completed: true}, {id: 804, text: "다운스윙 하체 리드", completed: false}], urls: ["https://youtu.be/E676xj3Cj0c?si=dVt_RFpCSYDI9S8U"]
+      }
+    ];
+
+    const INITIAL_SHOT_MEMOS = [
+      { id: "116", content: "멘탈 관리: 미스 샷 나오면 5초 빡치고 바로 잊어버리기. 다음 샷에 집중.", date: "방금 전" },
+      { id: "115", content: "우드 칠 때 쓸어치려고 하지말고 완만한 다운블로우로 치기. 공만 딱 걷어내는 느낌.", date: "5분 전" },
+      { id: "114", content: "퍼팅할 때 때리지 말고 헤드 무게로 밀어치기. 홀컵 들어가는 소리 듣고 고개 들자!", date: "15분 전" },
+      { id: "113", content: "그립에 힘 좀 빼자. 치약 짜는 정도의 악력만 유지. 채가 빠져나가는 느낌 기억하기.", date: "1시간 전" },
+      { id: "112", content: "드라이버 티샷 루틴: 빈스윙 2번 -> 타겟 확인 -> 심호흡 -> 3초 안에 샷.", date: "2시간 전" },
+      { id: "111", content: "아이언은 찍어쳐야 한다. 공 앞쪽 잔디(디봇)를 파낸다는 느낌으로 과감하게 내려치기.", date: "3시간 전" },
+      { id: "110", content: "보기해도 괜찮다. 무리해서 파 노리다가 더블, 트리플 하지 말고 안전한 곳으로 끊어 가자.", date: "어제" },
+      { id: "109", content: "어프로치 백스윙 크기로 거리 조절. 임팩트 때 감속하지 말고 지나가게 두기.", date: "어제" },
+      { id: "108", content: "어드레스 때 체중은 살짝 앞꿈치에 두기. 너무 뒤에 있으니 스윙이 들린다.", date: "2일 전" },
+      { id: "107", content: "다운스윙 하체 리드! 제발 팔로만 냅다 치지 말자 ㅠㅠ", date: "3일 전" }
+    ];
+
+    /* =========================================
+       [Sub Components Definition]
+    ========================================= */
+
+    function AuthScreen({ onLogin }) {
+      const [isLoginMode, setIsLoginMode] = useState(true);
+      const [accountId, setAccountId] = useState('');
+      const [password, setPassword] = useState('');
+      const [passwordConfirm, setPasswordConfirm] = useState('');
+      const [nickname, setNickname] = useState('');
+      const [keepLoggedIn, setKeepLoggedIn] = useState(false);
+      const [isLoading, setIsLoading] = useState(false);
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        if (isLoginMode) {
+          onLogin(); 
+        } else {
+          window.showToast("회원가입이 완료되었습니다! 로그인 해주세요.");
+          setIsLoginMode(true);
+        }
+      };
+
+      const handleSocialLogin = (provider) => {
+        window.showToast(`${provider} 계정으로 시작합니다.`);
+        onLogin();
+      };
+
+      const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        const provider = new GoogleAuthProvider();
+        try {
+          await signInWithPopup(auth, provider);
+          window.showToast("구글 계정으로 연결되었습니다!");
+          onLogin();
+        } catch (error) {
+          console.error(error);
+          if (error.code === "auth/popup-blocked" || error.code === "auth/popup-closed-by-user") {
+            window.showToast("로그인 팝업이 차단되었거나 닫혔습니다.");
+          } else {
+            window.showToast("구글 연동 모드입니다. (임시 통과)");
+            onLogin(); // 현재 프리뷰 환경(iframe 등)에서 팝업 제약이 있을 수 있어 테스트를 위해 진입을 허용합니다.
+          }
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      return (
+        <div className="flex flex-col h-full w-full justify-center items-center p-6 animate-in fade-in duration-300 overflow-y-auto scrollbar-hide">
+          <div className="w-full max-w-sm bg-white/90 backdrop-blur-md rounded-[32px] p-8 shadow-xl border border-[#d1c9b8] my-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-[36px] font-[900] stamped-text mb-2 tracking-tight">진심골프메모</h1>
+              <p className="text-[14px] font-bold text-gray-500">
+                {isLoginMode ? "입력 없이 로그인 버튼을 누르면 비회원으로 진입합니다!" : "나만의 골프 기록을 시작해보세요"}
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+              {!isLoginMode && (
+                <div className="relative">
+                  <Icon name="UserCircle" size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input type="text" placeholder="사용할 닉네임" value={nickname} onChange={e=>setNickname(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-[15px] outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all" />
+                </div>
+              )}
+              <div className="relative">
+                <Icon name="User" size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="text" placeholder="아이디 또는 이메일" value={accountId} onChange={e=>setAccountId(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-[15px] outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all" />
+              </div>
+              <div className="relative">
+                <Icon name="Lock" size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <input type="password" placeholder="비밀번호" value={password} onChange={e=>setPassword(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-[15px] outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all" />
+              </div>
+              {!isLoginMode && (
+                <div className="relative">
+                  <Icon name="Lock" size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <input type="password" placeholder="비밀번호 확인" value={passwordConfirm} onChange={e=>setPasswordConfirm(e.target.value)} className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-2xl font-bold text-[15px] outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all" />
+                </div>
+              )}
+
+              <div className="flex items-center px-1 mt-1 mb-1">
+                <label className="flex items-center gap-2 cursor-pointer group select-none">
+                  <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${keepLoggedIn ? 'bg-[#1a4314] border-[#1a4314]' : 'bg-white border-gray-300 group-hover:border-[#1a4314]'}`}>
+                    {keepLoggedIn && <Icon name="Check" size={12} className="text-white font-black" />}
+                  </div>
+                  <input type="checkbox" checked={keepLoggedIn} onChange={(e)=>setKeepLoggedIn(e.target.checked)} className="hidden" />
+                  <span className="text-[13px] font-bold text-gray-600 group-hover:text-[#1a4314] transition-colors">로그인 상태 유지</span>
+                </label>
+              </div>
+
+              <button type="submit" disabled={isLoading} className="w-full py-4 bg-[#1a4314] text-white rounded-2xl font-black text-[16px] shadow-lg hover:bg-[#2d6a4f] active:scale-95 transition-all mt-1 disabled:opacity-50">
+                {isLoginMode ? "로그인 (비회원 가능)" : "회원가입"}
+              </button>
+            </form>
+
+            <div className="mt-6 mb-6 flex items-center gap-3">
+              <div className="flex-1 h-px bg-gray-200"></div>
+              <span className="text-[11px] font-extrabold text-gray-400">SNS 계정으로 3초만에 {isLoginMode ? '시작하기' : '가입하기'}</span>
+              <div className="flex-1 h-px bg-gray-200"></div>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              <button onClick={() => handleSocialLogin('카카오')} disabled={isLoading} className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#FEE500] text-[#000000] rounded-2xl font-black text-[15px] hover:bg-[#FDD800] active:scale-95 transition-all shadow-sm relative disabled:opacity-50">
+                <i className="fa-solid fa-comment absolute left-5 text-xl"></i>
+                카카오로 {isLoginMode ? '로그인' : '가입'}
+              </button>
+              <button onClick={() => handleSocialLogin('네이버')} disabled={isLoading} className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#03C75A] text-white rounded-2xl font-black text-[15px] hover:bg-[#02b351] active:scale-95 transition-all shadow-sm relative disabled:opacity-50">
+                <span className="absolute left-5 font-[900] text-xl leading-none font-sans italic">N</span>
+                네이버로 {isLoginMode ? '로그인' : '가입'}
+              </button>
+              <button onClick={handleGoogleLogin} disabled={isLoading} className="w-full flex items-center justify-center gap-2 py-3.5 bg-white text-gray-700 border border-gray-200 rounded-2xl font-black text-[15px] hover:bg-gray-50 active:scale-95 transition-all shadow-sm relative disabled:opacity-50">
+                <i className="fa-brands fa-google absolute left-5 text-xl text-blue-500"></i>
+                구글로 {isLoginMode ? '로그인' : '가입'}
+              </button>
+            </div>
+
+            <div className="mt-8 text-center">
+              <button onClick={() => setIsLoginMode(!isLoginMode)} className="text-[14px] font-bold text-gray-500 hover:text-[#1a4314] transition-colors decoration-[#1a4314] hover:underline underline-offset-4">
+                {isLoginMode ? "아직 계정이 없으신가요? 회원가입" : "이미 계정이 있으신가요? 로그인"}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MyPage({ onCancel, defaultTab, setDefaultTab, baseFontSize, setBaseFontSize, onLogout }) {
+      return (
+        <div className="p-6 bg-[#fdfcf9] min-h-full flex flex-col gap-6">
+          <div className="flex flex-col items-center py-8 border-b border-[#d1c9b8]/50 mt-4 relative">
+            <button onClick={onLogout} className="absolute right-0 top-0 text-[13px] font-bold text-red-500 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors border border-red-100 bg-white">로그아웃</button>
+            <div className="w-20 h-20 rounded-full bg-[#e8f5e9] border border-[#a5d6a7] text-[#1a4314] flex items-center justify-center text-[32px] font-black shadow-md mb-4">나</div>
+            <h2 className="text-[22px] font-black text-gray-900 tracking-tight">나의 프로필</h2>
+            <p className="text-[13px] font-bold text-gray-500 mt-1">골프메모 유저</p>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <div className="bg-white border border-[#d1c9b8] rounded-2xl shadow-sm p-5 mb-2">
+              <h3 className="font-bold text-[15px] text-gray-800 mb-3">글자 크기 설정</h3>
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-[12px] font-bold text-gray-500">작게</span>
+                <input 
+                  type="range" min="12" max="24" step="1"
+                  value={baseFontSize} 
+                  onChange={(e) => setBaseFontSize(Number(e.target.value))} 
+                  className="flex-1 accent-[#1a4314]" 
+                />
+                <span className="text-[16px] font-bold text-gray-800">크게</span>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-3 text-center border border-gray-200">
+                <p className="font-medium text-gray-800" style={{ fontSize: `${baseFontSize}px` }}>이 정도 크기로 작성되고 보입니다.</p>
+              </div>
+            </div>
+
+            <div className="bg-white border border-[#d1c9b8] rounded-2xl shadow-sm p-5 mb-2">
+              <h3 className="font-bold text-[15px] text-gray-800 mb-3">앱 첫 화면 설정</h3>
+              <select 
+                value={defaultTab}
+                onChange={(e) => { setDefaultTab(e.target.value); window.showToast('첫 화면이 변경되었습니다.'); }}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-[16px] font-bold outline-none focus:border-[#1a4314]"
+              >
+                <option value="memo">메모 (기본)</option>
+                <option value="shot_memo">Shot메모</option>
+                <option value="game">게임</option>
+                <option value="metronome">메트로놈</option>
+              </select>
+              <p className="text-[12px] text-gray-500 mt-2 font-medium">앱 실행 시 가장 먼저 보여질 하단 메뉴를 선택합니다.</p>
+            </div>
+          </div>
+          <div className="mt-auto flex justify-center pb-8"><button onClick={onCancel} className="px-6 py-4 w-full bg-[#E2D9C8] text-[#1a4314] font-extrabold rounded-2xl hover:bg-[#d5ccba] shadow-sm">목록으로 돌아가기</button></div>
+        </div>
+      );
+    }
+
+    function MemoList({ memos, categories, activeCategory, setActiveCategory, isSelectionMode, setIsSelectionMode, selectedMemoIds, setSelectedMemoIds, onOpenDetail, baseFontSize }) {
+      const timerRef = useRef(null);
+      const isLongPressTriggered = useRef(false);
+
+      const handlePointerDown = (memo) => {
+        isLongPressTriggered.current = false;
+        if (isSelectionMode) return;
+        
+        timerRef.current = setTimeout(() => {
+          isLongPressTriggered.current = true;
+          if ('vibrate' in navigator) navigator.vibrate(50);
+          setIsSelectionMode(true);
+          setSelectedMemoIds([memo.id]);
+        }, 500);
+      };
+
+      const handlePointerMove = () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+
+      const handlePointerUp = () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+
+      const handleClick = (memo) => {
+        if (isLongPressTriggered.current) return;
+        
+        if (isSelectionMode) {
+          setSelectedMemoIds(prev => prev.includes(memo.id) ? prev.filter(id=>id!==memo.id) : [...prev, memo.id]);
+        } else {
+          onOpenDetail(memo);
+        }
+      };
+
+      return (
+        <div className="flex flex-col gap-4">
+          <div className="sticky top-0 z-30 bg-[#E2D9C8]/95 backdrop-blur-md pt-3 pb-3 px-3 -mx-2 mb-2 shadow-sm border-b border-[#d1c9b8]/50 flex flex-col gap-3">
+             <div className="flex justify-between items-center px-1">
+               <p className="text-[11px] text-gray-700 font-extrabold flex items-center gap-1"><Icon name="Edit3" size={12} className="mr-1"/> 메모를 길게 누르면 편집할 수 있어요!</p>
+               {!isSelectionMode && memos.length > 0 && (
+                 <button onClick={() => setIsSelectionMode(true)} className="text-[11px] font-extrabold px-3 py-1.5 rounded-lg bg-white border border-[#d1c9b8] text-gray-800 shadow-sm active:scale-95 transition-transform">
+                   목록 합치기
+                 </button>
+               )}
+             </div>
+             <div className="flex flex-wrap gap-2 px-1 overflow-x-auto scrollbar-hide pb-1">
+               {categories.map(cat => (
+                 <button 
+                   key={cat.name} 
+                   onClick={() => setActiveCategory(cat.name)}
+                   className={`px-4 py-1.5 rounded-full text-[13px] font-bold border whitespace-nowrap ${activeCategory === cat.name ? "bg-gray-800 text-white" : "bg-white/80 text-gray-700 border-[#d1c9b8]"}`}
+                 >
+                   {cat.name}
+                 </button>
+               ))}
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-4 pb-24 px-1">
+            {memos.length === 0 ? (
+              <div className="text-center text-gray-500 mt-10 py-12 bg-white/90 rounded-[24px] border border-dashed border-[#d1c9b8]"><div className="bg-[#E2D9C8] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><Icon name="PenTool" size={24} className="text-[#1a4314]" /></div><p className="font-bold text-[#1a4314]">기록된 메모가 없습니다.</p></div>
+            ) : (
+              memos.map(memo => (
+                <div 
+                  key={memo.id} 
+                  onPointerDown={() => handlePointerDown(memo)}
+                  onPointerMove={handlePointerMove}
+                  onPointerUp={handlePointerUp}
+                  onPointerCancel={handlePointerMove}
+                  onClick={() => handleClick(memo)}
+                  onContextMenu={e => e.preventDefault()}
+                  style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
+                  className={`bg-[#fdfcf9] rounded-[24px] p-5 shadow-sm border ${isSelectionMode && selectedMemoIds.includes(memo.id) ? 'border-[#1a4314] ring-2 ring-[#1a4314]' : 'border-[#d1c9b8]'} cursor-pointer`}
+                >
+                  <div className="flex justify-between items-center mb-1">
+                    <div className="flex gap-2 items-center">
+                       {isSelectionMode && <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${selectedMemoIds.includes(memo.id)?'bg-[#1a4314] border-[#1a4314]':'border-gray-300'}`}>{selectedMemoIds.includes(memo.id) && <Icon name="Check" size={12} className="text-white font-black"/>}</div>}
+                       <span className="text-[12px] font-bold text-[#1a4314] bg-[#e8f5e9] px-3 py-1 rounded-full border border-[#a5d6a7]">{memo.category}</span>
+                       {memo.isPinned && <Icon name="Pin" size={14} className="text-amber-600" />}
+                    </div>
+                    <span className="text-[12px] font-bold text-gray-400">{memo.date}</span>
+                  </div>
+                  <div className="flex gap-4 items-start mt-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-800 font-medium leading-[1.6] line-clamp-3" style={{ fontSize: `${baseFontSize}px` }} dangerouslySetInnerHTML={{ __html: memo.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ') }}></p>
+                    </div>
+                    {(memo.imageUrl || (memo.urls && memo.urls.length > 0)) && (
+                      <div className="flex flex-col gap-2 shrink-0">
+                        {memo.imageUrl && <img src={memo.imageUrl} className="w-[80px] h-[80px] object-cover rounded-2xl border" />}
+                        {memo.urls && memo.urls.map((url, idx) => {
+                          const ytId = getYoutubeId(url);
+                          const igId = getInstagramId(url);
+                          if (igId) {
+                            return (
+                              <div key={idx} className="relative w-[80px] h-[60px] rounded-[12px] overflow-hidden border border-gray-200 shadow-sm flex flex-col items-center justify-center bg-white">
+                                <Icon name="Instagram" size={18} className="text-pink-600 mb-0.5" />
+                                <span className="text-[9px] font-extrabold text-gray-700">Instagram</span>
+                              </div>
+                            );
+                          }
+                          if (!ytId) return null;
+                          return (
+                            <div key={idx} className="relative w-[80px] h-[60px] rounded-[12px] overflow-hidden border border-gray-200 shadow-sm bg-black">
+                              <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="yt-thumb" className="w-full h-full object-cover opacity-80" />
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <Icon name="PlayCircle" size={18} className="text-white drop-shadow-md" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function GlobalSearch({ memos, shotMemos, onOpenDetail, onCancel, baseFontSize }) {
+      const [query, setQuery] = useState("");
+
+      const myMemos = memos.filter(m => query && m.content.toLowerCase().includes(query.toLowerCase()));
+      const filteredShotMemos = shotMemos.filter(m => query && m.content.toLowerCase().includes(query.toLowerCase()));
+
+      const renderMemo = (memo) => (
+        <div key={`s-${memo.id}`} onClick={() => onOpenDetail(memo)} className="bg-white rounded-[20px] p-4 shadow-sm border border-[#d1c9b8] cursor-pointer mb-3 hover:border-[#1a4314] transition-colors">
+          <div className="flex justify-between items-center mb-2">
+            <span className="text-[11px] font-bold text-[#1a4314] bg-[#e8f5e9] px-2 py-0.5 rounded-md">{memo.category}</span>
+            <span className="text-[11px] text-gray-400 font-bold">{memo.date}</span>
+          </div>
+          <div className="flex gap-3 items-start">
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-800 font-medium leading-[1.6] line-clamp-2" style={{ fontSize: `${baseFontSize}px` }} dangerouslySetInnerHTML={{ __html: memo.content.replace(/<[^>]*>?/gm, '').replace(/&nbsp;/g, ' ') }}></p>
+            </div>
+            {memo.imageUrl && <img src={memo.imageUrl} className="w-[60px] h-[60px] object-cover rounded-xl border shrink-0" />}
+          </div>
+        </div>
+      );
+
+      const renderShotMemo = (memo) => (
+        <div key={`s-shot-${memo.id}`} className="bg-white rounded-[20px] p-4 shadow-sm border border-[#d1c9b8] mb-3">
+           <div className="flex justify-between items-center mb-1">
+             <span className="text-[11px] font-bold text-gray-500">Shot메모</span>
+             <span className="text-[11px] text-gray-400 font-bold">{memo.date}</span>
+           </div>
+           <p className="text-gray-800 font-medium" style={{ fontSize: `${baseFontSize}px` }}>{memo.content}</p>
+        </div>
+      );
+
+      return (
+        <div className="p-4 flex flex-col h-full bg-[#fdfcf9]">
+          <div className="flex items-center gap-3 mb-4 pt-2">
+            <button onClick={onCancel} className="text-[#1a4314] p-1"><Icon name="ChevronLeft" size={28}/></button>
+            <div className="relative flex-1">
+              <Icon name="Search" size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#1a4314]" />
+              <input autoFocus type="text" placeholder="검색어를 입력하세요" className="w-full pl-11 pr-10 py-3 bg-white border border-[#d1c9b8] rounded-full text-[16px] font-bold outline-none focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] transition-all shadow-sm" value={query} onChange={(e) => setQuery(e.target.value)} />
+              {query && <button onClick={() => setQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><Icon name="X" size={16}/></button>}
+            </div>
+          </div>
+          
+          <div className="flex-1 overflow-y-auto pb-24 scrollbar-hide px-1">
+            {!query ? (
+              <div className="text-center text-gray-400 mt-24 flex flex-col items-center">
+                <Icon name="Search" size={48} className="mb-4 opacity-20" />
+                <p className="font-bold text-gray-400">찾고 싶은 내용을 검색해보세요.</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                {myMemos.length === 0 && filteredShotMemos.length === 0 ? (
+                  <div className="text-center text-gray-500 mt-10 font-bold">검색 결과가 없습니다.</div>
+                ) : (
+                  <>
+                    {myMemos.length > 0 && (
+                      <div>
+                        <h3 className="font-black text-[14px] mb-3 text-[#1a4314] flex items-center gap-1.5"><Icon name="PenTool" size={16}/> 내 메모 ({myMemos.length})</h3>
+                        {myMemos.map(renderMemo)}
+                      </div>
+                    )}
+                    {filteredShotMemos.length > 0 && (
+                      <div>
+                        <h3 className="font-black text-[14px] mb-3 text-orange-600 flex items-center gap-1.5"><Icon name="MessageSquare" size={16}/> 숏메모 ({filteredShotMemos.length})</h3>
+                        {filteredShotMemos.map(renderShotMemo)}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function ShotMemoInputBar({ onSaveShotMemo }) {
+      const [text, setText] = useState('');
+      const textareaRef = useRef(null);
+
+      const handleInput = (e) => {
+        setText(e.target.value);
+        if (textareaRef.current) {
+          textareaRef.current.style.height = 'auto';
+          textareaRef.current.style.height = (textareaRef.current.scrollHeight) + 'px';
+        }
+      };
+
+      const handleSave = () => {
+        if(!text.trim())return; 
+        onSaveShotMemo({ id: Date.now().toString(), content: text, date: "방금 전" });
+        setText('');
+        if(textareaRef.current) textareaRef.current.style.height = 'auto';
+      };
+
+      return (
+        <div className="shrink-0 w-full bg-[#E8E2D2]/80 backdrop-blur-md border-t border-[#d1c9b8] p-3 px-4 flex gap-2 items-end z-[40]">
+          <textarea 
+            ref={textareaRef}
+            value={text} 
+            onChange={handleInput} 
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSave();
+              }
+            }}
+            placeholder="순간의 깨달음을 기록하세요..." 
+            className="flex-1 bg-white border border-[#d1c9b8] rounded-2xl px-4 py-3 outline-none resize-none font-medium shadow-sm min-h-[48px] max-h-[120px] overflow-y-auto scrollbar-hide text-[15px]" 
+            rows="1"
+          />
+          <button onClick={handleSave} disabled={!text.trim()} className="w-[48px] h-[48px] rounded-2xl bg-[#1a4314] text-white flex items-center justify-center shrink-0 disabled:opacity-50 shadow-sm transition-colors mb-[1px]">
+            <Icon name="Send" size={20} className="ml-1" />
+          </button>
+        </div>
+      );
+    }
+
+    function ShotMemoMain({ shotMemos, onSaveShotMemo, onDeleteShotMemos, isSelectionMode, setIsSelectionMode, selectedIds, setSelectedIds, baseFontSize }) {
+      const [editingId, setEditingId] = useState(null);
+      const [editingText, setEditingText] = useState('');
+      const [confirmDelId, setConfirmDelId] = useState(null);
+      const [copiedId, setCopiedId] = useState(null);
+      
+      const timerRef = useRef(null);
+      const isLongPressTriggered = useRef(false);
+
+      const handlePointerDown = (memo) => {
+        isLongPressTriggered.current = false;
+        if (editingId === memo.id || isSelectionMode) return;
+        
+        timerRef.current = setTimeout(() => {
+          isLongPressTriggered.current = true;
+          if ('vibrate' in navigator) navigator.vibrate(50);
+          setEditingId(memo.id);
+          setEditingText(memo.content);
+          setConfirmDelId(null);
+        }, 500);
+      };
+
+      const handlePointerMove = () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+
+      const handlePointerUp = () => {
+        if (timerRef.current) clearTimeout(timerRef.current);
+      };
+
+      const handleClick = (memo) => {
+        if (isLongPressTriggered.current) return;
+        if (editingId === memo.id) return;
+
+        if (isSelectionMode) {
+          setSelectedIds(prev => prev.includes(memo.id) ? prev.filter(s=>s!==memo.id) : [...prev, memo.id]);
+        }
+      };
+
+      const saveEdit = (id) => {
+        if (!editingText.trim()) return;
+        const memoToUpdate = shotMemos.find(m => m.id === id);
+        if (memoToUpdate) onSaveShotMemo({ ...memoToUpdate, content: editingText });
+        setEditingId(null);
+      };
+
+      const handleCopy = (memo, e) => {
+        e.stopPropagation();
+        const textArea = document.createElement("textarea");
+        textArea.value = memo.content;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        setCopiedId(memo.id);
+        setTimeout(() => setCopiedId(null), 2000);
+      };
+
+      return (
+        <div className="flex flex-col gap-4 h-full relative">
+          <div className="sticky top-0 z-30 bg-[#E2D9C8]/95 backdrop-blur-md pt-3 pb-3 px-4 shadow-sm border-b border-[#d1c9b8]/50 flex justify-between items-center -mx-2">
+            <p className="text-[12px] text-gray-700 font-extrabold flex items-center gap-1.5"><Icon name="Edit3" size={14}/> 메모를 길게 누르면 수정할 수 있어요!</p>
+            {!isSelectionMode && shotMemos.length > 0 && (
+              <button onClick={() => setIsSelectionMode(true)} className="text-[11px] font-extrabold px-3 py-1.5 rounded-lg bg-white border border-[#d1c9b8] text-gray-800 shadow-sm active:scale-95 transition-transform">
+                목록 합치기
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-3 pb-6 px-3">
+            {shotMemos.length === 0 ? (
+              <div className="text-center text-gray-500 mt-6 py-12 bg-white/90 rounded-[24px] border border-dashed border-[#d1c9b8]"><p className="font-bold text-[#1a4314]">기록된 숏메모가 없습니다.</p></div>
+            ) : (
+              [...shotMemos].reverse().map(memo => (
+                <div 
+                  key={memo.id} 
+                  {...(editingId !== memo.id ? { 
+                    onPointerDown: () => handlePointerDown(memo),
+                    onPointerMove: handlePointerMove,
+                    onPointerUp: handlePointerUp,
+                    onPointerCancel: handlePointerMove,
+                    onClick: () => handleClick(memo),
+                    onContextMenu: e => e.preventDefault()
+                  } : {})}
+                  style={{ WebkitTouchCallout: editingId === memo.id ? 'default' : 'none', userSelect: editingId === memo.id ? 'auto' : 'none' }}
+                  className={`bg-[#fdfcf9] rounded-2xl p-4 shadow-sm border ${isSelectionMode && selectedIds.includes(memo.id) ? 'border-[#1a4314] ring-2 ring-[#1a4314]' : 'border-[#d1c9b8]'} ${editingId !== memo.id ? 'cursor-pointer' : ''} flex justify-between items-start`}
+                >
+                  {editingId === memo.id ? (
+                    <div className="w-full flex flex-col gap-2 relative z-50">
+                      <textarea
+                        value={editingText}
+                        onChange={e => setEditingText(e.target.value)}
+                        onFocus={(e) => e.target.setSelectionRange(e.target.value.length, e.target.value.length)}
+                        className="w-full bg-white border border-[#1a4314] rounded-xl p-2 outline-none resize-none font-medium min-h-[60px]"
+                        style={{ fontSize: `${baseFontSize}px` }}
+                        autoFocus
+                      />
+                      <div className="flex justify-between items-center mt-1">
+                        <div className="flex gap-1">
+                          <button 
+                              onPointerDown={(e) => {
+                                  e.stopPropagation(); 
+                                  if (confirmDelId === memo.id) {
+                                      onDeleteShotMemos([memo.id]); 
+                                      setEditingId(null);
+                                      setConfirmDelId(null);
+                                  } else {
+                                      setConfirmDelId(memo.id);
+                                      setTimeout(() => setConfirmDelId(null), 3000);
+                                  }
+                              }} 
+                              className="text-red-500 text-[13px] font-bold p-2 flex items-center gap-1.5 hover:bg-red-50 rounded-lg active:scale-95 transition-transform"
+                          >
+                              <Icon name="Trash2" size={14}/>
+                              {confirmDelId === memo.id ? "정말 삭제?" : "삭제"}
+                          </button>
+                          <button 
+                              onPointerDown={(e) => handleCopy(memo, e)} 
+                              className="text-blue-600 text-[13px] font-bold p-2 flex items-center gap-1.5 hover:bg-blue-50 rounded-lg active:scale-95 transition-transform"
+                          >
+                              <Icon name="Copy" size={14}/>
+                              {copiedId === memo.id ? "복사완료!" : "복사"}
+                          </button>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onPointerDown={(e)=>{e.stopPropagation(); setEditingId(null);}} className="px-4 py-2 bg-[#E2D9C8] text-[#1a4314] rounded-lg text-[13px] font-bold hover:bg-[#d5ccba] active:scale-95 transition-transform">취소</button>
+                          <button onPointerDown={(e)=>{e.stopPropagation(); saveEdit(memo.id);}} className="px-4 py-2 bg-[#1a4314] text-white rounded-lg text-[13px] font-bold hover:bg-[#2d6a4f] active:scale-95 transition-transform">저장</button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-3 items-start flex-1">
+                      {isSelectionMode && <div className={`mt-0.5 w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${selectedIds.includes(memo.id)?'bg-[#1a4314] border-[#1a4314]':'border-gray-300'}`}>{selectedIds.includes(memo.id) && <Icon name="Check" size={12} className="text-white font-black"/>}</div>}
+                      <div className="flex flex-col gap-1 flex-1">
+                        <p className="text-gray-800 font-medium whitespace-pre-wrap leading-snug" style={{ fontSize: `${baseFontSize}px` }}>{memo.content}</p>
+                        <span className="text-[11px] font-bold text-gray-400">{memo.date}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    function MemoDetail({ memo, onDelete, onEdit, onTogglePin, onToggleChecklist, baseFontSize }) {
+      const [showChecklist, setShowChecklist] = useState(false);
+      const [confirmDel, setConfirmDel] = useState(false);
+
+      const hasIgUrl = memo.urls?.some(url => getInstagramId(url));
+
+      return (
+        <div className="bg-[#fdfcf9] min-h-full flex flex-col">
+          <div className="flex-1 pb-[calc(6rem+env(safe-area-inset-bottom))]">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-[#e8f5e9] border border-[#a5d6a7] flex items-center justify-center font-bold text-[#1a4314] text-[18px]">
+                    {(memo.author || '나').substring(0, 1)}
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-black text-[16px] text-gray-900">{memo.author || '나'}</span>
+                    <span className="text-[12px] font-medium text-gray-500">{memo.date}</span>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-end gap-2.5">
+                  <span className="bg-[#1a4314] text-white px-3 py-1.5 rounded-full text-[12px] font-bold shadow-sm">{memo.category}</span>
+                  {memo.author === "나" && (
+                    <div className="flex items-center gap-1.5">
+                      <button onClick={() => onTogglePin(memo.id)} className={`flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-md border transition-colors ${memo.isPinned ? 'bg-amber-50 border-amber-200 text-amber-600' : 'bg-white border-[#d1c9b8] text-gray-600'}`}>
+                        <Icon name="Pin" size={11} className={memo.isPinned ? "text-amber-600" : ""} /> {memo.isPinned ? "고정됨" : "고정"}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            
+              {memo.imageUrl && !hasIgUrl && (
+                <img src={memo.imageUrl} alt="memo" className="w-full rounded-2xl mb-6 border border-[#d1c9b8] shadow-sm object-cover" onError={(e) => { e.target.onerror = null; e.target.src = "https://picsum.photos/seed/golf-fallback/800/600"; }} />
+              )}
+
+              <div 
+                className="text-gray-800 font-medium leading-[1.8] mb-8 break-words tracking-tight [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&_strike]:line-through [&_div]:mt-1 [&_p]:mt-1" 
+                style={{ fontSize: `${baseFontSize}px` }} 
+                dangerouslySetInnerHTML={{ __html: memo.content || '' }} 
+              />
+
+              {/* 체크리스트 영역 */}
+              {memo.checklist && memo.checklist.length > 0 && (
+                <div className="mb-6">
+                  <button onClick={() => setShowChecklist(!showChecklist)} className="flex items-center gap-1.5 text-[14px] font-bold text-[#1a4314] bg-[#E8E2D2] border border-[#d1c9b8] px-4 py-2 rounded-xl hover:bg-[#d5ccba] transition-colors shadow-sm">
+                    <Icon name="CheckSquare" size={16} /> 
+                    {showChecklist ? '할 일 / 준비물 접기' : '할 일 / 준비물 보기'} ({memo.checklist.filter(c => c.completed).length}/{memo.checklist.length})
+                  </button>
+                  
+                  {showChecklist && (
+                    <div className="mt-2 bg-[#fdfcf9] p-4 rounded-2xl border border-[#d1c9b8] flex flex-col gap-3 shadow-sm">
+                      {memo.checklist.map(item => (
+                        <div key={item.id} className="flex items-start gap-3 cursor-pointer group" onClick={() => onToggleChecklist(memo.id, item.id)}>
+                          <div className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center shrink-0 shadow-sm border transition-colors ${item.completed ? 'bg-[#1a4314] border-[#1a4314]' : 'bg-white border-gray-400 group-hover:border-[#1a4314]'}`}>
+                            {item.completed && <Icon name="CheckSquare" fill={true} size={13} className="text-white" />}
+                          </div>
+                          <span className={`text-[15px] transition-colors ${item.completed ? 'text-gray-400 line-through font-medium' : 'text-gray-800 font-bold'}`}>{item.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 외부 링크 영역 */}
+              {memo.urls && memo.urls.length > 0 && (
+                <div className="mb-6">
+                  {memo.urls.map((url, idx) => {
+                    const ytId = getYoutubeId(url);
+                    const igId = getInstagramId(url);
+                    
+                    if (igId) {
+                      const displayImg = memo.imageUrl || "https://images.pexels.com/photos/1325656/pexels-photo-1325656.jpeg?auto=compress&cs=tinysrgb&w=800";
+                      return (
+                        <a key={idx} href={url} target="_blank" rel="noreferrer" className="flex flex-col bg-white rounded-2xl border border-gray-200 shadow-md hover:shadow-lg transition-all overflow-hidden group mb-4">
+                          <div className="flex items-center gap-2 p-3 border-b border-gray-100 bg-white">
+                            <div className="bg-gradient-to-tr from-yellow-400 via-pink-500 to-purple-500 p-1.5 rounded-full text-white"><Icon name="Instagram" size={16} /></div>
+                            <div className="flex flex-col flex-1"><span className="text-[13px] font-bold text-gray-900">Instagram 게시물</span><span className="text-[11px] text-gray-500">원본 보기</span></div>
+                            <span className="text-[11px] text-blue-500 font-bold px-2 py-1 rounded bg-blue-50">App에서 열기</span>
+                          </div>
+                          <div className="relative w-full aspect-square bg-gray-100 flex items-center justify-center overflow-hidden">
+                             <img src={displayImg} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt="ig-photo" />
+                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                               <span className="opacity-0 group-hover:opacity-100 bg-black/70 text-white text-[13px] font-bold px-4 py-2 rounded-full backdrop-blur-md flex items-center gap-1.5 transition-opacity duration-300"><Icon name="Instagram" size={16} /> 인스타그램으로 이동</span>
+                             </div>
+                          </div>
+                        </a>
+                      );
+                    }
+
+                    return (
+                      <div key={idx} className="bg-white p-4 rounded-2xl border border-[#d1c9b8] mb-3 shadow-sm">
+                        <h3 className="text-sm font-extrabold text-gray-800 mb-3 flex items-center"><Icon name="LinkIcon" size={16} className="mr-2" /> 첨부 링크</h3>
+                        <a href={url} target="_blank" rel="noreferrer" className="flex items-stretch bg-gray-50 rounded-xl border border-gray-200 hover:border-gray-300 transition-all overflow-hidden group">
+                          {ytId ? (
+                            <div className="relative w-28 shrink-0 bg-black flex items-center justify-center overflow-hidden">
+                              <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt="youtube thumbnail" className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-300" />
+                              <div className="absolute inset-0 flex items-center justify-center"><Icon name="PlayCircle" size={28} className="text-white drop-shadow-md group-hover:scale-110 transition-transform" /></div>
+                            </div>
+                          ) : (
+                            <div className="w-20 shrink-0 bg-gray-200 flex items-center justify-center text-gray-500 transition-colors"><Icon name="LinkIcon" size={24} /></div>
+                          )}
+                          <div className="flex-1 min-w-0 p-3 flex flex-col justify-center">
+                            <div className="text-[14px] font-extrabold text-gray-900 line-clamp-1 mb-1">{ytId ? "YouTube 동영상" : "웹사이트 링크"}</div>
+                            <div className="text-[12px] font-bold text-gray-500 truncate">{url}</div>
+                          </div>
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* 내 글일 경우 수정/삭제 버튼 */}
+              <div className="pt-2 flex justify-end gap-2">
+                {memo.author === "나" && (
+                  <>
+                    <button onClick={onEdit} className="flex items-center text-blue-600 text-[14px] font-extrabold px-4 py-2 rounded-xl border border-blue-200 bg-white hover:bg-blue-50 shadow-sm transition-colors">
+                      <Icon name="Edit3" size={16} className="mr-1.5" /> 수정하기
+                    </button>
+                    <button onClick={() => {
+                        if (confirmDel) onDelete(memo.id);
+                        else {
+                          setConfirmDel(true);
+                          setTimeout(() => setConfirmDel(false), 3000);
+                        }
+                    }} className="flex items-center text-red-500 text-[14px] font-extrabold px-4 py-2 rounded-xl border border-red-200 bg-white hover:bg-red-50 shadow-sm transition-colors">
+                      <Icon name="Trash2" size={16} className="mr-1.5" /> {confirmDel ? "정말 삭제?" : "삭제하기"}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function MemoEditor({ memo, categories, onSave, onCancel, baseFontSize }) {
+      const defaultCat = categories.find(c => c.name !== "전체") || { name: '기타' };
+      const [category, setCategory] = useState(memo?.category || defaultCat.name);
+      const [content, setContent] = useState(memo?.content || '');
+      
+      const fileInputRef = useRef(null);
+      const editorRef = useRef(null); 
+
+      const [keepOriginal, setKeepOriginal] = useState(false);
+      const [originalPosition, setOriginalPosition] = useState('bottom'); 
+
+      const [checklist, setChecklist] = useState(memo?.checklist || []);
+      const [newCheckItem, setNewCheckItem] = useState('');
+      const [showChecklistInput, setShowChecklistInput] = useState(false);
+      const [urls, setUrls] = useState(memo?.urls || []);
+      const [newUrl, setNewUrl] = useState('');
+      
+      const [summarizingUrl, setSummarizingUrl] = useState(null); 
+      const [isGeneratingTags, setIsGeneratingTags] = useState(false);
+      const [isOrganizingContent, setIsOrganizingContent] = useState(false); 
+
+      useEffect(() => {
+        if (editorRef.current && content !== editorRef.current.innerHTML) {
+          editorRef.current.innerHTML = content;
+        }
+      }, []);
+
+      const formatDoc = (e, cmd, value = null) => {
+        e.preventDefault(); 
+        document.execCommand(cmd, false, value);
+        if (editorRef.current) {
+          editorRef.current.focus();
+          setContent(editorRef.current.innerHTML);
+        }
+      };
+
+      const handleImageUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onloadend = () => setImageUrl(reader.result);
+          reader.readAsDataURL(file);
+        }
+      };
+
+      const handleSave = () => {
+        if (!content.trim()) return window.showToast("내용을 입력해주세요.");
+        onSave({ 
+          id: memo?.id || null, 
+          category, 
+          content, 
+          checklist, 
+          urls, 
+          imageUrl: memo?.imageUrl || null, 
+          date: memo?.date || "방금 전" 
+        });
+      };
+
+      const addItem = (type) => {
+        if (type === 'check' && newCheckItem.trim()) { setChecklist([...checklist, { id: Date.now(), text: newCheckItem, completed: false }]); setNewCheckItem(''); } 
+        else if (type === 'url' && newUrl.trim()) { setUrls([...urls, newUrl]); setNewUrl(''); }
+      };
+
+      const toggleCheckItem = (id) => { setChecklist(checklist.map(item => item.id === id ? { ...item, completed: !item.completed } : item)); };
+
+      const handleOrganizeContent = async () => {
+        const currentHtml = editorRef.current ? editorRef.current.innerHTML : content;
+        const rawText = currentHtml.replace(/<[^>]*>?/gm, '').trim();
+        if (!rawText) return window.showToast("정리할 내용을 먼저 작성해주세요!");
+        setIsOrganizingContent(true);
+
+        const apiKey = ""; 
+        const promptText = `다음 작성된 텍스트를 읽기 쉽고 깔끔한 SNS 게시물 스타일로 예쁘게 다듬어줘.
+        - 적절하고 센스 있는 이모지를 섞어줄 것
+        - 결과를 <b>, <br/>, <ul>, <li> 등의 HTML 태그가 적용된 형태로 바로 출력할 것 (마크다운 제외).
+        원본 내용: ${rawText}`;
+
+        const payload = { contents: [{ parts: [{ text: promptText }] }] };
+
+        const fetchWithBackoff = async (retries = 3, delay = 1000) => {
+          try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`HTTP error!`);
+            return JSON.parse(await response.text());
+          } catch (error) {
+            if (retries > 0) {
+              await new Promise(resolve => setTimeout(resolve, delay));
+              return fetchWithBackoff(retries - 1, delay * 2);
+            } else throw error;
+          }
+        };
+
+        try {
+          const result = await fetchWithBackoff();
+          let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) {
+            const cleanHtml = text.replace(/```html/gi, '').replace(/```/g, '').trim();
+            let finalHtml = cleanHtml;
+            if (keepOriginal) {
+              const separatorTop = '<br/><br/><div style="color:#9ca3af; font-size:13px; font-weight:900; margin-bottom:8px;">--- AI 정리 ---</div>';
+              const separatorBottom = '<br/><br/><div style="color:#9ca3af; font-size:13px; font-weight:900; margin-bottom:8px;">--- 원본 내용 ---</div>';
+              finalHtml = originalPosition === 'top' ? currentHtml + separatorTop + cleanHtml : cleanHtml + separatorBottom + currentHtml;
+            }
+            setContent(finalHtml);
+            if (editorRef.current) editorRef.current.innerHTML = finalHtml;
+          }
+        } catch (error) {
+          window.showToast("글 정리 중 오류가 발생했습니다.");
+        } finally {
+          setIsOrganizingContent(false);
+        }
+      };
+
+      const handleGenerateTags = async () => {
+        const currentHtml = editorRef.current ? editorRef.current.innerHTML : content;
+        const rawText = currentHtml.replace(/<[^>]*>?/gm, '').trim();
+        if (!rawText) return window.showToast("메모 내용을 먼저 작성해주세요!");
+        setIsGeneratingTags(true);
+
+        const apiKey = ""; 
+        const promptText = `다음 골프 메모를 읽고 인스타그램 해시태그 3~5개를 한 줄로 띄어쓰기해서 출력해.\n내용: ${rawText}`; 
+        const payload = { contents: [{ parts: [{ text: promptText }] }] };
+
+        const fetchWithBackoff = async (retries = 3, delay = 1000) => {
+          try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`HTTP error!`);
+            return JSON.parse(await response.text());
+          } catch (error) {
+            if (retries > 0) {
+              await new Promise(resolve => setTimeout(resolve, delay));
+              return fetchWithBackoff(retries - 1, delay * 2);
+            } else throw error;
+          }
+        };
+
+        try {
+          const result = await fetchWithBackoff();
+          const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) {
+            const newHtml = currentHtml + (currentHtml ? '<br/><br/>' : '') + `<span style="color:#1a4314; font-weight:900;">${text.trim()}</span>`;
+            setContent(newHtml);
+            if (editorRef.current) editorRef.current.innerHTML = newHtml;
+          }
+        } catch (error) {
+          window.showToast("태그 생성 중 오류가 발생했습니다.");
+        } finally {
+          setIsGeneratingTags(false);
+        }
+      };
+
+      const handleSummarizeUrl = async (url) => {
+        if (summarizingUrl) return;
+        setSummarizingUrl(url);
+        const apiKey = ""; 
+        const promptText = `다음 링크의 영상을 보고 골프 핵심 레슨 내용을 3~4줄로 명확하게 요약해줘: ${url}`;
+        const payload = { contents: [{ parts: [{ text: promptText }] }] };
+
+        const fetchWithBackoff = async (retries = 5, delay = 1000) => {
+          try {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+              method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`HTTP error!`);
+            return JSON.parse(await response.text());
+          } catch (error) {
+            if (retries > 0) {
+              await new Promise(resolve => setTimeout(resolve, delay));
+              return fetchWithBackoff(retries - 5, delay * 2);
+            } else throw error;
+          }
+        };
+
+        try {
+          const result = await fetchWithBackoff();
+          const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+          const currentHtml = editorRef.current ? editorRef.current.innerHTML : content;
+          if (text) {
+            const formattedSummary = '<b>🤖 [AI 영상 요약]</b><br/>' + text.trim().replace(/\n/g, '<br/>');
+            const newHtml = currentHtml + (currentHtml ? '<br/><br/>' : '') + formattedSummary;
+            setContent(newHtml);
+            if (editorRef.current) editorRef.current.innerHTML = newHtml;
+          }
+        } catch (error) {
+          window.showToast("AI 요약 중 오류가 발생했습니다.");
+        } finally {
+          setSummarizingUrl(null);
+        }
+      };
+
+      return (
+        <div className="p-6 bg-[#fdfcf9] min-h-full flex flex-col">
+          {/* 상단: 카테고리 선택 */}
+          <div className="flex flex-wrap gap-1.5 pb-4 mb-2 border-b border-[#d1c9b8]/50">
+            {categories.filter(c => c.name !== "전체").map(cat => (
+              <button key={cat.name} onClick={() => setCategory(cat.name)} className={`px-3.5 py-1.5 rounded-full text-[13px] font-extrabold border transition-colors ${category === cat.name ? 'bg-[#1a4314] border-[#1a4314] text-white shadow-md' : 'bg-white border-[#d1c9b8] text-gray-700 hover:bg-gray-50'}`}>
+                {cat.name}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex-1 flex flex-col mb-6">
+            <label className="block text-[14px] font-black text-gray-800 mb-2 px-1">기록 내용</label>
+            
+            {/* 에디터 영역 */}
+            <div className="flex-1 flex flex-col border border-[#d1c9b8] rounded-[16px] overflow-hidden bg-white focus-within:border-[#1a4314] focus-within:ring-1 focus-within:ring-[#1a4314]/30 transition-all shadow-sm">
+              {/* 툴바 */}
+              <div className="flex flex-wrap items-center gap-1 bg-white border-b border-[#d1c9b8]/80 p-2">
+                <button type="button" onMouseDown={(e) => formatDoc(e, 'bold')} className="p-1.5 text-[#334155] hover:bg-slate-100 hover:text-[#1a4314] rounded-md transition-colors"><Icon name="Bold" size={16} /></button>
+                <button type="button" onMouseDown={(e) => formatDoc(e, 'italic')} className="p-1.5 text-[#334155] hover:bg-slate-100 hover:text-[#1a4314] rounded-md transition-colors"><Icon name="Italic" size={16} /></button>
+                <button type="button" onMouseDown={(e) => formatDoc(e, 'underline')} className="p-1.5 text-[#334155] hover:bg-slate-100 hover:text-[#1a4314] rounded-md transition-colors"><Icon name="Underline" size={16} /></button>
+                <button type="button" onMouseDown={(e) => formatDoc(e, 'strikeThrough')} className="p-1.5 text-[#334155] hover:bg-slate-100 hover:text-[#1a4314] rounded-md transition-colors"><Icon name="Strikethrough" size={16} /></button>
+                <div className="w-[1px] h-5 bg-gray-200 mx-1"></div>
+                <button type="button" onMouseDown={(e) => formatDoc(e, 'justifyLeft')} className="p-1.5 text-[#334155] hover:bg-slate-100 hover:text-[#1a4314] rounded-md transition-colors"><Icon name="AlignLeft" size={16} /></button>
+                <button type="button" onMouseDown={(e) => formatDoc(e, 'justifyCenter')} className="p-1.5 text-[#334155] hover:bg-slate-100 hover:text-[#1a4314] rounded-md transition-colors"><Icon name="AlignCenter" size={16} /></button>
+                <button type="button" onMouseDown={(e) => formatDoc(e, 'justifyRight')} className="p-1.5 text-[#334155] hover:bg-slate-100 hover:text-[#1a4314] rounded-md transition-colors"><Icon name="AlignRight" size={16} /></button>
+                <div className="w-[1px] h-5 bg-gray-200 mx-1"></div>
+                <button type="button" onMouseDown={(e) => formatDoc(e, 'insertUnorderedList')} className="p-1.5 text-[#334155] hover:bg-slate-100 hover:text-[#1a4314] rounded-md transition-colors"><Icon name="ListIcon" size={16} /></button>
+              </div>
+              <div ref={editorRef} contentEditable data-placeholder="스윙 기록, 레슨 내용 등을 자유롭게 적어보세요." onInput={(e) => setContent(e.currentTarget.innerHTML)} className="flex-1 w-full min-h-[180px] p-4 outline-none font-medium leading-[1.6] overflow-y-auto [&_ul]:list-disc [&_ul]:ml-5 [&_ol]:list-decimal [&_ol]:ml-5 [&_b]:font-bold [&_strong]:font-bold [&_i]:italic [&_em]:italic [&_u]:underline [&_strike]:line-through empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400 cursor-text break-words tracking-tight" style={{ fontSize: `${baseFontSize}px` }} />
+            </div>
+            
+            {/* AI 기능 및 원본 유지 */}
+            <div className="flex justify-between items-center mt-3 pl-1">
+              <div className="flex items-center gap-2 text-[13px] font-extrabold text-gray-700">
+                <label className="flex items-center gap-2 cursor-pointer hover:text-[#1a4314] transition-colors"><input type="checkbox" checked={keepOriginal} onChange={e => setKeepOriginal(e.target.checked)} className="rounded text-[#1a4314] border-gray-300 focus:ring-[#1a4314] w-4 h-4 cursor-pointer" />원본 유지</label>
+                {keepOriginal && <select value={originalPosition} onChange={e => setOriginalPosition(e.target.value)} className="bg-white border border-[#d1c9b8] rounded-lg px-2 py-1 outline-none cursor-pointer focus:border-[#1a4314]"><option value="bottom">아래에</option><option value="top">위에</option></select>}
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleOrganizeContent} disabled={isOrganizingContent || !content.trim() || isGeneratingTags} className="flex items-center gap-1.5 px-4 py-2 bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0] hover:bg-[#dcfce7] rounded-[10px] text-[13px] font-extrabold transition-colors disabled:opacity-50 shadow-sm">{isOrganizingContent ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Edit3" size={14} />}AI 다듬기</button>
+                <button onClick={handleGenerateTags} disabled={isGeneratingTags || !content.trim() || isOrganizingContent} className="flex items-center gap-1.5 px-4 py-2 bg-white text-gray-500 border border-gray-200 hover:bg-gray-50 rounded-[10px] text-[13px] font-extrabold transition-colors disabled:opacity-50 shadow-sm">{isGeneratingTags ? <Icon name="Loader2" size={14} className="animate-spin" /> : <Icon name="Sparkles" size={14} />}AI 태그</button>
+              </div>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <button onClick={() => setShowChecklistInput(!showChecklistInput)} className="flex items-center gap-2 text-[14px] font-extrabold text-[#1a4314] bg-white border border-[#d1c9b8] px-4 py-2 rounded-xl hover:bg-gray-50 transition-colors shadow-sm w-max">
+              <Icon name="CheckSquare" size={18} /> {showChecklistInput ? "체크리스트 닫기" : "체크리스트 추가"} {checklist.length > 0 && ` (${checklist.length})`}
+            </button>
+            {showChecklistInput && (
+              <div className="bg-white p-4 rounded-[16px] border border-[#d1c9b8] mt-3 shadow-sm">
+                <div className="flex gap-2 mb-3">
+                  <input type="text" value={newCheckItem} onChange={e => setNewCheckItem(e.target.value)} onKeyDown={e => e.key === 'Enter' && addItem('check')} placeholder="할 일, 준비물 등..." className="flex-1 px-4 py-2 text-[15px] border border-gray-300 rounded-xl outline-none focus:border-[#1a4314] font-medium" />
+                  <button onClick={() => addItem('check')} className="bg-[#1e293b] text-white px-4 py-2 rounded-xl font-extrabold text-[14px] shadow-sm hover:bg-[#334155] transition-colors">추가</button>
+                </div>
+                <ul className="flex flex-col gap-2">
+                  {checklist.map(item => (
+                    <li key={item.id} className="flex justify-between items-center bg-gray-50 p-3 rounded-xl border border-gray-200 shadow-sm text-[14px] cursor-pointer" onClick={() => toggleCheckItem(item.id)}>
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <div className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 border transition-colors ${item.completed ? 'bg-[#1a4314] border-[#1a4314]' : 'bg-white border-gray-400'}`}>
+                          {item.completed && <Icon name="CheckSquare" fill={true} size={13} className="text-white" />}
+                        </div>
+                        <span className={`truncate ${item.completed ? 'text-gray-400 line-through font-medium' : 'text-gray-900 font-bold'}`}>{item.text}</span>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); setChecklist(checklist.filter(i => i.id !== item.id)); }} className="text-gray-400 hover:text-red-500 p-1 shrink-0"><Icon name="Trash2" size={16} /></button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="mb-4">
+            <label className="flex items-center font-black text-[14px] text-gray-800 mb-2 px-1"><Icon name="LinkIcon" size={16} className="mr-1.5" /> 외부 링크 첨부</label>
+            <div className="flex gap-2 mb-2">
+              <input type="url" value={newUrl} onChange={e => setNewUrl(e.target.value)} onKeyDown={e => e.key === 'Enter' && addItem('url')} placeholder="유튜브 등" className="flex-1 px-4 py-2.5 text-[15px] font-medium border border-gray-300 rounded-xl outline-none focus:border-[#1a4314]" />
+              <button onClick={() => addItem('url')} className="bg-[#1e293b] text-white px-5 py-2.5 rounded-xl font-extrabold text-[14px] shrink-0 shadow-sm hover:bg-[#334155] transition-colors">추가</button>
+            </div>
+            <ul className="flex flex-col gap-2">
+              {urls.map((url, idx) => {
+                const ytId = getYoutubeId(url);
+                return (
+                  <li key={idx} className="flex justify-between items-center bg-white rounded-xl border border-[#d1c9b8] shadow-sm overflow-hidden p-1.5 pr-2">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      {ytId ? <img src={`https://img.youtube.com/vi/${ytId}/default.jpg`} alt="yt-thumb" className="w-[50px] h-[40px] object-cover bg-gray-100 shrink-0 rounded-lg" /> : <div className="w-[50px] h-[40px] bg-gray-100 flex items-center justify-center text-gray-400 shrink-0 rounded-lg"><Icon name="LinkIcon" size={16} /></div>}
+                      <span className="text-gray-800 text-[13px] font-medium truncate pr-2">{url}</span>
+                    </div>
+                    <button onClick={() => { setUrls(urls.filter((_, i) => i !== idx)); if (summarizingUrl === url) setSummarizingUrl(null); }} className="text-gray-400 hover:text-red-500 p-1.5 shrink-0"><Icon name="Trash2" size={16} /></button>
+                    <div className="flex items-center shrink-0 gap-2 pl-1">
+                      <button onClick={() => handleSummarizeUrl(url)} disabled={!!summarizingUrl || !ytId} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md transition-colors border ${!ytId ? 'hidden' : summarizingUrl === url ? 'bg-gray-50 border-gray-200 text-gray-400' : 'bg-white border-[#d1c9b8] text-[#1a4314] hover:bg-gray-50 shadow-sm'}`}>
+                        {summarizingUrl === url ? <Icon name="Loader2" size={12} className="animate-spin" /> : <Icon name="Sparkles" size={12} />}<span className="text-[11px] font-extrabold whitespace-nowrap">AI 요약</span>
+                      </button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div className="flex gap-3 mt-auto pt-6 border-t border-[#d1c9b8]">
+            <button onClick={onCancel} className="flex-1 py-3.5 bg-white border border-[#d1c9b8] text-gray-700 rounded-xl font-bold text-[15px] hover:bg-gray-50 transition-colors shadow-sm">취소</button>
+            <button onClick={handleSave} className="flex-[2] py-3.5 bg-[#1a4314] text-white rounded-xl font-bold text-[15px] hover:bg-[#2d6a4f] shadow-md transition-colors active:scale-95">저장하기</button>
+          </div>
+        </div>
+      );
+    }
+
+    function CategoryManager({ categories, setCategories }) {
+      const [newCat, setNewCat] = useState('');
+      const [confirmDelCat, setConfirmDelCat] = useState(null);
+
+      return (
+        <div className="p-6 bg-[#fdfcf9] min-h-full flex flex-col gap-6 relative">
+          <div>
+              <h2 className="text-2xl font-black mb-8">카테고리 편집</h2>
+              <div className="flex gap-2 mb-8 bg-white p-4 border border-[#d1c9b8] rounded-2xl shadow-sm">
+                <input value={newCat} onChange={e=>setNewCat(e.target.value)} placeholder="새 카테고리..." className="flex-1 outline-none font-bold px-2 text-[16px]" />
+                <button onClick={()=>{if(newCat) {setCategories([...categories, {name:newCat}]); setNewCat('');}}} className="bg-[#1a4314] text-white px-5 py-3 rounded-xl font-bold hover:bg-[#2d6a4f] transition-colors">추가</button>
+              </div>
+              <div className="flex flex-col gap-3">
+                {categories.filter(c=>c.name!=="전체").map(c=>(
+                  <div key={c.name} className="bg-white p-4 rounded-2xl border border-[#d1c9b8] flex justify-between items-center font-bold shadow-sm">
+                    <span className="text-[16px] text-gray-900">{c.name}</span>
+                    <div className="flex items-center gap-3">
+                      <button onClick={()=>{
+                          if(confirmDelCat === c.name) {
+                              setCategories(categories.filter(cat=>cat.name!==c.name));
+                              setConfirmDelCat(null);
+                          } else {
+                              setConfirmDelCat(c.name);
+                              setTimeout(()=>setConfirmDelCat(null), 3000);
+                          }
+                      }} className={`p-2 rounded-lg transition-colors font-extrabold ${confirmDelCat === c.name ? 'bg-red-50 text-red-600 border border-red-200' : 'text-gray-400 hover:text-red-500 hover:bg-gray-50'}`}>
+                        {confirmDelCat === c.name ? <span className="text-[11px]">정말 삭제?</span> : <Icon name="Trash2" size={18}/>}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+          </div>
+        </div>
+      );
+    }
+
+    function GameMain({ onSelectGame }) {
+      const categories = [
+        { title: "필드 게임", games: [{ id: 'draw', name: '팀 뽑기', icon: '🎯' }, { id: 'chip', name: '칩 돌리기', icon: '🪙' }, { id: 'tee', name: '순서 뽑기', icon: '📍' }] },
+      ];
+      
+      return (
+        <div className="p-5 flex flex-col gap-8">
+          {categories.map((cat, i) => (
+            <div key={i}>
+              <h2 className="text-[18px] font-black mb-4 px-1">{cat.title}</h2>
+              <div className="grid grid-cols-3 gap-3">
+                {cat.games.map(g=><div key={g.id} onClick={()=>onSelectGame(g.id)} className="bg-white rounded-2xl p-4 flex flex-col items-center border border-[#d1c9b8] shadow-sm active:scale-95 transition-all cursor-pointer"><div className="text-[32px] mb-2">{g.icon}</div><div className="font-extrabold text-[14px] text-gray-800 whitespace-nowrap">{g.name}</div></div>)}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // === 실시간 팀 뽑기 (Golf Draw Game) ===
+    function TeamDrawGame({ fbUser }) {
+      const PHASES = { SETTINGS: 'SETTINGS', WAITING: 'WAITING', SHUFFLE: 'SHUFFLE', DRAW: 'DRAW', RANDOM_JOKER: 'RANDOM_JOKER', RESULT: 'RESULT' };
+      const JOKER_OPTIONS = ['사용안함', '랜덤', '이글', '버디', '파', '보기', '더블', '트리플'];
+      const RANDOM_JOKER_POOL = ['이글', '버디', '파', '보기', '더블', '트리플'];
+      const DEFAULT_PLAYERS = ['타이거 우즈', '로리 맥일로이', '스코티 셔플러', '필 미켈슨'];
+
+      const [phase, setPhase] = useState(PHASES.SETTINGS);
+      const localPhaseRef = useRef(phase); 
+      
+      const [roomDataFound, setRoomDataFound] = useState(null); 
+      const [roomId, setRoomId] = useState('');
+      const [hostUid, setHostUid] = useState(null);
+      const [guestSlots, setGuestSlots] = useState({});
+      
+      const [players, setPlayers] = useState(['', '', '', '']);
+      const [jokerType, setJokerType] = useState('보기');
+      
+      const [activeSettingMenu, setActiveSettingMenu] = useState(null);
+      const [isJokerModalOpen, setIsJokerModalOpen] = useState(false);
+      const [isInviteOpen, setIsInviteOpen] = useState(false); 
+      const [localJokerSpin, setLocalJokerSpin] = useState('...');
+
+      const [joinedStatus, setJoinedStatus] = useState([false, false, false, false]);
+      const [actualRoles, setActualRoles] = useState([]);
+      const [selectedCards, setSelectedCards] = useState({});
+      const [isShuffling, setIsShuffling] = useState(false);
+      const [shufflePositions, setShufflePositions] = useState(Array(5).fill({ x: 0, y: 0, r: 0 }));
+      const lastShuffleRef = useRef(0);
+      const [finalJokerStroke, setFinalJokerStroke] = useState('');
+      const [isSpinningJoker, setIsSpinningJoker] = useState(false);
+      const [pickLog, setPickLog] = useState('카드를 선택하세요!');
+
+      const [guestPermissions, setGuestPermissions] = useState({ finishShuffle: true, autoPick: true, nextHole: true });
+
+      const isHostView = Boolean(fbUser && hostUid === fbUser.uid);
+      const MY_PLAYER_INDEX = isHostView ? 0 : (guestSlots[fbUser?.uid] !== undefined ? guestSlots[fbUser?.uid] : -1);
+
+      useEffect(() => { localPhaseRef.current = phase; }, [phase]);
+
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const room = params.get('room');
+        if (room) setRoomId(room);
+        else setRoomDataFound(true);
+      }, []);
+
+      useEffect(() => {
+        if (!fbUser || !roomId || typeof db === 'undefined') return;
+        const roomDoc = doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+        
+        const unsubscribe = onSnapshot(roomDoc, (snapshot) => {
+          if (snapshot.exists()) {
+            setRoomDataFound(true);
+            const data = snapshot.data();
+            const amIHost = fbUser && data.hostUid === fbUser.uid;
+
+            if (localPhaseRef.current !== PHASES.SETTINGS || !amIHost) {
+              setPhase(data.phase);
+              setPlayers(data.players || ['', '', '', '']); 
+              setJokerType(data.jokerType || '보기');
+              setGuestPermissions(data.guestPermissions || { finishShuffle: true, autoPick: true, nextHole: true });
+            }
+
+            setJoinedStatus(data.joinedStatus || [false,false,false,false]);
+            setActualRoles(data.actualRoles || []);
+            setSelectedCards(data.selectedCards || {});
+            setFinalJokerStroke(data.finalJokerStroke || '');
+            setHostUid(data.hostUid);
+            setGuestSlots(data.guestSlots || {});
+            setIsSpinningJoker(data.isSpinningJoker || false);
+            
+            if (data.shuffleTrigger && data.shuffleTrigger > lastShuffleRef.current) {
+              lastShuffleRef.current = data.shuffleTrigger;
+              triggerLocalShuffle(data.shuffleDirection);
+            }
+          } else {
+            setRoomDataFound(false);
+          }
+        }, (err) => {
+          console.error("동기화 에러:", err);
+          setRoomDataFound(false);
+        });
+
+        return () => unsubscribe();
+      }, [fbUser, roomId]);
+
+      useEffect(() => {
+        const count = Object.keys(selectedCards).length;
+        if (count === 0) setPickLog('가장 먼저 카드를 선점하세요!');
+        else if (count === 4) setPickLog('✅ 모든 선택이 완료되었습니다!');
+        else setPickLog(`💬 ${count}/4 명 선택 완료 (남은 카드를 고르세요)`);
+      }, [selectedCards]);
+
+      useEffect(() => {
+        let interval;
+        if (phase === PHASES.RANDOM_JOKER && isSpinningJoker) {
+          let spinCount = 0;
+          interval = setInterval(() => {
+            setLocalJokerSpin(RANDOM_JOKER_POOL[spinCount % RANDOM_JOKER_POOL.length]);
+            spinCount++;
+          }, 100);
+        }
+        return () => clearInterval(interval);
+      }, [phase, isSpinningJoker]);
+
+      const updateRoomState = async (updates) => {
+        if (!roomId || typeof db === 'undefined') return;
+        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId), updates);
+      };
+
+      const goToSettings = () => setPhase(PHASES.SETTINGS);
+
+      const goHome = () => {
+        try { window.history.pushState({}, '', window.location.pathname); } catch(e) {}
+        setRoomId('');
+        setRoomDataFound(true);
+        setPhase(PHASES.SETTINGS);
+        setHostUid(null);
+        setGuestSlots({});
+        setSelectedCards({});
+        setJoinedStatus([false, false, false, false]);
+        setIsInviteOpen(false);
+        setGuestPermissions({ finishShuffle: true, autoPick: true, nextHole: true });
+        setActiveSettingMenu(null);
+        setPlayers(['', '', '', '']); 
+      };
+
+      const resumeGame = () => {
+        const finalPlayers = players.map((p, idx) => p.trim() !== '' ? p.trim() : DEFAULT_PLAYERS[idx]);
+        let roles = jokerType === '사용안함' ? ['R', 'R', 'B', 'B'] : (() => {
+          const s = Math.random() > 0.5 ? 'R' : 'B';
+          const f = s === 'R' ? 'B' : 'R';
+          return [f, f, s, 'J'];
+        })();
+
+        updateRoomState({
+          players: finalPlayers, jokerType, guestPermissions, phase: PHASES.SHUFFLE,
+          actualRoles: roles.sort(() => Math.random() - 0.5), selectedCards: {},
+          finalJokerStroke: jokerType === '랜덤' ? '' : jokerType, isSpinningJoker: false, shuffleTrigger: 0
+        });
+        
+        setPlayers(finalPlayers);
+        setPhase(PHASES.SHUFFLE);
+      };
+
+      const createRoom = () => {
+        if (!fbUser) return window.showToast('⚠️ 서버 접속 중입니다. 잠시 후 다시 시도해주세요.');
+
+        const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const finalPlayers = players.map((p, idx) => p.trim() !== '' ? p.trim() : DEFAULT_PLAYERS[idx]);
+        
+        setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', newRoomId), {
+          hostUid: fbUser.uid, phase: PHASES.WAITING, players: finalPlayers, jokerType, joinedStatus: [true, false, false, false],
+          guestSlots: {}, actualRoles: [], selectedCards: {}, finalJokerStroke: '', isSpinningJoker: false, shuffleTrigger: 0,
+          guestPermissions
+        }).catch(err => console.error("방 생성 실패:", err));
+        
+        setPlayers(finalPlayers);
+        try { window.history.pushState({}, '', `?room=${newRoomId}`); } catch(e) {}
+        setRoomId(newRoomId);
+        setPhase(PHASES.WAITING); 
+        setIsInviteOpen(true);
+      };
+
+      const toggleJoin = (index) => {
+        if (!fbUser) return;
+        const slots = { ...guestSlots };
+        const newStatus = [...joinedStatus];
+        if (isHostView) {
+          if (index === 0) return;
+          newStatus[index] = !newStatus[index];
+          updateRoomState({ joinedStatus: newStatus });
+        } else {
+          if (slots[fbUser.uid] === index) { newStatus[index] = false; delete slots[fbUser.uid]; }
+          else { if (newStatus[index]) return; if (slots[fbUser.uid] !== undefined) newStatus[slots[fbUser.uid]] = false; newStatus[index] = true; slots[fbUser.uid] = index; }
+          updateRoomState({ joinedStatus: newStatus, guestSlots: slots });
+        }
+      };
+
+      const startGame = async () => {
+        if (!isHostView && !guestPermissions.nextHole) return;
+        let roles = jokerType === '사용안함' ? ['R', 'R', 'B', 'B'] : (() => {
+          const s = Math.random() > 0.5 ? 'R' : 'B';
+          const f = s === 'R' ? 'B' : 'R';
+          return [f, f, s, 'J'];
+        })();
+        await updateRoomState({ phase: PHASES.SHUFFLE, actualRoles: roles.sort(() => Math.random() - 0.5), selectedCards: {}, finalJokerStroke: jokerType === '랜덤' ? '' : jokerType, isSpinningJoker: false, shuffleTrigger: 0 });
+      };
+
+      const shuffleDeck = (dir) => updateRoomState({ shuffleTrigger: Date.now(), shuffleDirection: dir });
+
+      const triggerLocalShuffle = (direction) => {
+        setIsShuffling(direction);
+        let count = 0;
+        const interval = setInterval(() => {
+          setShufflePositions(Array.from({length:5}).map(() => ({ x: (Math.random()-0.5)*60+(direction==='left'?-80:80), y:(Math.random()-0.5)*60, r:(Math.random()-0.5)*180+(direction==='left'?-90:90) })));
+          if (++count > 8) { clearInterval(interval); setShufflePositions(Array(5).fill({x:0,y:0,r:0})); setIsShuffling(false); }
+        }, 100);
+      };
+
+      const selectCard = (cardIndex) => {
+        if (selectedCards[cardIndex] !== undefined || Object.keys(selectedCards).length >= 4) return;
+        if (MY_PLAYER_INDEX === -1) return; 
+
+        const pickedIdxs = Object.values(selectedCards).map(c => c.playerIndex);
+        if (pickedIdxs.includes(MY_PLAYER_INDEX)) return; 
+
+        const pickOrder = Object.keys(selectedCards).length;
+        const newSelected = { ...selectedCards, [cardIndex]: { playerIndex: MY_PLAYER_INDEX, player: players[MY_PLAYER_INDEX], role: actualRoles[pickOrder] } };
+        updateRoomState({ selectedCards: newSelected });
+      };
+
+      const autoPickRemaining = () => {
+        if (!isHostView && !guestPermissions.autoPick) return;
+        const pickedPlayers = Object.values(selectedCards).map(c => c.playerIndex);
+        const unpickedPlayers = [0, 1, 2, 3].filter(idx => !pickedPlayers.includes(idx));
+        
+        const pickedCards = Object.keys(selectedCards).map(Number);
+        const unpickedCards = [0, 1, 2, 3, 4].filter(idx => !pickedCards.includes(idx));
+        
+        const newSelected = { ...selectedCards };
+        let currentPickOrder = Object.keys(selectedCards).length;
+        
+        const shuffledUnpickedCards = [...unpickedCards].sort(() => Math.random() - 0.5);
+
+        unpickedPlayers.forEach(playerIdx => {
+          const cardIndex = shuffledUnpickedCards.pop();
+          newSelected[cardIndex] = {
+            playerIndex: playerIdx,
+            player: players[playerIdx],
+            role: actualRoles[currentPickOrder]
+          };
+          currentPickOrder++;
+        });
+
+        updateRoomState({ selectedCards: newSelected, phase: PHASES.RESULT });
+      };
+
+      const finishShuffle = () => (isHostView || guestPermissions.finishShuffle) && updateRoomState({ phase: PHASES.DRAW });
+      const revealTeams = () => (isHostView || guestPermissions.autoPick) && updateRoomState({ phase: PHASES.RESULT });
+      
+      const executeRandomJoker = () => {
+        const jokerCard = Object.values(selectedCards).find(c => c.role === 'J');
+        const canExecute = isHostView || (jokerCard && jokerCard.playerIndex === MY_PLAYER_INDEX);
+        if (!canExecute) return;
+        
+        updateRoomState({ isSpinningJoker: true, phase: PHASES.RANDOM_JOKER });
+        setTimeout(() => {
+          const final = RANDOM_JOKER_POOL[Math.floor(Math.random() * RANDOM_JOKER_POOL.length)];
+          updateRoomState({ finalJokerStroke: final, isSpinningJoker: false, phase: PHASES.RESULT });
+        }, 2000);
+      };
+
+      const handleCopyUrl = () => {
+        const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
+        const el = document.createElement('textarea'); el.value = url; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el);
+        window.showToast('초대 URL이 복사되었습니다!'); setIsInviteOpen(false);
+      };
+
+      const getCardStyle = (role, jokerTeam = null) => {
+        if (role === 'R') return 'bg-red-500 text-white shadow-lg';
+        if (role === 'B') return 'bg-blue-500 text-white shadow-lg';
+        if (role === 'J') {
+          if (jokerTeam === 'R') return 'bg-red-500 text-white border-4 border-yellow-400';
+          if (jokerTeam === 'B') return 'bg-blue-500 text-white border-4 border-yellow-400';
+          return 'bg-purple-600 text-white';
+        }
+        return 'bg-slate-700 text-slate-300';
+      };
+
+      if (roomId && roomDataFound === null) return <div className="min-h-full bg-slate-900 flex items-center justify-center text-white"><Icon name="Loader2" className="w-10 h-10 animate-spin text-green-500" /></div>;
+      if (roomId && roomDataFound === false) return <div className="min-h-full bg-slate-900 flex flex-col items-center justify-center text-white p-6 text-center"><Icon name="X" className="w-16 h-16 text-red-500 mb-4" /><h2 className="text-2xl font-bold mb-2">방을 찾을 수 없습니다.</h2><button onClick={goHome} className="bg-green-600 px-6 py-3 rounded-xl font-bold mt-4">새 방 만들기</button></div>;
+
+      return (
+        <div className="w-full h-full mx-auto min-h-full pb-[env(safe-area-inset-bottom)] bg-gray-50 overflow-x-hidden relative flex flex-col">
+          {phase !== PHASES.SETTINGS && roomId && (
+            <div className="absolute top-4 left-4 z-40 pointer-events-none">
+              {isHostView ? (
+                <span className="bg-yellow-400 text-yellow-900 text-[10px] font-black px-3 py-1.5 rounded-full shadow-md border border-yellow-300">👑 방장 모드</span>
+              ) : (
+                <span className="bg-white text-slate-700 text-[10px] font-black px-3 py-1.5 rounded-full shadow-md border border-slate-200">👤 참여자 모드</span>
+              )}
+            </div>
+          )}
+
+          {phase !== PHASES.SETTINGS && roomId && isHostView && (
+            <div className="absolute top-4 right-4 z-40">
+              <button onClick={goToSettings} className="p-2 bg-white text-slate-700 hover:bg-gray-100 rounded-full shadow-lg border border-gray-200 transition-all active:scale-95" title="설정으로 가기">
+                <Icon name="Settings" size={20} />
+              </button>
+            </div>
+          )}
+
+          {phase === PHASES.SETTINGS && (
+            <div className="p-4 pt-10 animate-in fade-in flex-1 overflow-y-auto">
+              <div className="text-center mb-10">
+                <h1 className="text-4xl font-black text-green-700 tracking-tighter mb-2">⛳ 골프 팀 뽑기</h1>
+                <p className="text-sm text-gray-500 font-medium break-keep">실시간 온라인 멀티플레이 팀 정하기</p>
+              </div>
+              <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 border border-gray-100">
+                <h2 className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2"><Icon name="Users" size={16} /> 플레이어 (4명)</h2>
+                <p className="text-xs text-gray-500 mb-4 tracking-tight break-keep">
+                  * 선수 이름을 눌러 실제 플레이어들의 이름으로 변경해주세요.
+                </p>
+                <div className="space-y-3">
+                  {players.map((player, idx) => (
+                    <div key={idx} className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-green-50 text-green-700 flex items-center justify-center font-bold text-sm shrink-0">{idx + 1}</div>
+                      <div className="relative flex-1">
+                        <input 
+                          type="text" 
+                          value={player} 
+                          onChange={(e) => { const n = [...players]; n[idx] = e.target.value; setPlayers(n); }} 
+                          className={`w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition text-black font-bold placeholder-gray-400 cursor-pointer focus:cursor-text text-base ${idx === 0 ? 'pr-10 border-yellow-300 bg-yellow-50/20' : ''}`} 
+                          placeholder={DEFAULT_PLAYERS[idx]} 
+                        />
+                        {idx === 0 && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><Icon name="Crown" size={20} className="text-yellow-500" /></div>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex gap-3 mb-6">
+                <button 
+                  onClick={() => setActiveSettingMenu(prev => prev === 'JOKER' ? null : 'JOKER')}
+                  className={`flex-1 p-4 rounded-2xl shadow-sm border transition-all flex flex-col items-center gap-2 active:scale-[0.98] ${activeSettingMenu === 'JOKER' ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-100' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
+                >
+                  <span className="text-sm font-bold text-gray-700 flex items-center gap-1">🃏 조커 설정</span>
+                  <span className="text-xs font-bold text-purple-700 bg-white border border-purple-100 px-3 py-1 rounded-full shadow-sm">{jokerType}</span>
+                </button>
+                
+                <button 
+                  onClick={() => setActiveSettingMenu(prev => prev === 'PERMISSIONS' ? null : 'PERMISSIONS')}
+                  className={`flex-1 p-4 rounded-2xl shadow-sm border transition-all flex flex-col items-center gap-2 active:scale-[0.98] ${activeSettingMenu === 'PERMISSIONS' ? 'bg-green-50 border-green-300 ring-2 ring-green-100' : 'bg-white border-gray-100 hover:bg-gray-50'}`}
+                >
+                  <span className="text-sm font-bold text-gray-700 flex items-center gap-1"><Icon name="Check" size={16} className="text-green-600"/> 동반자 권한</span>
+                  <span className="text-xs font-bold text-green-700 bg-white border border-green-100 px-3 py-1 rounded-full shadow-sm">
+                    {Object.values(guestPermissions).filter(Boolean).length}개 허용
+                  </span>
+                </button>
+              </div>
+
+              {activeSettingMenu && (
+                <div className="bg-white rounded-2xl p-5 shadow-sm mb-8 border border-gray-100 animate-in fade-in slide-in-from-top-2">
+                  {activeSettingMenu === 'JOKER' && (
+                    <div>
+                      <div className="grid grid-cols-4 gap-2 mb-4">
+                        {JOKER_OPTIONS.map((opt) => (
+                          <button key={opt} onClick={() => setJokerType(opt)} className={`py-2 text-sm rounded-lg border transition-all active:scale-[0.98] ${jokerType === opt ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}>{opt}</button>
+                        ))}
+                      </div>
+                      <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-500 leading-relaxed break-keep border border-gray-200">
+                        * 조커로 뽑힌 플레이어는 인원이 부족한 팀에 자동 배치됩니다.<br/>
+                        * 적용 타수: 팀 승패 계산 시 실제 타수와 무관하게 선택한 타수가 적용됩니다.
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSettingMenu === 'PERMISSIONS' && (
+                    <div>
+                      <p className="text-xs text-gray-500 mb-4 tracking-tight break-keep">
+                        * 체크 시 동반자(참여자) 화면에서도 버튼이 활성화되어 게임을 진행할 수 있습니다.
+                      </p>
+                      <div className="space-y-4">
+                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg transition">
+                          <input type="checkbox" checked={guestPermissions.finishShuffle} onChange={(e) => setGuestPermissions(p => ({...p, finishShuffle: e.target.checked}))} className="w-5 h-5 accent-green-600 cursor-pointer" />
+                          <span className="text-sm text-gray-700 font-medium">패 섞기 완료 권한</span>
+                        </label>
+                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg transition">
+                          <input type="checkbox" checked={guestPermissions.autoPick} onChange={(e) => setGuestPermissions(p => ({...p, autoPick: e.target.checked}))} className="w-5 h-5 accent-green-600 cursor-pointer" />
+                          <span className="text-sm text-gray-700 font-medium">남은 동반자 카드 선택 (결과 확인) 권한</span>
+                        </label>
+                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg transition">
+                          <input type="checkbox" checked={guestPermissions.nextHole} onChange={(e) => setGuestPermissions(p => ({...p, nextHole: e.target.checked}))} className="w-5 h-5 accent-green-600 cursor-pointer" />
+                          <span className="text-sm text-gray-700 font-medium">다음 홀 이동 권한</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {roomId ? (
+                <div className="flex gap-3 mt-auto">
+                  <button onClick={goHome} className="flex-1 bg-gray-200 text-gray-700 font-bold py-4 rounded-2xl shadow-sm hover:bg-gray-300 transition active:scale-[0.98] text-[15px]">새 방 만들기</button>
+                  <button onClick={resumeGame} className="flex-1 bg-green-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-green-700 transition active:scale-[0.98] text-[15px]">게임 계속하기</button>
+                </div>
+              ) : (
+                <button onClick={createRoom} className="w-full bg-green-600 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-green-700 transition active:scale-[0.98] text-lg mt-auto mb-4">방 만들기</button>
+              )}
+            </div>
+          )}
+
+          {phase === PHASES.WAITING && (
+            <div className="min-h-full flex flex-col p-4 animate-in fade-in flex-1">
+              <div className="bg-green-600 text-white p-6 rounded-3xl shadow-md text-center mb-6 relative mt-12">
+                {roomId && <span className="absolute top-3 right-5 text-[10px] opacity-70">Room: {roomId}</span>}
+                <h1 className="text-2xl font-bold mb-1">라운드 대기실</h1>
+                <p className="text-xs opacity-90">{isHostView ? '인원이 다 모이지 않아도 방장은 바로 시작할 수 있습니다.' : '본인 자리를 선택하세요.'}</p>
+              </div>
+              {isHostView && <button onClick={() => setIsInviteOpen(true)} className="w-full bg-white border-2 border-green-500 text-green-600 font-bold py-3.5 rounded-2xl mb-6 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-transform"><Icon name="QrCode" size={20} /> 방 초대하기</button>}
+              <div className="grid grid-cols-2 gap-4 flex-1 content-start">
+                {players.map((p, i) => {
+                  const joined = joinedStatus[i];
+                  const mine = i === MY_PLAYER_INDEX;
+                  return (
+                    <div key={i} onClick={() => toggleJoin(i)} className={`relative p-5 rounded-3xl border-2 flex flex-col items-center justify-center gap-3 transition-all cursor-pointer active:scale-95 bg-white ${joined ? (mine ? 'border-green-500 bg-green-50 ring-2 ring-green-400 shadow-md' : 'border-green-300 opacity-90') : 'border-dashed border-gray-300 opacity-60'}`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm ${joined ? (mine ? 'bg-green-500 text-white' : 'bg-green-100 text-green-600') : 'bg-gray-100 text-gray-400'}`}><Icon name="Check" size={24} /></div>
+                      <span className="font-bold text-sm">{p}</span>
+                      <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${joined ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'}`}>{mine ? '내 자리' : (joined ? (i===0?'방장':'입장 완료') : '대기 중')}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="mt-8 flex gap-3 mb-4">
+                {isHostView ? (
+                  <button onClick={startGame} className="w-full font-bold py-4 rounded-2xl shadow-lg transition-all bg-green-600 text-white hover:bg-green-700 active:scale-[0.98]">게임 시작하기</button>
+                ) : <div className="w-full bg-slate-800 text-white/50 text-center py-4 rounded-2xl font-bold">방장이 시작하기를 기다리는 중...</div>}
+              </div>
+            </div>
+          )}
+
+          {phase === PHASES.SHUFFLE && (
+            <div className="min-h-full bg-slate-900 text-white flex flex-col p-6 animate-in fade-in relative overflow-hidden flex-1">
+              <h2 className="text-center text-xl font-bold mb-1 mt-12">패 섞기 (기리)</h2>
+              <p className="text-center text-slate-400 text-xs mb-4">방장이 아니더라도 누구나 섞을 수 있습니다.</p>
+              
+              {isHostView ? (
+                <button 
+                  onClick={() => setIsJokerModalOpen(true)}
+                  className="mx-auto mb-6 bg-slate-800 text-slate-300 border border-slate-700 px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-slate-700 active:scale-95 transition shadow-sm"
+                >
+                  🃏 조커 설정: <span className="text-purple-400">{jokerType}</span>
+                </button>
+              ) : (
+                <div className="mx-auto mb-6 bg-slate-800/50 text-slate-400 px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2">
+                  🃏 현재 조커 설정: <span className="text-purple-400/80">{jokerType}</span>
+                </div>
+              )}
+
+              <div className="flex flex-wrap justify-center gap-4 flex-1 content-center z-10">
+                {Array.from({length:5}).map((_, i) => (
+                  <div key={i} className="w-[28%] aspect-[3/4] bg-slate-800 rounded-2xl border-2 border-slate-700 flex items-center justify-center shadow-2xl relative transition-transform duration-100" style={{ transform: `translate(${shufflePositions[i].x}px, ${shufflePositions[i].y}px) rotate(${shufflePositions[i].r}deg)`, backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' }}><span className="text-slate-600 font-bold text-xl">?</span></div>
+                ))}
+              </div>
+              <div className="mt-8 space-y-3 z-10 pb-4">
+                <div className="flex gap-3">
+                  <button onClick={() => shuffleDeck('left')} disabled={isShuffling} className="flex-1 bg-slate-700 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-600 active:scale-[0.98] transition-transform"><Icon name="RotateCcw" size={20} className={isShuffling==='left'?'animate-spin':''} /> 왼쪽</button>
+                  <button onClick={() => shuffleDeck('right')} disabled={isShuffling} className="flex-1 bg-slate-700 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-600 active:scale-[0.98] transition-transform">오른쪽 <Icon name="RotateCw" size={20} className={isShuffling==='right'?'animate-spin':''} /></button>
+                </div>
+                {(isHostView || guestPermissions.finishShuffle) ? <button onClick={finishShuffle} className="w-full bg-green-600 py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-transform">패 섞기 완료</button> : <div className="text-center text-slate-500 py-4 font-bold">방장이 섞기를 마칠 때까지 대기중...</div>}
+              </div>
+
+              {isHostView && isJokerModalOpen && (
+                <div className="absolute inset-0 z-50 bg-slate-900/90 backdrop-blur-sm flex flex-col p-6 items-center justify-center animate-in fade-in zoom-in duration-200">
+                  <div className="bg-white rounded-3xl w-full max-w-sm p-6 shadow-2xl relative text-gray-800">
+                    <button onClick={() => setIsJokerModalOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full transition">
+                      <Icon name="X" size={20} />
+                    </button>
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 tracking-tight">
+                      🃏 조커 설정 변경
+                    </h3>
+                    <div className="grid grid-cols-4 gap-2 mb-5">
+                      {JOKER_OPTIONS.map((opt) => (
+                        <button 
+                          key={opt} 
+                          onClick={() => {
+                            let roles = [];
+                            if (opt === '사용안함') roles = ['R', 'R', 'B', 'B'];
+                            else {
+                                const s = Math.random() > 0.5 ? 'R' : 'B';
+                                const f = s === 'R' ? 'B' : 'R';
+                                roles = [f, f, s, 'J'];
+                            }
+                            updateRoomState({ jokerType: opt, actualRoles: roles.sort(()=>Math.random()-0.5), finalJokerStroke: opt==='랜덤'?'':opt });
+                            setJokerType(opt);
+                          }} 
+                          className={`py-2 px-1 text-[13px] rounded-xl border transition-all font-bold tracking-tight active:scale-[0.98] ${jokerType === opt ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="p-3 bg-gray-50 rounded-xl text-[11px] text-gray-500 leading-relaxed break-keep border border-gray-100 mb-6">
+                      <span className="font-bold text-gray-600">💡 조커 룰 안내</span><br/>
+                      • 조커를 뽑은 플레이어는 인원이 부족한 팀으로 자동 배치됩니다.<br/>
+                      • 설정된 타수는 팀 승패 계산 시 실제 타수와 무관하게 적용됩니다.
+                    </div>
+                    <button onClick={() => setIsJokerModalOpen(false)} className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl hover:bg-slate-700 active:scale-95 transition tracking-tight">
+                      설정 완료
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {phase === PHASES.DRAW && (
+            <div className="min-h-full bg-slate-900 text-white flex flex-col p-6 animate-in fade-in flex-1">
+              <h2 className="text-center text-xl font-bold mb-8 mt-12">팀 뽑기</h2>
+              <div className="flex flex-wrap justify-center gap-4 flex-1 content-center relative">
+                {(() => {
+                  const myPick = Object.keys(selectedCards).find(k => selectedCards[k].playerIndex === MY_PLAYER_INDEX);
+                  if (myPick) {
+                    const data = selectedCards[myPick];
+                    return (
+                      <div className={`w-[70%] aspect-[3/4] rounded-3xl shadow-2xl flex flex-col items-center justify-center border-4 border-white/20 animate-in zoom-in-90 ${getCardStyle(data.role)}`}>
+                        <span className="text-[6rem] mb-4 drop-shadow-xl">{data.role==='J'?'🃏':data.role}</span>
+                        <div className="bg-black/40 px-6 py-2 rounded-full font-bold text-xl">내 카드</div>
+                      </div>
+                    );
+                  }
+                  return Array.from({length:5}).map((_, i) => {
+                    const p = selectedCards[i];
+                    return (
+                      <div key={i} onClick={() => selectCard(i)} className={`w-[28%] aspect-[3/4] rounded-2xl flex flex-col items-center justify-center transition-all shadow-xl relative active:scale-95 ${p ? 'bg-slate-800/80 border border-slate-600 opacity-50 cursor-not-allowed' : 'bg-slate-700 border-2 border-green-500 cursor-pointer hover:scale-105'}`} style={!p ? { backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.05) 10px, rgba(255,255,255,0.05) 20px)' } : {}}>
+                        {p ? <div className="text-center"><Icon name="Check" size={24} className="mx-auto opacity-50" /><div className="text-[10px] mt-1 truncate px-1">{p.player}</div></div> : <span className="text-slate-500 font-bold text-xl">?</span>}
+                      </div>
+                    );
+                  });
+                })()}
+              </div>
+              <div className="mt-8 pb-4">
+                <div className="border border-slate-700 bg-slate-800/80 p-5 rounded-2xl text-center backdrop-blur-sm">
+                  <p className={`font-bold text-sm mb-3 ${!Object.keys(selectedCards).find(k=>selectedCards[k].playerIndex===MY_PLAYER_INDEX) ? 'text-green-400 animate-pulse' : 'text-slate-400'}`}>{pickLog}</p>
+                  <div className="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden"><div className="bg-green-500 h-full transition-all duration-500" style={{ width: `${(Object.keys(selectedCards).length / 4) * 100}%` }}></div></div>
+                </div>
+                
+                {(isHostView || guestPermissions.autoPick) && Object.keys(selectedCards).length < 4 && (
+                  <button onClick={autoPickRemaining} className="w-full bg-yellow-500 text-yellow-900 py-4 rounded-2xl font-bold text-lg mt-4 shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <Icon name="Users" size={20} /> 남은 동반자 카드 선택 (결과 보기)
+                  </button>
+                )}
+
+                {(isHostView || guestPermissions.autoPick) && Object.keys(selectedCards).length >= 4 && (
+                  <button onClick={revealTeams} className="w-full bg-green-600 text-white py-5 rounded-2xl font-bold text-xl mt-4 shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <Icon name="Check" size={24} /> 결과 확인 (전체 공개)
+                  </button>
+                )}
+
+                {!(isHostView || guestPermissions.autoPick) && Object.keys(selectedCards).length >= 4 && (
+                  <div className="w-full bg-slate-800 text-slate-400 font-bold py-5 rounded-xl text-center text-lg mt-4 tracking-tight">결과 확인을 기다립니다...</div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {phase === PHASES.RANDOM_JOKER && (
+            <div className="min-h-full bg-purple-900 text-white flex flex-col items-center justify-center p-6 animate-in fade-in flex-1">
+              <h2 className="text-xl font-bold mb-10">조커 타수 추첨 중...</h2>
+              <div className="w-full bg-purple-800/50 rounded-3xl p-12 border-4 border-purple-500 shadow-2xl text-center"><span className="text-7xl font-black text-yellow-400 drop-shadow-lg">{isSpinningJoker ? localJokerSpin : finalJokerStroke}</span></div>
+            </div>
+          )}
+
+          {phase === PHASES.RESULT && (() => {
+            const results = Object.values(selectedCards);
+            const isJokerPending = jokerType === '랜덤' && !finalJokerStroke;
+            const rCount = results.filter(r => r.role === 'R').length;
+            const jokerTeam = rCount === 1 ? 'R' : 'B';
+            
+            const jokerCard = results.find(r => r.role === 'J');
+            const amIJoker = jokerCard && jokerCard.playerIndex === MY_PLAYER_INDEX;
+            const canIClickJoker = isHostView || amIJoker;
+
+            return (
+              <div className="min-h-full bg-slate-900 text-white flex flex-col p-4 animate-in fade-in flex-1">
+                <h2 className="text-center text-3xl font-black mb-8 text-yellow-400 mt-12">팀 매칭 결과</h2>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  {results.map((res, idx) => {
+                    const clickable = res.role === 'J' && isJokerPending && canIClickJoker;
+                    return (
+                      <div key={idx} onClick={() => clickable && executeRandomJoker()} className={`relative aspect-[3/4] rounded-3xl flex flex-col items-center p-3 shadow-2xl transition-all active:scale-95 ${getCardStyle(res.role, jokerTeam)} ${clickable ? 'cursor-pointer animate-pulse ring-4 ring-yellow-400 scale-105' : ''}`}>
+                        {clickable && <span className="absolute -top-3 right-2 bg-yellow-400 text-black text-[12px] font-black px-3 py-1.5 rounded-full z-10 border-2 border-white shadow-lg">Click!</span>}
+                        {res.role === 'J' && isJokerPending && !canIClickJoker && <span className="absolute -top-3 right-2 bg-slate-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg z-10 border border-slate-600">확인 대기중</span>}
+                        <div className="flex-1 flex flex-col items-center justify-center w-full">
+                          {res.role === 'J' ? <div className="text-center"><span className="text-7xl mb-2 block">🃏</span><span className="text-xl font-black bg-black/30 px-4 py-1 rounded-full">{finalJokerStroke || '확인중'}</span></div> : <span className="text-8xl font-black">{res.role}</span>}
+                        </div>
+                        <div className="w-full bg-black/40 py-3 rounded-2xl text-center font-bold text-sm">{res.player}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="bg-slate-800 rounded-2xl p-5 text-center mb-auto shadow-inner border border-slate-700">
+                  {isJokerPending ? (
+                    canIClickJoker ? <p className="text-yellow-400 font-bold animate-pulse">🃏 조커 카드를 클릭해 확인하세요!</p> : <p className="text-yellow-400 font-bold animate-pulse">🃏 조커 타수 확인 대기중...</p>
+                  ) : <p className="text-yellow-400 font-black text-xl">🎉 이긴 팀이 포인트를 가져갑니다! 🎉</p>}
+                </div>
+                
+                {(isHostView || guestPermissions.nextHole) ? (
+                  <div className="mt-8 space-y-3 pb-4">
+                    <button onClick={nextHole} disabled={isJokerPending} className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform ${isJokerPending ? 'bg-gray-700 text-gray-500' : 'bg-green-600 text-white shadow-lg'}`}><Icon name="RotateCcw" size={20} /> 다음 홀 이동 (다시 뽑기)</button>
+                  </div>
+                ) : (
+                  <div className="mt-8 space-y-3 pb-4">
+                    <div className="w-full bg-slate-800 text-slate-400 font-bold py-5 rounded-xl text-center text-lg tracking-tight">다음 홀을 준비중입니다...</div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {isInviteOpen && (
+            <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-in zoom-in text-gray-800 flex flex-col items-center relative">
+                <button onClick={() => setIsInviteOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full transition active:scale-95"><Icon name="X" size={24} /></button>
+                <div className="flex items-center gap-2 mb-2 w-full"><Icon name="QrCode" size={20} className="text-green-600" /><h2 className="text-lg font-bold">방 초대하기</h2></div>
+                <p className="text-sm text-gray-500 text-left mb-6 break-keep leading-relaxed w-full">라운드 동반자의 카메라로 스캔하거나<br/>초대 URL을 공유해 참여할 수 있습니다.</p>
+                <div className="w-48 h-48 bg-gray-50 rounded-2xl border mb-6 flex items-center justify-center overflow-hidden shadow-inner">
+                  <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?room=${roomId}`)}`} className="w-[85%] h-[85%] mix-blend-multiply" />
+                </div>
+                <div className="w-full mb-6">
+                  <label className="text-xs font-bold text-gray-500 mb-2 block">초대 URL</label>
+                  <div className="bg-gray-50 border border-gray-200 p-3 rounded-xl text-xs font-medium text-gray-600 truncate flex items-center gap-2">
+                    <Icon name="LinkIcon" size={16} className="text-gray-400 shrink-0" />
+                    <span className="truncate">{window.location.origin}{window.location.pathname}?room={roomId}</span>
+                  </div>
+                </div>
+                <div className="flex gap-3 w-full">
+                  <button onClick={handleCopyUrl} className="flex-1 py-3.5 bg-gray-100 text-gray-700 font-bold rounded-2xl hover:bg-gray-200 transition active:scale-95">URL 복사</button>
+                  <button onClick={async () => { try { await navigator.share({ title: '⛳ 골프 뽑기 게임', text: '라운드 동반자들과 함께 공정하게 팀을 뽑아보세요!', url: `${window.location.origin}${window.location.pathname}?room=${roomId}` }); setIsInviteOpen(false); } catch(e){} }} className="flex-1 py-3.5 bg-green-600 text-white font-bold rounded-2xl shadow-lg hover:bg-green-700 transition active:scale-95">공유하기</button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function ChipFlipGame() {
+      const [isFlipping, setIsFlipping] = useState(false);
+      const [rotation, setRotation] = useState(0);
+
+      const flipChip = () => {
+        if (isFlipping) return;
+        setIsFlipping(true);
+        if ('vibrate' in navigator) navigator.vibrate(50);
+        
+        const isHeads = Math.random() > 0.5;
+        const currentMod = rotation % 360;
+        const targetMod = isHeads ? 0 : 180;
+        
+        let newRotation = rotation + 1800; 
+        if ((newRotation % 360) !== targetMod) {
+            newRotation += 180;
+        }
+
+        setRotation(newRotation);
+        
+        setTimeout(() => {
+          setIsFlipping(false);
+        }, 3000);
+      };
+
+      return (
+        <div className="p-6 bg-[#fdfcf9] min-h-full flex flex-col items-center justify-center flex-1">
+          <div className="text-center mb-16 mt-4">
+              <h2 className="text-[26px] font-black text-gray-900 mb-2">칩 돌리기</h2>
+              <p className="text-gray-500 font-bold text-[14px]">마커를 돌려 앞/뒤를 결정하세요</p>
+          </div>
+          
+          <div className="relative w-48 h-48 mb-16" style={{ perspective: '1000px' }}>
+            <div 
+              className="w-full h-full rounded-full shadow-2xl relative"
+              style={{
+                transformStyle: 'preserve-3d',
+                transform: `rotateY(${rotation}deg)`,
+                transition: 'transform 3s cubic-bezier(0.2, 0.8, 0.2, 1)'
+              }}
+            >
+              <div 
+                className="absolute w-full h-full rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 border-[10px] border-yellow-600 flex flex-col items-center justify-center shadow-inner" 
+                style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
+              >
+                <span className="text-[50px] font-black text-yellow-900 drop-shadow-sm leading-none">O</span>
+                <span className="text-[14px] font-bold text-yellow-800 mt-1">앞면</span>
+              </div>
+              
+              <div 
+                className="absolute w-full h-full rounded-full bg-gradient-to-br from-slate-300 to-slate-500 border-[10px] border-slate-600 flex flex-col items-center justify-center shadow-inner" 
+                style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              >
+                <span className="text-[50px] font-black text-slate-900 drop-shadow-sm leading-none">X</span>
+                <span className="text-[14px] font-bold text-slate-800 mt-1">뒷면</span>
+              </div>
+            </div>
+          </div>
+          
+          <button 
+            onClick={flipChip} 
+            disabled={isFlipping}
+            className="mt-auto mb-8 py-4 px-8 bg-[#1a4314] text-white rounded-2xl font-black text-[18px] shadow-lg hover:bg-[#2d6a4f] active:scale-95 transition-all w-full disabled:opacity-50 disabled:active:scale-100"
+          >
+            {isFlipping ? '돌아가는 중...' : '칩 돌리기'}
+          </button>
+        </div>
+      );
+    }
+
+    function TeeSpinGame() {
+      const [rot, setRot] = useState(0);
+      
+      const spinLeft = () => setRot(rot - (1800 + Math.random() * 360));
+      const spinRight = () => setRot(rot + 1800 + Math.random() * 360);
+
+      return (
+        <div className="p-6 bg-[#fdfcf9] min-h-full flex flex-col items-center justify-center flex-1">
+          <div className="text-center mb-10 mt-4">
+            <h2 className="text-[26px] font-black text-gray-900 mb-2">순서 뽑기</h2>
+            <p className="text-gray-500 font-bold text-[14px]">티가 가리키는 방향의 사람이 첫 타자!</p>
+          </div>
+          <div className="relative w-64 h-64 bg-white rounded-full border-8 border-[#e8f5e9] flex items-center justify-center shadow-inner overflow-hidden">
+            
+            <div className="absolute top-4 w-2.5 h-2.5 bg-gray-300 rounded-full shadow-inner" />
+            <div className="absolute bottom-4 w-2.5 h-2.5 bg-gray-300 rounded-full shadow-inner" />
+            <div className="absolute left-4 w-2.5 h-2.5 bg-gray-300 rounded-full shadow-inner" />
+            <div className="absolute right-4 w-2.5 h-2.5 bg-gray-300 rounded-full shadow-inner" />
+
+            <div 
+              style={{ transform:`rotate(${rot}deg)`, transition:'all 3s cubic-bezier(0.2, 0.8, 0.2, 1)' }}
+              className="absolute z-10 w-full h-full flex items-center justify-center"
+            >
+              <svg viewBox="0 0 40 190" className="drop-shadow-xl" style={{ width: '40px', height: '190px' }}>
+                <defs>
+                  <linearGradient id="teeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fca5a5" />
+                    <stop offset="30%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#991b1b" />
+                  </linearGradient>
+                </defs>
+                <path d="M 18 5 C 18 0, 22 0, 22 5 L 26 130 C 26 145, 36 145, 36 155 L 36 160 L 4 160 L 4 155 C 4 145, 14 145, 14 130 Z" fill="url(#teeGrad)" />
+                <ellipse cx="20" cy="160" rx="16" ry="4" fill="#7f1d1d" />
+                <path d="M 18 5 C 18 0, 20 0, 20 5 L 20 160 L 4 160 L 4 155 C 4 145, 14 145, 14 130 Z" fill="#ffffff" opacity="0.15" />
+              </svg>
+            </div>
+            
+            <div className="absolute w-4 h-4 bg-gray-200 rounded-full shadow-md z-20 border border-gray-300" />
+            
+          </div>
+
+          <div className="mt-16 w-full flex gap-3">
+            <button onClick={spinLeft} className="flex-1 py-4 bg-[#E2D9C8] text-[#1a4314] border border-[#d1c9b8] rounded-2xl font-black text-[16px] shadow-sm active:scale-95 transition-transform">
+              왼쪽으로
+            </button>
+            <button onClick={spinRight} className="flex-1 py-4 bg-[#1a4314] text-white rounded-2xl font-black text-[16px] shadow-lg active:scale-95 transition-transform">
+              오른쪽으로 돌리기
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // === [Metronome Component & Helpers] ===
+    const MetroActivity = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
+    const MetroBell = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>;
+    const MetroMessageSquare = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
+    const MetroClock = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
+    const MetroSave = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
+    const MetroBookmark = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg>;
+    const MetroPlus = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>;
+    const MetroX = ({ size, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>;
+    const MetroPlay = ({ size, fill, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="5 3 19 12 5 21 5 3"/></svg>;
+    const MetroSquare = ({ size, fill, className }) => <svg width={size} height={size} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>;
+
+    const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
+      const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+      return { x: centerX + (radius * Math.cos(angleInRadians)), y: centerY + (radius * Math.sin(angleInRadians)) };
+    };
+
+    const describeArc = (x, y, radius, startAngle, endAngle) => {
+      const start = polarToCartesian(x, y, radius, endAngle);
+      const end = polarToCartesian(x, y, radius, startAngle);
+      const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+      return [ "M", start.x, start.y, "A", radius, radius, 0, largeArcFlag, 0, end.x, end.y ].join(" ");
+    };
+
+    const DEFAULT_METRO_PHRASES = [
+      { id: 'd1', name: '짬-뽕', beats: 2, labels: ['짬', '뽕'], isDefault: true, lastUsed: 99 },
+      { id: 'd2', name: '똑-딱', beats: 2, labels: ['똑', '딱'], isDefault: true }, 
+      { id: 'd3', name: '하-나', beats: 2, labels: ['하', '나'], isDefault: true },
+      { id: 'd4', name: '백-스윙', beats: 2, labels: ['백', '스윙'], isDefault: true },
+      { id: 'd9', name: '머리-고정', beats: 2, labels: ['머리', '고정'], isDefault: true, lastUsed: 95 },
+      { id: 'd10', name: '체중-이동', beats: 2, labels: ['체중', '이동'], isDefault: true },
+      { id: 'd11', name: '힘을-빼자', beats: 2, labels: ['힘을', '빼자'], isDefault: true },
+      { id: 'd16', name: '손목-유지', beats: 2, labels: ['손목', '유지'], isDefault: true },
+      
+      { id: 'd0', name: '골프-메트로-놈', beats: 3, labels: ['골프', '메트로', '놈'], isDefault: true, lastUsed: 105 },
+      { id: 'd5', name: '짜-장-면', beats: 3, labels: ['짜', '장', '면'], isDefault: true, lastUsed: 100 },
+      { id: 'd6', name: '에-델-바이스', beats: 3, labels: ['에', '델', '바이스'], isDefault: true },
+      { id: 'd7', name: '백-스-윙', beats: 3, labels: ['백', '스', '윙'], isDefault: true },
+      { id: 'd8', name: '원-투-쓰리', beats: 3, labels: ['원', '투', '쓰리'], isDefault: true },
+      { id: 'd12', name: '머-리-고정', beats: 3, labels: ['머', '리', '고정'], isDefault: true },
+      { id: 'd13', name: '체-중-이동', beats: 3, labels: ['체', '중', '이동'], isDefault: true },
+      { id: 'd14', name: '부-드-럽게', beats: 3, labels: ['부', '드', '럽게'], isDefault: true },
+      { id: 'd15', name: '끝-까-지', beats: 3, labels: ['끝', '까', '지'], isDefault: true },
+      { id: 'd17', name: '몸으로-팔을-던져', beats: 3, labels: ['몸으로', '팔을', '던져'], isDefault: true },
+      { id: 'd18', name: '하체-리드-스윙', beats: 3, labels: ['하체', '리드', '스윙'], isDefault: true },
+      { id: 'd19', name: '헤드를-똑바로-보내', beats: 3, labels: ['헤드를', '똑바로', '보내'], isDefault: true, lastUsed: 96 },
+      { id: 'd20', name: '팔-은-아래로만', beats: 3, labels: ['팔', '은', '아래로만'], isDefault: true, lastUsed: 98 },
+    ];
+
+    const BASE_METRO_RHYTHMS = {
+      TWO_FOUR: { id: 'base-2', name: '2박자 (기본)', beats: 2, labels: ['시작', '2'] },
+      THREE_FOUR: { id: 'base-3', name: '3박자 (기본)', beats: 3, labels: ['시작', '2', '3'] },
+    };
+
+    function MetronomeMain() {
+      const [isPlaying, setIsPlaying] = useState(false);
+      const [currentRhythm, setCurrentRhythm] = useState({ ...DEFAULT_METRO_PHRASES.find(p => p.name === '골프-메트로-놈') }); 
+      const [activeBeat, setActiveBeat] = useState(-1);
+      const [soundMode, setSoundMode] = useState('metronome'); 
+      
+      const [isModalOpen, setIsModalOpen] = useState(false); 
+      const [alertMessage, setAlertMessage] = useState(''); 
+      const [deletingId, setDeletingId] = useState(null); 
+      const [confirmDialog, setConfirmDialog] = useState(null); 
+
+      const [bpmPresets, setBpmPresets] = useState(() => {
+        const saved = localStorage.getItem('golfMetronomeBpmPresets');
+        return saved ? JSON.parse(saved) : [40, 50, 60, 70, 80];
+      });
+      
+      const [activePresetIndex, setActivePresetIndex] = useState(2);
+      const [bpm, setBpm] = useState(bpmPresets[2] || 60); 
+
+      const [editingPresetIndex, setEditingPresetIndex] = useState(null);
+      const presetPressTimer = useRef(null);
+      const isPresetLongPressed = useRef(false);
+      const longPressTimer = useRef(null);
+      const isLongPressed = useRef(false);
+      const knobSvgRef = useRef(null);
+
+      const [savedPhrases, setSavedPhrases] = useState(() => {
+        const saved = localStorage.getItem('golfMetronomePhrases');
+        if (saved) {
+          try { 
+            const parsed = JSON.parse(saved); 
+            const customPhrases = parsed.filter(p => !p.isDefault);
+            const mergedDefaults = DEFAULT_METRO_PHRASES.map(dp => {
+              const savedDp = parsed.find(p => p.id === dp.id);
+              return savedDp ? { ...dp, lastUsed: savedDp.lastUsed || dp.lastUsed, isDeleted: savedDp.isDeleted } : dp;
+            });
+            return [...mergedDefaults, ...customPhrases];
+          } catch (e) { 
+            return DEFAULT_METRO_PHRASES; 
+          }
+        }
+        return DEFAULT_METRO_PHRASES;
+      });
+
+      const soundModeRef = useRef(soundMode);
+      const bpmRef = useRef(bpm);
+      const rhythmRef = useRef(currentRhythm);
+
+      useEffect(() => { soundModeRef.current = soundMode; }, [soundMode]);
+      useEffect(() => { bpmRef.current = bpm; }, [bpm]);
+      useEffect(() => { rhythmRef.current = currentRhythm; }, [currentRhythm]);
+
+      useEffect(() => { localStorage.setItem('golfMetronomePhrases', JSON.stringify(savedPhrases)); }, [savedPhrases]);
+      useEffect(() => { localStorage.setItem('golfMetronomeBpmPresets', JSON.stringify(bpmPresets)); }, [bpmPresets]);
+
+      const audioCtxRef = useRef(null);
+      const nextNoteTimeRef = useRef(0);
+      const currentBeatRef = useRef(0);
+      const timerIdRef = useRef(null);
+      const isPlayingRef = useRef(false);
+
+      const lookahead = 25.0; 
+      const scheduleAheadTime = 0.1; 
+
+      const initAudioAndVoice = () => {
+        if (!audioCtxRef.current) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          audioCtxRef.current = new AudioContext();
+        }
+        if (audioCtxRef.current.state === 'suspended') {
+          audioCtxRef.current.resume();
+        }
+        if ('speechSynthesis' in window) {
+          const dummyUtterance = new SpeechSynthesisUtterance('');
+          window.speechSynthesis.speak(dummyUtterance);
+        }
+      };
+
+      const speakText = (text, currentBpm) => {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        
+        let textToSpeak = text;
+        if (text === '2') textToSpeak = '둘';
+        if (text === '3') textToSpeak = '셋';
+
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.lang = 'ko-KR'; 
+        utterance.rate = Math.min(2.5, Math.max(1.0, currentBpm / 60)); 
+        utterance.pitch = 1.1;
+
+        window.speechSynthesis.speak(utterance);
+      };
+
+      const playClick = (time, isAccent, mode) => {
+        if (!audioCtxRef.current) return;
+        const osc = audioCtxRef.current.createOscillator();
+        const gainNode = audioCtxRef.current.createGain();
+
+        if (mode === 'metronome') {
+          osc.type = 'square';
+          osc.frequency.setValueAtTime(isAccent ? 1200 : 800, time);
+          osc.frequency.exponentialRampToValueAtTime(isAccent ? 600 : 400, time + 0.02);
+          
+          osc.connect(gainNode);
+          gainNode.connect(audioCtxRef.current.destination);
+
+          const currentVol = isAccent ? 0.7 : 0.4;
+          gainNode.gain.setValueAtTime(currentVol, time);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.03); 
+
+          osc.start(time);
+          osc.stop(time + 0.04);
+        } else {
+          osc.type = 'sine';
+          osc.frequency.value = isAccent ? 1000 : 800;
+          osc.connect(gainNode);
+          gainNode.connect(audioCtxRef.current.destination);
+
+          const currentVol = isAccent ? 0.8 : 0.4;
+          gainNode.gain.setValueAtTime(currentVol, time);
+          gainNode.gain.exponentialRampToValueAtTime(0.001, time + 0.1);
+
+          osc.start(time);
+          osc.stop(time + 0.1);
+        }
+      };
+
+      const nextNote = useCallback(() => {
+        const secondsPerBeat = 60.0 / bpmRef.current;
+        nextNoteTimeRef.current += secondsPerBeat;
+        
+        currentBeatRef.current++;
+        if (currentBeatRef.current >= rhythmRef.current.beats) {
+          currentBeatRef.current = 0;
+        }
+      }, []);
+
+      const scheduleNote = useCallback((beatNumber, time) => {
+        const isAccent = beatNumber === 0;
+        const currentMode = soundModeRef.current;
+
+        if (currentMode === 'beep' || currentMode === 'metronome') {
+          playClick(time, isAccent, currentMode);
+        }
+
+        const timeToNote = (time - audioCtxRef.current.currentTime) * 1000;
+        setTimeout(() => {
+          if (isPlayingRef.current) {
+            setActiveBeat(beatNumber);
+            if (soundModeRef.current === 'voice') {
+              speakText(rhythmRef.current.labels[beatNumber], bpmRef.current);
+            }
+          }
+        }, Math.max(0, timeToNote)); 
+      }, []);
+
+      const scheduler = useCallback(() => {
+        while (nextNoteTimeRef.current < audioCtxRef.current.currentTime + scheduleAheadTime) {
+          scheduleNote(currentBeatRef.current, nextNoteTimeRef.current);
+          nextNote();
+        }
+        timerIdRef.current = setTimeout(scheduler, lookahead);
+      }, [nextNote, scheduleNote]);
+
+      const togglePlay = () => {
+        if (!isPlaying) {
+          initAudioAndVoice();
+          isPlayingRef.current = true;
+          setIsPlaying(true);
+          currentBeatRef.current = 0;
+          nextNoteTimeRef.current = audioCtxRef.current.currentTime + 0.05;
+          scheduler();
+        } else {
+          isPlayingRef.current = false;
+          setIsPlaying(false);
+          clearTimeout(timerIdRef.current);
+          setActiveBeat(-1);
+          if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+      };
+
+      useEffect(() => {
+        return () => {
+          clearTimeout(timerIdRef.current);
+          if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') audioCtxRef.current.close();
+          if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+          if (presetPressTimer.current) clearTimeout(presetPressTimer.current);
+        };
+      }, []);
+
+      const handleKnobMove = useCallback((e) => {
+        if (e.cancelable) e.preventDefault(); 
+        if (!knobSvgRef.current) return;
+        
+        const rect = knobSvgRef.current.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+        
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        let angle = Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI) + 90;
+        if (angle > 180) angle -= 360;
+        
+        if (angle > 135) angle = 135;
+        if (angle < -135) angle = -135;
+        
+        const newBpm = Math.round(30 + ((angle - (-135)) / 270) * 170);
+        
+        setBpm(prevBpm => {
+            if (prevBpm !== newBpm) {
+                setBpmPresets(prevPresets => {
+                    const updated = [...prevPresets];
+                    updated[activePresetIndex] = newBpm;
+                    return updated;
+                });
+                return newBpm;
+            }
+            return prevBpm;
+        });
+      }, [activePresetIndex]);
+
+      const handleKnobUp = useCallback(() => {
+        document.removeEventListener('mousemove', handleKnobMove);
+        document.removeEventListener('mouseup', handleKnobUp);
+        document.removeEventListener('touchmove', handleKnobMove);
+        document.removeEventListener('touchend', handleKnobUp);
+      }, [handleKnobMove]);
+
+      const handleKnobDown = (e) => {
+        document.addEventListener('mousemove', handleKnobMove);
+        document.addEventListener('mouseup', handleKnobUp);
+        document.addEventListener('touchmove', handleKnobMove, { passive: false });
+        document.addEventListener('touchend', handleKnobUp);
+      };
+
+      const handlePressStart = (id) => {
+        isLongPressed.current = false;
+        longPressTimer.current = setTimeout(() => {
+          isLongPressed.current = true;
+          setDeletingId(id);
+          if (navigator.vibrate) navigator.vibrate(50); 
+        }, 500); 
+      };
+
+      const handlePressEnd = () => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+      };
+
+      const handlePhraseClick = (phrase) => {
+        if (isLongPressed.current) return; 
+        if (deletingId) {
+          setDeletingId(null);
+          return; 
+        }
+        applyPhrase(phrase);
+      };
+      
+      const handlePresetPressStart = (index) => {
+        isPresetLongPressed.current = false;
+        presetPressTimer.current = setTimeout(() => {
+          isPresetLongPressed.current = true;
+          setEditingPresetIndex(index);
+          if (navigator.vibrate) navigator.vibrate(50); 
+        }, 500); 
+      };
+
+      const handlePresetPressEnd = () => {
+        if (presetPressTimer.current) clearTimeout(presetPressTimer.current);
+      };
+
+      const handlePresetClick = (index, val) => {
+        if (isPresetLongPressed.current) return;
+        setActivePresetIndex(index);
+        setBpm(val);
+      };
+
+      const handlePresetChange = (index, newValue) => {
+        const val = parseInt(newValue, 10);
+        if (!isNaN(val) && val >= 30 && val <= 200) {
+          setBpmPresets(prev => {
+            const updated = [...prev];
+            updated[index] = val;
+            return updated;
+          });
+          if (activePresetIndex === index) {
+              setBpm(val);
+          }
+        }
+        setEditingPresetIndex(null);
+      };
+
+      const handleLabelChange = (index, value) => {
+        if (value.length > 4) {
+          setAlertMessage("메시지는 박자당 최대 4자까지만 입력할 수 있습니다.");
+          return;
+        }
+        
+        const newLabels = [...currentRhythm.labels];
+        newLabels[index] = value;
+        
+        const totalLength = newLabels.join('').length;
+        if (totalLength > 8) {
+          setAlertMessage("메시지는 전체 합쳐서 최대 8자까지만 입력 가능합니다.");
+          return;
+        }
+        
+        setCurrentRhythm(prev => {
+          return { ...prev, labels: newLabels };
+        });
+      };
+
+      const saveCurrentPhrase = () => {
+        const name = currentRhythm.labels.join('-');
+        if (savedPhrases.some(p => p.labels.join('-') === name && !p.isDeleted)) return;
+
+        const currentBeatPhrases = savedPhrases.filter(p => !p.isDeleted && p.beats === currentRhythm.beats);
+        if (currentBeatPhrases.length >= 15) {
+          setAlertMessage(`메시지는 샘플을 포함하여 최대 15줄까지만 유지할 수 있습니다.\n\n불필요한 메시지를 꾹~ 길게 눌러 삭제한 뒤 새로운 메시지를 추가해주세요.`);
+          return;
+        }
+
+        const newPhrase = {
+          id: `custom-${Date.now()}`,
+          name: name,
+          beats: currentRhythm.beats,
+          labels: [...currentRhythm.labels],
+          isDefault: false,
+          lastUsed: Date.now() 
+        };
+        setSavedPhrases(prev => [...prev, newPhrase]);
+        setIsModalOpen(true); 
+      };
+
+      const deletePhrase = (id, e) => {
+        e.stopPropagation(); 
+        setSavedPhrases(prev => {
+          const target = prev.find(p => p.id === id);
+          if (target?.isDefault) {
+            return prev.map(p => p.id === id ? { ...p, isDeleted: true } : p);
+          }
+          return prev.filter(p => p.id !== id);
+        });
+        setDeletingId(null); 
+      };
+
+      const restoreDefaults = () => {
+        setConfirmDialog({
+          message: "삭제된 기본 메시지들을 모두 복구하시겠습니까?\n(박자당 15개 메시지가 넘어가면 추가가 제한될 수 있습니다)",
+          onConfirm: () => {
+            setSavedPhrases(prev => prev.map(p => p.isDefault ? { ...p, isDeleted: false } : p));
+            setConfirmDialog(null);
+          }
+        });
+      };
+
+      const applyPhrase = (phrase) => {
+        setCurrentRhythm({ ...phrase, labels: [...phrase.labels] });
+        setSoundMode('voice'); 
+        setIsModalOpen(false); 
+        setSavedPhrases(prev => 
+          prev.map(p => p.id === phrase.id ? { ...p, lastUsed: Date.now() } : p)
+        );
+      };
+
+      const applyBaseRhythm = (rhythm) => {
+        setCurrentRhythm({ ...rhythm, labels: [...rhythm.labels] });
+        setIsModalOpen(false);
+      };
+
+      const visiblePhrases = savedPhrases.filter(p => !p.isDeleted);
+      const previewPhrases = [...visiblePhrases]
+        .filter(p => p.name !== '똑-딱')
+        .sort((a, b) => (b.lastUsed || 0) - (a.lastUsed || 0))
+        .slice(0, 4);
+
+      const renderPhraseItem = (phrase) => {
+        const isSelected = currentRhythm.labels.join('-') === phrase.labels.join('-');
+        const isDeleting = deletingId === phrase.id;
+        
+        return (
+          <div
+            key={phrase.id}
+            onMouseDown={() => handlePressStart(phrase.id)}
+            onMouseUp={handlePressEnd}
+            onMouseLeave={handlePressEnd}
+            onTouchStart={() => handlePressStart(phrase.id)}
+            onTouchEnd={handlePressEnd}
+            onContextMenu={(e) => { e.preventDefault(); return false; }} 
+            onClick={(e) => { e.stopPropagation(); handlePhraseClick(phrase); }}
+            className={`relative group flex items-center justify-center px-3 py-1.5 rounded-lg text-[12px] tracking-tight font-medium transition-all duration-200 cursor-pointer select-none border shadow-sm ${
+              isSelected
+                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400'
+                : 'bg-slate-800 border-slate-700 text-slate-300 hover:border-slate-500 hover:text-slate-100'
+            } ${isDeleting ? 'ring-2 ring-red-500 scale-105 shadow-xl' : ''}`}
+          >
+            <span>{phrase.name}</span>
+            
+            {isDeleting && (
+              <button 
+                onClick={(e) => deletePhrase(phrase.id, e)}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 shadow-md z-10 hover:bg-red-600 transition-colors animate-pulse"
+              >
+                <MetroX size={12} />
+              </button>
+            )}
+          </div>
+        );
+      };
+
+      const knobCx = 80;
+      const knobCy = 80;
+      const knobRadius = 65;
+      const currentKnobAngle = -135 + ((bpm - 30) / 170) * 270;
+      const thumbPos = polarToCartesian(knobCx, knobCy, knobRadius, currentKnobAngle);
+
+      return (
+        <div className="w-full min-h-[100%] bg-[#0f172a] flex flex-col relative font-sans tracking-tight select-none overflow-hidden" onClick={() => setDeletingId(null)}>
+          <div className="bg-emerald-500 rounded-b-[20px] pt-6 pb-3 px-4 text-center shadow-md relative z-10 shrink-0">
+            <div className="flex justify-center items-center gap-1.5">
+              <MetroActivity size={18} className="text-white" />
+              <h1 className="text-lg font-extrabold text-white tracking-wide">GOLF METRONOME</h1>
+            </div>
+            <p className="text-emerald-50 text-[11px] mt-0.5 opacity-90 font-medium">나만의 스윙 메시지를 만들어보세요</p>
+          </div>
+
+          <div className="flex-1 flex flex-col px-4 pt-3 pb-3 overflow-y-auto">
+            
+            {/* Sound Mode Toggle */}
+            <div className="flex flex-col items-center mb-3 w-full shrink-0">
+              <div className="bg-slate-800 p-1 rounded-full flex gap-1 shadow-[inset_0_2px_4px_rgba(0,0,0,0.4)] border border-slate-700/50 w-full">
+                <button
+                  onClick={() => setSoundMode('beep')}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-full text-[12px] font-bold transition-all ${
+                    soundMode === 'beep' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <MetroBell size={14} /> 비프음
+                </button>
+                <button
+                  onClick={() => setSoundMode('voice')}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-full text-[12px] font-bold transition-all ${
+                    soundMode === 'voice' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <MetroMessageSquare size={14} /> 음성
+                </button>
+                <button
+                  onClick={() => setSoundMode('metronome')}
+                  className={`flex-1 flex items-center justify-center gap-1 py-1.5 rounded-full text-[12px] font-bold transition-all ${
+                    soundMode === 'metronome' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <MetroClock size={14} /> 메트로놈
+                </button>
+              </div>
+            </div>
+
+            {/* Visualizer (Dots & Text) */}
+            <div className="flex justify-center gap-3 mb-3 h-16 items-start shrink-0">
+              {Array.from({ length: currentRhythm.beats }).map((_, i) => {
+                const isActive = activeBeat === i;
+                const isAccent = i === 0;
+                
+                let circleClass = "bg-slate-800 shadow-[inset_0_4px_6px_rgba(0,0,0,0.6)]";
+                if (isActive) {
+                  circleClass = isAccent ? "bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.5)]" : "bg-slate-400 shadow-[0_0_15px_rgba(148,163,184,0.4)]";
+                }
+
+                return (
+                  <div key={i} className="flex flex-col items-center gap-1.5 relative">
+                    <div className={`w-10 h-10 rounded-full transition-all duration-200 flex items-center justify-center border border-slate-700/30 ${circleClass} ${isActive ? 'scale-110' : 'scale-100'}`} />
+                    
+                    <input
+                      type="text"
+                      maxLength={4} 
+                      value={currentRhythm.labels[i]}
+                      onChange={(e) => handleLabelChange(i, e.target.value)}
+                      className={`text-[12px] font-bold text-center bg-transparent w-[60px] outline-none border-b-2 border-transparent focus:border-emerald-500 transition-all focus:bg-slate-800 rounded py-0.5 ${isActive ? 'text-slate-100' : 'text-slate-400 hover:text-slate-300'} ${soundMode === 'voice' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Add Message / Select Beat Container */}
+            <div className="flex justify-center mb-3 min-h-[30px] shrink-0">
+              {soundMode === 'voice' ? (
+                <button 
+                  onClick={(e) => { e.stopPropagation(); saveCurrentPhrase(); }}
+                  className="flex items-center gap-1.5 px-5 py-1.5 border border-emerald-500 text-emerald-500 rounded-full text-[12px] font-bold transition hover:bg-emerald-500/10 active:scale-95 shadow-sm"
+                >
+                  <MetroSave size={14} /> 현재 메시지 추가하기
+                </button>
+              ) : (
+                <div className="flex gap-3">
+                  <button 
+                    onClick={() => applyBaseRhythm(BASE_METRO_RHYTHMS.TWO_FOUR)}
+                    className={`flex items-center justify-center w-20 py-1.5 rounded-full text-[12px] font-bold transition border shadow-sm ${currentRhythm.beats === 2 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                  >
+                    2박자
+                  </button>
+                  <button 
+                    onClick={() => applyBaseRhythm(BASE_METRO_RHYTHMS.THREE_FOUR)}
+                    className={`flex items-center justify-center w-20 py-1.5 rounded-full text-[12px] font-bold transition border shadow-sm ${currentRhythm.beats === 3 ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : 'border-slate-600 bg-slate-800 text-slate-300 hover:bg-slate-700'}`}
+                  >
+                    3박자
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Circular BPM Knob & Display */}
+            <div className="flex flex-col items-center mb-3 w-full relative shrink-0">
+              <div className="relative w-[160px] h-[160px] flex items-center justify-center select-none touch-none mb-3">
+                
+                {/* SVG Dial */}
+                <svg ref={knobSvgRef} width="160" height="160" className="absolute inset-0 z-10 cursor-pointer" onMouseDown={handleKnobDown} onTouchStart={handleKnobDown}>
+                  <path d={describeArc(knobCx, knobCy, knobRadius, -135, 135)} fill="none" stroke="#1e293b" strokeWidth="8" strokeLinecap="round" />
+                  <path d={describeArc(knobCx, knobCy, knobRadius, -135, currentKnobAngle)} fill="none" stroke="#10b981" strokeWidth="8" strokeLinecap="round" />
+                  <circle cx={thumbPos.x} cy={thumbPos.y} r="10" fill="#ffffff" className="shadow-md pointer-events-none" />
+                </svg>
+
+                {/* Play Button inside Knob */}
+                <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); togglePlay(); }} 
+                      className={`pointer-events-auto w-[70px] h-[70px] rounded-full flex items-center justify-center transition-all duration-300 transform active:scale-95 border-[3px] ${
+                        isPlaying 
+                          ? 'bg-red-500 border-red-400 shadow-[0_0_20px_rgba(239,68,68,0.4)] text-white' 
+                          : 'bg-amber-500 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.4)] text-white pl-1.5'
+                      }`}
+                    >
+                      {isPlaying ? <MetroSquare size={24} fill="currentColor" className="mr-0" /> : <MetroPlay size={30} fill="currentColor" />}
+                    </button>
+                </div>
+              </div>
+              
+              {/* Quick Presets */}
+              <div className="w-full flex flex-col items-center px-2">
+                  <span className="text-slate-400 text-[10px] font-bold mb-1.5 tracking-widest">BPM</span>
+                  <div className="flex justify-between w-full gap-1.5">
+                    {bpmPresets.map((val, index) => {
+                      const isActive = activePresetIndex === index;
+                      return editingPresetIndex === index ? (
+                        <input
+                          key={`preset-input-${index}`}
+                          type="number"
+                          autoFocus
+                          defaultValue={val}
+                          onBlur={(e) => handlePresetChange(index, e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handlePresetChange(index, e.target.value);
+                          }}
+                          className="flex-1 w-0 py-1.5 rounded-lg text-[13px] font-bold text-center bg-slate-900 border border-emerald-500 text-white outline-none shadow-inner"
+                        />
+                      ) : (
+                        <button 
+                          key={`preset-${index}`} 
+                          onMouseDown={() => handlePresetPressStart(index)}
+                          onMouseUp={handlePresetPressEnd}
+                          onMouseLeave={handlePresetPressEnd}
+                          onTouchStart={() => handlePresetPressStart(index)}
+                          onTouchEnd={handlePresetPressEnd}
+                          onContextMenu={(e) => { e.preventDefault(); return false; }} 
+                          onClick={() => handlePresetClick(index, val)} 
+                          className={`flex-1 py-1.5 rounded-lg text-[13px] font-bold transition-all shadow-sm border ${
+                            isActive 
+                                ? 'bg-emerald-500 border-emerald-400 text-white scale-105 z-10 shadow-md' 
+                                : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                          }`}
+                        >
+                          {val}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <div className="text-center mt-1.5 text-slate-500 text-[10px] font-medium w-full">
+                    가운데 동그라미를 드래그하거나 숫자를 길게 눌러 조절하세요.
+                  </div>
+              </div>
+            </div>
+
+            {/* Message Library Section (Main Page) */}
+            <div className="bg-slate-800/80 p-3 rounded-2xl border border-slate-700 shadow-md mt-auto shrink-0 mb-1 mx-1">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-1.5 text-emerald-400">
+                  <MetroBookmark size={14} />
+                  <span className="text-[12px] font-bold">메시지 보관함</span>
+                </div>
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setIsModalOpen(true); }}
+                  className="flex items-center gap-0.5 text-[11px] font-bold transition text-emerald-500 hover:opacity-80"
+                >
+                  <MetroPlus size={12} /> 전체보기
+                </button>
+              </div>
+              
+              <div className="flex flex-wrap gap-2 items-center">
+                {previewPhrases.map((phrase) => renderPhraseItem(phrase))}
+              </div>
+            </div>
+          </div>
+
+          {/* Message Library Modal */}
+          {isModalOpen && (
+            <div className="absolute inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setDeletingId(null)}>
+              <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-md max-h-[85%] flex flex-col overflow-hidden transform transition-all" onClick={(e) => e.stopPropagation()}>
+                
+                <div className="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-800/50 z-10">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-[17px] font-bold text-emerald-400 flex items-center gap-2">
+                      <MetroBookmark size={20} /> 전체 메시지
+                    </h2>
+                    <button onClick={restoreDefaults} className="text-[11px] font-bold px-2.5 py-1.5 bg-slate-700 text-slate-300 hover:bg-slate-600 rounded-lg transition">샘플 복구</button>
+                  </div>
+                  <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white p-1 rounded-full hover:bg-slate-700 transition">
+                    <MetroX size={24} />
+                  </button>
+                </div>
+                
+                <div className="p-6 overflow-y-auto metro-scrollbar flex-1">
+                  <div className="mb-8">
+                    <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+                      <span className="text-[15px] font-bold text-slate-200">2박자 <span className="text-slate-500 text-[13px] ml-1 font-medium">(퍼팅, 어프로치)</span></span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">{visiblePhrases.filter(p => p.beats === 2).length} / 15</span>
+                        <button onClick={() => applyBaseRhythm(BASE_METRO_RHYTHMS.TWO_FOUR)} className="text-[11px] font-bold px-2.5 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:bg-slate-700">기본 셋팅</button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2.5">
+                      {visiblePhrases.filter(p => p.beats === 2).map((phrase) => renderPhraseItem(phrase))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between mb-4 border-b border-slate-800 pb-2">
+                      <span className="text-[15px] font-bold text-slate-200">3박자 <span className="text-slate-500 text-[13px] ml-1 font-medium">(풀스윙)</span></span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-md">{visiblePhrases.filter(p => p.beats === 3).length} / 15</span>
+                        <button onClick={() => applyBaseRhythm(BASE_METRO_RHYTHMS.THREE_FOUR)} className="text-[11px] font-bold px-2.5 py-1 bg-slate-800 border border-slate-700 rounded text-slate-300 hover:bg-slate-700">기본 셋팅</button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2.5">
+                      {visiblePhrases.filter(p => p.beats === 3).map((phrase) => renderPhraseItem(phrase))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Custom Alert Modal */}
+          {alertMessage && (
+            <div className="absolute inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
+              <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-xs p-6 flex flex-col items-center text-center transform transition-all">
+                <div className="w-14 h-14 rounded-full bg-amber-500/10 flex items-center justify-center mb-5 text-amber-500">
+                  <MetroBell size={28} />
+                </div>
+                <p className="text-slate-200 text-[15px] whitespace-pre-line leading-relaxed mb-6 font-medium">
+                  {alertMessage}
+                </p>
+                <button 
+                  onClick={() => setAlertMessage('')}
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold rounded-xl transition border border-slate-700"
+                >
+                  확인
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Custom Confirm Modal */}
+          {confirmDialog && (
+            <div className="absolute inset-0 bg-neutral-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-[70]">
+              <div className="bg-slate-900 rounded-[2rem] border border-slate-700 shadow-2xl w-full max-w-xs p-6 flex flex-col items-center text-center transform transition-all">
+                <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center mb-5 text-emerald-500">
+                  <MetroBell size={28} />
+                </div>
+                <p className="text-slate-200 text-[15px] whitespace-pre-line leading-relaxed mb-6 font-medium">
+                  {confirmDialog.message}
+                </p>
+                <div className="flex gap-3 w-full">
+                  <button 
+                    onClick={() => setConfirmDialog(null)}
+                    className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition border border-slate-700"
+                  >
+                    취소
+                  </button>
+                  <button 
+                    onClick={confirmDialog.onConfirm}
+                    className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl transition border border-emerald-500"
+                  >
+                    복구
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    function App() {
+      const [isAuthenticated, setIsAuthenticated] = useState(false);
+      const [fbUser, setFbUser] = useState(null);
+
+      const [defaultTab, setDefaultTab] = useState('memo');
+      const [currentTab, setCurrentTab] = useState(defaultTab);
+      const [view, setView] = useState('list');
+      const [activeCategory, setActiveCategory] = useState("전체");
+      const [searchQuery, setSearchQuery] = useState("");
+      const [categories, setCategories] = useState(INITIAL_CATEGORIES);
+      const [memos, setMemos] = useState([]);
+      const [shotMemos, setShotMemos] = useState([]);
+      const [blockedUsers, setBlockedUsers] = useState([]);
+      const [hiddenFromUsers, setHiddenFromUsers] = useState([]);
+      const [currentMemo, setCurrentMemo] = useState(null);
+      
+      const [isSelectionMode, setIsSelectionMode] = useState(false);
+      const [selectedMemoIds, setSelectedMemoIds] = useState([]);
+      const [confirmDelMerge, setConfirmDelMerge] = useState(false);
+      
+      const [blockModalTarget, setBlockModalTarget] = useState(null);
+      const [isMenuOpen, setIsMenuOpen] = useState(false);
+      const [showMergeModal, setShowMergeModal] = useState(false);
+      const [isMerging, setIsMerging] = useState(false);
+
+      const [baseFontSize, setBaseFontSize] = useState(15);
+      const [followingUsers, setFollowingUsers] = useState(['골프여신']);
+      
+      const [toastMsg, setToastMsg] = useState('');
+      const menuRef = useRef(null);
+
+      useEffect(() => {
+        const handleClickOutside = (event) => {
+          if (menuRef.current && !menuRef.current.contains(event.target)) {
+            setIsMenuOpen(false);
+          }
+        };
+        if (isMenuOpen) {
+          document.addEventListener('mousedown', handleClickOutside);
+          document.addEventListener('touchstart', handleClickOutside);
+        }
+        return () => {
+          document.removeEventListener('mousedown', handleClickOutside);
+          document.removeEventListener('touchstart', handleClickOutside);
+        };
+      }, [isMenuOpen]);
+
+      useEffect(() => {
+        const handleToast = (e) => {
+            setToastMsg(e.detail);
+            setTimeout(() => setToastMsg(''), 3000);
+        };
+        window.addEventListener('show-toast', handleToast);
+        return () => window.removeEventListener('show-toast', handleToast);
+      }, []);
+
+      useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('room')) {
+          setDefaultTab('game');
+          setCurrentTab('game');
+          setView('game_draw');
+        }
+      }, []);
+
+      useEffect(() => {
+        if (!auth) return;
+        const initAuth = async () => {
+          try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await signInWithCustomToken(auth, __initial_auth_token);
+            }
+          } catch (e) { console.error("Firebase Auth Error", e); }
+        };
+        initAuth();
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+          setFbUser(user);
+          if (user) {
+            setIsAuthenticated(true);
+          } else {
+            setIsAuthenticated(false);
+          }
+        });
+        return () => unsubscribe();
+      }, []);
+
+      useEffect(() => {
+        if (!fbUser || typeof db === 'undefined') return;
+        const q = collection(db, 'artifacts', appId, 'public', 'data', 'memos');
+        const unsub = onSnapshot(q, (snap) => {
+          if (snap.empty) {
+            setMemos(INITIAL_MEMOS);
+            INITIAL_MEMOS.forEach(async (m) => await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', m.id.toString()), m));
+          } else {
+            const data = snap.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => Number(b.id) - Number(a.id));
+            setMemos(data);
+          }
+        }, (err) => console.error(err));
+        return () => unsub();
+      }, [fbUser]);
+
+      useEffect(() => {
+        if (!fbUser || typeof db === 'undefined') return;
+        const q = collection(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos');
+        const unsub = onSnapshot(q, (snap) => {
+          if (snap.empty) {
+            setShotMemos(INITIAL_SHOT_MEMOS);
+            INITIAL_SHOT_MEMOS.forEach(async (m) => await setDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', m.id.toString()), m));
+          } else {
+            const data = snap.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => Number(b.id) - Number(a.id));
+            setShotMemos(data);
+          }
+        }, (err) => console.error(err));
+        return () => unsub();
+      }, [fbUser]);
+
+      const scrollToTop = () => setTimeout(() => { const el = document.getElementById('main-scroll-area'); if (el) el.scrollTo({ top: 0, behavior: 'smooth' }); }, 50);
+      const scrollToBottom = () => setTimeout(() => { const el = document.getElementById('main-scroll-area'); if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); }, 50);
+
+      const handleSaveMemo = async (memo) => {
+        if (typeof db === 'undefined' || !fbUser) return;
+        const memoId = memo.id ? memo.id.toString() : Date.now().toString();
+        const memoRef = doc(db, 'artifacts', appId, 'public', 'data', 'memos', memoId);
+        
+        const safeMemo = Object.fromEntries(Object.entries(memo).map(([k, v]) => [k, v === undefined ? null : v]));
+        
+        const payload = safeMemo.id ? { ...safeMemo } : { ...safeMemo, id: memoId, author: fbUser?.displayName || "나", likes: 0, likedByMe: false, comments: [], views: 0, shares: 0, date: "방금 전", isPinned: false };
+        await setDoc(memoRef, payload);
+        setCurrentTab('memo'); setView('list'); scrollToTop();
+      };
+
+      const handleDeleteMemo = async (id) => {
+        if (typeof db === 'undefined' || !fbUser) return;
+        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', id.toString()));
+        setView('list');
+      };
+
+      const handleSaveShotMemo = async (memo) => {
+        if (typeof db === 'undefined' || !fbUser) return;
+        await setDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', memo.id.toString()), memo);
+        scrollToBottom();
+      };
+
+      const handleDeleteShotMemos = async (ids) => {
+        if (typeof db === 'undefined' || !fbUser) return;
+        for (const id of ids) { await deleteDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', id.toString())); }
+      };
+
+      const filteredMyMemos = memos.filter(m => m.author === "나" && (activeCategory === "전체" || m.category === activeCategory));
+
+      const handleMergeMemos = async (type) => {
+        const targetMemos = memos.filter(m => selectedMemoIds.includes(m.id)).sort((a, b) => Number(a.id) - Number(b.id));
+        if (targetMemos.length < 2) return;
+
+        setIsMerging(true);
+        let mergedContent = "";
+
+        if (type === 'time') {
+          mergedContent = targetMemos.map(m => `<div style="color:#10b981; font-size:12px; font-weight:bold; margin-bottom:4px;">[${m.date} - ${m.category}]</div>${m.content}`).join('<br/><br/><hr style="border-top: 1px dashed #e5e7eb; margin: 12px 0;"/><br/>');
+        } else {
+          const apiKey = "";
+          const rawTexts = targetMemos.map(m => `[${m.category}] ${m.content.replace(/<[^>]*>?/gm, '')}`).join('\n\n---\n\n');
+          const prompt = `다음은 사용자가 작성한 여러 개의 골프 메모입니다. 이 내용들을 분석하여 유사한 주제끼리 묶어서 가독성 좋고 자연스러운 하나의 완성 글로 합쳐주세요. 강조할 부분은 <b> 태그를, 줄바꿈은 <br/>을 사용하세요.\n\n[원본 메모들]\n${rawTexts}`;
+
+          const payload = { contents: [{ parts: [{ text: prompt }] }] };
+
+          const fetchWithBackoff = async (retries = 3, delay = 1000) => {
+            try {
+              const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+              });
+              if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+              return JSON.parse(await response.text());
+            } catch (error) {
+              if (retries > 0) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+                return fetchWithBackoff(retries - 1, delay * 2);
+              } else throw error;
+            }
+          };
+
+          try {
+            const result = await fetchWithBackoff();
+            let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) mergedContent = text.replace(/```html/gi, '').replace(/```/g, '').trim();
+          } catch (error) {
+            window.showToast("AI 정리 중 오류가 발생했습니다. 시간순으로 임시 병합됩니다.");
+            mergedContent = targetMemos.map(m => `<b>[${m.date}]</b><br/>${m.content}`).join('<br/><br/>');
+          }
+        }
+
+        const allUrls = [...new Set(targetMemos.flatMap(m => m.urls || []))];
+        let checklistIdCounter = Date.now();
+        const allChecklists = targetMemos.flatMap(m => m.checklist || []).map(item => ({ id: checklistIdCounter++, text: item.text, completed: item.completed }));
+        const firstImage = targetMemos.find(m => m.imageUrl)?.imageUrl || null;
+
+        const newDraft = { id: null, author: "나", category: "기타", content: mergedContent, urls: allUrls, checklist: allChecklists, imageUrl: firstImage, isPublic: false };
+
+        setIsMerging(false); setShowMergeModal(false); setIsSelectionMode(false); setSelectedMemoIds([]);
+        setCurrentMemo(newDraft); setView('edit');
+      };
+
+      const handleShotMemoMerge = (ids) => { 
+        const merged = shotMemos.filter(m => ids.includes(m.id)).map(m => m.content).join('<br/>'); 
+        setCurrentMemo({ id: null, author: "나", category: "기타", content: merged, urls: [], checklist: [], imageUrl: null, isPublic: false }); 
+        setIsSelectionMode(false);
+        setSelectedMemoIds([]);
+        setView('edit'); 
+      };
+      
+      const handleBlockPost = (author) => { if (!blockedUsers.includes(author)) setBlockedUsers([...blockedUsers, author]); setBlockModalTarget(null); window.showToast(`${author} 차단됨`); };
+      const handleBlockHide = (author) => { if (!hiddenFromUsers.includes(author)) setHiddenFromUsers([...hiddenFromUsers, author]); setBlockModalTarget(null); window.showToast(`${author}에게 숨김됨`); };
+      const handleToggleFollow = (author) => { if (author === '나') return; setFollowingUsers(prev => prev.includes(author) ? prev.filter(u => u !== author) : [...prev, author]); };
+      
+      const handleTogglePin = async (id) => { 
+        const memo = memos.find(m => m.id === id);
+        if(!memo || typeof db === 'undefined' || !fbUser) return;
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', id.toString()), { ...memo, isPinned: !memo.isPinned });
+      };
+      
+      const handleToggleChecklist = async (memoId, itemId) => {
+        const memo = memos.find(m => m.id === memoId);
+        if(!memo || typeof db === 'undefined' || !fbUser) return;
+        const updated = { ...memo, checklist: memo.checklist.map(c => c.id === itemId ? { ...c, completed: !c.completed } : c) };
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', memoId.toString()), updated);
+      };
+
+      const handleTabChange = (tab) => {
+        setIsSelectionMode(false); setSelectedMemoIds([]);
+        setCurrentTab(tab); setView('list');
+        setCurrentMemo(null); 
+        if (tab === 'shot_memo') scrollToBottom(); else scrollToTop();
+      };
+
+      const handleLogout = async () => { 
+        try {
+          await signOut(auth);
+          setIsAuthenticated(false); 
+          setView('list'); 
+          setCurrentTab(defaultTab); 
+          window.showToast("로그아웃 되었습니다.");
+        } catch (e) {
+          console.error("로그아웃 실패:", e);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 bg-[#c8c3b7] flex justify-center sm:items-center sm:py-6 text-gray-900 w-full h-full">
+          <GlobalStyle />
+          <div className="w-full h-full max-w-[440px] shadow-2xl flex flex-col bg-white overflow-hidden kraft-bg sm:max-h-[850px] sm:rounded-[40px] sm:border-[10px] sm:border-gray-800 relative">
+            
+            {toastMsg && (
+                <div className="absolute top-10 left-1/2 -translate-x-1/2 z-[100] bg-gray-900/90 text-white px-6 py-3 rounded-full font-bold shadow-xl text-sm whitespace-nowrap animate-in fade-in slide-in-from-top-4">
+                    {toastMsg}
+                </div>
+            )}
+
+            {!isAuthenticated ? (
+              <AuthScreen onLogin={() => setIsAuthenticated(true)} />
+            ) : (
+              <>
+                <header className="pt-[max(env(safe-area-inset-top),2rem)] pb-4 px-5 z-50 flex-shrink-0 flex justify-between items-center bg-white/50 backdrop-blur-sm border-b border-[#d1c9b8]/50">
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-[26px] font-[900] stamped-text pb-0.5">진심골프메모</h1>
+                    <div className="flex flex-col border-l-[2px] border-[#1a4314]/80 pl-2.5"><span className="text-[10px] font-[900] stamped-text">GOLF MEMO</span><span className="text-[10px] font-[900] stamped-text">& PRACTICE</span></div>
+                  </div>
+                  {view === 'list' && (
+                    <div className="relative ml-auto" ref={menuRef}>
+                      <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 bg-white/60 rounded-full border border-[#d1c9b8] hover:bg-white transition-colors shadow-sm">
+                        <Icon name="Menu" size={20} className="text-[#1a4314]" />
+                      </button>
+                      {isMenuOpen && (
+                        <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-2xl shadow-xl border border-[#d1c9b8] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                          <button onClick={() => { setView('search'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 border-b border-gray-100 transition-colors">
+                            <Icon name="Search" size={18} className="text-[#1a4314]"/> 통합 검색
+                          </button>
+                          <button onClick={() => { setView('mypage'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 transition-colors">
+                            <Icon name="User" size={18} className="text-[#1a4314]"/> 마이페이지
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {view !== 'list' && view !== 'mypage' && view !== 'search' && <button onClick={() => setView('list')} className="flex items-center text-[#1a4314] font-extrabold ml-auto"><Icon name="ChevronLeft" size={28} /> 뒤로</button>}
+                </header>
+
+                <main id="main-scroll-area" className="flex-1 overflow-y-auto scrollbar-hide relative flex flex-col">
+                  {view === 'list' && currentTab === 'memo' && <MemoList memos={filteredMyMemos} categories={categories} activeCategory={activeCategory} setActiveCategory={setActiveCategory} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedMemoIds={selectedMemoIds} setSelectedMemoIds={setSelectedMemoIds} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} baseFontSize={baseFontSize} />}
+                  {view === 'search' && <GlobalSearch memos={memos} shotMemos={shotMemos} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onCancel={()=>setView('list')} baseFontSize={baseFontSize} />}
+                  {view === 'list' && currentTab === 'shot_memo' && <ShotMemoMain shotMemos={shotMemos} onSaveShotMemo={handleSaveShotMemo} onDeleteShotMemos={handleDeleteShotMemos} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedIds={selectedMemoIds} setSelectedIds={setSelectedMemoIds} baseFontSize={baseFontSize} />}
+                  {view === 'mypage' && <MyPage onCancel={()=>setView('list')} defaultTab={defaultTab} setDefaultTab={setDefaultTab} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} onLogout={handleLogout} />}
+                  {view === 'detail' && <MemoDetail memo={memos.find(m => m.id === currentMemo?.id) || currentMemo} onDelete={handleDeleteMemo} onEdit={() => setView('edit')} onTogglePin={handleTogglePin} onToggleChecklist={handleToggleChecklist} baseFontSize={baseFontSize} />}
+                  {view === 'edit' && <MemoEditor memo={currentMemo} categories={categories} onSave={handleSaveMemo} onCancel={()=>setView(currentMemo?.id ? 'detail' : 'list')} baseFontSize={baseFontSize} />}
+                  {view === 'categories' && <CategoryManager categories={categories} setCategories={setCategories} />}
+                  
+                  {view === 'list' && currentTab === 'game' && <GameMain onSelectGame={id=>setView(`game_${id}`)} />}
+                  {view === 'game_draw' && <TeamDrawGame fbUser={fbUser} />}
+                  {view === 'game_chip' && <ChipFlipGame />}
+                  {view === 'game_tee' && <TeeSpinGame />}
+                  {view === 'list' && currentTab === 'metronome' && <MetronomeMain />}
+                </main>
+
+                {!isSelectionMode && view === 'list' && currentTab === 'shot_memo' && (
+                  <ShotMemoInputBar onSaveShotMemo={handleSaveShotMemo} />
+                )}
+
+                {!isSelectionMode && view === 'list' && currentTab === 'memo' && (
+                  <button onClick={() => { setCurrentMemo(null); setView('edit'); }} className="absolute right-5 w-[56px] h-[56px] bg-[#1a4314] rounded-full flex items-center justify-center text-white shadow-xl z-[40] active:scale-95 transition-transform" style={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
+                    <Icon name="Plus" size={32} />
+                  </button>
+                )}
+
+                {isSelectionMode && view === 'list' && (currentTab === 'memo' || currentTab === 'shot_memo') && (
+                  <div className="absolute left-0 right-0 bg-white/95 backdrop-blur-md border-t border-[#d1c9b8] p-4 pb-5 flex justify-between items-center z-[50] shadow-[0_-10px_20px_rgba(0,0,0,0.1)] rounded-t-[20px]" style={{ bottom: 'calc(55px + env(safe-area-inset-bottom))' }}>
+                    <span className="font-extrabold text-[#1a4314] text-[15px] pl-2">{selectedMemoIds.length}개 선택됨</span>
+                    <div className="flex gap-2">
+                      <button onClick={()=> {setIsSelectionMode(false); setSelectedMemoIds([]);}} className="px-4 py-2.5 bg-[#E2D9C8] text-[#1a4314] rounded-xl font-bold text-[13px] hover:bg-[#d5ccba] transition-colors border border-[#d1c9b8]">취소</button>
+                      {selectedMemoIds.length > 0 && (
+                        <button onClick={() => { if (confirmDelMerge) { if (currentTab === 'memo') selectedMemoIds.forEach(id => handleDeleteMemo(id)); else handleDeleteShotMemos(selectedMemoIds); setIsSelectionMode(false); setSelectedMemoIds([]); setConfirmDelMerge(false); } else { setConfirmDelMerge(true); setTimeout(() => setConfirmDelMerge(false), 3000); } }} className="px-4 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold text-[13px] shadow-sm hover:bg-red-100">{confirmDelMerge ? "정말 삭제?" : "삭제"}</button>
+                      )}
+                      <button onClick={() => { if (currentTab === 'memo') setShowMergeModal(true); else handleShotMemoMerge(selectedMemoIds); }} disabled={selectedMemoIds.length < 2} className="px-4 py-2.5 bg-[#1a4314] text-white rounded-xl font-bold text-[13px] disabled:opacity-50 disabled:bg-gray-400 shadow-md hover:bg-[#2d6a4f] transition-colors">합치기</button>
+                    </div>
+                  </div>
+                )}
+
+                {view === 'list' && (
+                  <nav className="shrink-0 bg-[#E8E2D2]/95 border-t border-[#d1c9b8]/60 flex justify-between z-10 text-[9px] font-bold text-[#6b7280] pb-[env(safe-area-inset-bottom)] sm:rounded-b-[30px]">
+                    <div onClick={() => handleTabChange('memo')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='memo'?'text-[#1a4314]':''}`}><Icon name="PenTool" size={20}/><span>메모</span></div>
+                    <div onClick={() => handleTabChange('shot_memo')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='shot_memo'?'text-[#1a4314]':''}`}><Icon name="MessageSquare" size={20}/><span>Shot메모</span></div>
+                    <div onClick={() => handleTabChange('game')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='game'?'text-[#1a4314]':''}`}><Icon name="Dices" size={20}/><span>게임</span></div>
+                    <div onClick={() => handleTabChange('metronome')} className={`p-2 flex-1 flex flex-col items-center cursor-pointer ${currentTab==='metronome'?'text-[#1a4314]':''}`}><Icon name="Timer" size={20}/><span>메트로놈</span></div>
+                  </nav>
+                )}
+
+                {showMergeModal && (
+                  <div className="absolute inset-0 bg-black/60 z-[60] flex items-center justify-center p-5 animate-in fade-in duration-200">
+                    <div className="bg-[#fcfbf9] rounded-3xl p-6 w-full max-w-sm flex flex-col gap-4 shadow-2xl animate-in zoom-in-95 duration-200 relative overflow-hidden border border-[#d1c9b8]">
+                      {isMerging && (
+                        <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+                          <Icon name="Loader2" size={40} className="text-[#1a4314] animate-spin mb-3" />
+                          <p className="font-bold text-[#1a4314] text-sm">AI가 메모를 합치고 있습니다...</p>
+                        </div>
+                      )}
+                      <h3 className="text-lg font-extrabold text-gray-900 mb-1">어떤 방식으로 합칠까요?</h3>
+                      <button onClick={() => handleMergeMemos('time')} className="flex flex-col items-start p-4 border border-gray-200 rounded-xl hover:border-[#1a4314] hover:bg-[#e8f5e9] transition-all text-left bg-white">
+                        <span className="font-bold text-gray-800 flex items-center gap-1.5"><Icon name="Calendar" size={16} className="text-[#1a4314]"/> 시간순서로 합치기</span>
+                        <span className="text-[12px] text-gray-500 mt-1.5 leading-snug">선택한 메모들을 작성된 순서대로 단순하게 이어 붙입니다.</span>
+                      </button>
+                      <button onClick={() => handleMergeMemos('ai')} className="flex flex-col items-start p-4 border border-gray-200 rounded-xl hover:border-purple-500 hover:bg-purple-50 transition-all text-left bg-white">
+                        <span className="font-bold text-gray-800 flex items-center gap-1.5"><Icon name="Sparkles" size={16} className="text-purple-500"/> AI 유사 내용 묶기</span>
+                        <span className="text-[12px] text-gray-500 mt-1.5 leading-snug">AI가 분석하여 비슷한 주제끼리 매끄럽게 재작성합니다.</span>
+                      </button>
+                      <button onClick={() => setShowMergeModal(false)} className="mt-2 py-3 bg-[#E2D9C8] text-[#1a4314] font-bold rounded-xl hover:bg-[#d5ccba] transition-colors">취소</button>
+                    </div>
+                  </div>
+                )}
+
+                {blockModalTarget && (
+                  <div className="absolute inset-0 bg-black/60 z-[70] flex items-end justify-center animate-in fade-in" onClick={() => setBlockModalTarget(null)}>
+                    <div className="bg-[#fdfcf9] w-full max-w-[440px] rounded-t-[32px] p-6 pb-[calc(3rem+env(safe-area-inset-bottom))] flex flex-col gap-2 shadow-2xl animate-in slide-in-from-bottom-full border border-[#d1c9b8]" onClick={e => e.stopPropagation()}>
+                      <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div><h3 className="text-[18px] font-black mb-4 px-2">{blockModalTarget}님 차단 설정</h3>
+                      <button onClick={() => handleBlockPost(blockModalTarget)} className="w-full text-left px-5 py-4 bg-white border rounded-2xl font-bold text-red-600 hover:bg-red-50">이 유저의 게시물 숨기기</button>
+                      <button onClick={() => handleBlockHide(blockModalTarget)} className="w-full text-left px-5 py-4 bg-white border rounded-2xl font-bold text-orange-600 hover:bg-orange-50 mt-2">내 메모를 보지 못하게 차단</button>
+                      <button onClick={() => setBlockModalTarget(null)} className="w-full py-4 mt-4 bg-[#E2D9C8] font-extrabold rounded-2xl hover:bg-[#d5ccba]">취소</button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      );
+    }
+    
+    const rootElement = document.getElementById('root');
+    const root = ReactDOM.createRoot(rootElement);
+    root.render(<App />);
+  </script>
+</body>
+</html>
