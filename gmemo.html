@@ -114,13 +114,12 @@
     // 아래 설정값(YOUR_...)을 본인의 Firebase Config 값으로 교체해주세요!
     // ============================================================================
     const myFirebaseConfig = {
-const firebaseConfig = {
-  apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
-  authDomain: "left-right-6da31.firebaseapp.com",
-  projectId: "left-right-6da31",
-  storageBucket: "left-right-6da31.firebasestorage.app",
-  messagingSenderId: "128347797181",
-  appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
+      apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
+      authDomain: "left-right-6da31.firebaseapp.com",
+      projectId: "left-right-6da31",
+      storageBucket: "left-right-6da31.firebasestorage.app",
+      messagingSenderId: "128347797181",
+      appId: "1:128347797181:web:3e1cdfe3e8d2efcde3a9d4"
     };
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
@@ -247,13 +246,62 @@ const firebaseConfig = {
       const [keepLoggedIn, setKeepLoggedIn] = useState(false);
       const [isLoading, setIsLoading] = useState(false);
 
-      const handleSubmit = (e) => {
+      const handleSubmit = async (e) => {
         e.preventDefault();
-        if (isLoginMode) {
-          onLogin(); 
-        } else {
-          window.showToast("회원가입이 완료되었습니다! 로그인 해주세요.");
-          setIsLoginMode(true);
+        setIsLoading(true);
+
+        const getEmail = (id) => {
+          if (!id) return "";
+          return id.includes('@') ? id : `${id.trim()}@golfmemo.com`;
+        };
+
+        try {
+          if (isLoginMode) {
+            if (!accountId && !password) {
+              window.showToast("비회원(익명)으로 로그인합니다...");
+              await signInAnonymously(auth);
+              onLogin();
+            } else {
+              if (!accountId || !password) {
+                window.showToast("아이디와 비밀번호를 모두 입력하거나, 빈 칸으로 로그인(비회원)해주세요.");
+                setIsLoading(false);
+                return;
+              }
+              await signInWithEmailAndPassword(auth, getEmail(accountId), password);
+              window.showToast("로그인 성공!");
+              onLogin();
+            }
+          } else {
+            if (!accountId || !password || !nickname) {
+              window.showToast("모든 항목을 입력해주세요.");
+              setIsLoading(false);
+              return;
+            }
+            if (password !== passwordConfirm) {
+              window.showToast("비밀번호가 일치하지 않습니다.");
+              setIsLoading(false);
+              return;
+            }
+            const userCredential = await createUserWithEmailAndPassword(auth, getEmail(accountId), password);
+            await updateProfile(userCredential.user, { displayName: nickname });
+            window.showToast("회원가입이 완료되었습니다! 로그인되었습니다.");
+            onLogin();
+          }
+        } catch (error) {
+          console.error(error);
+          let msg = "오류가 발생했습니다.";
+          if (error.code === "auth/invalid-credential" || error.code === "auth/wrong-password" || error.code === "auth/user-not-found") {
+            msg = "아이디 또는 비밀번호가 일치하지 않습니다.";
+          } else if (error.code === "auth/email-already-in-use") {
+            msg = "이미 사용 중인 아이디입니다.";
+          } else if (error.code === "auth/weak-password") {
+            msg = "비밀번호는 최소 6자리 이상이어야 합니다.";
+          } else if (error.code === "auth/invalid-email") {
+            msg = "올바른 아이디/이메일 형식이 아닙니다.";
+          }
+          window.showToast(msg);
+        } finally {
+          setIsLoading(false);
         }
       };
 
@@ -324,8 +372,9 @@ const firebaseConfig = {
                 </label>
               </div>
 
-              <button type="submit" disabled={isLoading} className="w-full py-4 bg-[#1a4314] text-white rounded-2xl font-black text-[16px] shadow-lg hover:bg-[#2d6a4f] active:scale-95 transition-all mt-1 disabled:opacity-50">
-                {isLoginMode ? "로그인 (비회원 가능)" : "회원가입"}
+              <button type="submit" disabled={isLoading} className="w-full py-4 bg-[#1a4314] text-white rounded-2xl font-black text-[16px] shadow-lg hover:bg-[#2d6a4f] active:scale-95 transition-all mt-1 flex items-center justify-center gap-2 disabled:opacity-50">
+                {isLoading && <Icon name="Loader2" size={16} className="animate-spin" />}
+                {isLoginMode ? "로그인 (비회원 가능)" : "회원가입 완료"}
               </button>
             </form>
 
