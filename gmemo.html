@@ -107,12 +107,7 @@
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
     import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-    // ============================================================================
-    // [🔥 FIREBASE 연동 설정 (GitHub 배포용) 🔥]
-    // 깃허브 페이지 등에 올려서 실제로 방 만들기 및 메모 동기화 기능을 사용하시려면
-    // 파이어베이스(firebase.google.com) 프로젝트를 생성하고 웹 앱을 추가한 뒤
-    // 아래 설정값(YOUR_...)을 본인의 Firebase Config 값으로 교체해주세요!
-    // ============================================================================
+    // GitHub 배포를 위한 파이어베이스 설정값
     const myFirebaseConfig = {
       apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
       authDomain: "left-right-6da31.firebaseapp.com",
@@ -127,8 +122,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    
-    // 💡 데이터베이스 저장 경로 식별자입니다. 본인만의 앱 이름으로 변경해 주세요 (예: my-golf-memo-2024)
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'golf-memo-app';
 
     // --- Global Styles ---
@@ -183,7 +176,7 @@
       return match ? match[1] : null;
     };
 
-    // --- Initial Data ---
+    // --- Initial Data (샘플 복구) ---
     const INITIAL_CATEGORIES = [
       { name: "전체" }, { name: "필드/라운드" }, { name: "스크린" },
       { name: "연습장" }, { name: "스윙 분석" },
@@ -195,28 +188,28 @@
         id: "25", author: "나", category: "장비 관련", date: "방금 전",
         content: "타이틀리스트 Vokey SM9 웨지 50도, 54도, 58도 세팅 완료! ✨<br/>확실히 그루브가 살아있어서 스핀량이 장난 아니다. 숏게임 자신감이 뿜뿜. 주말 라운드가 기대됨.",
         imageUrl: "https://images.pexels.com/photos/54123/pexels-photo-54123.jpeg?auto=compress&cs=tinysrgb&w=800",
-        checklist: [{id: 1, text: "웨지 네임택 스티커 붙이기", completed: false}], urls: []
+        checklist: [{id: 1, text: "웨지 네임택 스티커 붙이기", completed: false}], urls: [], likes: 0, likedByMe: false, comments: [], views: 0, shares: 0
       },
       {
         id: "24", author: "나", category: "필드/라운드", date: "어제",
         content: "<b>⛳️ 가평 베네스트 CC 후기</b><br/><br/>전반에는 아이언이 안 맞아서 고생했는데 후반부터 영점이 잡히기 시작함. 확실히 산악 지형이라 라이가 안 좋은 곳이 많아서 트러블 샷 연습이 많이 필요할 듯.<br/><br/>- 파3 니어리스트 먹음! (8번 아이언, 135m)<br/>- 그린 스피드는 2.8 정도로 약간 빠른 편.<br/>- 캐디님 진행이 너무 좋아서 즐겁게 쳤다.",
         imageUrl: "https://images.pexels.com/photos/2828723/pexels-photo-2828723.jpeg?auto=compress&cs=tinysrgb&w=800", 
-        checklist: [], urls: []
+        checklist: [], urls: [], likes: 0, likedByMe: false, comments: [], views: 0, shares: 0
       },
       {
         id: "23", author: "나", category: "연습장", date: "2일 전",
         content: "드라이버 백스윙 탑에서 크로스오버 되는 현상 교정 중.<br/><br/>테이크백 때 손목을 너무 일찍 쓰지 말고, 어깨 턴으로만 명치 앞까지 가져가는 느낌으로 하니까 훨씬 궤도가 좋아짐. 내일 스크린에서 써먹어봐야지. 🏌️‍♂️",
-        imageUrl: null, checklist: [], urls: []
+        imageUrl: null, checklist: [], urls: [], likes: 0, likedByMe: false, comments: [], views: 0, shares: 0
       },
       {
         id: "19", author: "나", category: "스윙 분석", date: "3일 전",
         content: "오늘 연습장 스윙 영상 ⛳️ 백스윙 탑에서 멈칫하는 동작이 생겼다. 리듬이 끊기는 느낌인데, 하나-둘 템포로 다시 맞춰보자.",
-        imageUrl: null, checklist: [], urls: ["https://www.youtube.com/watch?v=dQw4w9WgXcQ"]
+        imageUrl: null, checklist: [], urls: ["https://www.youtube.com/watch?v=dQw4w9WgXcQ"], likes: 0, likedByMe: false, comments: [], views: 0, shares: 0
       },
       {
         id: "8", author: "나", isPinned: true, category: "레슨/루틴", date: "4일 전",
         content: "<b>[AI 영상 요약]</b><br/>• 지면 반력을 활용하기 위해 다운스윙 시 왼발을 강하게 딛어주세요.<br/>• 임팩트 순간 손목 코킹을 유지하며(래깅) 헤드 스피드를 늘려야 합니다.",
-        imageUrl: null, checklist: [{id: 803, text: "테이크백 천천히 빼기", completed: true}, {id: 804, text: "다운스윙 하체 리드", completed: false}], urls: ["https://youtu.be/E676xj3Cj0c?si=dVt_RFpCSYDI9S8U"]
+        imageUrl: null, checklist: [{id: 803, text: "테이크백 천천히 빼기", completed: true}, {id: 804, text: "다운스윙 하체 리드", completed: false}], urls: ["https://youtu.be/E676xj3Cj0c?si=dVt_RFpCSYDI9S8U"], likes: 0, likedByMe: false, comments: [], views: 0, shares: 0
       }
     ];
 
@@ -234,8 +227,68 @@
     ];
 
     /* =========================================
-       [Sub Components Definition]
+       [Sub Components]
     ========================================= */
+
+    // === 온보딩 슬라이드 화면 ===
+    function OnboardingScreen({ onComplete }) {
+      const [currentSlide, setCurrentSlide] = useState(0);
+      const touchStartX = useRef(null);
+
+      const slides = [
+        { id: 1, title: "나만의 골프 기록", desc: "라운드 후기부터 장비 리뷰까지\n모든 골프 라이프를 남겨보세요.", icon: "PenTool", color: "bg-[#e8f5e9] text-[#1a4314]" },
+        { id: 2, title: "순간의 깨달음, 숏메모", desc: "일상에서, 필드에서, 연습장에서 번뜩이는\n스윙의 감각을 1초만에 기록하세요.", icon: "MessageSquare", color: "bg-blue-50 text-blue-600" },
+        { id: 3, title: "일정한 스윙 템포", desc: "나만의 단어로 만들어진\n골프 전용 메트로놈을 활용해보세요.", icon: "Timer", color: "bg-purple-50 text-purple-600" },
+        { id: 4, title: "라운드를 더 즐겁게", desc: "공정한 팀 뽑기와 순서 정하기 게임으로\n동반자들과 즐거운 시간을 보내세요.", icon: "Dices", color: "bg-orange-50 text-orange-600" }
+      ];
+
+      const handleNext = () => {
+        if (currentSlide < slides.length - 1) {
+          setCurrentSlide(prev => prev + 1);
+        } else {
+          onComplete();
+        }
+      };
+
+      const handleTouchStart = (e) => { touchStartX.current = e.touches[0].clientX; };
+      const handleTouchEnd = (e) => {
+        if (!touchStartX.current) return;
+        const touchEndX = e.changedTouches[0].clientX;
+        const diff = touchStartX.current - touchEndX;
+        if (diff > 50 && currentSlide < slides.length - 1) setCurrentSlide(prev => prev + 1);
+        else if (diff < -50 && currentSlide > 0) setCurrentSlide(prev => prev - 1);
+        touchStartX.current = null;
+      };
+
+      return (
+        <div className="absolute inset-0 bg-[#fdfcf9] z-[100] flex flex-col justify-between items-center p-8 animate-in fade-in duration-300" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+          <div className="w-full flex justify-end mt-4">
+            <button onClick={onComplete} className="text-gray-400 font-bold text-[15px] px-3 py-2 active:scale-95 transition-transform">건너뛰기</button>
+          </div>
+          
+          <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm text-center gap-8 -mt-10">
+            <div className={`w-36 h-36 rounded-full flex items-center justify-center shadow-xl transition-colors duration-500 ${slides[currentSlide].color}`}>
+              <Icon name={slides[currentSlide].icon} size={70} />
+            </div>
+            <div className="animate-in slide-in-from-bottom-4 duration-500" key={currentSlide}>
+              <h2 className="text-2xl font-black text-gray-900 mb-4 tracking-tight">{slides[currentSlide].title}</h2>
+              <p className="text-[15px] font-bold text-gray-500 leading-relaxed whitespace-pre-line break-keep">{slides[currentSlide].desc}</p>
+            </div>
+          </div>
+
+          <div className="w-full max-w-sm flex flex-col items-center gap-8 mb-8">
+            <div className="flex gap-3">
+              {slides.map((_, i) => (
+                <div key={i} className={`h-2.5 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-8 bg-[#1a4314]' : 'w-2.5 bg-gray-200'}`} />
+              ))}
+            </div>
+            <button onClick={handleNext} className="w-full py-4 bg-[#1a4314] text-white rounded-2xl font-black text-[18px] shadow-lg active:scale-95 transition-all">
+              {currentSlide === slides.length - 1 ? "시작하기" : "다음"}
+            </button>
+          </div>
+        </div>
+      );
+    }
 
     function AuthScreen({ onLogin }) {
       const [isLoginMode, setIsLoginMode] = useState(true);
@@ -255,11 +308,21 @@
           return id.includes('@') ? id : `${id.trim()}@golfmemo.com`;
         };
 
+        const isCanvas = typeof __firebase_config !== 'undefined';
+        
+        // 캔버스 환경에서 이미 로그인 되어있다면 (오류 방지용 통과)
+        if (isCanvas && auth.currentUser) {
+            window.showToast("접속 성공! (미리보기 환경)");
+            onLogin();
+            setIsLoading(false);
+            return;
+        }
+
         try {
           if (isLoginMode) {
             if (!accountId && !password) {
               window.showToast("비회원(익명)으로 로그인합니다...");
-              await signInAnonymously(auth);
+              if (!auth.currentUser) await signInAnonymously(auth);
               onLogin();
             } else {
               if (!accountId || !password) {
@@ -298,6 +361,8 @@
             msg = "비밀번호는 최소 6자리 이상이어야 합니다.";
           } else if (error.code === "auth/invalid-email") {
             msg = "올바른 아이디/이메일 형식이 아닙니다.";
+          } else if (error.code === "auth/network-request-failed") {
+            msg = "네트워크 오류: 파이어베이스 설정을 확인해주세요.";
           }
           window.showToast(msg);
         } finally {
@@ -312,6 +377,14 @@
 
       const handleGoogleLogin = async () => {
         setIsLoading(true);
+        const isCanvas = typeof __firebase_config !== 'undefined';
+        if (isCanvas && auth.currentUser) {
+            window.showToast("구글 연동 완료! (미리보기 환경)");
+            onLogin();
+            setIsLoading(false);
+            return;
+        }
+
         const provider = new GoogleAuthProvider();
         try {
           await signInWithPopup(auth, provider);
@@ -323,7 +396,7 @@
             window.showToast("로그인 팝업이 차단되었거나 닫혔습니다.");
           } else {
             window.showToast("구글 연동 모드입니다. (임시 통과)");
-            onLogin(); // 현재 프리뷰 환경(iframe 등)에서 팝업 제약이 있을 수 있어 테스트를 위해 진입을 허용합니다.
+            onLogin(); // 현재 프리뷰 환경에서 팝업 제약이 있을 수 있어 테스트를 위해 진입을 허용
           }
         } finally {
           setIsLoading(false);
@@ -460,6 +533,7 @@
     function MemoList({ memos, categories, activeCategory, setActiveCategory, isSelectionMode, setIsSelectionMode, selectedMemoIds, setSelectedMemoIds, onOpenDetail, baseFontSize }) {
       const timerRef = useRef(null);
       const isLongPressTriggered = useRef(false);
+      const [showBanner, setShowBanner] = useState(() => localStorage.getItem('golf_memo_hide_banner') !== 'true');
 
       const handlePointerDown = (memo) => {
         isLongPressTriggered.current = false;
@@ -491,6 +565,11 @@
         }
       };
 
+      const closeBanner = () => {
+        setShowBanner(false);
+        localStorage.setItem('golf_memo_hide_banner', 'true');
+      };
+
       return (
         <div className="flex flex-col gap-4">
           <div className="sticky top-0 z-30 bg-[#E2D9C8]/95 backdrop-blur-md pt-3 pb-3 px-3 -mx-2 mb-2 shadow-sm border-b border-[#d1c9b8]/50 flex flex-col gap-3">
@@ -516,8 +595,22 @@
           </div>
 
           <div className="flex flex-col gap-4 pb-24 px-1">
+            {showBanner && (
+              <div className="bg-[#1a4314]/10 border border-[#1a4314]/20 rounded-[20px] p-4 flex gap-3 items-start animate-in fade-in relative mb-1">
+                <Icon name="Sparkles" size={20} className="text-[#1a4314] shrink-0 mt-0.5" />
+                <div className="flex-1 pr-6">
+                  <p className="text-[13px] font-bold text-[#1a4314] leading-snug break-keep">
+                    사용자의 이해를 돕기위해 예시로 넣어둔 내용은 삭제하셔도 됩니다. 이제 나만의 내용으로 채워나가세요!
+                  </p>
+                </div>
+                <button onClick={closeBanner} className="absolute right-3 top-3.5 text-[#1a4314] opacity-50 hover:opacity-100 transition-opacity p-1">
+                  <Icon name="X" size={16} />
+                </button>
+              </div>
+            )}
+
             {memos.length === 0 ? (
-              <div className="text-center text-gray-500 mt-10 py-12 bg-white/90 rounded-[24px] border border-dashed border-[#d1c9b8]"><div className="bg-[#E2D9C8] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><Icon name="PenTool" size={24} className="text-[#1a4314]" /></div><p className="font-bold text-[#1a4314]">기록된 메모가 없습니다.</p></div>
+              <div className="text-center text-gray-500 mt-6 py-12 bg-white/90 rounded-[24px] border border-dashed border-[#d1c9b8]"><div className="bg-[#E2D9C8] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><Icon name="PenTool" size={24} className="text-[#1a4314]" /></div><p className="font-bold text-[#1a4314]">기록된 메모가 없습니다.</p></div>
             ) : (
               memos.map(memo => (
                 <div 
@@ -700,6 +793,7 @@
       const [editingText, setEditingText] = useState('');
       const [confirmDelId, setConfirmDelId] = useState(null);
       const [copiedId, setCopiedId] = useState(null);
+      const [showBanner, setShowBanner] = useState(() => localStorage.getItem('golf_memo_hide_banner') !== 'true');
       
       const timerRef = useRef(null);
       const isLongPressTriggered = useRef(false);
@@ -753,6 +847,11 @@
         setTimeout(() => setCopiedId(null), 2000);
       };
 
+      const closeBanner = () => {
+        setShowBanner(false);
+        localStorage.setItem('golf_memo_hide_banner', 'true');
+      };
+
       return (
         <div className="flex flex-col gap-4 h-full relative">
           <div className="sticky top-0 z-30 bg-[#E2D9C8]/95 backdrop-blur-md pt-3 pb-3 px-4 shadow-sm border-b border-[#d1c9b8]/50 flex justify-between items-center -mx-2">
@@ -765,6 +864,20 @@
           </div>
 
           <div className="flex flex-col gap-3 pb-6 px-3">
+            {showBanner && (
+              <div className="bg-[#1a4314]/10 border border-[#1a4314]/20 rounded-[20px] p-4 flex gap-3 items-start animate-in fade-in relative mb-1">
+                <Icon name="Sparkles" size={20} className="text-[#1a4314] shrink-0 mt-0.5" />
+                <div className="flex-1 pr-6">
+                  <p className="text-[13px] font-bold text-[#1a4314] leading-snug break-keep">
+                    사용자의 이해를 돕기위해 예시로 넣어둔 내용은 삭제하셔도 됩니다. 이제 나만의 내용으로 채워나가세요!
+                  </p>
+                </div>
+                <button onClick={closeBanner} className="absolute right-3 top-3.5 text-[#1a4314] opacity-50 hover:opacity-100 transition-opacity p-1">
+                  <Icon name="X" size={16} />
+                </button>
+              </div>
+            )}
+
             {shotMemos.length === 0 ? (
               <div className="text-center text-gray-500 mt-6 py-12 bg-white/90 rounded-[24px] border border-dashed border-[#d1c9b8]"><p className="font-bold text-[#1a4314]">기록된 숏메모가 없습니다.</p></div>
             ) : (
@@ -1322,7 +1435,7 @@
 
     function GameMain({ onSelectGame }) {
       const categories = [
-        { title: "필드 게임", games: [{ id: 'draw', name: '팀 뽑기', icon: '🎯' }, { id: 'chip', name: '칩 돌리기', icon: '🪙' }, { id: 'tee', name: '순서 뽑기', icon: '📍' }] },
+        { title: "필드 게임", games: [{ id: 'draw', name: '팀 뽑기', icon: '🎯' }, { id: 'tee', name: '순서 뽑기', icon: '📍' }] },
       ];
       
       return (
@@ -1447,7 +1560,12 @@
 
       const updateRoomState = async (updates) => {
         if (!roomId || typeof db === 'undefined') return;
-        await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId), updates);
+        try {
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId), updates);
+        } catch (err) {
+            console.error("Room Sync Error:", err);
+            window.showToast("오류: Firestore Database 권한이 거부되었습니다.");
+        }
       };
 
       const goToSettings = () => setPhase(PHASES.SETTINGS);
@@ -1485,23 +1603,27 @@
         setPhase(PHASES.SHUFFLE);
       };
 
-      const createRoom = () => {
+      const createRoom = async () => {
         if (!fbUser) return window.showToast('⚠️ 서버 접속 중입니다. 잠시 후 다시 시도해주세요.');
 
         const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
         const finalPlayers = players.map((p, idx) => p.trim() !== '' ? p.trim() : DEFAULT_PLAYERS[idx]);
         
-        setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', newRoomId), {
-          hostUid: fbUser.uid, phase: PHASES.WAITING, players: finalPlayers, jokerType, joinedStatus: [true, false, false, false],
-          guestSlots: {}, actualRoles: [], selectedCards: {}, finalJokerStroke: '', isSpinningJoker: false, shuffleTrigger: 0,
-          guestPermissions
-        }).catch(err => console.error("방 생성 실패:", err));
-        
-        setPlayers(finalPlayers);
-        try { window.history.pushState({}, '', `?room=${newRoomId}`); } catch(e) {}
-        setRoomId(newRoomId);
-        setPhase(PHASES.WAITING); 
-        setIsInviteOpen(true);
+        try {
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'rooms', newRoomId), {
+              hostUid: fbUser.uid, phase: PHASES.WAITING, players: finalPlayers, jokerType, joinedStatus: [true, false, false, false],
+              guestSlots: {}, actualRoles: [], selectedCards: {}, finalJokerStroke: '', isSpinningJoker: false, shuffleTrigger: 0,
+              guestPermissions
+            });
+            setPlayers(finalPlayers);
+            try { window.history.pushState({}, '', `?room=${newRoomId}`); } catch(e) {}
+            setRoomId(newRoomId);
+            setPhase(PHASES.WAITING); 
+            setIsInviteOpen(true);
+        } catch (err) {
+            console.error("방 생성 실패:", err);
+            window.showToast("오류: Firestore 권한 부족. 파이어베이스 규칙을 확인하세요.");
+        }
       };
 
       const toggleJoin = (index) => {
@@ -1592,6 +1714,8 @@
           updateRoomState({ finalJokerStroke: final, isSpinningJoker: false, phase: PHASES.RESULT });
         }, 2000);
       };
+
+      const nextHole = () => startGame();
 
       const handleCopyUrl = () => {
         const url = `${window.location.origin}${window.location.pathname}?room=${roomId}`;
@@ -1965,76 +2089,6 @@
               </div>
             </div>
           )}
-        </div>
-      );
-    }
-
-    function ChipFlipGame() {
-      const [isFlipping, setIsFlipping] = useState(false);
-      const [rotation, setRotation] = useState(0);
-
-      const flipChip = () => {
-        if (isFlipping) return;
-        setIsFlipping(true);
-        if ('vibrate' in navigator) navigator.vibrate(50);
-        
-        const isHeads = Math.random() > 0.5;
-        const currentMod = rotation % 360;
-        const targetMod = isHeads ? 0 : 180;
-        
-        let newRotation = rotation + 1800; 
-        if ((newRotation % 360) !== targetMod) {
-            newRotation += 180;
-        }
-
-        setRotation(newRotation);
-        
-        setTimeout(() => {
-          setIsFlipping(false);
-        }, 3000);
-      };
-
-      return (
-        <div className="p-6 bg-[#fdfcf9] min-h-full flex flex-col items-center justify-center flex-1">
-          <div className="text-center mb-16 mt-4">
-              <h2 className="text-[26px] font-black text-gray-900 mb-2">칩 돌리기</h2>
-              <p className="text-gray-500 font-bold text-[14px]">마커를 돌려 앞/뒤를 결정하세요</p>
-          </div>
-          
-          <div className="relative w-48 h-48 mb-16" style={{ perspective: '1000px' }}>
-            <div 
-              className="w-full h-full rounded-full shadow-2xl relative"
-              style={{
-                transformStyle: 'preserve-3d',
-                transform: `rotateY(${rotation}deg)`,
-                transition: 'transform 3s cubic-bezier(0.2, 0.8, 0.2, 1)'
-              }}
-            >
-              <div 
-                className="absolute w-full h-full rounded-full bg-gradient-to-br from-yellow-300 to-yellow-500 border-[10px] border-yellow-600 flex flex-col items-center justify-center shadow-inner" 
-                style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden' }}
-              >
-                <span className="text-[50px] font-black text-yellow-900 drop-shadow-sm leading-none">O</span>
-                <span className="text-[14px] font-bold text-yellow-800 mt-1">앞면</span>
-              </div>
-              
-              <div 
-                className="absolute w-full h-full rounded-full bg-gradient-to-br from-slate-300 to-slate-500 border-[10px] border-slate-600 flex flex-col items-center justify-center shadow-inner" 
-                style={{ backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-              >
-                <span className="text-[50px] font-black text-slate-900 drop-shadow-sm leading-none">X</span>
-                <span className="text-[14px] font-bold text-slate-800 mt-1">뒷면</span>
-              </div>
-            </div>
-          </div>
-          
-          <button 
-            onClick={flipChip} 
-            disabled={isFlipping}
-            className="mt-auto mb-8 py-4 px-8 bg-[#1a4314] text-white rounded-2xl font-black text-[18px] shadow-lg hover:bg-[#2d6a4f] active:scale-95 transition-all w-full disabled:opacity-50 disabled:active:scale-100"
-          >
-            {isFlipping ? '돌아가는 중...' : '칩 돌리기'}
-          </button>
         </div>
       );
     }
@@ -2851,6 +2905,9 @@
     }
 
     function App() {
+      // 온보딩 관련 상태
+      const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('golf_memo_onboarding_seen') !== 'true');
+      
       const [isAuthenticated, setIsAuthenticated] = useState(false);
       const [fbUser, setFbUser] = useState(null);
 
@@ -2927,7 +2984,8 @@
         initAuth();
         const unsubscribe = onAuthStateChanged(auth, (user) => {
           setFbUser(user);
-          if (user) {
+          const hasSeenOnboarding = localStorage.getItem('golf_memo_onboarding_seen') === 'true';
+          if (user && hasSeenOnboarding) {
             setIsAuthenticated(true);
           } else {
             setIsAuthenticated(false);
@@ -2938,31 +2996,60 @@
 
       useEffect(() => {
         if (!fbUser || typeof db === 'undefined') return;
+        
+        let isLocalFallback = false;
+        
         const q = collection(db, 'artifacts', appId, 'public', 'data', 'memos');
         const unsub = onSnapshot(q, (snap) => {
-          if (snap.empty) {
+          if (snap.empty && !isLocalFallback) {
             setMemos(INITIAL_MEMOS);
-            INITIAL_MEMOS.forEach(async (m) => await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', m.id.toString()), m));
+            INITIAL_MEMOS.forEach(async (m) => {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', m.id.toString()), m);
+                } catch(e) { 
+                    console.warn("Firestore permissions: ", e);
+                    isLocalFallback = true;
+                }
+            });
           } else {
             const data = snap.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => Number(b.id) - Number(a.id));
             setMemos(data);
           }
-        }, (err) => console.error(err));
+        }, (err) => {
+            console.error("Firebase permission error (memos):", err);
+            isLocalFallback = true;
+            if (memos.length === 0) setMemos(INITIAL_MEMOS);
+            window.showToast("파이어베이스 권한 확인 필요 (로컬 모드 실행 중)");
+        });
         return () => unsub();
       }, [fbUser]);
 
       useEffect(() => {
         if (!fbUser || typeof db === 'undefined') return;
+        
+        let isLocalFallback = false;
+        
         const q = collection(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos');
         const unsub = onSnapshot(q, (snap) => {
-          if (snap.empty) {
+          if (snap.empty && !isLocalFallback) {
             setShotMemos(INITIAL_SHOT_MEMOS);
-            INITIAL_SHOT_MEMOS.forEach(async (m) => await setDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', m.id.toString()), m));
+            INITIAL_SHOT_MEMOS.forEach(async (m) => {
+                try {
+                    await setDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', m.id.toString()), m);
+                } catch(e) { 
+                    console.warn("Firestore permissions: ", e);
+                    isLocalFallback = true;
+                }
+            });
           } else {
             const data = snap.docs.map(d => ({ ...d.data(), id: d.id })).sort((a, b) => Number(b.id) - Number(a.id));
             setShotMemos(data);
           }
-        }, (err) => console.error(err));
+        }, (err) => {
+            console.error("Firebase permission error (shotMemos):", err);
+            isLocalFallback = true;
+            if (shotMemos.length === 0) setShotMemos(INITIAL_SHOT_MEMOS);
+        });
         return () => unsub();
       }, [fbUser]);
 
@@ -2970,32 +3057,65 @@
       const scrollToBottom = () => setTimeout(() => { const el = document.getElementById('main-scroll-area'); if (el) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' }); }, 50);
 
       const handleSaveMemo = async (memo) => {
-        if (typeof db === 'undefined' || !fbUser) return;
         const memoId = memo.id ? memo.id.toString() : Date.now().toString();
-        const memoRef = doc(db, 'artifacts', appId, 'public', 'data', 'memos', memoId);
-        
         const safeMemo = Object.fromEntries(Object.entries(memo).map(([k, v]) => [k, v === undefined ? null : v]));
-        
         const payload = safeMemo.id ? { ...safeMemo } : { ...safeMemo, id: memoId, author: fbUser?.displayName || "나", likes: 0, likedByMe: false, comments: [], views: 0, shares: 0, date: "방금 전", isPinned: false };
-        await setDoc(memoRef, payload);
+        
+        if (typeof db !== 'undefined' && fbUser) {
+            try {
+                const memoRef = doc(db, 'artifacts', appId, 'public', 'data', 'memos', memoId);
+                await setDoc(memoRef, payload);
+            } catch(e) {
+                console.warn("Firestore Set Error (로컬 모드 진행):", e);
+                setMemos(prev => [payload, ...prev.filter(m => m.id !== payload.id)]);
+            }
+        } else {
+            setMemos(prev => [payload, ...prev.filter(m => m.id !== payload.id)]);
+        }
         setCurrentTab('memo'); setView('list'); scrollToTop();
       };
 
       const handleDeleteMemo = async (id) => {
-        if (typeof db === 'undefined' || !fbUser) return;
-        await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', id.toString()));
+        if (typeof db !== 'undefined' && fbUser) {
+            try {
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', id.toString()));
+            } catch(e) {
+                console.warn("Delete Error (로컬 모드 진행):", e);
+                setMemos(prev => prev.filter(m => m.id !== id));
+            }
+        } else {
+            setMemos(prev => prev.filter(m => m.id !== id));
+        }
         setView('list');
       };
 
       const handleSaveShotMemo = async (memo) => {
-        if (typeof db === 'undefined' || !fbUser) return;
-        await setDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', memo.id.toString()), memo);
+        if (typeof db !== 'undefined' && fbUser) {
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', memo.id.toString()), memo);
+            } catch(e) {
+                console.warn("Set Error (로컬 모드 진행):", e);
+                setShotMemos(prev => [memo, ...prev.filter(m => m.id !== memo.id)]);
+            }
+        } else {
+            setShotMemos(prev => [memo, ...prev.filter(m => m.id !== memo.id)]);
+        }
         scrollToBottom();
       };
 
       const handleDeleteShotMemos = async (ids) => {
-        if (typeof db === 'undefined' || !fbUser) return;
-        for (const id of ids) { await deleteDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', id.toString())); }
+        if (typeof db !== 'undefined' && fbUser) {
+            for (const id of ids) { 
+                try {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'users', fbUser.uid, 'shotMemos', id.toString())); 
+                } catch(e) { 
+                    console.warn("Delete Error (로컬 모드 진행):", e); 
+                    setShotMemos(prev => prev.filter(m => !ids.includes(m.id)));
+                }
+            }
+        } else {
+             setShotMemos(prev => prev.filter(m => !ids.includes(m.id)));
+        }
       };
 
       const filteredMyMemos = memos.filter(m => m.author === "나" && (activeCategory === "전체" || m.category === activeCategory));
@@ -3062,19 +3182,29 @@
       
       const handleBlockPost = (author) => { if (!blockedUsers.includes(author)) setBlockedUsers([...blockedUsers, author]); setBlockModalTarget(null); window.showToast(`${author} 차단됨`); };
       const handleBlockHide = (author) => { if (!hiddenFromUsers.includes(author)) setHiddenFromUsers([...hiddenFromUsers, author]); setBlockModalTarget(null); window.showToast(`${author}에게 숨김됨`); };
-      const handleToggleFollow = (author) => { if (author === '나') return; setFollowingUsers(prev => prev.includes(author) ? prev.filter(u => u !== author) : [...prev, author]); };
       
       const handleTogglePin = async (id) => { 
         const memo = memos.find(m => m.id === id);
-        if(!memo || typeof db === 'undefined' || !fbUser) return;
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', id.toString()), { ...memo, isPinned: !memo.isPinned });
+        if(!memo) return;
+        const updated = { ...memo, isPinned: !memo.isPinned };
+        if(typeof db !== 'undefined' && fbUser) {
+            try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', id.toString()), updated); } 
+            catch(e) { console.warn(e); setMemos(prev => prev.map(m => m.id === id ? updated : m)); }
+        } else {
+            setMemos(prev => prev.map(m => m.id === id ? updated : m));
+        }
       };
       
       const handleToggleChecklist = async (memoId, itemId) => {
         const memo = memos.find(m => m.id === memoId);
-        if(!memo || typeof db === 'undefined' || !fbUser) return;
+        if(!memo) return;
         const updated = { ...memo, checklist: memo.checklist.map(c => c.id === itemId ? { ...c, completed: !c.completed } : c) };
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', memoId.toString()), updated);
+        if(typeof db !== 'undefined' && fbUser) {
+            try { await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'memos', memoId.toString()), updated); } 
+            catch(e) { console.warn(e); setMemos(prev => prev.map(m => m.id === memoId ? updated : m)); }
+        } else {
+            setMemos(prev => prev.map(m => m.id === memoId ? updated : m));
+        }
       };
 
       const handleTabChange = (tab) => {
@@ -3086,7 +3216,10 @@
 
       const handleLogout = async () => { 
         try {
-          await signOut(auth);
+          const isCanvas = typeof __firebase_config !== 'undefined';
+          if (!isCanvas) {
+             await signOut(auth); // 실제 깃허브 배포 환경에서만 완전 로그아웃
+          }
           setIsAuthenticated(false); 
           setView('list'); 
           setCurrentTab(defaultTab); 
@@ -3095,6 +3228,21 @@
           console.error("로그아웃 실패:", e);
         }
       };
+
+      if (showOnboarding) {
+        return (
+          <div className="fixed inset-0 bg-[#c8c3b7] flex justify-center sm:items-center sm:py-6 text-gray-900 w-full h-full">
+            <GlobalStyle />
+            <div className="w-full h-full max-w-[440px] shadow-2xl flex flex-col bg-white overflow-hidden kraft-bg sm:max-h-[850px] sm:rounded-[40px] sm:border-[10px] sm:border-gray-800 relative">
+              <OnboardingScreen onComplete={() => { 
+                localStorage.setItem('golf_memo_onboarding_seen', 'true'); 
+                setShowOnboarding(false);
+                if (fbUser) setIsAuthenticated(true);
+              }} />
+            </div>
+          </div>
+        );
+      }
 
       return (
         <div className="fixed inset-0 bg-[#c8c3b7] flex justify-center sm:items-center sm:py-6 text-gray-900 w-full h-full">
@@ -3122,14 +3270,17 @@
                         <Icon name="Menu" size={20} className="text-[#1a4314]" />
                       </button>
                       {isMenuOpen && (
-                        <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-2xl shadow-xl border border-[#d1c9b8] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
-                          <button onClick={() => { setView('search'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 border-b border-gray-100 transition-colors">
-                            <Icon name="Search" size={18} className="text-[#1a4314]"/> 통합 검색
-                          </button>
-                          <button onClick={() => { setView('mypage'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 transition-colors">
-                            <Icon name="User" size={18} className="text-[#1a4314]"/> 마이페이지
-                          </button>
-                        </div>
+                        <>
+                          <div className="fixed inset-0 z-40" onClick={() => setIsMenuOpen(false)}></div>
+                          <div className="absolute right-0 top-full mt-2 w-36 bg-white rounded-2xl shadow-xl border border-[#d1c9b8] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+                            <button onClick={() => { setView('search'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 border-b border-gray-100 transition-colors">
+                              <Icon name="Search" size={18} className="text-[#1a4314]"/> 통합 검색
+                            </button>
+                            <button onClick={() => { setView('mypage'); setIsMenuOpen(false); }} className="w-full flex items-center gap-2.5 px-4 py-3.5 hover:bg-gray-50 font-extrabold text-[14px] text-gray-800 transition-colors">
+                              <Icon name="User" size={18} className="text-[#1a4314]"/> 마이페이지
+                            </button>
+                          </div>
+                        </>
                       )}
                     </div>
                   )}
