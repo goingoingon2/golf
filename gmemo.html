@@ -107,7 +107,7 @@
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
     import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-    // GitHub 배포를 위한 파이어베이스 설정값 (사용자 설정)
+    // GitHub 배포를 위한 파이어베이스 설정값
     const myFirebaseConfig = {
       apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
       authDomain: "left-right-6da31.firebaseapp.com",
@@ -118,12 +118,9 @@
     };
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
-    
-    // 💡 데이터베이스 저장 경로 식별자입니다. 본인만의 앱 이름으로 변경해 주세요 (예: my-golf-memo-2024)
     const appId = typeof __app_id !== 'undefined' ? __app_id : 'golf-memo-app';
 
     // --- Global Styles ---
@@ -324,7 +321,6 @@
 
         const isCanvas = typeof __firebase_config !== 'undefined';
         
-        // 캔버스 환경에서 이미 로그인 되어있다면 (오류 방지용 통과)
         if (isCanvas && auth.currentUser) {
             window.showToast("접속 성공! (미리보기 환경)");
             onLogin();
@@ -410,7 +406,7 @@
             window.showToast("로그인 팝업이 차단되었거나 닫혔습니다.");
           } else {
             window.showToast("구글 연동 모드입니다. (임시 통과)");
-            onLogin(); // 현재 프리뷰 환경에서 팝업 제약이 있을 수 있어 테스트를 위해 진입을 허용
+            onLogin(); 
           }
         } finally {
           setIsLoading(false);
@@ -544,7 +540,7 @@
       );
     }
 
-    function MemoList({ memos, categories, activeCategory, setActiveCategory, isSelectionMode, setIsSelectionMode, selectedMemoIds, setSelectedMemoIds, onOpenDetail, baseFontSize }) {
+    function MemoList({ memos, activeCategory, setActiveCategory, isSelectionMode, setIsSelectionMode, selectedMemoIds, setSelectedMemoIds, onOpenDetail, baseFontSize, showNotice, onDismiss }) {
       const timerRef = useRef(null);
       const isLongPressTriggered = useRef(false);
 
@@ -578,40 +574,26 @@
         }
       };
 
-      // 카테고리 배지 클릭 시 필터링 처리
-      const handleCategoryClick = (e, category) => {
-        e.stopPropagation(); // 카드 클릭(상세보기) 이벤트 방지
-        if (activeCategory === category) {
-          setActiveCategory("전체"); // 이미 활성화된 상태면 필터 해제
-        } else {
-          setActiveCategory(category);
-        }
-      };
-
       return (
         <div className="flex flex-col gap-4">
-          <div className="sticky top-0 z-30 bg-[#E2D9C8]/95 backdrop-blur-md pt-3 pb-3 px-3 -mx-2 mb-2 shadow-sm border-b border-[#d1c9b8]/50 flex flex-col gap-3">
-             <div className="flex justify-between items-center px-1">
-               <div className="flex items-center gap-2">
-                 <p className="text-[11px] text-gray-700 font-extrabold flex items-center gap-1"><Icon name="Edit3" size={12} className="mr-1"/> 길게 누르면 편집!</p>
-                 {activeCategory !== "전체" && (
-                   <button 
-                     onClick={() => setActiveCategory("전체")}
-                     className="flex items-center gap-1 text-[11px] font-bold text-white bg-[#1a4314] px-2 py-0.5 rounded-md shadow-sm animate-in zoom-in"
-                   >
-                     {activeCategory} <Icon name="X" size={10} />
-                   </button>
-                 )}
-               </div>
-               {!isSelectionMode && memos.length > 0 && (
-                 <button onClick={() => setIsSelectionMode(true)} className="text-[11px] font-extrabold px-3 py-1.5 rounded-lg bg-white border border-[#d1c9b8] text-gray-800 shadow-sm active:scale-95 transition-transform">
-                   목록 합치기
-                 </button>
-               )}
-             </div>
+          <div className="sticky top-0 z-30 bg-[#E2D9C8]/95 backdrop-blur-md py-2 px-3 -mx-2 shadow-sm border-b border-[#d1c9b8]/50 flex justify-between items-center">
+             <p className="text-[11px] text-gray-700 font-extrabold flex items-center gap-1"><Icon name="Edit3" size={12} className="mr-1"/> 메모를 길게 누르면 편집할 수 있어요!</p>
+             {!isSelectionMode && memos.length > 0 && (
+               <button onClick={() => setIsSelectionMode(true)} className="text-[11px] font-extrabold px-3 py-1.5 rounded-lg bg-white border border-[#d1c9b8] text-gray-800 shadow-sm active:scale-95 transition-transform">
+                 목록 합치기
+               </button>
+             )}
           </div>
 
           <div className="flex flex-col gap-4 pb-24 px-1">
+            {showNotice && (
+              <div className="bg-[#1a4314] text-white rounded-[20px] p-4 flex items-start gap-3 shadow-lg relative mx-1 mt-1">
+                <Icon name="Sparkles" size={20} className="text-yellow-400 shrink-0 mt-0.5" />
+                <p className="text-[13px] font-bold leading-[1.6] flex-1 break-keep opacity-95">사용자의 이해를 돕기위해 예시로 넣어둔 게시물은 삭제하셔도 됩니다. 이제 나만의 내용으로 채워나가세요!</p>
+                <button onClick={onDismiss} className="text-white/60 hover:text-white p-1 rounded-lg shrink-0 -mt-1 -mr-1"><Icon name="X" size={18} /></button>
+              </div>
+            )}
+
             {memos.length === 0 ? (
               <div className="text-center text-gray-500 mt-10 py-12 bg-white/90 rounded-[24px] border border-dashed border-[#d1c9b8]"><div className="bg-[#E2D9C8] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3"><Icon name="PenTool" size={24} className="text-[#1a4314]" /></div><p className="font-bold text-[#1a4314]">기록된 메모가 없습니다.</p></div>
             ) : (
@@ -625,17 +607,17 @@
                   onClick={() => handleClick(memo)}
                   onContextMenu={e => e.preventDefault()}
                   style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
-                  className={`bg-[#fdfcf9] rounded-[24px] p-5 shadow-sm border ${isSelectionMode && selectedMemoIds.includes(memo.id) ? 'border-[#1a4314] ring-2 ring-[#1a4314]' : 'border-[#d1c9b8]'} cursor-pointer`}
+                  className={`bg-[#fdfcf9] rounded-[24px] p-5 shadow-sm border ${isSelectionMode && selectedMemoIds.includes(memo.id) ? 'border-[#1a4314] ring-2 ring-[#1a4314]' : 'border-[#d1c9b8]'} cursor-pointer transition-colors`}
                 >
                   <div className="flex justify-between items-center mb-1">
                     <div className="flex gap-2 items-center">
                        {isSelectionMode && <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${selectedMemoIds.includes(memo.id)?'bg-[#1a4314] border-[#1a4314]':'border-gray-300'}`}>{selectedMemoIds.includes(memo.id) && <Icon name="Check" size={12} className="text-white font-black"/>}</div>}
-                       <button 
-                         onClick={(e) => handleCategoryClick(e, memo.category)}
-                         className={`text-[12px] font-bold px-3 py-1 rounded-full border transition-colors active:scale-95 ${activeCategory === memo.category ? 'bg-[#1a4314] text-white border-[#1a4314]' : 'text-[#1a4314] bg-[#e8f5e9] border-[#a5d6a7] hover:bg-[#c8e6c9]'}`}
+                       <span 
+                          onClick={(e) => { e.stopPropagation(); setActiveCategory(activeCategory === memo.category ? '전체' : memo.category); }} 
+                          className={`text-[12px] font-bold px-3 py-1 rounded-full border cursor-pointer active:scale-95 transition-colors ${activeCategory === memo.category ? 'bg-[#1a4314] text-white border-[#1a4314]' : 'text-[#1a4314] bg-[#e8f5e9] border-[#a5d6a7] hover:bg-[#c8e6c9]'}`}
                        >
-                         {memo.category}
-                       </button>
+                          {memo.category}
+                       </span>
                        {memo.isPinned && <Icon name="Pin" size={14} className="text-amber-600" />}
                     </div>
                     <span className="text-[12px] font-bold text-gray-400">{memo.date}</span>
@@ -754,7 +736,7 @@
       );
     }
 
-    function ShotMemoInputBar({ onSaveShotMemo }) {
+    function ShotMemoInputBar({ onSaveShotMemo, showNotice, onDismissNotice }) {
       const [text, setText] = useState('');
       const textareaRef = useRef(null);
 
@@ -774,24 +756,40 @@
       };
 
       return (
-        <div className="shrink-0 w-full bg-[#E8E2D2]/80 backdrop-blur-md border-t border-[#d1c9b8] p-3 px-4 flex gap-2 items-end z-[40]">
-          <textarea 
-            ref={textareaRef}
-            value={text} 
-            onChange={handleInput} 
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSave();
-              }
-            }}
-            placeholder="순간의 깨달음을 기록하세요..." 
-            className="flex-1 bg-white border border-[#d1c9b8] rounded-2xl px-4 py-3 outline-none resize-none font-medium shadow-sm min-h-[48px] max-h-[120px] overflow-y-auto scrollbar-hide text-[15px]" 
-            rows="1"
-          />
-          <button onClick={handleSave} disabled={!text.trim()} className="w-[48px] h-[48px] rounded-2xl bg-[#1a4314] text-white flex items-center justify-center shrink-0 disabled:opacity-50 shadow-sm transition-colors mb-[1px]">
-            <Icon name="Send" size={20} className="ml-1" />
-          </button>
+        <div className="shrink-0 w-full flex flex-col z-[40]">
+          {showNotice && (
+            <div className="px-4 pb-3">
+              <div className="bg-[#1a4314] text-white rounded-[20px] p-4 flex items-start gap-3 shadow-lg animate-in fade-in slide-in-from-bottom-2 relative">
+                <Icon name="Sparkles" size={20} className="text-yellow-400 shrink-0 mt-0.5" />
+                <p className="text-[13px] font-bold leading-[1.6] flex-1 break-keep opacity-95">
+                  사용자의 이해를 돕기위해 예시로 넣어둔 게시물은 삭제하셔도 됩니다. 이제 나만의 내용으로 채워나가세요!
+                </p>
+                <button onClick={onDismissNotice} className="text-white/60 hover:text-white p-1 rounded-lg transition-colors shrink-0 -mt-1 -mr-1">
+                  <Icon name="X" size={18} />
+                </button>
+                <div className="absolute -bottom-1.5 left-8 w-4 h-4 bg-[#1a4314] rotate-45 rounded-sm"></div>
+              </div>
+            </div>
+          )}
+          <div className="w-full bg-[#E8E2D2]/95 backdrop-blur-md border-t border-[#d1c9b8] p-3 px-4 flex gap-2 items-end">
+            <textarea 
+              ref={textareaRef}
+              value={text} 
+              onChange={handleInput} 
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSave();
+                }
+              }}
+              placeholder="순간의 깨달음을 기록하세요..." 
+              className="flex-1 bg-white border border-[#d1c9b8] rounded-2xl px-4 py-3 outline-none resize-none font-medium shadow-sm min-h-[48px] max-h-[120px] overflow-y-auto scrollbar-hide text-[15px]" 
+              rows="1"
+            />
+            <button onClick={handleSave} disabled={!text.trim()} className="w-[48px] h-[48px] rounded-2xl bg-[#1a4314] text-white flex items-center justify-center shrink-0 disabled:opacity-50 shadow-sm transition-colors mb-[1px]">
+              <Icon name="Send" size={20} className="ml-1" />
+            </button>
+          </div>
         </div>
       );
     }
@@ -865,7 +863,7 @@
             )}
           </div>
 
-          <div className="flex flex-col gap-3 pb-6 px-3">
+          <div className="flex flex-col gap-3 pb-3 px-3">
             {shotMemos.length === 0 ? (
               <div className="text-center text-gray-500 mt-6 py-12 bg-white/90 rounded-[24px] border border-dashed border-[#d1c9b8]"><p className="font-bold text-[#1a4314]">기록된 숏메모가 없습니다.</p></div>
             ) : (
@@ -1712,18 +1710,18 @@
       };
 
       const getCardStyle = (role, jokerTeam = null) => {
-        if (role === 'R') return 'bg-red-500 text-white shadow-lg border-2 border-red-600';
-        if (role === 'B') return 'bg-blue-500 text-white shadow-lg border-2 border-blue-600';
+        if (role === 'R') return 'bg-red-500 text-white shadow-lg';
+        if (role === 'B') return 'bg-blue-500 text-white shadow-lg';
         if (role === 'J') {
           if (jokerTeam === 'R') return 'bg-red-500 text-white border-4 border-yellow-400';
           if (jokerTeam === 'B') return 'bg-blue-500 text-white border-4 border-yellow-400';
-          return 'bg-purple-600 text-white border-2 border-purple-700';
+          return 'bg-purple-600 text-white';
         }
-        return 'bg-[#E2D9C8] text-[#1a4314]';
+        return 'bg-slate-700 text-slate-300';
       };
 
-      if (roomId && roomDataFound === null) return <div className="min-h-full bg-[#fdfcf9] flex items-center justify-center text-[#1a4314]"><Icon name="Loader2" className="w-10 h-10 animate-spin" /></div>;
-      if (roomId && roomDataFound === false) return <div className="min-h-full bg-[#fdfcf9] flex flex-col items-center justify-center text-gray-800 p-6 text-center"><Icon name="X" className="w-16 h-16 text-red-500 mb-4" /><h2 className="text-2xl font-black mb-2 text-[#1a4314]">방을 찾을 수 없습니다.</h2><button onClick={goHome} className="bg-[#1a4314] text-white px-6 py-3 rounded-xl font-bold mt-4 shadow-sm hover:bg-[#2d6a4f]">새 방 만들기</button></div>;
+      if (roomId && roomDataFound === null) return <div className="min-h-full bg-slate-900 flex items-center justify-center text-white"><Icon name="Loader2" className="w-10 h-10 animate-spin text-green-500" /></div>;
+      if (roomId && roomDataFound === false) return <div className="min-h-full bg-[#fdfcf9] flex flex-col items-center justify-center p-6 text-center"><Icon name="X" className="w-16 h-16 text-red-500 mb-4" /><h2 className="text-2xl font-bold mb-2 text-gray-900">방을 찾을 수 없습니다.</h2><button onClick={goHome} className="bg-[#1a4314] text-white px-6 py-3 rounded-xl font-bold mt-4">새 방 만들기</button></div>;
 
       return (
         <div className="w-full h-full mx-auto min-h-full pb-[env(safe-area-inset-bottom)] bg-[#fdfcf9] overflow-x-hidden relative flex flex-col">
@@ -1739,34 +1737,33 @@
 
           {phase !== PHASES.SETTINGS && roomId && isHostView && (
             <div className="absolute top-4 right-4 z-40">
-              <button onClick={goToSettings} className="p-2 bg-white text-gray-700 hover:bg-gray-100 rounded-full shadow-md border border-[#d1c9b8] transition-all active:scale-95" title="설정으로 가기">
-                <Icon name="Settings" size={18} />
+              <button onClick={goToSettings} className="p-2 bg-white text-gray-700 hover:bg-gray-100 rounded-full shadow-md border border-gray-200 transition-all active:scale-95" title="설정으로 가기">
+                <Icon name="Settings" size={20} />
               </button>
             </div>
           )}
 
-          {/* 1. SETTINGS 화면 (방 만들기) */}
           {phase === PHASES.SETTINGS && (
-            <div className="p-5 pt-10 animate-in fade-in flex-1 overflow-y-auto">
+            <div className="p-4 pt-10 animate-in fade-in flex-1 overflow-y-auto">
               <div className="text-center mb-10">
-                <h1 className="text-[32px] font-black text-[#1a4314] tracking-tighter mb-2">⛳ 골프 팀 뽑기</h1>
-                <p className="text-[13px] font-bold text-gray-500 break-keep">실시간 온라인 멀티플레이 팀 정하기</p>
+                <h1 className="text-[28px] font-black text-[#1a4314] tracking-tighter mb-2">⛳ 골프 팀 뽑기</h1>
+                <p className="text-sm text-gray-500 font-medium break-keep">실시간 온라인 멀티플레이 팀 정하기</p>
               </div>
-              <div className="bg-white rounded-[24px] p-5 shadow-sm mb-6 border border-[#d1c9b8]">
-                <h2 className="text-[14px] font-black text-gray-800 mb-2 flex items-center gap-2"><Icon name="Users" size={16} /> 플레이어 (4명)</h2>
-                <p className="text-[11px] font-bold text-gray-400 mb-4 tracking-tight break-keep">
+              <div className="bg-white rounded-2xl p-5 shadow-sm mb-6 border border-[#d1c9b8]">
+                <h2 className="text-sm font-bold text-gray-800 mb-2 flex items-center gap-2"><Icon name="Users" size={16} /> 플레이어 (4명)</h2>
+                <p className="text-xs text-gray-500 mb-4 tracking-tight break-keep">
                   * 선수 이름을 눌러 실제 플레이어들의 이름으로 변경해주세요.
                 </p>
                 <div className="space-y-3">
                   {players.map((player, idx) => (
                     <div key={idx} className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#1a4314] border border-[#a5d6a7] flex items-center justify-center font-black text-sm shrink-0">{idx + 1}</div>
+                      <div className="w-8 h-8 rounded-full bg-[#e8f5e9] text-[#1a4314] flex items-center justify-center font-bold text-sm shrink-0 border border-[#a5d6a7]">{idx + 1}</div>
                       <div className="relative flex-1">
                         <input 
                           type="text" 
                           value={player} 
                           onChange={(e) => { const n = [...players]; n[idx] = e.target.value; setPlayers(n); }} 
-                          className={`w-full p-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a4314]/20 focus:border-[#1a4314] outline-none transition font-bold text-gray-800 placeholder-gray-400 text-[15px] ${idx === 0 ? 'pr-10 border-yellow-400 bg-yellow-50 focus:border-yellow-500' : ''}`} 
+                          className={`w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a4314] outline-none transition text-gray-900 font-bold placeholder-gray-400 cursor-pointer focus:cursor-text text-base ${idx === 0 ? 'pr-10 border-yellow-400 bg-yellow-50' : 'bg-white'}`} 
                           placeholder={DEFAULT_PLAYERS[idx]} 
                         />
                         {idx === 0 && <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"><Icon name="Crown" size={20} className="text-yellow-500" /></div>}
@@ -1779,34 +1776,33 @@
               <div className="flex gap-3 mb-6">
                 <button 
                   onClick={() => setActiveSettingMenu(prev => prev === 'JOKER' ? null : 'JOKER')}
-                  className={`flex-1 p-4 rounded-[20px] shadow-sm border transition-all flex flex-col items-center gap-2.5 active:scale-[0.98] ${activeSettingMenu === 'JOKER' ? 'bg-[#f3e8ff] border-[#d8b4fe] ring-2 ring-purple-200' : 'bg-white border-[#d1c9b8] hover:bg-gray-50'}`}
+                  className={`flex-1 p-4 rounded-2xl shadow-sm border transition-all flex flex-col items-center gap-2 active:scale-[0.98] ${activeSettingMenu === 'JOKER' ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-100' : 'bg-white border-[#d1c9b8] hover:bg-gray-50'}`}
                 >
-                  <span className="text-[14px] font-black text-gray-800 flex items-center gap-1.5">🃏 조커 설정</span>
-                  <span className="text-[12px] font-black text-purple-600 bg-white border border-purple-200 px-3 py-1 rounded-full shadow-sm">{jokerType}</span>
+                  <span className="text-sm font-bold text-gray-800 flex items-center gap-1">🃏 조커 설정</span>
+                  <span className="text-xs font-bold text-purple-700 bg-white border border-purple-100 px-3 py-1 rounded-full shadow-sm">{jokerType}</span>
                 </button>
                 
                 <button 
                   onClick={() => setActiveSettingMenu(prev => prev === 'PERMISSIONS' ? null : 'PERMISSIONS')}
-                  className={`flex-1 p-4 rounded-[20px] shadow-sm border transition-all flex flex-col items-center gap-2.5 active:scale-[0.98] ${activeSettingMenu === 'PERMISSIONS' ? 'bg-[#e8f5e9] border-[#a5d6a7] ring-2 ring-[#1a4314]/20' : 'bg-white border-[#d1c9b8] hover:bg-gray-50'}`}
+                  className={`flex-1 p-4 rounded-2xl shadow-sm border transition-all flex flex-col items-center gap-2 active:scale-[0.98] ${activeSettingMenu === 'PERMISSIONS' ? 'bg-[#e8f5e9] border-[#1a4314]/30 ring-2 ring-[#1a4314]/10' : 'bg-white border-[#d1c9b8] hover:bg-gray-50'}`}
                 >
-                  <span className="text-[14px] font-black text-gray-800 flex items-center gap-1.5"><Icon name="Check" size={16} className="text-[#1a4314]"/> 동반자 권한</span>
-                  <span className="text-[12px] font-black text-[#1a4314] bg-white border border-[#a5d6a7] px-3 py-1 rounded-full shadow-sm">
+                  <span className="text-sm font-bold text-gray-800 flex items-center gap-1"><Icon name="Check" size={16} className="text-[#1a4314]"/> 동반자 권한</span>
+                  <span className="text-xs font-bold text-[#1a4314] bg-white border border-[#1a4314]/20 px-3 py-1 rounded-full shadow-sm">
                     {Object.values(guestPermissions).filter(Boolean).length}개 허용
                   </span>
                 </button>
               </div>
 
               {activeSettingMenu && (
-                <div className="bg-white rounded-[24px] p-5 shadow-sm mb-8 border border-[#d1c9b8] animate-in fade-in slide-in-from-top-2">
+                <div className="bg-white rounded-2xl p-5 shadow-sm mb-8 border border-[#d1c9b8] animate-in fade-in slide-in-from-top-2">
                   {activeSettingMenu === 'JOKER' && (
                     <div>
                       <div className="grid grid-cols-4 gap-2 mb-4">
                         {JOKER_OPTIONS.map((opt) => (
-                          <button key={opt} onClick={() => setJokerType(opt)} className={`py-2.5 text-[13px] rounded-xl border transition-all font-bold active:scale-[0.98] ${jokerType === opt ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}>{opt}</button>
+                          <button key={opt} onClick={() => setJokerType(opt)} className={`py-2 text-sm rounded-lg border transition-all active:scale-[0.98] ${jokerType === opt ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'}`}>{opt}</button>
                         ))}
                       </div>
-                      <div className="p-3.5 bg-gray-50 rounded-xl text-[12px] font-medium text-gray-500 leading-relaxed break-keep border border-gray-200">
-                        <span className="font-bold text-gray-700">💡 조커 활용법</span><br/>
+                      <div className="p-3 bg-gray-50 rounded-xl text-xs text-gray-500 leading-relaxed break-keep border border-gray-200">
                         * 조커로 뽑힌 플레이어는 인원이 부족한 팀에 자동 배치됩니다.<br/>
                         * 적용 타수: 팀 승패 계산 시 실제 타수와 무관하게 선택한 타수가 적용됩니다.
                       </div>
@@ -1815,21 +1811,21 @@
 
                   {activeSettingMenu === 'PERMISSIONS' && (
                     <div>
-                      <p className="text-[12px] font-medium text-gray-500 mb-4 tracking-tight break-keep">
+                      <p className="text-xs text-gray-500 mb-4 tracking-tight break-keep">
                         * 체크 시 동반자(참여자) 화면에서도 버튼이 활성화되어 게임을 진행할 수 있습니다.
                       </p>
                       <div className="space-y-4">
-                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-xl transition">
+                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg transition">
                           <input type="checkbox" checked={guestPermissions.finishShuffle} onChange={(e) => setGuestPermissions(p => ({...p, finishShuffle: e.target.checked}))} className="w-5 h-5 accent-[#1a4314] cursor-pointer" />
-                          <span className="text-[14px] text-gray-800 font-bold">패 섞기 완료 권한</span>
+                          <span className="text-sm text-gray-800 font-medium">패 섞기 완료 권한</span>
                         </label>
-                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-xl transition">
+                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg transition">
                           <input type="checkbox" checked={guestPermissions.autoPick} onChange={(e) => setGuestPermissions(p => ({...p, autoPick: e.target.checked}))} className="w-5 h-5 accent-[#1a4314] cursor-pointer" />
-                          <span className="text-[14px] text-gray-800 font-bold">남은 동반자 카드 선택 (결과 확인) 권한</span>
+                          <span className="text-sm text-gray-800 font-medium">남은 동반자 카드 선택 (결과 확인) 권한</span>
                         </label>
-                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-xl transition">
+                        <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg transition">
                           <input type="checkbox" checked={guestPermissions.nextHole} onChange={(e) => setGuestPermissions(p => ({...p, nextHole: e.target.checked}))} className="w-5 h-5 accent-[#1a4314] cursor-pointer" />
-                          <span className="text-[14px] text-gray-800 font-bold">다음 홀 이동 권한</span>
+                          <span className="text-sm text-gray-800 font-medium">다음 홀 이동 권한</span>
                         </label>
                       </div>
                     </div>
@@ -1838,116 +1834,77 @@
               )}
 
               {roomId ? (
-                <div className="flex gap-3 mt-auto pt-4">
-                  <button onClick={goHome} className="flex-1 bg-[#E2D9C8] text-[#1a4314] font-black py-4 rounded-2xl shadow-sm hover:bg-[#d5ccba] transition active:scale-[0.98] text-[15px] border border-[#d1c9b8]">새 방 만들기</button>
-                  <button onClick={resumeGame} className="flex-1 bg-[#1a4314] text-white font-black py-4 rounded-2xl shadow-lg hover:bg-[#2d6a4f] transition active:scale-[0.98] text-[15px]">게임 계속하기</button>
+                <div className="flex gap-3 mt-auto">
+                  <button onClick={goHome} className="flex-1 bg-[#E2D9C8] text-[#1a4314] font-bold py-4 rounded-2xl shadow-sm hover:bg-[#d5ccba] transition active:scale-[0.98] text-[15px] border border-[#d1c9b8]">새 방 만들기</button>
+                  <button onClick={resumeGame} className="flex-1 bg-[#1a4314] text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-[#2d6a4f] transition active:scale-[0.98] text-[15px]">게임 계속하기</button>
                 </div>
               ) : (
-                <button onClick={createRoom} className="w-full bg-[#1a4314] text-white font-black py-4 rounded-2xl shadow-lg hover:bg-[#2d6a4f] transition active:scale-[0.98] text-[16px] mt-auto mb-4">방 만들기</button>
+                <button onClick={createRoom} className="w-full bg-[#1a4314] text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-[#2d6a4f] transition active:scale-[0.98] text-lg mt-auto mb-4">방 만들기</button>
               )}
             </div>
           )}
 
-          {/* 2. WAITING 화면 (대기실) */}
           {phase === PHASES.WAITING && (
-            <div className="min-h-full flex flex-col p-5 animate-in fade-in flex-1">
-              <div className="bg-[#1a4314] text-white p-6 rounded-[24px] shadow-lg text-center mb-8 relative mt-8">
-                {roomId && <span className="absolute top-3 right-5 text-[11px] font-bold opacity-80">Room: {roomId}</span>}
-                <h1 className="text-[26px] font-black mb-1">라운드 대기실</h1>
-                <p className="text-[12px] font-medium opacity-90">{isHostView ? '인원이 다 모이지 않아도 방장은 바로 시작할 수 있습니다.' : '본인 자리를 선택하세요.'}</p>
+            <div className="min-h-full flex flex-col p-4 animate-in fade-in flex-1">
+              <div className="bg-[#1a4314] text-white p-6 rounded-3xl shadow-md text-center mb-6 relative mt-12">
+                {roomId && <span className="absolute top-3 right-5 text-[10px] opacity-70">Room: {roomId}</span>}
+                <h1 className="text-2xl font-bold mb-1">라운드 대기실</h1>
+                <p className="text-xs text-white/80">{isHostView ? '인원이 다 모이지 않아도 방장은 바로 시작할 수 있습니다.' : '본인 자리를 선택하세요.'}</p>
               </div>
-              
-              {isHostView && (
-                <button onClick={() => setIsInviteOpen(true)} className="w-full bg-white border-2 border-[#1a4314] text-[#1a4314] font-black py-3.5 rounded-2xl mb-8 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-transform">
-                  <Icon name="QrCode" size={20} /> 방 초대하기
-                </button>
-              )}
-              
+              {isHostView && <button onClick={() => setIsInviteOpen(true)} className="w-full bg-white border border-[#1a4314] text-[#1a4314] font-bold py-3.5 rounded-2xl mb-6 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] transition-transform"><Icon name="QrCode" size={20} /> 방 초대하기</button>}
               <div className="grid grid-cols-2 gap-4 flex-1 content-start">
                 {players.map((p, i) => {
                   const joined = joinedStatus[i];
                   const mine = i === MY_PLAYER_INDEX;
-                  
-                  let cardStyle = "border-dashed border-[#d1c9b8] bg-[#fdfcf9] opacity-70";
-                  let iconBg = "bg-[#E2D9C8] text-gray-400";
-                  let badgeStyle = "bg-gray-200 text-gray-500";
-                  let statusText = "대기 중";
-
-                  if (joined) {
-                    if (mine) {
-                      cardStyle = "border-2 border-[#1a4314] bg-[#e8f5e9] shadow-md ring-2 ring-[#1a4314]/20";
-                      iconBg = "bg-[#1a4314] text-white";
-                      badgeStyle = "bg-[#1a4314] text-white";
-                      statusText = "내 자리";
-                    } else {
-                      cardStyle = "border border-gray-300 bg-white opacity-100 shadow-sm border-dashed";
-                      iconBg = "bg-gray-100 text-gray-300";
-                      badgeStyle = "bg-gray-100 text-gray-500";
-                      statusText = i === 0 ? "방장" : "대기 중";
-                    }
-                  }
-
                   return (
-                    <div key={i} onClick={() => toggleJoin(i)} className={`relative p-5 rounded-3xl flex flex-col items-center justify-center gap-3 transition-all cursor-pointer active:scale-95 ${cardStyle}`}>
-                      <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-sm transition-colors ${iconBg}`}><Icon name="Check" size={26} /></div>
-                      <span className="font-black text-[15px] text-gray-800">{p}</span>
-                      <span className={`text-[11px] font-bold px-3 py-1.5 rounded-full transition-colors ${badgeStyle}`}>{statusText}</span>
+                    <div key={i} onClick={() => toggleJoin(i)} className={`relative p-5 rounded-[24px] flex flex-col items-center justify-center gap-3 transition-all cursor-pointer active:scale-95 bg-white shadow-sm border-2 ${joined ? (mine ? 'border-[#1a4314] bg-[#f0fdf4] ring-2 ring-[#1a4314]/20' : 'border-[#1a4314]/30 opacity-90') : 'border-dashed border-gray-300 opacity-60'}`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center shadow-sm transition-colors ${joined ? (mine ? 'bg-[#1a4314] text-white' : 'bg-gray-100 text-gray-500') : 'bg-gray-50 text-gray-300'}`}><Icon name="Check" size={24} /></div>
+                      <span className="font-bold text-[14px] text-gray-800">{p}</span>
+                      <span className={`text-[10px] font-bold px-3 py-1 rounded-full ${joined ? 'bg-[#1a4314] text-white' : 'bg-gray-100 text-gray-500'}`}>{mine ? '내 자리' : (joined ? (i===0?'방장':'입장 완료') : '대기 중')}</span>
                     </div>
                   );
                 })}
               </div>
-              
               <div className="mt-8 flex gap-3 mb-4">
                 {isHostView ? (
-                  <button onClick={startGame} className="w-full font-black text-[16px] py-4 rounded-2xl shadow-lg transition-all bg-[#1a4314] text-white hover:bg-[#2d6a4f] active:scale-[0.98]">게임 시작하기</button>
-                ) : (
-                  <div className="w-full bg-[#E2D9C8] text-[#1a4314] text-center py-4 rounded-2xl font-black text-[15px] border border-[#d1c9b8]">방장이 시작하기를 기다리는 중...</div>
-                )}
+                  <button onClick={startGame} className="w-full font-bold py-4 rounded-2xl shadow-lg transition-all bg-[#1a4314] text-white hover:bg-[#2d6a4f] active:scale-[0.98] text-[16px]">게임 시작하기</button>
+                ) : <div className="w-full bg-[#E2D9C8] text-[#1a4314] text-center py-4 rounded-2xl font-bold text-[15px]">방장이 시작하기를 기다리는 중...</div>}
               </div>
             </div>
           )}
 
-          {/* 3. SHUFFLE 화면 (패 섞기) */}
           {phase === PHASES.SHUFFLE && (
-            <div className="min-h-full bg-[#fdfcf9] text-gray-900 flex flex-col p-6 animate-in fade-in relative overflow-hidden flex-1">
-              <h2 className="text-center text-[24px] font-black mb-1 mt-8 text-[#1a4314]">패 섞기 (기리)</h2>
-              <p className="text-center text-gray-500 font-bold text-[12px] mb-6">방장이 아니더라도 누구나 섞을 수 있습니다.</p>
+            <div className="min-h-full bg-[#fdfcf9] flex flex-col p-6 animate-in fade-in relative overflow-hidden flex-1">
+              <h2 className="text-center text-xl font-bold mb-1 mt-12 text-[#1a4314]">패 섞기 (기리)</h2>
+              <p className="text-center text-gray-500 text-xs mb-4 font-bold">방장이 아니더라도 누구나 섞을 수 있습니다.</p>
               
               {isHostView ? (
                 <button 
                   onClick={() => setIsJokerModalOpen(true)}
-                  className="mx-auto mb-8 bg-white text-gray-700 border border-[#d1c9b8] px-5 py-2.5 rounded-full text-[13px] font-bold flex items-center gap-2 hover:bg-gray-50 active:scale-95 transition shadow-sm"
+                  className="mx-auto mb-6 bg-white border border-[#d1c9b8] px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2 hover:bg-gray-50 active:scale-95 transition shadow-sm text-gray-800"
                 >
-                  🃏 조커 설정: <span className="text-purple-600 font-black">{jokerType}</span>
+                  🃏 조커 설정: <span className="text-purple-600">{jokerType}</span>
                 </button>
               ) : (
-                <div className="mx-auto mb-8 bg-gray-50 border border-gray-200 text-gray-500 px-5 py-2.5 rounded-full text-[13px] font-bold flex items-center gap-2">
-                  🃏 현재 조커 설정: <span className="text-purple-500 font-black">{jokerType}</span>
+                <div className="mx-auto mb-6 bg-gray-50 border border-gray-200 px-5 py-2 rounded-full text-sm font-bold flex items-center gap-2 text-gray-500">
+                  🃏 현재 조커 설정: <span className="text-purple-500/80">{jokerType}</span>
                 </div>
               )}
 
-              <div className="flex flex-wrap justify-center gap-4 flex-1 content-center z-10 perspective-1000">
+              <div className="flex flex-wrap justify-center gap-4 flex-1 content-center z-10">
                 {Array.from({length:5}).map((_, i) => (
-                  <div key={i} className="w-[28%] aspect-[3/4] bg-[#1a4314] rounded-[20px] border-[3px] border-[#E2D9C8] flex items-center justify-center shadow-xl relative transition-transform duration-100" style={{ transform: `translate(${shufflePositions[i].x}px, ${shufflePositions[i].y}px) rotate(${shufflePositions[i].r}deg)`, backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px)' }}>
-                    <span className="text-[#E2D9C8] font-black text-2xl">?</span>
+                  <div key={i} className="w-[28%] aspect-[3/4] bg-[#E8E2D2] rounded-2xl border border-[#d1c9b8] flex items-center justify-center shadow-md relative transition-transform duration-100" style={{ transform: `translate(${shufflePositions[i].x}px, ${shufflePositions[i].y}px) rotate(${shufflePositions[i].r}deg)` }}>
+                    <div className="absolute inset-2 border-2 border-dashed border-[#1a4314]/10 rounded-xl"></div>
+                    <span className="text-[#1a4314]/30 font-black text-3xl">?</span>
                   </div>
                 ))}
               </div>
-              
               <div className="mt-8 space-y-3 z-10 pb-4">
                 <div className="flex gap-3">
-                  <button onClick={() => shuffleDeck('left')} disabled={isShuffling} className="flex-1 bg-[#E2D9C8] text-[#1a4314] border border-[#d1c9b8] py-4 rounded-2xl font-black text-[15px] flex items-center justify-center gap-2 hover:bg-[#d5ccba] active:scale-[0.98] transition-transform shadow-sm">
-                    <Icon name="RotateCcw" size={18} className={isShuffling==='left'?'animate-spin':''} /> 왼쪽
-                  </button>
-                  <button onClick={() => shuffleDeck('right')} disabled={isShuffling} className="flex-1 bg-[#E2D9C8] text-[#1a4314] border border-[#d1c9b8] py-4 rounded-2xl font-black text-[15px] flex items-center justify-center gap-2 hover:bg-[#d5ccba] active:scale-[0.98] transition-transform shadow-sm">
-                    오른쪽 <Icon name="RotateCw" size={18} className={isShuffling==='right'?'animate-spin':''} />
-                  </button>
+                  <button onClick={() => shuffleDeck('left')} disabled={isShuffling} className="flex-1 bg-white border border-[#d1c9b8] text-gray-800 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-transform shadow-sm"><Icon name="RotateCcw" size={20} className={isShuffling==='left'?'animate-spin text-[#1a4314]':''} /> 왼쪽</button>
+                  <button onClick={() => shuffleDeck('right')} disabled={isShuffling} className="flex-1 bg-white border border-[#d1c9b8] text-gray-800 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-transform shadow-sm">오른쪽 <Icon name="RotateCw" size={20} className={isShuffling==='right'?'animate-spin text-[#1a4314]':''} /></button>
                 </div>
-                {(isHostView || guestPermissions.finishShuffle) ? (
-                  <button onClick={finishShuffle} className="w-full bg-[#1a4314] text-white py-4 rounded-2xl font-black text-[16px] shadow-lg hover:bg-[#2d6a4f] active:scale-[0.98] transition-transform">패 섞기 완료</button>
-                ) : (
-                  <div className="text-center text-[#1a4314] py-4 font-black">방장이 섞기를 마칠 때까지 대기중...</div>
-                )}
+                {(isHostView || guestPermissions.finishShuffle) ? <button onClick={finishShuffle} className="w-full bg-[#1a4314] text-white py-4 rounded-2xl font-bold text-lg active:scale-[0.98] transition-transform shadow-lg hover:bg-[#2d6a4f]">패 섞기 완료</button> : <div className="text-center text-gray-500 py-4 font-bold">방장이 섞기를 마칠 때까지 대기중...</div>}
               </div>
 
               {isHostView && isJokerModalOpen && (
@@ -1956,7 +1913,7 @@
                     <button onClick={() => setIsJokerModalOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full transition">
                       <Icon name="X" size={20} />
                     </button>
-                    <h3 className="text-lg font-black mb-4 flex items-center gap-2 tracking-tight text-[#1a4314]">
+                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2 tracking-tight text-gray-900">
                       🃏 조커 설정 변경
                     </h3>
                     <div className="grid grid-cols-4 gap-2 mb-5">
@@ -1974,13 +1931,18 @@
                             updateRoomState({ jokerType: opt, actualRoles: roles.sort(()=>Math.random()-0.5), finalJokerStroke: opt==='랜덤'?'':opt });
                             setJokerType(opt);
                           }} 
-                          className={`py-2.5 px-1 text-[13px] rounded-xl border transition-all font-bold tracking-tight active:scale-[0.98] ${jokerType === opt ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-white text-gray-600 border-[#d1c9b8] hover:bg-gray-50'}`}
+                          className={`py-2 px-1 text-[13px] rounded-xl border transition-all font-bold tracking-tight active:scale-[0.98] ${jokerType === opt ? 'bg-purple-600 text-white border-purple-600 shadow-md' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
                         >
                           {opt}
                         </button>
                       ))}
                     </div>
-                    <button onClick={() => setIsJokerModalOpen(false)} className="w-full bg-[#1a4314] text-white font-black py-4 rounded-2xl hover:bg-[#2d6a4f] shadow-md active:scale-95 transition tracking-tight">
+                    <div className="p-3 bg-white rounded-xl text-[11px] text-gray-500 leading-relaxed break-keep border border-gray-200 mb-6">
+                      <span className="font-bold text-gray-700">💡 조커 룰 안내</span><br/>
+                      • 조커를 뽑은 플레이어는 인원이 부족한 팀으로 자동 배치됩니다.<br/>
+                      • 설정된 타수는 팀 승패 계산 시 실제 타수와 무관하게 적용됩니다.
+                    </div>
+                    <button onClick={() => setIsJokerModalOpen(false)} className="w-full bg-[#1a4314] text-white font-bold py-4 rounded-2xl hover:bg-[#2d6a4f] active:scale-95 transition tracking-tight shadow-md">
                       설정 완료
                     </button>
                   </div>
@@ -1989,27 +1951,26 @@
             </div>
           )}
 
-          {/* 4. DRAW 화면 (팀 뽑기) */}
           {phase === PHASES.DRAW && (
-            <div className="min-h-full bg-[#fdfcf9] text-gray-900 flex flex-col p-6 animate-in fade-in flex-1">
-              <h2 className="text-center text-[26px] font-black mb-8 mt-10 text-[#1a4314]">팀 뽑기</h2>
+            <div className="min-h-full bg-[#fdfcf9] flex flex-col p-6 animate-in fade-in flex-1">
+              <h2 className="text-center text-xl font-bold mb-8 mt-12 text-[#1a4314]">팀 뽑기</h2>
               <div className="flex flex-wrap justify-center gap-4 flex-1 content-center relative">
                 {(() => {
                   const myPick = Object.keys(selectedCards).find(k => selectedCards[k].playerIndex === MY_PLAYER_INDEX);
                   if (myPick) {
                     const data = selectedCards[myPick];
                     return (
-                      <div className={`w-[70%] aspect-[3/4] rounded-[32px] shadow-2xl flex flex-col items-center justify-center border-4 border-white animate-in zoom-in-90 ${getCardStyle(data.role)}`}>
+                      <div className={`w-[70%] aspect-[3/4] rounded-3xl shadow-2xl flex flex-col items-center justify-center border-4 border-white/50 animate-in zoom-in-90 ${getCardStyle(data.role)}`}>
                         <span className="text-[6rem] mb-4 drop-shadow-xl">{data.role==='J'?'🃏':data.role}</span>
-                        <div className="bg-black/30 px-6 py-2 rounded-full font-bold text-xl text-white">내 카드</div>
+                        <div className="bg-black/20 px-6 py-2 rounded-full font-bold text-xl backdrop-blur-sm text-white">내 카드</div>
                       </div>
                     );
                   }
                   return Array.from({length:5}).map((_, i) => {
                     const p = selectedCards[i];
                     return (
-                      <div key={i} onClick={() => selectCard(i)} className={`w-[28%] aspect-[3/4] rounded-2xl flex flex-col items-center justify-center transition-all shadow-md relative active:scale-95 ${p ? 'bg-[#E2D9C8] border border-[#d1c9b8] opacity-60 cursor-not-allowed' : 'bg-[#1a4314] border-[3px] border-[#E2D9C8] cursor-pointer hover:scale-105 hover:shadow-lg'}`} style={!p ? { backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px)' } : {}}>
-                        {p ? <div className="text-center"><Icon name="Check" size={24} className="mx-auto opacity-50 text-[#1a4314]" /><div className="text-[11px] mt-1 font-bold text-[#1a4314] truncate px-1">{p.player}</div></div> : <span className="text-[#E2D9C8] font-black text-2xl">?</span>}
+                      <div key={i} onClick={() => selectCard(i)} className={`w-[28%] aspect-[3/4] rounded-2xl flex flex-col items-center justify-center transition-all shadow-md relative active:scale-95 ${p ? 'bg-gray-100 border border-gray-200 opacity-60 cursor-not-allowed' : 'bg-[#E8E2D2] border-2 border-[#1a4314] cursor-pointer hover:scale-105'}`}>
+                        {p ? <div className="text-center"><Icon name="Check" size={24} className="mx-auto text-gray-400" /><div className="text-[10px] mt-1 truncate px-1 text-gray-500 font-bold">{p.player}</div></div> : <div className="absolute inset-1.5 border border-dashed border-[#1a4314]/20 rounded-xl flex items-center justify-center"><span className="text-[#1a4314] font-black text-2xl">?</span></div>}
                       </div>
                     );
                   });
@@ -2017,38 +1978,36 @@
               </div>
               <div className="mt-8 pb-4">
                 <div className="border border-[#d1c9b8] bg-white p-5 rounded-2xl text-center shadow-sm">
-                  <p className={`font-black text-[15px] mb-3 ${!Object.keys(selectedCards).find(k=>selectedCards[k].playerIndex===MY_PLAYER_INDEX) ? 'text-[#1a4314] animate-pulse' : 'text-gray-500'}`}>{pickLog}</p>
-                  <div className="w-full bg-[#E2D9C8] h-3 rounded-full overflow-hidden shadow-inner border border-[#d1c9b8]"><div className="bg-[#1a4314] h-full transition-all duration-500" style={{ width: `${(Object.keys(selectedCards).length / 4) * 100}%` }}></div></div>
+                  <p className={`font-bold text-[14px] mb-3 ${!Object.keys(selectedCards).find(k=>selectedCards[k].playerIndex===MY_PLAYER_INDEX) ? 'text-[#1a4314] animate-pulse' : 'text-gray-500'}`}>{pickLog}</p>
+                  <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden"><div className="bg-[#1a4314] h-full transition-all duration-500" style={{ width: `${(Object.keys(selectedCards).length / 4) * 100}%` }}></div></div>
                 </div>
                 
                 {(isHostView || guestPermissions.autoPick) && Object.keys(selectedCards).length < 4 && (
-                  <button onClick={autoPickRemaining} className="w-full bg-white border border-[#d1c9b8] text-[#1a4314] py-4 rounded-2xl font-black text-[16px] mt-4 shadow-sm active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-gray-50">
-                    <Icon name="Users" size={20} /> 남은 동반자 자동 선택
+                  <button onClick={autoPickRemaining} className="w-full bg-yellow-400 text-yellow-900 py-4 rounded-2xl font-bold text-[16px] mt-4 shadow-md active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <Icon name="Users" size={20} /> 남은 카드 대신 선택하기
                   </button>
                 )}
 
                 {(isHostView || guestPermissions.autoPick) && Object.keys(selectedCards).length >= 4 && (
-                  <button onClick={revealTeams} className="w-full bg-[#1a4314] text-white py-5 rounded-2xl font-black text-[18px] mt-4 shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-[#2d6a4f]">
-                    <Icon name="Check" size={24} /> 결과 확인 (전체 공개)
+                  <button onClick={revealTeams} className="w-full bg-[#1a4314] text-white py-4 rounded-2xl font-bold text-[16px] mt-4 shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                    <Icon name="Check" size={20} /> 결과 확인 (전체 공개)
                   </button>
                 )}
 
                 {!(isHostView || guestPermissions.autoPick) && Object.keys(selectedCards).length >= 4 && (
-                  <div className="w-full bg-[#E2D9C8] text-[#1a4314] font-black py-5 rounded-2xl text-center text-[16px] mt-4 border border-[#d1c9b8]">결과 확인을 기다립니다...</div>
+                  <div className="w-full bg-[#E2D9C8] text-[#1a4314] font-bold py-4 rounded-2xl text-center text-[15px] mt-4 tracking-tight">결과 확인을 기다리는 중...</div>
                 )}
               </div>
             </div>
           )}
 
-          {/* 5. JOKER SPIN 화면 */}
           {phase === PHASES.RANDOM_JOKER && (
-            <div className="min-h-full bg-purple-900 text-white flex flex-col items-center justify-center p-6 animate-in fade-in flex-1">
-              <h2 className="text-xl font-bold mb-10">조커 타수 추첨 중...</h2>
-              <div className="w-full bg-purple-800/50 rounded-3xl p-12 border-4 border-purple-500 shadow-2xl text-center"><span className="text-7xl font-black text-yellow-400 drop-shadow-lg">{isSpinningJoker ? localJokerSpin : finalJokerStroke}</span></div>
+            <div className="min-h-full bg-[#fdfcf9] flex flex-col items-center justify-center p-6 animate-in fade-in flex-1">
+              <h2 className="text-xl font-bold mb-10 text-[#1a4314]">조커 타수 추첨 중...</h2>
+              <div className="w-full bg-white rounded-3xl p-12 border-4 border-purple-500 shadow-xl text-center"><span className="text-7xl font-black text-purple-600 drop-shadow-md">{isSpinningJoker ? localJokerSpin : finalJokerStroke}</span></div>
             </div>
           )}
 
-          {/* 6. RESULT 화면 (결과) */}
           {phase === PHASES.RESULT && (() => {
             const results = Object.values(selectedCards);
             const isJokerPending = jokerType === '랜덤' && !finalJokerStroke;
@@ -2060,62 +2019,61 @@
             const canIClickJoker = isHostView || amIJoker;
 
             return (
-              <div className="min-h-full bg-[#fdfcf9] text-gray-900 flex flex-col p-5 animate-in fade-in flex-1">
-                <h2 className="text-center text-[28px] font-black mb-8 text-[#1a4314] mt-10">팀 매칭 결과</h2>
+              <div className="min-h-full bg-[#fdfcf9] flex flex-col p-4 animate-in fade-in flex-1">
+                <h2 className="text-center text-[26px] font-black mb-8 text-[#1a4314] mt-10">팀 매칭 결과</h2>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   {results.map((res, idx) => {
                     const clickable = res.role === 'J' && isJokerPending && canIClickJoker;
                     return (
-                      <div key={idx} onClick={() => clickable && executeRandomJoker()} className={`relative aspect-[3/4] rounded-3xl flex flex-col items-center p-3 shadow-lg transition-all active:scale-95 ${getCardStyle(res.role, jokerTeam)} ${clickable ? 'cursor-pointer animate-pulse ring-4 ring-purple-400 scale-105' : ''}`}>
-                        {clickable && <span className="absolute -top-3 right-2 bg-purple-600 text-white text-[12px] font-black px-3 py-1.5 rounded-full z-10 border-2 border-white shadow-lg">Click!</span>}
-                        {res.role === 'J' && isJokerPending && !canIClickJoker && <span className="absolute -top-3 right-2 bg-gray-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-lg z-10 border border-white">확인 대기중</span>}
+                      <div key={idx} onClick={() => clickable && executeRandomJoker()} className={`relative aspect-[3/4] rounded-3xl flex flex-col items-center p-3 shadow-md transition-all active:scale-95 ${getCardStyle(res.role, jokerTeam)} ${clickable ? 'cursor-pointer animate-pulse ring-4 ring-yellow-400 scale-105' : ''}`}>
+                        {clickable && <span className="absolute -top-3 right-2 bg-yellow-400 text-black text-[12px] font-black px-3 py-1.5 rounded-full z-10 border-2 border-white shadow-md">Click!</span>}
+                        {res.role === 'J' && isJokerPending && !canIClickJoker && <span className="absolute -top-3 right-2 bg-gray-800 text-white text-[10px] font-bold px-3 py-1.5 rounded-full shadow-md z-10 border border-gray-600">대기중</span>}
                         <div className="flex-1 flex flex-col items-center justify-center w-full">
-                          {res.role === 'J' ? <div className="text-center"><span className="text-7xl mb-2 block drop-shadow-md">🃏</span><span className="text-[18px] font-black bg-white text-purple-700 px-4 py-1.5 rounded-full shadow-sm border border-purple-200">{finalJokerStroke || '확인중'}</span></div> : <span className="text-[5.5rem] font-black drop-shadow-md">{res.role}</span>}
+                          {res.role === 'J' ? <div className="text-center"><span className="text-6xl mb-2 block">🃏</span><span className="text-lg font-black bg-white/20 px-4 py-1 rounded-full text-white">{finalJokerStroke || '확인중'}</span></div> : <span className="text-[5rem] font-black text-white">{res.role}</span>}
                         </div>
-                        <div className="w-full bg-white/20 backdrop-blur-sm py-3.5 rounded-2xl text-center font-bold text-[14px]">{res.player}</div>
+                        <div className="w-full bg-black/20 py-3 rounded-2xl text-center font-bold text-sm text-white backdrop-blur-sm">{res.player}</div>
                       </div>
                     );
                   })}
                 </div>
                 <div className="bg-white rounded-2xl p-5 text-center mb-auto shadow-sm border border-[#d1c9b8]">
                   {isJokerPending ? (
-                    canIClickJoker ? <p className="text-purple-600 font-black text-[15px] animate-pulse">🃏 조커 카드를 클릭해 확인하세요!</p> : <p className="text-purple-600 font-black text-[15px] animate-pulse">🃏 조커 타수 확인 대기중...</p>
-                  ) : <p className="text-[#1a4314] font-black text-[16px]">🎉 이긴 팀이 포인트를 가져갑니다! 🎉</p>}
+                    canIClickJoker ? <p className="text-purple-600 font-bold animate-pulse">🃏 조커 카드를 클릭해 확인하세요!</p> : <p className="text-purple-600 font-bold animate-pulse">🃏 조커 타수 확인 대기중...</p>
+                  ) : <p className="text-[#1a4314] font-black text-lg">🎉 이긴 팀이 포인트를 가져갑니다! 🎉</p>}
                 </div>
                 
                 {(isHostView || guestPermissions.nextHole) ? (
                   <div className="mt-8 space-y-3 pb-4">
-                    <button onClick={nextHole} disabled={isJokerPending} className={`w-full py-4.5 rounded-2xl font-black text-[16px] flex items-center justify-center gap-2 active:scale-[0.98] transition-transform ${isJokerPending ? 'bg-gray-200 text-gray-400' : 'bg-[#1a4314] text-white shadow-lg hover:bg-[#2d6a4f]'}`}><Icon name="RotateCcw" size={18} /> 다음 홀 이동 (다시 뽑기)</button>
+                    <button onClick={nextHole} disabled={isJokerPending} className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-[0.98] transition-transform text-[16px] ${isJokerPending ? 'bg-gray-200 text-gray-400' : 'bg-[#1a4314] text-white shadow-lg hover:bg-[#2d6a4f]'}`}><Icon name="RotateCcw" size={20} /> 다음 홀 이동 (다시 뽑기)</button>
                   </div>
                 ) : (
                   <div className="mt-8 space-y-3 pb-4">
-                    <div className="w-full bg-[#E2D9C8] text-[#1a4314] font-black py-4.5 rounded-2xl text-center text-[15px] border border-[#d1c9b8]">다음 홀을 준비중입니다...</div>
+                    <div className="w-full bg-[#E2D9C8] text-[#1a4314] font-bold py-4 rounded-2xl text-center text-[15px] tracking-tight">다음 홀을 준비중입니다...</div>
                   </div>
                 )}
               </div>
             );
           })()}
 
-          {/* 7. 초대 모달 */}
           {isInviteOpen && (
-            <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center p-5 backdrop-blur-sm">
-              <div className="bg-[#fdfcf9] w-full max-w-sm rounded-[32px] shadow-2xl p-7 animate-in zoom-in text-gray-900 flex flex-col items-center relative border border-[#d1c9b8]">
-                <button onClick={() => setIsInviteOpen(false)} className="absolute top-5 right-5 p-2 text-gray-400 hover:bg-gray-100 rounded-full transition active:scale-95"><Icon name="X" size={24} /></button>
-                <div className="flex items-center gap-2 mb-3 w-full"><Icon name="QrCode" size={22} className="text-[#1a4314]" /><h2 className="text-[20px] font-black text-[#1a4314]">방 초대하기</h2></div>
-                <p className="text-[13px] font-medium text-gray-500 text-left mb-6 break-keep leading-relaxed w-full">라운드 동반자의 스마트폰 카메라로 스캔하거나<br/>초대 URL을 공유해 참여할 수 있습니다.</p>
-                <div className="w-48 h-48 bg-white rounded-3xl border border-[#d1c9b8] mb-8 flex items-center justify-center overflow-hidden shadow-sm p-2">
+            <div className="absolute inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+              <div className="bg-[#fdfcf9] w-full max-w-sm rounded-3xl shadow-2xl p-6 animate-in zoom-in text-gray-800 flex flex-col items-center relative border border-[#d1c9b8]">
+                <button onClick={() => setIsInviteOpen(false)} className="absolute top-4 right-4 p-2 text-gray-400 hover:bg-gray-100 rounded-full transition active:scale-95"><Icon name="X" size={24} /></button>
+                <div className="flex items-center gap-2 mb-2 w-full"><Icon name="QrCode" size={20} className="text-[#1a4314]" /><h2 className="text-lg font-black text-[#1a4314]">방 초대하기</h2></div>
+                <p className="text-[13px] font-bold text-gray-500 text-left mb-6 break-keep leading-relaxed w-full">라운드 동반자의 카메라로 스캔하거나<br/>초대 URL을 공유해 참여할 수 있습니다.</p>
+                <div className="w-48 h-48 bg-white rounded-2xl border border-gray-200 mb-6 flex items-center justify-center overflow-hidden shadow-sm p-2">
                   <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`${window.location.origin}${window.location.pathname}?room=${roomId}`)}`} className="w-full h-full mix-blend-multiply" />
                 </div>
                 <div className="w-full mb-6">
-                  <label className="text-[12px] font-bold text-gray-500 mb-2 block px-1">초대 URL</label>
-                  <div className="bg-white border border-[#d1c9b8] p-3.5 rounded-xl text-[12px] font-bold text-gray-700 truncate flex items-center gap-2 shadow-sm">
-                    <Icon name="LinkIcon" size={16} className="text-[#1a4314] shrink-0" />
+                  <label className="text-[11px] font-bold text-gray-500 mb-2 block">초대 URL</label>
+                  <div className="bg-white border border-gray-200 p-3 rounded-xl text-[12px] font-medium text-gray-600 truncate flex items-center gap-2 shadow-sm">
+                    <Icon name="LinkIcon" size={16} className="text-gray-400 shrink-0" />
                     <span className="truncate">{window.location.origin}{window.location.pathname}?room={roomId}</span>
                   </div>
                 </div>
                 <div className="flex gap-3 w-full">
-                  <button onClick={handleCopyUrl} className="flex-1 py-4 bg-[#E2D9C8] text-[#1a4314] font-black rounded-2xl hover:bg-[#d5ccba] transition active:scale-95 text-[15px] border border-[#d1c9b8]">URL 복사</button>
-                  <button onClick={async () => { try { await navigator.share({ title: '⛳ 진심골프메모: 팀 뽑기', text: '라운드 동반자들과 함께 공정하게 팀을 뽑아보세요!', url: `${window.location.origin}${window.location.pathname}?room=${roomId}` }); setIsInviteOpen(false); } catch(e){} }} className="flex-1 py-4 bg-[#1a4314] text-white font-black rounded-2xl shadow-md hover:bg-[#2d6a4f] transition active:scale-95 text-[15px]">공유하기</button>
+                  <button onClick={handleCopyUrl} className="flex-1 py-3.5 bg-white border border-[#d1c9b8] text-gray-800 font-bold rounded-xl hover:bg-gray-50 transition active:scale-95 text-[14px] shadow-sm">URL 복사</button>
+                  <button onClick={async () => { try { await navigator.share({ title: '⛳ 골프 뽑기 게임', text: '라운드 동반자들과 함께 공정하게 팀을 뽑아보세요!', url: `${window.location.origin}${window.location.pathname}?room=${roomId}` }); setIsInviteOpen(false); } catch(e){} }} className="flex-1 py-3.5 bg-[#1a4314] text-white font-bold rounded-xl shadow-md hover:bg-[#2d6a4f] transition active:scale-95 text-[14px]">공유하기</button>
                 </div>
               </div>
             </div>
@@ -2650,12 +2608,12 @@
 
       return (
         <div className="w-full min-h-[100%] bg-[#0f172a] flex flex-col relative font-sans tracking-tight select-none overflow-hidden" onClick={() => setDeletingId(null)}>
-          <div className="bg-emerald-500 rounded-b-[20px] pt-6 pb-3 px-4 text-center shadow-md relative z-10 shrink-0">
+          <div className="bg-emerald-500 rounded-b-[16px] pt-3 pb-2 px-4 text-center shadow-md relative z-10 shrink-0">
             <div className="flex justify-center items-center gap-1.5">
-              <MetroActivity size={18} className="text-white" />
-              <h1 className="text-lg font-extrabold text-white tracking-wide">GOLF METRONOME</h1>
+              <MetroActivity size={16} className="text-white" />
+              <h1 className="text-[16px] font-extrabold text-white tracking-wide">GOLF METRONOME</h1>
             </div>
-            <p className="text-emerald-50 text-[11px] mt-0.5 opacity-90 font-medium">나만의 스윙 메시지를 만들어보세요</p>
+            <p className="text-emerald-50 text-[10px] mt-0.5 opacity-90 font-medium">나만의 스윙 메시지를 만들어보세요</p>
           </div>
 
           <div className="flex-1 flex flex-col px-4 pt-3 pb-3 overflow-y-auto">
@@ -2938,6 +2896,8 @@
     function App() {
       // 온보딩 관련 상태
       const [showOnboarding, setShowOnboarding] = useState(() => localStorage.getItem('golf_memo_onboarding_seen') !== 'true');
+      const [showNoticeMemo, setShowNoticeMemo] = useState(() => localStorage.getItem('golf_memo_notice_memo') !== 'true');
+      const [showNoticeShot, setShowNoticeShot] = useState(() => localStorage.getItem('golf_memo_notice_shot') !== 'true');
       
       const [isAuthenticated, setIsAuthenticated] = useState(false);
       const [fbUser, setFbUser] = useState(null);
@@ -3212,7 +3172,7 @@
         try {
           const isCanvas = typeof __firebase_config !== 'undefined';
           if (!isCanvas) {
-             await signOut(auth); // 실제 깃허브 배포 환경에서만 완전 로그아웃
+             await signOut(auth);
           }
           setIsAuthenticated(false); 
           setView('list'); 
@@ -3222,6 +3182,9 @@
           console.error("로그아웃 실패:", e);
         }
       };
+
+      const dismissNoticeMemo = () => { localStorage.setItem('golf_memo_notice_memo', 'true'); setShowNoticeMemo(false); };
+      const dismissNoticeShot = () => { localStorage.setItem('golf_memo_notice_shot', 'true'); setShowNoticeShot(false); };
 
       if (showOnboarding) {
         return (
@@ -3253,10 +3216,9 @@
               <AuthScreen onLogin={() => setIsAuthenticated(true)} />
             ) : (
               <>
-                <header className="pt-[max(env(safe-area-inset-top),1rem)] pb-2.5 px-4 z-50 flex-shrink-0 flex justify-between items-center bg-white/50 backdrop-blur-sm border-b border-[#d1c9b8]/50">
-                  <div className="flex items-center gap-2.5">
+                <header className="pt-[max(env(safe-area-inset-top),1.5rem)] pb-3 px-4 z-50 flex-shrink-0 flex justify-between items-center bg-white/50 backdrop-blur-sm border-b border-[#d1c9b8]/50">
+                  <div className="flex items-center gap-2">
                     <h1 className="text-[22px] font-[900] stamped-text pb-0.5">진심골프메모</h1>
-                    <div className="flex flex-col border-l-[2px] border-[#1a4314]/80 pl-2 leading-[1.1]"><span className="text-[8px] font-[900] stamped-text">GOLF MEMO</span><span className="text-[8px] font-[900] stamped-text">& PRACTICE</span></div>
                   </div>
                   {view === 'list' && (
                     <div className="relative ml-auto" ref={menuRef}>
@@ -3279,7 +3241,7 @@
                 </header>
 
                 <main id="main-scroll-area" className="flex-1 overflow-y-auto scrollbar-hide relative flex flex-col">
-                  {view === 'list' && currentTab === 'memo' && <MemoList memos={filteredMyMemos} categories={categories} activeCategory={activeCategory} setActiveCategory={setActiveCategory} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedMemoIds={selectedMemoIds} setSelectedMemoIds={setSelectedMemoIds} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} baseFontSize={baseFontSize} />}
+                  {view === 'list' && currentTab === 'memo' && <MemoList memos={filteredMyMemos} activeCategory={activeCategory} setActiveCategory={setActiveCategory} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedMemoIds={selectedMemoIds} setSelectedMemoIds={setSelectedMemoIds} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} baseFontSize={baseFontSize} showNotice={showNoticeMemo} onDismiss={dismissNoticeMemo} />}
                   {view === 'search' && <GlobalSearch memos={memos} shotMemos={shotMemos} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onCancel={()=>setView('list')} baseFontSize={baseFontSize} />}
                   {view === 'list' && currentTab === 'shot_memo' && <ShotMemoMain shotMemos={shotMemos} onSaveShotMemo={handleSaveShotMemo} onDeleteShotMemos={handleDeleteShotMemos} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedIds={selectedMemoIds} setSelectedIds={setSelectedMemoIds} baseFontSize={baseFontSize} />}
                   {view === 'mypage' && <MyPage onCancel={()=>setView('list')} defaultTab={defaultTab} setDefaultTab={setDefaultTab} baseFontSize={baseFontSize} setBaseFontSize={setBaseFontSize} onLogout={handleLogout} />}
@@ -3289,13 +3251,12 @@
                   
                   {view === 'list' && currentTab === 'game' && <GameMain onSelectGame={id=>setView(`game_${id}`)} />}
                   {view === 'game_draw' && <TeamDrawGame fbUser={fbUser} />}
-                  {view === 'game_chip' && <ChipFlipGame />}
                   {view === 'game_tee' && <TeeSpinGame />}
                   {view === 'list' && currentTab === 'metronome' && <MetronomeMain />}
                 </main>
 
                 {!isSelectionMode && view === 'list' && currentTab === 'shot_memo' && (
-                  <ShotMemoInputBar onSaveShotMemo={handleSaveShotMemo} />
+                  <ShotMemoInputBar onSaveShotMemo={handleSaveShotMemo} showNotice={showNoticeShot} onDismissNotice={dismissNoticeShot} />
                 )}
 
                 {!isSelectionMode && view === 'list' && currentTab === 'memo' && (
@@ -3355,7 +3316,7 @@
                       <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mb-4"></div><h3 className="text-[18px] font-black mb-4 px-2">{blockModalTarget}님 차단 설정</h3>
                       <button onClick={() => handleBlockPost(blockModalTarget)} className="w-full text-left px-5 py-4 bg-white border rounded-2xl font-bold text-red-600 hover:bg-red-50">이 유저의 게시물 숨기기</button>
                       <button onClick={() => handleBlockHide(blockModalTarget)} className="w-full text-left px-5 py-4 bg-white border rounded-2xl font-bold text-orange-600 hover:bg-orange-50 mt-2">내 메모를 보지 못하게 차단</button>
-                      <button onClick={() => setBlockModalTarget(null)} className="w-full py-4 mt-4 bg-[#E2D9C8] font-extrabold rounded-2xl hover:bg-[#d5ccba]">취소</button>
+                      <button onClick={() => setBlockModalTarget(null)} className="w-full py-4 mt-4 bg-[#E2D9C8] text-[#1a4314] font-extrabold rounded-2xl hover:bg-[#d5ccba]">취소</button>
                     </div>
                   </div>
                 )}
