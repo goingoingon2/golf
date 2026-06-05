@@ -107,7 +107,7 @@
     import { getAuth, signInWithCustomToken, signInAnonymously, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, updateProfile, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
     import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, updateDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
 
-    // GitHub 배포를 위한 파이어베이스 설정값
+    // GitHub 배포를 위한 파이어베이스 설정값 (사용자 설정)
     const myFirebaseConfig = {
       apiKey: "AIzaSyALzYLoBWl-oHCyLzEr7YefqqySx8ESEjA",
       authDomain: "left-right-6da31.firebaseapp.com",
@@ -118,6 +118,7 @@
     };
 
     const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : myFirebaseConfig;
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
@@ -589,7 +590,7 @@
             {showNotice && (
               <div className="bg-[#1a4314] text-white rounded-[20px] p-4 flex items-start gap-3 shadow-lg relative mx-1 mt-1">
                 <Icon name="Sparkles" size={20} className="text-yellow-400 shrink-0 mt-0.5" />
-                <p className="text-[13px] font-bold leading-[1.6] flex-1 break-keep opacity-95">사용자의 이해를 돕기위해 예시로 넣어둔 게시물은 삭제하셔도 됩니다. 이제 나만의 내용으로 채워나가세요!</p>
+                <p className="text-[13px] font-bold leading-[1.6] flex-1 break-keep opacity-95">사용자의 이해를 돕기위해 예시로 넣어둔 내용은 삭제하셔도 됩니다. 이제 나만의 내용으로 채워나가세요!</p>
                 <button onClick={onDismiss} className="text-white/60 hover:text-white p-1 rounded-lg shrink-0 -mt-1 -mr-1"><Icon name="X" size={18} /></button>
               </div>
             )}
@@ -613,8 +614,15 @@
                     <div className="flex gap-2 items-center">
                        {isSelectionMode && <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 ${selectedMemoIds.includes(memo.id)?'bg-[#1a4314] border-[#1a4314]':'border-gray-300'}`}>{selectedMemoIds.includes(memo.id) && <Icon name="Check" size={12} className="text-white font-black"/>}</div>}
                        <span 
-                          onClick={(e) => { e.stopPropagation(); setActiveCategory(activeCategory === memo.category ? '전체' : memo.category); }} 
-                          className={`text-[12px] font-bold px-3 py-1 rounded-full border cursor-pointer active:scale-95 transition-colors ${activeCategory === memo.category ? 'bg-[#1a4314] text-white border-[#1a4314]' : 'text-[#1a4314] bg-[#e8f5e9] border-[#a5d6a7] hover:bg-[#c8e6c9]'}`}
+                          onClick={(e) => { 
+                            e.stopPropagation(); 
+                            if (activeCategory === memo.category) {
+                              setActiveCategory("전체"); 
+                            } else {
+                              setActiveCategory(memo.category);
+                            }
+                          }} 
+                          className={`text-[12px] font-bold px-3 py-1 rounded-full border cursor-pointer hover:bg-[#c8e6c9] active:scale-95 transition-colors ${activeCategory === memo.category ? 'bg-[#1a4314] text-white border-[#1a4314]' : 'text-[#1a4314] bg-[#e8f5e9] border-[#a5d6a7]'}`}
                        >
                           {memo.category}
                        </span>
@@ -758,13 +766,13 @@
       return (
         <div className="shrink-0 w-full flex flex-col z-[40]">
           {showNotice && (
-            <div className="px-4 pb-3">
-              <div className="bg-[#1a4314] text-white rounded-[20px] p-4 flex items-start gap-3 shadow-lg animate-in fade-in slide-in-from-bottom-2 relative">
+            <div className="px-4 pb-2">
+              <div className="bg-[#1a4314] text-white rounded-[20px] p-4 flex items-start gap-3 shadow-lg relative">
                 <Icon name="Sparkles" size={20} className="text-yellow-400 shrink-0 mt-0.5" />
                 <p className="text-[13px] font-bold leading-[1.6] flex-1 break-keep opacity-95">
-                  사용자의 이해를 돕기위해 예시로 넣어둔 게시물은 삭제하셔도 됩니다. 이제 나만의 내용으로 채워나가세요!
+                  사용자의 이해를 돕기위해 예시로 넣어둔 내용은 삭제하셔도 됩니다. 이제 나만의 내용으로 채워나가세요!
                 </p>
-                <button onClick={onDismissNotice} className="text-white/60 hover:text-white p-1 rounded-lg transition-colors shrink-0 -mt-1 -mr-1">
+                <button onClick={onDismissNotice} className="text-white/60 hover:text-white p-1 rounded-lg shrink-0 -mt-1 -mr-1 transition-colors">
                   <Icon name="X" size={18} />
                 </button>
                 <div className="absolute -bottom-1.5 left-8 w-4 h-4 bg-[#1a4314] rotate-45 rounded-sm"></div>
@@ -863,7 +871,7 @@
             )}
           </div>
 
-          <div className="flex flex-col gap-3 pb-3 px-3">
+          <div className="flex flex-col gap-3 pb-2 px-3">
             {shotMemos.length === 0 ? (
               <div className="text-center text-gray-500 mt-6 py-12 bg-white/90 rounded-[24px] border border-dashed border-[#d1c9b8]"><p className="font-bold text-[#1a4314]">기록된 숏메모가 없습니다.</p></div>
             ) : (
@@ -2608,12 +2616,12 @@
 
       return (
         <div className="w-full min-h-[100%] bg-[#0f172a] flex flex-col relative font-sans tracking-tight select-none overflow-hidden" onClick={() => setDeletingId(null)}>
-          <div className="bg-emerald-500 rounded-b-[16px] pt-3 pb-2 px-4 text-center shadow-md relative z-10 shrink-0">
+          <div className="bg-emerald-500 rounded-b-[20px] pt-6 pb-3 px-4 text-center shadow-md relative z-10 shrink-0">
             <div className="flex justify-center items-center gap-1.5">
-              <MetroActivity size={16} className="text-white" />
-              <h1 className="text-[16px] font-extrabold text-white tracking-wide">GOLF METRONOME</h1>
+              <MetroActivity size={18} className="text-white" />
+              <h1 className="text-lg font-extrabold text-white tracking-wide">GOLF METRONOME</h1>
             </div>
-            <p className="text-emerald-50 text-[10px] mt-0.5 opacity-90 font-medium">나만의 스윙 메시지를 만들어보세요</p>
+            <p className="text-emerald-50 text-[11px] mt-0.5 opacity-90 font-medium">나만의 스윙 메시지를 만들어보세요</p>
           </div>
 
           <div className="flex-1 flex flex-col px-4 pt-3 pb-3 overflow-y-auto">
@@ -3240,7 +3248,7 @@
                   {view !== 'list' && view !== 'mypage' && view !== 'search' && <button onClick={() => setView('list')} className="flex items-center text-[#1a4314] font-extrabold ml-auto"><Icon name="ChevronLeft" size={28} /> 뒤로</button>}
                 </header>
 
-                <main id="main-scroll-area" className="flex-1 overflow-y-auto scrollbar-hide relative flex flex-col">
+                <main id="main-scroll-area" className="flex-1 overflow-y-auto scrollbar-hide relative flex flex-col overscroll-none">
                   {view === 'list' && currentTab === 'memo' && <MemoList memos={filteredMyMemos} activeCategory={activeCategory} setActiveCategory={setActiveCategory} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedMemoIds={selectedMemoIds} setSelectedMemoIds={setSelectedMemoIds} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} baseFontSize={baseFontSize} showNotice={showNoticeMemo} onDismiss={dismissNoticeMemo} />}
                   {view === 'search' && <GlobalSearch memos={memos} shotMemos={shotMemos} onOpenDetail={m=>{setCurrentMemo(m); setView('detail');}} onCancel={()=>setView('list')} baseFontSize={baseFontSize} />}
                   {view === 'list' && currentTab === 'shot_memo' && <ShotMemoMain shotMemos={shotMemos} onSaveShotMemo={handleSaveShotMemo} onDeleteShotMemos={handleDeleteShotMemos} isSelectionMode={isSelectionMode} setIsSelectionMode={setIsSelectionMode} selectedIds={selectedMemoIds} setSelectedIds={setSelectedMemoIds} baseFontSize={baseFontSize} />}
