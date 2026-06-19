@@ -2897,10 +2897,10 @@
               <AuthScreen onLogin={() => setIsAuthenticated(true)} />
             ) : (
               <>
-                <header className="pt-[max(env(safe-area-inset-top),2rem)] pb-4 px-5 z-10 flex-shrink-0 flex justify-between items-center">
-                  <div className="flex items-center gap-3">
-                    <h1 className="text-[26px] font-[900] stamped-text pb-0.5">진심골프메모</h1>
-                    <div className="flex flex-col border-l-[2px] border-[#1a4314]/80 pl-2.5"><span className="text-[10px] font-[900] stamped-text">GOLF MEMO</span><span className="text-[10px] font-[900] stamped-text">& PRACTICE</span></div>
+                <header className="pt-[max(env(safe-area-inset-top),0.6rem)] pb-2.5 px-4 z-10 flex-shrink-0 flex justify-between items-center gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h1 className="text-[20px] font-[900] stamped-text whitespace-nowrap shrink-0">진심골프메모</h1>
+                    {view === 'list' && <div className="flex flex-col border-l-[2px] border-[#1a4314]/80 pl-2 shrink-0"><span className="text-[9px] font-[900] stamped-text leading-tight">GOLF MEMO</span><span className="text-[9px] font-[900] stamped-text leading-tight">& PRACTICE</span></div>}
                   </div>
                   {view === 'list' ? (
                     <div className="ml-auto flex items-center gap-2">
