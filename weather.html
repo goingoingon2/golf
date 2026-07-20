@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>전국 주요 골프장 실시간 날씨</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 트렌디한 Pretendard 폰트 및 모던 아이콘 라이브러리 추가 -->
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+        .weather-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .weather-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        /* 로딩 스피너 애니메이션 */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #10b981; /* Tailwind emerald-500 */
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 스크롤바 숨기기 (시간별 예보 가로 스크롤용) */
+        .no-scrollbar::-webkit-scrollbar { 
+            display: none; 
+        }
+        .no-scrollbar { 
+            -ms-overflow-style: none; 
+            scrollbar-width: none; 
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 p-3 md:p-8 bg-gray-100/70 selection:bg-emerald-100">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-6 md:mb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-50">
+            <div class="w-full md:w-auto text-center md:text-left">
+                <h1 class="text-2xl md:text-3xl font-bold text-gray-800 flex items-center justify-center md:justify-start gap-2 tracking-tight">
+                    <i class="ph-fill ph-golf text-emerald-500 text-3xl md:text-4xl"></i>
+                    나의 관심 골프장 날씨
+                </h1>
+                <p class="text-gray-400 mt-2 text-sm md:text-base font-medium" id="update-time">데이터를 불러오는 중입니다...</p>
+            </div>
+            <button onclick="fetchWeatherAll()" class="mt-4 md:mt-0 bg-gray-800 hover:bg-black text-white font-medium py-3 md:py-2.5 px-6 rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-2 w-full md:w-auto justify-center group">
+                <i class="ph-bold ph-arrows-clockwise text-lg group-hover:rotate-180 transition-transform duration-500"></i>
+                새로고침
+            </button>
+        </header>
+
+        <div id="loading-indicator" class="flex flex-col items-center justify-center py-20">
+            <div class="spinner mb-4"></div>
+            <p class="text-gray-500 font-medium">실시간 기상 데이터를 가져오고 있습니다...</p>
+        </div>
+
+        <div id="weather-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+            <!-- 날씨 카드가 동적으로 삽입될 공간 -->
+        </div>
+    </div>
+
+    <script>
+        // 대상 골프장 및 대략적인 위경도 좌표 데이터 (날씨 조회용)
+        const golfCourses = [
+            { name: '남양주CC', region: '경기 남양주', lat: 37.707, lon: 127.226, icon: 'ph-fill ph-tree-evergreen', color: 'text-emerald-500' },
+            { name: '양평TPC', region: '경기 양평', lat: 37.441, lon: 127.618, icon: 'ph-fill ph-mountains', color: 'text-stone-500' },
+            { name: '플라밍고CC', region: '충남 당진', lat: 36.993, lon: 126.643, icon: 'ph-fill ph-feather', color: 'text-rose-400' },
+            { name: '엠스클럽의성', region: '경북 의성', lat: 36.319, lon: 128.587, icon: 'ph-fill ph-apple-pod', color: 'text-red-500' },
+            { name: '속리산CC', region: '충북 보은', lat: 36.505, lon: 127.755, icon: 'ph-fill ph-leaf', color: 'text-orange-400' }
+        ];
+
+        // WMO 날씨 코드를 한글 설명과 이모지로 변환하는 함수
+        function getWeatherInfo(code) {
+            const weatherCodes = {
+                0: { text: '맑음', icon: '☀️', color: 'text-yellow-500' },
+                1: { text: '대체로 맑음', icon: '🌤️', color: 'text-yellow-400' },
+                2: { text: '구름조금', icon: '⛅', color: 'text-gray-400' },
+                3: { text: '흐림', icon: '☁️', color: 'text-gray-500' },
+                45: { text: '안개', icon: '🌫️', color: 'text-gray-400' },
+                48: { text: '짙은 안개', icon: '🌫️', color: 'text-gray-500' },
+                51: { text: '가벼운 이슬비', icon: '🌦️', color: 'text-blue-400' },
+                53: { text: '이슬비', icon: '🌧️', color: 'text-blue-500' },
+                55: { text: '강한 이슬비', icon: '🌧️', color: 'text-blue-600' },
+                61: { text: '약한 비', icon: '🌧️', color: 'text-blue-400' },
+                63: { text: '비', icon: '🌧️', color: 'text-blue-500' },
+                65: { text: '강한 비', icon: '🌧️', color: 'text-blue-600' },
+                71: { text: '약한 눈', icon: '🌨️', color: 'text-blue-200' },
+                73: { text: '눈', icon: '❄️', color: 'text-blue-300' },
+                75: { text: '강한 눈', icon: '❄️', color: 'text-blue-400' },
+                80: { text: '약한 소나기', icon: '🌦️', color: 'text-blue-500' },
+                81: { text: '소나기', icon: '🌧️', color: 'text-blue-600' },
+                82: { text: '강한 소나기', icon: '⛈️', color: 'text-gray-700' },
+                95: { text: '천둥번개', icon: '🌩️', color: 'text-purple-500' },
+                96: { text: '천둥번개/우박', icon: '⛈️', color: 'text-purple-600' },
+                99: { text: '강한 천둥/우박', icon: '⛈️', color: 'text-purple-700' },
+            };
+            
+            return weatherCodes[code] || { text: '알 수 없음', icon: '❓', color: 'text-gray-500' };
+        }
+
+        async function fetchWeather(course) {
+            try {
+                // Open-Meteo 무료 API 사용 (시간별 데이터 hourly 추가)
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${course.lat}&longitude=${course.lon}&current_weather=true&hourly=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=3`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                
+                const current = data.current_weather;
+                const daily = data.daily;
+                const weatherInfo = getWeatherInfo(current.weathercode);
+                
+                // 1. 일별 예보(3일) HTML 생성
+                let forecastHtml = '<div class="flex justify-between gap-2">';
+                const dayLabels = ['오늘', '내일', '모레'];
+                for(let i = 0; i < 3; i++) {
+                    const dateStr = daily.time[i].substring(5, 10).replace('-', '/'); // 07/20 형태
+                    const dailyWeather = getWeatherInfo(daily.weathercode[i]);
+                    forecastHtml += `
+                        <div class="flex flex-col items-center flex-1 bg-gray-50 rounded-xl py-3 border border-gray-100">
+                            <span class="text-xs text-gray-700 font-bold">${dayLabels[i]}</span>
+                            <span class="text-[10px] text-gray-400 mb-1">${dateStr}</span>
+                            <span class="text-2xl my-1 ${dailyWeather.color}" title="${dailyWeather.text}">${dailyWeather.icon}</span>
+                            <div class="flex gap-1 text-sm mt-1">
+                                <span class="text-red-500 font-semibold">${Math.round(daily.temperature_2m_max[i])}°</span>
+                                <span class="text-gray-300">|</span>
+                                <span class="text-blue-500 font-semibold">${Math.round(daily.temperature_2m_min[i])}°</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                forecastHtml += '</div>';
+
+                // 2. 시간별 예보(Hourly) HTML 생성 (현재 시간부터 15시간)
+                const hourly = data.hourly;
+                // API 데이터 중 현재 시간과 같거나 그 이후인 첫 번째 인덱스 찾기
+                let startIndex = hourly.time.findIndex(t => new Date(t).getTime() >= new Date().getTime());
+                if (startIndex === -1) startIndex = 0;
+
+                let hourlyHtml = `
+                    <div class="mt-4 border-t border-gray-50 pt-4 relative z-10">
+                        <div class="flex justify-between items-center mb-2">
+                            <p class="text-sm text-gray-500 font-medium flex items-center gap-1">
+                                <i class="ph ph-clock text-base"></i> 시간별 예보
+                            </p>
+                            <span class="text-[10px] text-gray-400 font-normal bg-gray-100 px-2 py-0.5 rounded-full"><i class="ph ph-arrows-left-right align-middle"></i> 좌우 스와이프</span>
+                        </div>
+                        <div class="flex overflow-x-auto gap-2 pb-2 no-scrollbar snap-x snap-mandatory">
+                `;
+                
+                for (let i = startIndex; i < hourly.time.length; i++) {
+                    if (!hourly.time[i]) break; // 데이터 초과 방지
+                    
+                    const timeObj = new Date(hourly.time[i]);
+                    let hourStr = `${timeObj.getHours()}시`;
+                    let isDateSeparator = false;
+                    
+                    if (i === startIndex) {
+                        hourStr = '지금';
+                    } else if (timeObj.getHours() === 0) {
+                        isDateSeparator = true;
+                        
+                        // 오늘 기준 몇 일 차이인지 계산하여 내일/모레 표시
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const compareDate = new Date(timeObj);
+                        compareDate.setHours(0, 0, 0, 0);
+                        const diffDays = Math.round((compareDate - today) / (1000 * 60 * 60 * 24));
+                        
+                        if (diffDays === 1) {
+                            hourStr = '내일';
+                        } else if (diffDays === 2) {
+                            hourStr = '모레';
+                        } else {
+                            hourStr = `${timeObj.getDate()}일`;
+                        }
+                    }
+
+                    const hWeather = getWeatherInfo(hourly.weathercode[i]);
+                    const hTemp = Math.round(hourly.temperature_2m[i]);
+                    
+                    // 자정(내일, 모레)이거나 지금인 경우 텍스트/배경 강조
+                    let textClass = 'text-gray-500 font-medium';
+                    let bgClass = 'bg-gray-50 border-gray-100';
+                    
+                    if (isDateSeparator) {
+                        textClass = 'text-emerald-600 font-bold';
+                        bgClass = 'bg-emerald-50 border-emerald-100';
+                    }
+                    else if (hourStr === '지금') {
+                        textClass = 'text-blue-600 font-bold';
+                        bgClass = 'bg-blue-50 border-blue-100';
+                    }
+
+                    hourlyHtml += `
+                        <div class="flex flex-col items-center min-w-[4rem] ${bgClass} rounded-xl py-2.5 border shrink-0 snap-center transition-colors">
+                            <span class="text-[11px] ${textClass}">${hourStr}</span>
+                            <span class="text-2xl my-1.5 ${hWeather.color}" title="${hWeather.text}">${hWeather.icon}</span>
+                            <span class="text-[13px] font-bold text-gray-700">${hTemp}°</span>
+                        </div>
+                    `;
+                }
+                hourlyHtml += `</div></div>`;
+                
+                // 3. 최종 HTML 카드 조합
+                return `
+                    <div class="weather-card bg-white rounded-2xl p-5 md:p-6 shadow-sm border border-gray-100 flex flex-col h-full relative overflow-hidden">
+                        <i class="${course.icon} ${course.color} absolute -right-6 -top-6 text-7xl md:text-8xl opacity-[0.05] pointer-events-none transform -rotate-12"></i>
+                        
+                        <div class="flex justify-between items-start mb-4 relative z-10">
+                            <div>
+                                <h2 class="text-xl md:text-2xl font-bold text-gray-800 tracking-tight flex items-center gap-1.5">
+                                    <i class="${course.icon} ${course.color} text-xl hidden md:inline-block"></i>
+                                    ${course.name}
+                                </h2>
+                                <p class="text-xs md:text-sm text-gray-400 flex items-center gap-1 mt-1 font-medium">
+                                    <i class="ph-fill ph-map-pin text-gray-300 text-sm"></i>
+                                    ${course.region}
+                                </p>
+                            </div>
+                            <div class="text-4xl md:text-5xl ${weatherInfo.color} drop-shadow-sm">
+                                ${weatherInfo.icon}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-auto relative z-10">
+                            <!-- 현재 상태 -->
+                            <div class="flex items-end justify-between mb-2">
+                                <div>
+                                    <p class="text-sm text-gray-500 font-medium mb-1">현재 상태</p>
+                                    <div class="flex items-baseline gap-2">
+                                        <span class="text-3xl md:text-4xl font-black text-gray-800 tracking-tighter">${Math.round(current.temperature)}°</span>
+                                        <span class="text-base md:text-lg font-bold ${weatherInfo.color}">${weatherInfo.text}</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5 bg-gray-50 px-3 py-2 rounded-xl border border-gray-100 shadow-sm" title="현재 풍속">
+                                    <i class="ph ph-wind text-gray-400 text-lg"></i>
+                                    <span class="font-bold text-gray-600 text-sm">${current.windspeed} <span class="text-[10px] font-medium text-gray-400">m/s</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 시간별 예보 -->
+                        ${hourlyHtml}
+                        
+                        <!-- 일별 예보 -->
+                        <div class="mt-4 border-t border-gray-50 pt-4 relative z-10">
+                            <p class="text-sm text-gray-500 font-medium mb-2 flex items-center gap-1">
+                                <i class="ph ph-calendar-blank text-base"></i> 3일 예보
+                            </p>
+                            ${forecastHtml}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error(`Error fetching weather for ${course.name}:`, error);
+                return `
+                    <div class="weather-card bg-white rounded-2xl p-6 shadow-sm border border-red-100 h-full flex items-center justify-center text-center">
+                        <div>
+                            <div class="text-4xl mb-2">⚠️</div>
+                            <h2 class="text-lg font-bold text-gray-800 mb-1">${course.name}</h2>
+                            <p class="text-sm text-red-500">날씨 정보를 불러오지 못했습니다.</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        async function fetchWeatherAll() {
+            const grid = document.getElementById('weather-grid');
+            const loader = document.getElementById('loading-indicator');
+            const timeLabel = document.getElementById('update-time');
+            
+            // 로딩 상태 표시
+            grid.classList.add('hidden');
+            loader.classList.remove('hidden');
+            grid.innerHTML = '';
+            
+            // 현재 시간 기록
+            const now = new Date();
+            timeLabel.innerText = `마지막 업데이트: ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+
+            // 모든 골프장의 날씨 데이터를 비동기 병렬로 가져오기
+            const promises = golfCourses.map(course => fetchWeather(course));
+            const cardsHtml = await Promise.all(promises);
+            
+            // 결과 렌더링
+            grid.innerHTML = cardsHtml.join('');
+            
+            // 로딩 완료 후 그리드 표시
+            loader.classList.add('hidden');
+            grid.classList.remove('hidden');
+        }
+
+        // 페이지 로드 시 날씨 데이터 가져오기 실행
+        window.onload = fetchWeatherAll;
+    </script>
+</body>
+</html>
