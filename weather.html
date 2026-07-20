@@ -112,8 +112,8 @@
 
         async function fetchWeather(course) {
             try {
-                // Open-Meteo 무료 API 사용 (시간별 데이터 hourly 추가)
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${course.lat}&longitude=${course.lon}&current_weather=true&hourly=temperature_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=Asia%2FSeoul&forecast_days=3`;
+                // Open-Meteo 무료 API 사용 (시간별 데이터 hourly 추가, 강수 확률 precipitation_probability 추가)
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${course.lat}&longitude=${course.lon}&current_weather=true&hourly=temperature_2m,weathercode,precipitation_probability&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&forecast_days=3`;
                 const response = await fetch(url);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const data = await response.json();
@@ -122,28 +122,31 @@
                 const daily = data.daily;
                 const weatherInfo = getWeatherInfo(current.weathercode);
                 
-                // 1. 일별 예보(3일) HTML 생성
                 let forecastHtml = '<div class="flex justify-between gap-2">';
                 const dayLabels = ['오늘', '내일', '모레'];
                 for(let i = 0; i < 3; i++) {
                     const dateStr = daily.time[i].substring(5, 10).replace('-', '/'); // 07/20 형태
                     const dailyWeather = getWeatherInfo(daily.weathercode[i]);
+                    const popMax = daily.precipitation_probability_max[i] || 0; // 일별 최대 강수 확률
+                    
                     forecastHtml += `
                         <div class="flex flex-col items-center flex-1 bg-gray-50 rounded-xl py-3 border border-gray-100">
                             <span class="text-xs text-gray-700 font-bold">${dayLabels[i]}</span>
                             <span class="text-[10px] text-gray-400 mb-1">${dateStr}</span>
                             <span class="text-2xl my-1 ${dailyWeather.color}" title="${dailyWeather.text}">${dailyWeather.icon}</span>
-                            <div class="flex gap-1 text-sm mt-1">
+                            <div class="flex gap-1 text-sm mt-0.5">
                                 <span class="text-red-500 font-semibold">${Math.round(daily.temperature_2m_max[i])}°</span>
                                 <span class="text-gray-300">|</span>
                                 <span class="text-blue-500 font-semibold">${Math.round(daily.temperature_2m_min[i])}°</span>
+                            </div>
+                            <div class="flex items-center gap-0.5 mt-1.5 ${popMax > 0 ? 'text-blue-500 font-bold' : 'text-gray-400 font-medium'} text-xs bg-white px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">
+                                <i class="${popMax > 0 ? 'ph-fill' : 'ph'} ph-drop"></i>${popMax}%
                             </div>
                         </div>
                     `;
                 }
                 forecastHtml += '</div>';
 
-                // 2. 시간별 예보(Hourly) HTML 생성 (현재 시간부터 15시간)
                 const hourly = data.hourly;
                 // API 데이터 중 현재 시간과 같거나 그 이후인 첫 번째 인덱스 찾기
                 let startIndex = hourly.time.findIndex(t => new Date(t).getTime() >= new Date().getTime());
@@ -190,6 +193,7 @@
 
                     const hWeather = getWeatherInfo(hourly.weathercode[i]);
                     const hTemp = Math.round(hourly.temperature_2m[i]);
+                    const hPop = hourly.precipitation_probability[i] || 0; // 시간별 강수 확률
                     
                     // 자정(내일, 모레)이거나 지금인 경우 텍스트/배경 강조
                     let textClass = 'text-gray-500 font-medium';
@@ -204,11 +208,15 @@
                         bgClass = 'bg-blue-50 border-blue-100';
                     }
 
+                    // 시간별 카드 너비를 4rem에서 4.5rem으로 살짝 넓힘 (강수확률 표시 공간 확보)
                     hourlyHtml += `
-                        <div class="flex flex-col items-center min-w-[4rem] ${bgClass} rounded-xl py-2.5 border shrink-0 snap-center transition-colors">
+                        <div class="flex flex-col items-center min-w-[4.5rem] ${bgClass} rounded-xl py-2.5 border shrink-0 snap-center transition-colors">
                             <span class="text-[11px] ${textClass}">${hourStr}</span>
                             <span class="text-2xl my-1.5 ${hWeather.color}" title="${hWeather.text}">${hWeather.icon}</span>
                             <span class="text-[13px] font-bold text-gray-700">${hTemp}°</span>
+                            <div class="flex items-center gap-0.5 mt-0.5 ${hPop > 0 ? 'text-blue-500 font-bold' : 'text-gray-400 font-medium'} text-[10px]">
+                                <i class="${hPop > 0 ? 'ph-fill' : 'ph'} ph-drop"></i>${hPop}%
+                            </div>
                         </div>
                     `;
                 }
