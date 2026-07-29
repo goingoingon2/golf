@@ -1,0 +1,1283 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>고양 컨트리클럽 — 실시간 예약 · 티시트 매칭</title>
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
+<style>
+/* ============================================================
+   고양 컨트리클럽 — 통합본 (예약 페이지 + 티시트 매칭)
+   · club_9.html + tee_match.html 을 한 파일로 병합
+   · showPage('book' | 'match') 로 화면 전환
+   · 매칭 화면의 전역/클래스는 m 접두어로 분리
+   ============================================================ */
+/* 로고 3색 — 딥그린 · 버건디 · 골드 (그 외는 무채색) */
+:root{
+  --bg:#f5f6f3; --surface:#ffffff; --surface-2:#fafbf8;
+  --text:#22271f; --text-2:#5f6a5c; --text-3:#98a094;
+  --border:#e3e7de; --border-2:#ccd3c6;
+  --brand:#1b6b3a; --brand2:#14522c; --brand-2:#14522c;
+  --brand-soft:#e9f1ec; --brand-line:#c3dbcc;
+  --wine:#8b1f2f; --wine2:#701825; --wine-soft:#f7eaec; --wine-line:#e8cdd1;
+  --gold:#c79a3c; --gold-soft:#f8f1e2; --gold-line:#e8d6ae;
+  --green:#1b6b3a; --green-soft:#e9f1ec;
+  --amber:#c79a3c; --amber-soft:#f8f1e2;
+  --night:#8b1f2f; --night-soft:#f7eaec;
+  --red:#8b1f2f; --red-soft:#f7eaec;
+  --pink:#8b1f2f; --pink-soft:#f7eaec;
+  --header-bg:#14522c; --header-fg:#e8f0ea;
+  --radius:12px; --radius-sm:6px;
+  --shadow:0 1px 3px rgba(25,35,22,.08),0 1px 2px rgba(25,35,22,.06);
+  --shadow-lg:0 18px 48px rgba(25,45,25,.22);
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+/* 페이지 전환 */
+.page{display:none;}
+.page.on{display:block;}
+#pgMatch{font-size:13px;background:#f2f4f0;min-height:100vh;}
+#pgBook{background:var(--bg);}
+
+/* ============================ 공통 리셋 ============================ */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Pretendard','Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;}
+input,select{font-family:inherit;font-size:13px;color:var(--text);}
+a{text-decoration:none;color:inherit;}
+::-webkit-scrollbar{width:10px;height:10px;}
+::-webkit-scrollbar-thumb{background:#ccd3c6;border-radius:6px;}
+::-webkit-scrollbar-thumb:hover{background:#b3bdac;}
+
+/* ============================ 예약 페이지 ============================ */
+
+/* ============================================================
+   고양 컨트리클럽 — 개별 골프장 홈페이지 · 예약 페이지 (9홀)
+   · 좌석(seat) 단위 "채우기" 예약 UI 적용
+   · 고양CC 실제 운영 참고: GOYANG 단일 코스 · 1~3부(3부 야간) · 7분 간격
+     첫 티오프 05:25 · 3부 야간 21시대 · 캐디피 80,000원(9홀) · 카트는 전 티타임 의무(표기 생략)
+   · 본 파일은 UI 샘플이며 실제 예약 기능이 없습니다.
+   ============================================================ */
+/* 로고 3색 — 딥그린 · 버건디 · 골드 (그 외는 무채색) */
+
+.wrap{max-width:1240px;margin:0 auto;padding:0 22px;}
+
+/* ---------- 상단 유틸바 ---------- */
+.util{background:var(--brand);color:#fff;font-size:11.5px;}
+.util-in{display:flex;align-items:center;justify-content:space-between;height:32px;}
+.util-l{display:flex;gap:14px;opacity:.9;}
+.util-r{display:flex;gap:14px;align-items:center;}
+.util a{cursor:pointer;}
+.util a:hover{text-decoration:underline;}
+.util .plat{background:rgba(255,255,255,.16);border-radius:99px;padding:3px 11px;font-weight:700;}
+
+/* ---------- 헤더 ---------- */
+.hd{background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;}
+.hd-in{display:flex;align-items:center;justify-content:space-between;height:70px;}
+.logo{display:flex;align-items:center;gap:11px;cursor:pointer;}
+.logo .mk{width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--brand) 0 50%,var(--wine) 50% 100%);color:#fff;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;position:relative;}
+.logo .mk .emo{position:absolute;bottom:-3px;right:-4px;font-size:15px;}
+.logo .tx b{display:block;font-size:17px;font-weight:800;letter-spacing:-.4px;}
+.logo .tx span{display:block;font-size:10.5px;color:var(--text-3);font-weight:600;letter-spacing:1.2px;}
+.gnb{display:flex;gap:4px;}
+.gnb a{padding:9px 15px;border-radius:8px;font-size:14px;font-weight:700;color:var(--text-2);cursor:pointer;}
+.gnb a:hover{background:var(--surface-2);color:var(--text);}
+.gnb a.on{color:var(--brand);background:var(--brand-soft);}
+.hd-r{display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.hd-r button{white-space:nowrap;}
+.btn-line{border:1px solid var(--border-2);border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:700;color:var(--text-2);}
+.btn-line:hover{border-color:var(--brand);color:var(--brand);}
+.btn-fill{background:var(--brand);color:#fff;border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:800;}
+.btn-fill:hover{background:var(--brand2);}
+
+/* ---------- 히어로 ---------- */
+.hero{background:linear-gradient(115deg,var(--brand2) 0%,var(--brand) 62%,#227a43 100%);color:#fff;position:relative;overflow:hidden;}
+.hero:after{content:'⛳';position:absolute;right:6%;top:50%;transform:translateY(-50%);font-size:145px;opacity:.1;}
+.hero-in{padding:36px 22px 32px;display:flex;align-items:flex-end;justify-content:space-between;gap:26px;flex-wrap:wrap;position:relative;z-index:1;}
+.hero-h h1{font-size:31px;font-weight:800;letter-spacing:-1px;}
+.hero-h .sub{font-size:14px;opacity:.93;margin-top:8px;font-weight:500;}
+.hero-meta{display:flex;gap:9px;margin-top:15px;flex-wrap:wrap;}
+.hero-meta span{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.24);border-radius:99px;padding:5px 13px;font-size:12px;font-weight:700;}
+.hero-meta .star{color:#e8c877;}
+.hero-act{margin-top:16px;}
+.hbtn{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);color:#fff;font-size:13.5px;font-weight:700;padding:10px 16px;border-radius:9px;backdrop-filter:blur(3px);transition:.14s;}
+.hbtn:hover{background:rgba(255,255,255,.28);transform:translateY(-1px);}
+
+/* ---------- 홀 탭 (전체시간 / 18홀 / 9홀) ---------- */
+.holetab{display:flex;border:1px solid var(--border-2);border-radius:8px;overflow:hidden;margin-bottom:14px;background:var(--surface);}
+.holetab .ht{flex:1;padding:12px 8px;font-size:14px;font-weight:700;color:var(--text-2);border-right:1px solid var(--border);transition:.12s;}
+.holetab .ht:last-child{border-right:none;}
+.holetab .ht:hover{background:var(--surface-2);color:var(--text);}
+.holetab .ht.on{background:var(--brand);color:#fff;}
+.holetab .ht.on:hover{background:var(--brand2);color:#fff;}
+.chip.h18{background:var(--brand-soft);color:var(--brand);border-color:var(--brand-line);}
+.chip.h9{background:var(--surface-2);color:var(--text-2);border-color:var(--border-2);}
+
+/* ---------- 날짜 스트립 ---------- */
+.dateband{background:var(--surface);border-bottom:1px solid var(--border);padding:18px 0 20px;}
+.db-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.db-head h2{font-size:20px;font-weight:600;letter-spacing:-.3px;color:var(--text-2);}
+.db-head h2 b{font-weight:800;color:var(--text);}
+.db-nav{display:flex;gap:6px;flex-shrink:0;}
+.db-nav button{width:38px;height:32px;border:1px solid var(--border-2);border-radius:7px;color:var(--text-2);font-size:15px;font-weight:800;background:var(--surface);}
+.db-nav button:hover:not(:disabled){border-color:var(--brand);color:var(--brand);}
+.db-nav button:disabled{opacity:.35;cursor:not-allowed;}
+.db-strip{display:flex;gap:2px;background:#e4e7de;border-radius:10px;padding:11px 9px;overflow-x:auto;}
+.dc{flex:1 0 auto;min-width:56px;border-radius:8px;padding:7px 3px 8px;text-align:center;cursor:pointer;transition:.12s;}
+.dc:hover{background:rgba(0,0,0,.06);}
+.dc .w{font-size:11px;font-weight:700;color:#5a6157;}
+.dc .d{font-size:15px;font-weight:800;margin-top:3px;color:#293026;letter-spacing:-.3px;}
+.dc .n{font-size:10px;font-weight:800;margin-top:6px;color:var(--brand);}
+.dc.wknd .w,.dc.wknd .d{color:var(--wine);}
+.dc.hol .w,.dc.hol .d{color:var(--wine);font-weight:900;}
+.dc.none .n{color:#9aa096;font-weight:700;}
+.dc.on{background:var(--brand);box-shadow:0 2px 7px rgba(20,82,44,.28);}
+.dc.on .w,.dc.on .d{color:#fff;}
+.dc.on .n{color:#e4eedb;}
+
+/* ---------- 9홀 특징 스트립 ---------- */
+.feat{background:var(--surface);border-bottom:1px solid var(--border);}
+.feat-in{display:flex;gap:0;padding:0 22px;}
+.fi{flex:1;padding:15px 18px;border-right:1px solid var(--border);display:flex;gap:11px;align-items:center;}
+.fi:last-child{border-right:none;}
+.fi .ic{width:36px;height:36px;border-radius:10px;background:var(--brand-soft);color:var(--brand);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hbtn [data-ic]{display:inline-flex;vertical-align:-3px;margin-right:3px;}
+.sect-h .nm .ic-svg{vertical-align:-3px;margin-right:2px;}
+.fi .tt{font-size:13px;font-weight:800;}
+.fi .ds{font-size:11px;color:var(--text-2);margin-top:2px;font-weight:600;}
+
+/* ---------- 안내 ---------- */
+.notice{background:var(--gold-soft);border-bottom:1px solid #ecdcc2;}
+.notice-in{display:flex;gap:11px;padding:13px 22px;font-size:12.5px;color:#6b5220;line-height:1.65;align-items:flex-start;}
+.notice .warn{display:block;color:var(--wine);font-weight:800;margin-bottom:3px;}
+.nlist{list-style:none;margin:5px 0 0;padding:0;}
+.nlist li{position:relative;padding-left:10px;margin-top:2px;}
+.nlist li:before{content:'-';position:absolute;left:0;color:#8d7440;}
+.m-warn{background:var(--wine-soft);border:1px solid var(--wine-line);border-radius:8px;padding:10px 12px;font-size:11.5px;font-weight:700;color:var(--wine);line-height:1.6;margin-bottom:12px;}
+.notice .tag{background:var(--gold);color:#fff;border-radius:5px;padding:2px 8px;font-size:10.5px;font-weight:800;flex-shrink:0;margin-top:1px;}
+.notice b{color:#503c14;}
+
+/* ---------- 본문 ---------- */
+.body{display:flex;gap:24px;padding:24px 0 60px;align-items:flex-start;}
+.side{width:236px;flex-shrink:0;position:sticky;top:86px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);}
+.panel-h{font-size:13.5px;font-weight:800;display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.panel-h a{font-size:11.5px;color:var(--brand);font-weight:700;cursor:pointer;}
+.fg{margin-bottom:15px;}
+.fg label{display:block;font-size:11.5px;font-weight:800;color:var(--text-2);margin-bottom:7px;}
+.frow{display:flex;gap:5px;flex-wrap:wrap;}
+.fb{border:1px solid var(--border-2);background:var(--surface);border-radius:7px;padding:7px 0;font-size:12px;font-weight:700;color:var(--text-2);flex:1;min-width:38px;}
+.fb.wide{flex:1 1 46%;}
+.fb:hover{border-color:var(--brand);color:var(--brand);}
+.fb.on{background:var(--brand);border-color:var(--brand);color:#fff;}
+.fg select{width:100%;border:1px solid var(--border-2);border-radius:7px;padding:8px 9px;background:var(--surface);font-weight:600;}
+.legend{border-top:1px solid var(--border);padding-top:13px;}
+.lrow{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-2);margin-bottom:7px;font-weight:600;}
+.lrow .dot{width:26px;height:16px;border-radius:5px;flex-shrink:0;}
+.lrow .dot.open{background:var(--surface-2);border:1.5px dashed var(--border-2);}
+.lrow .dot.sel{background:var(--brand);}
+.lrow .dot.other{background:#eaeee7;border:1px solid #ccd3c6;}
+.lrow .dot.exc{background:var(--gold-soft);border:1px solid var(--gold-line);}
+
+.main{flex:1;min-width:0;}
+.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+.mhead .cnt{font-size:14px;font-weight:700;color:var(--text-2);}
+.mhead .cnt b{color:var(--brand);font-size:18px;font-weight:800;}
+.sortbar{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:3px;}
+.sortbar button{padding:7px 13px;border-radius:7px;font-size:12.5px;font-weight:700;color:var(--text-2);}
+.sortbar button.on{background:var(--brand);color:#fff;}
+
+.sect{margin-bottom:26px;}
+.sect-h{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.sect-h .nm{font-size:15px;font-weight:800;display:flex;align-items:center;gap:6px;}
+.sect-h .rg{font-size:12px;color:var(--text-3);font-weight:600;}
+.sect-h .ln{flex:1;height:1px;background:var(--border);}
+.sect-h .n{font-size:11.5px;font-weight:800;color:var(--brand);background:var(--brand-soft);border-radius:99px;padding:3px 10px;}
+.sect.night .sect-h .nm{color:var(--night);}
+.sect.night .sect-h .n{color:var(--night);background:var(--night-soft);}
+
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);position:relative;transition:.14s;}
+.card:hover{border-color:var(--border-2);box-shadow:0 5px 16px rgba(30,60,30,.09);}
+.card.exclusive{background:#fdfbf5;border-color:var(--gold-line);}
+.card.night{background:linear-gradient(180deg,#fdf8f9,#fff);border-color:var(--wine-line);}
+.card.picked{border-color:var(--brand);box-shadow:0 0 0 3px rgba(44,110,63,.14);}
+.ribbon{position:absolute;top:11px;right:-1px;background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:3px 11px;border-radius:6px 0 0 6px;}
+.ribbon.exc{background:var(--gold);}
+.ribbon.night{background:var(--night);}
+.c-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px;}
+.c-time{font-size:25px;font-weight:800;letter-spacing:-1.1px;line-height:1;}
+.c-time .ap{font-size:12px;font-weight:700;color:var(--text-2);margin-right:4px;letter-spacing:0;}
+.c-meta{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
+.chip{font-size:10px;font-weight:700;border-radius:5px;padding:3px 7px;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border);}
+.chip.hot{background:var(--wine-soft);color:var(--wine);border-color:var(--wine-line);}
+.chip.nite{background:var(--wine-soft);color:var(--wine);border-color:var(--wine-line);}
+.chip .ic-svg{margin-right:1px;vertical-align:-2px;}
+.c-price{text-align:right;}
+.c-price .p{font-size:19px;font-weight:800;letter-spacing:-.6px;}
+.c-price s{display:block;font-size:11px;color:var(--text-3);font-weight:600;}
+.c-price .per{font-size:10px;color:var(--text-3);font-weight:600;margin-top:2px;}
+
+.seats{display:flex;gap:6px;}
+.seat{flex:1;height:50px;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11.5px;font-weight:700;position:relative;transition:.12s;}
+.seat .who{font-size:11px;font-weight:700;line-height:1;}
+.seat .sub{font-size:8.5px;font-weight:600;opacity:.9;}
+.seat.open{background:var(--surface-2);border:1.5px dashed var(--border-2);color:var(--text-3);cursor:pointer;}
+.seat.open:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);}
+.seat.open.sel{background:var(--brand);border:1.5px solid var(--brand);color:#fff;box-shadow:0 2px 7px rgba(44,110,63,.28);}
+.seat.open.sel:hover{background:var(--brand2);border-color:var(--brand2);}
+.seat.open.nofill{cursor:default;opacity:.55;}
+.seat.open.nofill:hover{border-color:var(--border-2);color:var(--text-3);background:var(--surface-2);}
+.seat.other{background:#eef1eb;border:1px solid #d2d9cc;color:#4a5547;cursor:default;}
+.seat.mine{background:var(--brand);border:1px solid var(--brand);color:#fff;}
+.seat.exc{background:var(--gold-soft);border:1px solid var(--gold-line);color:#8a6a24;cursor:not-allowed;}
+.seat .g{position:absolute;top:3px;right:4px;font-size:8px;font-weight:800;width:13px;height:13px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.seat .g.m,.seat .g.f{background:rgba(34,39,31,.1);color:inherit;}
+.seat.mine .g,.seat.open.sel .g{background:rgba(255,255,255,.3);color:#fff;}
+
+.c-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;padding-top:11px;border-top:1px solid var(--border);}
+.f-status{font-size:11px;color:var(--text-2);font-weight:600;line-height:1.45;}
+.f-status .ok{color:var(--brand);font-weight:800;}
+.f-status .ex{color:var(--gold);font-weight:800;}
+.f-status .full{color:var(--text-3);font-weight:800;}
+.bk{background:var(--brand);color:#fff;border-radius:8px;padding:9px 14px;font-size:12.5px;font-weight:800;flex-shrink:0;}
+.bk:hover{background:var(--brand2);}
+.bk.ghost{background:var(--surface);color:var(--brand);border:1.5px solid var(--brand);}
+.bk:disabled{background:var(--surface-2);color:var(--text-3);cursor:not-allowed;border:1px solid var(--border);}
+
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--text-3);font-size:13.5px;background:var(--surface);border:1px dashed var(--border-2);border-radius:var(--radius);}
+.empty b{display:block;font-size:15px;color:var(--text-2);margin-bottom:7px;}
+.empty a{color:var(--brand);font-weight:700;cursor:pointer;}
+
+/* ---------- 모달 ---------- */
+.ov{position:fixed;inset:0;background:rgba(25,40,25,.5);display:none;align-items:center;justify-content:center;z-index:200;padding:20px;}
+.ov.open{display:flex;}
+.modal{background:var(--surface);border-radius:16px;width:100%;max-width:480px;max-height:90vh;overflow:auto;box-shadow:var(--shadow-lg);}
+.m-top{display:flex;align-items:center;gap:12px;padding:18px 20px;border-bottom:1px solid var(--border);}
+.m-top .mk{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2c6e3f,#7cb342);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;}
+.m-top h3{font-size:16px;font-weight:800;}
+.m-sub{font-size:11.5px;color:var(--text-2);margin-top:3px;font-weight:600;}
+.m-x{margin-left:auto;width:30px;height:30px;border-radius:8px;color:var(--text-3);font-size:15px;}
+.m-x:hover{background:var(--surface-2);}
+.m-body{padding:18px 20px;}
+.m-seats{display:flex;gap:7px;margin-bottom:16px;}
+.m-seats .seat{height:46px;pointer-events:none;}
+.mrow{margin-bottom:14px;}
+.mrow label{display:block;font-size:11.5px;font-weight:800;color:var(--text-2);margin-bottom:7px;}
+.mrow input{width:100%;border:1px solid var(--border-2);border-radius:8px;padding:10px 11px;}
+.mrow input:focus{outline:none;border-color:var(--brand);}
+.btype{display:flex;gap:8px;}
+.opt{flex:1;border:1.5px solid var(--border-2);border-radius:10px;padding:11px;cursor:pointer;transition:.12s;}
+.opt:hover{border-color:var(--brand);}
+.opt.on{border-color:var(--brand);background:var(--brand-soft);}
+.opt .ot{font-size:13px;font-weight:800;display:flex;align-items:center;gap:6px;}
+.opt .od{font-size:10.5px;color:var(--text-2);margin-top:5px;line-height:1.45;font-weight:600;}
+.badge{font-size:9px;font-weight:800;border-radius:4px;padding:2px 6px;}
+.badge.kr{background:var(--gold-soft);color:var(--gold);}
+.badge.us{background:var(--brand-soft);color:var(--brand);}
+.paxsel{display:flex;gap:6px;}
+.paxsel button{flex:1;border:1px solid var(--border-2);border-radius:8px;padding:10px 0;font-size:13px;font-weight:700;color:var(--text-2);}
+.paxsel button.on{background:var(--brand);border-color:var(--brand);color:#fff;}
+.paxsel button:disabled{opacity:.35;cursor:not-allowed;}
+.summary{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;padding:13px;}
+.sr{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text-2);margin-bottom:7px;font-weight:600;}
+.sr .v{font-weight:800;color:var(--text);}
+.sr.total{border-top:1px solid var(--border);padding-top:9px;margin-top:9px;margin-bottom:0;font-size:14px;}
+.sr.total .v{color:var(--brand);font-size:17px;font-weight:800;}
+.dep{font-size:11px;color:var(--text-3);margin-top:9px;line-height:1.5;font-weight:600;}
+.m-foot{display:flex;gap:9px;padding:15px 20px;border-top:1px solid var(--border);}
+.m-foot button{flex:1;height:46px;border-radius:11px;font-size:14px;font-weight:800;}
+.m-foot .cancel{background:var(--surface-2);color:var(--text-2);border:1px solid var(--border-2);}
+.m-foot .confirm{background:var(--brand);color:#fff;}
+.m-foot .confirm:hover{background:var(--brand2);}
+
+/* ---------- 푸터 / 토스트 ---------- */
+.ft{background:#1f2b1f;color:#a8bba4;padding:30px 0;font-size:12px;line-height:1.8;}
+.ft b{color:#fff;font-size:14px;display:block;margin-bottom:8px;}
+.ft .row{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;}
+.ft .plink{color:#9fe08f;font-weight:700;cursor:pointer;}
+.toast{position:fixed;left:50%;bottom:32px;transform:translateX(-50%) translateY(20px);background:#1f2b1f;color:#fff;padding:12px 22px;border-radius:11px;font-size:13px;font-weight:600;box-shadow:var(--shadow-lg);opacity:0;pointer-events:none;transition:.28s;z-index:300;max-width:90vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media(max-width:1100px){.cards{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:980px){
+  .body{flex-direction:column;} .side{width:100%;position:static;}
+  .cards{grid-template-columns:1fr;} .gnb{display:none;} .feat-in{flex-wrap:wrap;} .fi{flex:1 1 50%;}
+}
+
+
+/* ============================ 티시트 매칭 ============================ */
+
+/* ============================================================
+   티시트 매칭 (운영자) — 좌석 단위 예약 · 싱글 페어링(포섬 채우기)
+   · 대기 중인 싱글·듀오를 빈 좌석에 배정해 4인 팀을 완성한다
+   · 드래그&드롭 또는 OPEN 클릭으로 배정 · 자동 페어링 지원
+   · aRP 관리자 디자인 토큰 기준 · 본 페이지는 UI 샘플입니다
+   ============================================================ */
+/* 로고 3색 — 딥그린 · 버건디 · 골드 (그 외는 무채색) */
+
+
+/* ---------- 상단 앱바 ---------- */
+.appbar{height:48px;background:var(--header-bg);color:var(--header-fg);display:flex;align-items:center;gap:14px;padding:0 16px;position:sticky;top:0;z-index:60;}
+.ab-club{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;background:rgba(255,255,255,.1);padding:6px 10px;border-radius:7px;}
+.ab-club .flag{color:var(--gold);}
+.ab-day{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;background:rgba(255,255,255,.08);padding:6px 10px;border-radius:7px;}
+.ab-day .dot{width:7px;height:7px;border-radius:50%;background:#8dc79f;}
+.ab-day b{font-family:var(--mono);font-weight:700;}
+.ab-save{font-size:12px;font-weight:600;background:rgba(255,255,255,.12);color:#bfe0cb;padding:6px 10px;border-radius:7px;display:flex;align-items:center;gap:5px;}
+.ab-search{flex:1;max-width:420px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.09);border-radius:7px;padding:7px 11px;font-size:12.5px;color:#a8bfae;}
+.ab-search .kbd{margin-left:auto;font-size:10.5px;background:rgba(255,255,255,.13);padding:2px 6px;border-radius:4px;}
+.ab-notice{display:flex;align-items:center;gap:9px;font-size:12px;background:rgba(255,255,255,.07);padding:6px 12px;border-radius:7px;max-width:520px;}
+.ab-notice .tag{background:var(--gold);color:#14522c;font-weight:800;font-size:10.5px;padding:2px 7px;border-radius:4px;flex-shrink:0;}
+.ab-notice .tx{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ab-notice .cnt{background:rgba(255,255,255,.18);font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:9px;flex-shrink:0;}
+.ab-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.ab-ic{position:relative;font-size:15px;opacity:.9;}
+.ab-ic .bdg{position:absolute;top:-5px;right:-7px;background:var(--red);color:#fff;font-size:9.5px;font-weight:800;padding:1px 5px;border-radius:9px;}
+.ab-user{display:flex;align-items:center;gap:8px;padding-left:12px;border-left:1px solid rgba(255,255,255,.16);}
+.ab-user .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--brand) 0 50%,var(--wine) 50% 100%);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:#fff;}
+.ab-user .nm{font-size:12px;font-weight:700;line-height:1.25;}
+.ab-user .rl{font-size:10.5px;opacity:.7;}
+
+/* ---------- 탭바 ---------- */
+.tabbar{height:38px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:stretch;padding:0 12px;position:sticky;top:48px;z-index:55;overflow-x:auto;}
+.tab{display:flex;align-items:center;gap:9px;padding:0 15px;font-size:12.5px;font-weight:600;color:var(--text-2);border-right:1px solid var(--border);white-space:nowrap;position:relative;}
+.tab:hover{background:var(--surface-2);}
+.tab.on{color:var(--brand);background:var(--brand-soft);font-weight:700;}
+.tab.on:after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--brand);}
+.tab.go{cursor:pointer;}
+.tab.go:hover{background:var(--brand-soft);color:var(--brand);}
+.ab-go{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.34);color:#fff;font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:7px;white-space:nowrap;transition:.14s;}
+.ab-go:hover{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.6);}
+.tab .x{font-size:12px;color:var(--text-3);opacity:.7;}
+.tab .x:hover{color:var(--red);opacity:1;}
+
+/* ---------- 페이지 헤더 ---------- */
+.mwrap{max-width:1760px;margin:0 auto;padding:0 16px;}
+.phead{display:flex;align-items:center;gap:12px;padding:14px 0 12px;}
+.phead .bc{font-size:12px;color:var(--text-3);}
+.phead h1{font-size:16px;font-weight:800;letter-spacing:-.3px;}
+.phead .right{margin-left:auto;display:flex;align-items:center;gap:9px;font-size:11.5px;color:var(--text-2);}
+.phead .sbx{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--text-3);background:var(--surface-2);border:1px solid var(--border);padding:2px 7px;border-radius:4px;}
+
+/* ---------- 툴바 ---------- */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.tb-f{display:flex;align-items:center;gap:7px;}
+.tb-f label{font-size:12px;font-weight:600;color:var(--text-2);}
+.tb-f select{background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-sm);padding:7px 10px;font-weight:600;min-width:132px;}
+.tb-r{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+.btn{background:var(--surface);border:1px solid var(--border-2);border-radius:var(--radius-sm);padding:8px 13px;font-size:12.5px;font-weight:700;color:var(--text-2);transition:.12s;}
+.btn:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff;}
+.btn.primary:hover{background:var(--brand-2);border-color:var(--brand-2);color:#fff;}
+
+/* ---------- 안내 배너 ---------- */
+.banner{display:flex;gap:9px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:11px 14px;font-size:12.5px;color:var(--text-2);line-height:1.65;margin-bottom:11px;}
+.banner .ic{color:var(--brand);flex-shrink:0;font-size:13px;}
+.banner b{color:var(--text);}
+
+/* ---------- 핫딜 ---------- */
+.hotbar{display:flex;align-items:center;gap:10px;background:var(--wine-soft);border:1px solid var(--wine-line);border-radius:var(--radius);padding:9px 13px;margin-bottom:13px;flex-wrap:wrap;}
+.hotbar .lb{font-size:12px;font-weight:800;color:var(--wine);flex-shrink:0;display:flex;align-items:center;gap:4px;}
+[data-ic]{display:inline-flex;align-items:center;}
+.ab-ic [data-ic]{opacity:.92;}
+.hotchip{background:var(--surface);border:1px solid var(--wine-line);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:700;color:var(--text-2);}
+.hotchip b{color:var(--red);font-family:var(--mono);}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin-bottom:13px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:13px 16px;box-shadow:var(--shadow);}
+.kpi .k{font-size:11.5px;font-weight:600;color:var(--text-2);margin-bottom:5px;}
+.kpi .v{font-size:23px;font-weight:800;letter-spacing:-.6px;}
+.kpi.b .v{color:var(--brand);} .kpi.g .v{color:var(--green);} .kpi.a .v{color:var(--amber);}
+
+/* ---------- 본문 그리드 ---------- */
+.grid{display:grid;grid-template-columns:1fr 268px;gap:13px;align-items:start;padding-bottom:40px;}
+
+/* ---------- 티시트 ---------- */
+.sheet{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+.trow{display:flex;align-items:center;gap:13px;padding:11px 15px;border-bottom:1px solid var(--border);transition:.1s;}
+.trow:last-child{border-bottom:none;}
+.trow:hover{background:#fafbf8;}
+.trow.done{background:#f5f9f5;}
+.t-time{font-size:14.5px;font-weight:800;font-family:var(--mono);letter-spacing:-.4px;width:56px;flex-shrink:0;}
+.t-price{font-size:12.5px;font-weight:700;color:var(--text-2);font-family:var(--mono);width:82px;flex-shrink:0;display:flex;align-items:center;gap:5px;}
+.t-price.hot{color:var(--red);}
+.t-price .hb{background:var(--red);color:#fff;font-size:8.5px;font-weight:800;padding:1px 4px;border-radius:3px;letter-spacing:.3px;}
+.t-seats{display:flex;gap:7px;flex:1;}
+.t-right{display:flex;align-items:center;gap:11px;flex-shrink:0;}
+.t-prog{font-size:11px;font-weight:700;padding:3px 9px;border-radius:12px;white-space:nowrap;}
+.t-prog.ok{background:var(--green-soft);color:var(--green);}
+.t-prog.late{background:var(--red-soft);color:var(--red);}
+.t-prog.soon{background:var(--surface-2);color:var(--text-2);}
+.t-cnt{font-size:12px;font-weight:800;font-family:var(--mono);color:var(--text-3);width:30px;text-align:right;}
+.t-cnt.full{color:var(--green);}
+
+/* 좌석 */
+.mseat{flex:1;min-width:96px;height:36px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;gap:5px;font-size:12px;font-weight:700;transition:.12s;position:relative;}
+.mseat.open{background:var(--surface-2);border:1.5px dashed var(--border-2);color:var(--text-3);font-size:11.5px;letter-spacing:.4px;cursor:pointer;}
+.mseat.open:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);}
+.mseat.open.dragover{border-color:var(--brand);border-style:solid;background:var(--brand-soft);color:var(--brand);transform:scale(1.03);box-shadow:0 0 0 3px rgba(92,124,250,.18);}
+.mseat.take{background:var(--brand-soft);border:1px solid var(--brand-line);color:#175c31;cursor:grab;}
+.mseat.take:hover{border-color:var(--brand);box-shadow:0 1px 4px rgba(27,107,58,.18);}
+.mseat.take:active{cursor:grabbing;}
+.mseat.take.drag{opacity:.42;}
+.mseat.take.new{animation:pop .45s ease;}
+/* 묶음(조인 단위) — 골드 상단선 + 인원 배지로 표시 */
+.mseat.take.grp{box-shadow:inset 0 2.5px 0 var(--gold);border-color:var(--gold-line);}
+.mseat.take.grp:hover{border-color:var(--gold);box-shadow:inset 0 2.5px 0 var(--gold),0 1px 4px rgba(199,154,60,.28);}
+.mseat .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mseat .pb{font-size:8.5px;font-weight:800;color:#8a6a24;background:var(--gold-soft);border:1px solid var(--gold-line);border-radius:4px;padding:0 4px;flex-shrink:0;}
+.qi .tp.n2{color:#8a6a24;background:var(--gold-soft);}
+.qi .tp.n3{color:var(--wine);background:var(--wine-soft);}
+.qadds{display:flex;gap:6px;margin:0 9px 10px;}
+.qadds button{flex:1;padding:8px 4px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);font-size:11.5px;font-weight:700;color:var(--text-2);transition:.12s;}
+.qadds button:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);}
+@keyframes pop{0%{transform:scale(.86);background:#cbe3d4;}60%{transform:scale(1.04);}100%{transform:scale(1);}}
+.mseat .g{font-size:9px;font-weight:800;width:15px;height:15px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.mseat .g.m,.mseat .g.f{background:rgba(34,39,31,.11);color:inherit;}
+.mseat .x{font-size:11px;color:#8ba795;margin-left:2px;cursor:pointer;}
+.mseat .x:hover{color:var(--red);}
+
+/* ---------- 대기열 ---------- */
+.mside{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);position:sticky;top:100px;}
+.mside-h{display:flex;align-items:center;gap:8px;padding:12px 14px 9px;border-bottom:1px solid var(--border);}
+.mside-h b{font-size:13px;font-weight:800;}
+.mside-h .n{background:var(--brand);color:#fff;font-size:10.5px;font-weight:800;padding:1px 7px;border-radius:9px;}
+.mside-tip{font-size:11px;color:var(--text-3);line-height:1.55;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface-2);}
+.qlist{padding:9px;display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto;}
+.qi{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 10px;cursor:grab;transition:.12s;}
+.qi:hover{border-color:var(--brand);background:var(--brand-soft);box-shadow:var(--shadow);}
+.qi.drag{opacity:.42;}
+.qi .h{color:var(--text-3);font-size:12px;cursor:grab;}
+.qi .nm{font-size:12.5px;font-weight:700;flex:1;}
+.qi .g{font-size:9px;font-weight:800;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.qi .g.m,.qi .g.f{background:rgba(34,39,31,.1);color:var(--text-2);}
+.qi .tp{font-size:10px;font-weight:800;color:var(--brand);background:var(--brand-soft);padding:2px 6px;border-radius:4px;}
+.qi .tp.duo{color:var(--amber);background:var(--amber-soft);}
+.qempty{padding:26px 14px;text-align:center;font-size:12px;color:var(--text-3);line-height:1.7;}
+.qadd{margin:0 9px 10px;padding:9px;border:1.5px dashed var(--border-2);border-radius:var(--radius-sm);font-size:12px;font-weight:700;color:var(--text-2);width:calc(100% - 18px);transition:.12s;}
+.qadd:hover{border-color:var(--brand);color:var(--brand);background:var(--brand-soft);}
+.qadd .k{font-size:10px;font-family:var(--mono);color:var(--text-3);margin-left:5px;}
+
+/* ---------- 토스트 ---------- */
+
+@media(max-width:1180px){
+  .grid{grid-template-columns:1fr;}
+  .mside{position:static;}
+  .kpis{grid-template-columns:repeat(3,1fr);}
+  .ab-notice,.ab-search{display:none;}
+}
+/* ---------- 모바일 ---------- */
+@media(max-width:760px){
+  .appbar{gap:8px;padding:0 12px;}
+  .ab-save,.ab-day{display:none;}
+  .ab-user{padding-left:9px;}
+  .ab-user .nm,.ab-user .rl{display:none;}
+  .phead{flex-wrap:wrap;gap:6px;}
+  .phead .right{width:100%;margin-left:0;font-size:11px;}
+  .toolbar{flex-wrap:wrap;gap:8px;}
+  .tb-f{flex:1 1 100%;}
+  .tb-f select{flex:1;min-width:0;}
+  .tb-r{margin-left:0;width:100%;}
+  .tb-r .btn{flex:1 1 auto;text-align:center;}
+  .kpis{grid-template-columns:repeat(2,1fr);gap:8px;}
+  .kpi{padding:11px 13px;} .kpi .v{font-size:20px;}
+  /* 티타임 행 — 좌석을 아래 2×2 로 접어 배치 */
+  .trow{flex-wrap:wrap;gap:9px;padding:12px 13px;}
+  .t-seats{flex:1 1 100%;order:3;display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+  .mseat{min-width:0;}
+  .t-right{margin-left:auto;}
+  .mwrap{padding:0 12px;}
+}
+
+</style>
+</head>
+<body>
+
+<div class="page on" id="pgBook">
+
+
+<div class="util"><div class="wrap util-in">
+  <div class="util-l"><a onclick="toast('고양 컨트리클럽 — UI 샘플')">경기 고양시 덕양구</a><a onclick="toast('오시는 길 — 샘플')">오시는 길</a><a onclick="toast('락카 사용안내 — 샘플')">락카 사용안내</a></div>
+  <div class="util-r"><a class="plat" href="tee_slot.html">← 티온 플랫폼으로</a><a onclick="toast('로그인 — 샘플')">로그인</a><a onclick="toast('회원가입 — 샘플')">회원가입</a></div>
+</div></div>
+
+<header class="hd"><div class="wrap hd-in">
+  <div class="logo" onclick="location.reload()">
+    <div class="mk">고양</div>
+    <div class="tx"><b>고양 컨트리클럽</b><span>GOYANG COUNTRY CLUB</span></div>
+  </div>
+  <nav class="gnb">
+    <a onclick="toast('클럽소개 — 샘플')">클럽소개</a>
+    <a class="on">예약</a>
+    <a onclick="toast('마이페이지 — 샘플')">마이페이지</a>
+    <a onclick="toast('이용안내 — 샘플')">이용안내</a>
+    <a onclick="toast('연습장소개 · 110타석 — 샘플')">연습장소개</a>
+    <a onclick="toast('커뮤니티 — 샘플')">커뮤니티</a>
+  </nav>
+  <div class="hd-r">
+    <button class="btn-line" onclick="showMine()">내 예약</button>
+    <button class="btn-fill" onclick="scrollToBook()">티타임 예약</button>
+  </div>
+</div></header>
+
+<section class="hero"><div class="wrap hero-in">
+  <div class="hero-h">
+    <h1>실시간 티타임 예약</h1>
+    <div class="sub">도심 속 친환경 조경의 GOYANG 코스 — 빈자리를 직접 선택해 예약하세요 · 새벽·야간 9홀 · 일반 시간 18홀</div>
+    <div class="hero-meta">
+      <span class="star">★ 4.2</span><span>경기 고양 덕양구</span><span>9홀 코스 (18홀 = 2바퀴)</span><span>GOYANG 코스</span><span>110타석 연습장</span>
+    </div>
+    <div class="hero-act"><button class="hbtn" onclick="showPage('match')"><span data-ic="target"></span> 티시트 매칭 보기 (운영자) ›</button></div>
+  </div>
+</div></section>
+
+<section class="dateband"><div class="wrap">
+  <div class="db-head">
+    <h2>Reservation <b id="dbTitle"></b></h2>
+    <div class="db-nav"><button id="dbPrev" onclick="shiftDates(-7)">‹</button><button id="dbNext" onclick="shiftDates(7)">›</button></div>
+  </div>
+  <div class="db-strip" id="dbStrip"></div>
+</div></section>
+
+<div class="feat"><div class="wrap feat-in">
+  <div class="fi"><div class="ic" data-ic="clock"></div><div><div class="tt">약 2시간 라운드</div><div class="ds">7분 간격 · 첫 티오프 05:25</div></div></div>
+  <div class="fi"><div class="ic" data-ic="moon"></div><div><div class="tt">3부 야간 라운드</div><div class="ds">최종 21:24 티오프</div></div></div>
+  <div class="fi"><div class="ic" data-ic="target"></div><div><div class="tt">110타석 골프레인지</div><div class="ds">KPGA 투어프로 레슨</div></div></div>
+  <div class="fi"><div class="ic" data-ic="users"></div><div><div class="tt">1인도 라운드</div><div class="ds">빈자리는 함께 채웁니다</div></div></div>
+</div></div>
+
+<div class="notice"><div class="wrap notice-in">
+  <span class="tag">예약 안내</span>
+  <div>
+    <b>좌석 단위 예약</b> — 티타임의 빈자리를 클릭해 원하는 인원만큼 선택한 뒤 예약합니다. 9홀은 회전이 빨라 <b>1~2인 예약도 대부분 당일 채워집니다</b>.
+    <b>팀 단독 예약</b>을 선택하면 채우기 없이 우리 팀만 라운드합니다.
+    <b class="warn">1~2인 예약은 취소될 수 있으며, 예약하신 티타임과 근접한 다른 티타임과의 합치기를 요청드릴 수 있습니다.</b>
+    <ul class="nlist">
+      <li>예약은 예약일로 부터 <b>4주 전 오전 9시</b> 부터 가능 합니다. (같은 요일 4주전 09시 정각 오픈)</li>
+      <li>예약 취소는 <b>3일전 까지</b> 하셔야 위약규정이 적용되지 않습니다.</li>
+      <li>문자 전송 오류가 발생할 수 있으니 반드시 최종 예약 확정은 <b>홈페이지 예약조회/취소</b> 메뉴에서 확인해주시기 바랍니다.</li>
+      <li>캐디피는 라운드 후 현장에서 정산합니다.</li>
+    </ul>
+  </div>
+</div></div>
+
+<div class="wrap"><div class="body">
+  <aside class="side"><div class="panel">
+    <div class="panel-h">예약 조건 <a onclick="resetFilt()">초기화</a></div>
+    <div class="fg"><label>부 (시간대)</label><div class="frow" id="fPart"></div></div>
+    <div class="fg"><label>필요한 빈자리</label><div class="frow" id="fQty"></div></div>
+    <div class="legend">
+      <div class="lrow"><span class="dot open"></span> 빈 자리 — 클릭해 선택</div>
+      <div class="lrow"><span class="dot sel"></span> 내가 선택한 자리</div>
+      <div class="lrow"><span class="dot other"></span> 다른 골퍼 (채워짐)</div>
+      <div class="lrow"><span class="dot exc"></span> 팀 단독 (채우기 불가)</div>
+    </div>
+  </div></aside>
+
+  <main class="main" id="bookArea">
+    <div class="holetab" id="fHoles"></div>
+    <div class="mhead">
+      <div class="cnt" id="cnt"></div>
+      <div class="sortbar" id="sortBar"></div>
+    </div>
+    <div id="sects"></div>
+  </main>
+</div></div>
+
+<footer class="ft"><div class="wrap row">
+  <div><b>고양 컨트리클럽 · GOYANG COUNTRY CLUB</b>경기도 고양시 덕양구 · 대표 031-000-0000<br><b style="color:#ffd97a;font-size:12px">본 페이지는 예약 UI 디자인 샘플이며 실제 예약이 되지 않습니다.</b></div>
+  <div><b>예약 방식 안내</b>좌석 단위 채우기 예약 · 팀 단독 예약 모두 가능<br><span class="plink" onclick="location.href='tee_slot.html'">티온 플랫폼에서 다른 골프장도 보기 ›</span></div>
+</div></footer>
+
+<div class="ov" id="ov" onclick="if(event.target===this)closeModal()"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+
+
+</div>
+
+<div class="page" id="pgMatch">
+
+
+<!-- ============ 상단 앱바 ============ -->
+<div class="appbar">
+  <div class="ab-club"><span class="flag" data-ic="flag"></span> 고양CC <span style="opacity:.6">9홀</span> ▾</div>
+  <div class="ab-day"><span class="dot"></span> 영업일 <b id="bizDay">2026-07-04</b></div>
+  <div class="ab-save"><span data-ic="save"></span> 자동 저장 · 방금</div>
+  <div class="ab-search"><span data-ic="search"></span> 화면 · 회원 · 예약 검색 / AI <span class="kbd">⌘K</span></div>
+  <div class="ab-notice"><span class="tag">공지</span><span class="tx">[전산] aRP 클라우드 서버 확장 및 안정화 작업 안내</span><span class="cnt">3</span></div>
+  <div class="ab-right">
+    <button class="ab-go" onclick="showPage('book')">홈페이지 예약 페이지 ↗</button>
+    <span class="ab-ic"><span data-ic="bell"></span><span class="bdg">4</span></span>
+    <span class="ab-ic"><span data-ic="chat"></span><span class="bdg">3</span></span>
+    <div class="ab-user"><div class="av">홍</div><div><div class="nm">홍길동</div><div class="rl">관리자(전체)</div></div></div>
+  </div>
+</div>
+
+<!-- ============ 탭바 ============ -->
+<div class="tabbar">
+  <div class="tab">HOME</div>
+  <div class="tab">프론트 데스크 <span class="x">✕</span></div>
+  <div class="tab">예약 현황 <span class="x">✕</span></div>
+  <div class="tab go" onclick="showPage('book')" title="홈페이지 예약 페이지로 이동">홈페이지 예약 <span class="x">✕</span></div>
+  <div class="tab on">티시트 매칭 <span class="x">✕</span></div>
+</div>
+
+<div class="mwrap">
+  <!-- ============ 페이지 헤더 ============ -->
+  <div class="phead">
+    <span class="bc">예약 ›</span>
+    <h1>티시트 매칭 — 조인 페어링</h1>
+    <div class="right">좌석 단위 예약 · 조인 묶음 페어링(포섬 채우기) — 샘플 <span class="sbx">W_SANDBOX</span></div>
+  </div>
+
+  <!-- ============ 툴바 ============ -->
+  <div class="toolbar">
+    <div class="tb-f"><label>영업일자</label>
+      <select id="selDay" onchange="mSetDay(this.value)"></select></div>
+    <div class="tb-f"><label>코스</label>
+      <select id="selCourse" onchange="mSetCourse(this.value)">
+        <option>GOYANG · 18홀 (2바퀴)</option>
+        <option>GOYANG · 9홀 새벽</option>
+        <option>GOYANG · 9홀 야간</option>
+      </select></div>
+    <div class="tb-r">
+      <button class="btn" onclick="mLoad()">예약현황에서 불러오기</button>
+      <button class="btn" onclick="showPage('book')">홈페이지 예약 페이지 ↗</button>
+      <button class="btn primary" onclick="mAutoPair()">조인 자동 페어링</button>
+      <button class="btn" onclick="mReset()">초기화</button>
+    </div>
+  </div>
+
+  <!-- ============ 안내 ============ -->
+  <div class="banner"><span class="ic">ⓘ</span>
+    <div><b>좌석 단위 매칭</b> — 팀(4인) 전체가 아니라 <b>좌석(seat) 단위</b>로 예약을 받고, 대기 중인 <b>조인(1~3인)</b>을 빈 좌석에 배정해 포섬을 채웁니다.
+    대기열을 <b>빈 좌석에 드래그</b>해 배정하거나 <b>OPEN을 클릭</b>하면 대기열 상단이 자동 배정됩니다.
+    <b>2·3인 조인은 묶음 단위</b>로 처리되어 배정·이동·해제 시 <b>일행이 항상 함께</b> 움직입니다(골드 상단선 + 인원 배지로 표시).
+    배정된 좌석을 <b>드래그</b>하면 대기열을 거치지 않고 <b>다른 티타임으로 바로 이동</b>합니다 — 1~2인 예약을 근접 티타임으로 합칠 때 사용합니다.
+    — 본 화면의 입력은 <b>저장되지 않는 UI 샘플</b>입니다.</div>
+  </div>
+
+  <!-- ============ 핫딜 ============ -->
+  <div class="hotbar" id="hotbar"></div>
+
+  <!-- ============ KPI ============ -->
+  <div class="kpis" id="kpis"></div>
+
+  <!-- ============ 본문 ============ -->
+  <div class="grid">
+    <div class="sheet" id="sheet"></div>
+    <aside class="mside">
+      <div class="mside-h"><b>조인 대기</b><span class="n" id="qn">0</span><span style="font-size:10.5px;color:var(--text-3);font-weight:600">명</span></div>
+      <div class="mside-tip"><b>2·3인 조인은 묶음</b>으로 움직입니다 — 한 명을 드래그하면 <b>일행 전원</b>이 함께 이동하고, 빈 좌석이 인원수만큼 없으면 이동하지 않습니다.<br>
+        빈 좌석에 <b>드래그</b>하거나 <b>OPEN 클릭</b>으로 배정 · 배정된 좌석을 드래그하면 <b>다른 티타임으로 바로 이동</b> · <b>✕</b>는 일행 전원 대기열로.<br>
+        좌석은 항상 <b>앞에서부터</b> 채워지며 일행은 <b>붙어서</b> 배치됩니다.</div>
+      <div class="qlist" id="qlist"></div>
+      <div class="qadds"><button onclick="mAdd(1)">＋ 싱글</button><button onclick="mAdd(2)">＋ 2인</button><button onclick="mAdd(3)">＋ 3인</button></div>
+    </aside>
+  </div>
+</div>
+
+
+
+
+
+</div>
+
+<script>
+
+/* ============================================================ 공통 유틸 */
+function cseed(n){var x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x);}
+var K_SURNAME=['김','이','박','최','정','강','조','윤','장','임','한','오','서','신','권','황','안','송','류','전'];
+function randName(n){return K_SURNAME[Math.floor(cseed(n)*K_SURNAME.length)]+'○○';}
+var DOW=['일','월','화','수','목','금','토'];
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(window._tt);window._tt=setTimeout(function(){t.classList.remove('show');},2600);}
+
+/* ============================================================ 단색 아이콘 (currentColor) */
+var ICO={
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>',
+  cart:'<path d="M5 7h10l2 4h2v5h-2M5 7v9h2"/><circle cx="9" cy="17" r="1.6"/><circle cx="17.5" cy="17" r="1.6"/>',
+  users:'<circle cx="9" cy="8" r="3"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M16 5.6a3 3 0 0 1 0 4.8"/><path d="M18.8 19.5a5.5 5.5 0 0 0-2.6-4.4"/>',
+  sunrise:'<path d="M12 3v4M5.6 10.6 4.2 9.2M18.4 10.6l1.4-1.4M3 17.5h18M7.5 17.5a4.5 4.5 0 0 1 9 0"/>',
+  sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M2.5 12h2M19.5 12h2M5.2 18.8l1.4-1.4M17.4 6.6l1.4-1.4"/>',
+  bulb:'<path d="M9.5 18h5M10.5 21h3M12 3a6 6 0 0 0-3.2 11.1V17h6.4v-2.9A6 6 0 0 0 12 3Z"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/>'
+};
+function ico(n,sz){return '<svg class="ic-svg" width="'+(sz||16)+'" height="'+(sz||16)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(ICO[n]||'')+'</svg>';}
+/* data-ic 속성이 붙은 정적 요소에 아이콘 주입 */
+function paintIcons(){document.querySelectorAll('#pgBook [data-ic]').forEach(function(el){
+  el.innerHTML=ico(el.getAttribute('data-ic'),el.classList.contains('ic')?20:15);});}
+
+/* ============================================================ 클럽 정보 (9홀 단일 코스) */
+var CLUB={id:'goyang',name:'고양 컨트리클럽',abbr:'고양',course:'GOYANG',base:64000,holes:9};
+/* 고양CC 운영 구분 — 1부 / 2부 / 3부(야간) */
+var PARTS=[
+  {k:1,nm:'1부',      rg:'05:30 ~ 10:30', s:330, e:629,  ic:'sunrise'},
+  {k:2,nm:'2부',      rg:'10:30 ~ 19:00', s:630, e:1139, ic:'sun'},
+  {k:3,nm:'3부 야간', rg:'19:00 ~ 21:30', s:1140,e:1290, ic:'moon'}
+];
+
+/* ============================================================ 날짜 */
+var HOLIDAYS={'2026-08-15':'광복절','2026-08-17':'대체공휴일','2026-09-24':'추석 연휴','2026-09-25':'추석','2026-09-26':'추석 연휴','2026-10-03':'개천절','2026-10-05':'대체공휴일','2026-10-09':'한글날'};
+function buildDates(){var base=new Date(2026,6,4),out=[];for(var i=0;i<90;i++){var d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i);
+  var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  out.push({y:d.getFullYear(),m:d.getMonth()+1,d:d.getDate(),dow:d.getDay(),key:key,hol:HOLIDAYS[key]||''});}return out;}
+var DATES=buildDates();
+var WIN=19; // 스트립에 한 번에 보이는 날짜 수
+
+var STATE={dateIdx:0,winStart:0,sort:'time',filt:{part:0,qty:0,holes:0},sheets:{},book:null,sel:{},mine:0};
+
+/* ============================================================ 티시트 생성 (9홀 · 6분 간격 · 06:00~20:30) */
+function genSheet(dateKey,dayIdx){
+  var seed=0;for(var i=0;i<dateKey.length;i++)seed+=dateKey.charCodeAt(i)*(i+1);
+  var dow=(DATES.filter(function(d){return d.key===dateKey;})[0]||{}).dow,wk=(dow===0||dow===6);
+  /* 예약 압력 — 가까운 날일수록 이미 많이 찼고, 먼 날일수록 여유롭다.
+     날짜별 지터를 곱해 인접한 날끼리도 잔여 수가 고르게 퍼지도록 한다. */
+  var jitter=0.72+cseed(seed+7)*0.56;
+  var press=Math.max(0,Math.min(1,(1-dayIdx/46)*jitter*(wk?1.18:1)));
+  var slots=[],t=325,interval=7,n=0; // 첫 티오프 05:25 · 7분 간격 (고양CC 기준)
+  while(t<=1284){                    // 최종 21:24
+    /* 홀 배치 — 새벽·저녁 늦은 시간은 9홀, 일반 시간대는 18홀(9홀 2바퀴) */
+    var holes;
+    if(t<360)       holes=9;   // 05:25 ~ 05:53  새벽 9홀
+    else if(t<=900) holes=18;  // 06:00 ~ 15:00  일반 18홀
+    else if(t<1020){t+=interval;n++;continue;} // 15:00~17:00 코스 정비·턴
+    else            holes=9;   // 17:00 ~ 21:24  저녁·야간 9홀
+    var time=String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');
+    var night=(t>=1140);
+    var dawn=(t<360);
+    var peak=(t>=360&&t<=780);
+    var hot=cseed(seed+n+11)>0.88;
+    var mult=(holes===18?2:1); // 18홀 = 9홀 2바퀴 요금
+    var raw=CLUB.base*mult*(wk?1.3:1)+(peak?9000*mult:0)-(night?14000:0)-(dawn?9000:0)-(hot?11000*mult:0);
+    var price=Math.round(raw/1000)*1000;
+    var cart='cart'; // 고양CC — 전 티타임 카트 의무 탑승
+    var seats=[null,null,null,null],exclusive=false;
+    /* 인기 시간대가 먼저 마감되고, 야간은 비교적 여유롭다 */
+    var closed=Math.min(0.97,(press*press*0.86+0.045*jitter)*(peak?1.16:(night?0.68:1)));
+    if(cseed(seed+n+121)<closed){
+      exclusive=cseed(seed+n+91)>0.8; // 9홀은 단독팀 비중이 낮다
+      for(var e=0;e<4;e++)seats[e]={who:randName(seed+n*7+e),gender:cseed(seed+n*5+e)>.5?'여':'남',owner:'other',exc:exclusive};
+    }else{
+      var maxPre=1+Math.round(press*2); // 가까울수록 미리 찬 인원이 많다
+      var pre=Math.min(3,Math.floor(cseed(seed+n+201)*(maxPre+1)));
+      for(var p=0;p<pre;p++)seats[p]={who:randName(seed+n*9+p+3),gender:cseed(seed+n*3+p+11)>.5?'여':'남',owner:'other'};
+    }
+    slots.push({id:'s'+n,idx:n,time:time,tmin:t,price:price,base:Math.round(CLUB.base*mult*(wk?1.3:1)/1000)*1000,hot:hot,night:night,dawn:dawn,holes:holes,cart:cart,course:CLUB.course,seats:seats,exclusive:exclusive});
+    t+=interval;n++;
+  }
+  return slots;
+}
+function sheetOf(i){var dk=DATES[i].key;if(!STATE.sheets[dk])STATE.sheets[dk]=genSheet(dk,i);return STATE.sheets[dk];}
+function sheet(){return sheetOf(STATE.dateIdx);}
+/* 해당 날짜의 남은(예약 가능) 티타임 수 — 단독팀·만석 제외 */
+function openTimes(i){return sheetOf(i).filter(function(s){return !s.exclusive&&openCount(s)>0;}).length;}
+function amPm(t){var p=t.split(':'),h=+p[0];var ap=h>=12?'오후':'오전';h=h%12||12;return ap+' '+h+':'+p[1];}
+function openCount(s){return s.seats.filter(function(x){return !x;}).length;}
+function partOf(tmin){for(var i=0;i<PARTS.length;i++){if(tmin>=PARTS[i].s&&tmin<=PARTS[i].e)return PARTS[i].k;}return 2;}
+
+/* ============================================================ 렌더 */
+function renderDate(){
+  var sd=DATES[STATE.dateIdx];
+  document.getElementById('dbTitle').textContent=sd.y+'년 '+String(sd.m).padStart(2,'0')+'월 '+String(sd.d).padStart(2,'0')+'일';
+  document.getElementById('dbPrev').disabled=(STATE.winStart<=0);
+  document.getElementById('dbNext').disabled=(STATE.winStart>=DATES.length-WIN);
+  var html='';
+  for(var i=STATE.winStart;i<Math.min(STATE.winStart+WIN,DATES.length);i++){
+    var d=DATES[i],n=openTimes(i);
+    var cls='dc'+(i===STATE.dateIdx?' on':'')+(d.hol?' hol':((d.dow===0||d.dow===6)?' wknd':''))+(n===0?' none':'');
+    var lbl=(d.d===1)?(String(d.m).padStart(2,'0')+'/01'):String(d.d).padStart(2,'0');
+    html+='<div class="'+cls+'" onclick="pickDate('+i+')" title="'+(d.hol||'')+'">'
+      +'<div class="w">'+DOW[d.dow]+'</div><div class="d">'+lbl+'</div>'
+      +'<div class="n">'+n+'</div></div>';
+  }
+  document.getElementById('dbStrip').innerHTML=html;
+}
+function pickDate(i){if(i===STATE.dateIdx)return;STATE.dateIdx=i;STATE.sel={};renderAll();}
+function shiftDates(d){
+  var n=Math.max(0,Math.min(DATES.length-WIN,STATE.winStart+d));
+  if(n===STATE.winStart)return;
+  STATE.winStart=n;renderDate();
+}
+function renderFilters(){
+  var f=STATE.filt;
+  document.getElementById('fPart').innerHTML=[[0,'전체']].concat(PARTS.map(function(p){return [p.k,p.nm];})).map(function(a){return '<button class="fb wide'+(f.part===a[0]?' on':'')+'" onclick="setFilt(\'part\','+a[0]+')">'+a[1]+'</button>';}).join('');
+  document.getElementById('fQty').innerHTML=[[0,'전체'],[1,'1'],[2,'2'],[3,'3'],[4,'4']].map(function(a){return '<button class="fb'+(f.qty===a[0]?' on':'')+'" onclick="setFilt(\'qty\','+a[0]+')">'+a[1]+'</button>';}).join('');
+  document.getElementById('fHoles').innerHTML=[[0,'전체시간'],[18,'18홀'],[9,'9홀']].map(function(a){
+    return '<button class="ht'+(f.holes===a[0]?' on':'')+'" onclick="setFilt(\'holes\','+a[0]+')">'+a[1]+'</button>';}).join('');
+  document.getElementById('sortBar').innerHTML=[['time','시간순'],['price','가격순'],['open','빈자리순']].map(function(a){return '<button class="'+(STATE.sort===a[0]?'on':'')+'" onclick="setSort(\''+a[0]+'\')">'+a[1]+'</button>';}).join('');
+}
+function visible(){
+  var f=STATE.filt;
+  var out=sheet().filter(function(s){
+    var open=openCount(s);
+    var mine=s.seats.some(function(x){return x&&x.owner==='me';});
+    /* 4인 예약이 완료된 타임은 노출하지 않는다 (내 예약은 계속 표시) */
+    if(open===0&&!mine)return false;
+    if(f.holes&&s.holes!==f.holes)return false;
+    if(f.part&&partOf(s.tmin)!==f.part)return false;
+    if(f.qty){if(s.exclusive)return false;if(open<f.qty)return false;}
+    return true;
+  });
+  if(STATE.sort==='price')out.sort(function(a,b){return a.price-b.price||a.tmin-b.tmin;});
+  else if(STATE.sort==='open')out.sort(function(a,b){return openCount(b)-openCount(a)||a.tmin-b.tmin;});
+  else out.sort(function(a,b){return a.tmin-b.tmin;});
+  return out;
+}
+function seatHTML(x){
+  if(!x)return '<div class="seat open">＋<span class="sub">빈자리</span></div>';
+  var cls=x.owner==='me'?'mine':(x.exc?'exc':'other');var g=x.gender==='여'?'f':'m';
+  return '<div class="seat '+cls+'"><span class="g '+g+'">'+(x.gender==='여'?'여':'남')+'</span><span class="who">'+(x.owner==='me'?'나':x.who)+'</span><span class="sub">'+(x.owner==='me'?'내 예약':(x.exc?'단독팀':'함께'))+'</span></div>';
+}
+function cardSeats(s){
+  var fillable=!s.exclusive,sel=STATE.sel[s.id]||0,k=0;
+  return s.seats.map(function(x){
+    if(x)return seatHTML(x);
+    k++;
+    if(!fillable)return '<div class="seat open nofill">＋<span class="sub">빈자리</span></div>';
+    var on=(k<=sel);
+    return '<div class="seat open'+(on?' sel':'')+'" onclick="seatSel(\''+s.id+'\','+k+')">'+(on?'✓':'＋')+'<span class="sub">'+(on?'선택':'빈자리')+'</span></div>';
+  }).join('');
+}
+/* 한 번에 하나의 티타임만 선택 · 왼쪽 누적 선택 / 경계 클릭 시 해제 */
+function seatSel(id,k){
+  var cur=STATE.sel[id]||0;
+  var hadOther=Object.keys(STATE.sel).some(function(kk){return kk!==id;});
+  var next=(k===cur)?k-1:k;
+  STATE.sel={};
+  if(next>0)STATE.sel[id]=next;
+  renderCards();
+  if(hadOther&&next>0)toast('한 번에 하나의 티타임만 선택할 수 있어요 · 이전 선택은 해제됩니다');
+}
+function cardHTML(s){
+  var open=openCount(s),selN=STATE.sel[s.id]||0;
+  var mineHere=s.seats.some(function(x){return x&&x.owner==='me';});
+  var selMsg='<span class="ok">'+selN+'석 선택됨</span> · '+selN+'명으로 채웁니다';
+  var st,bt;
+  if(mineHere){st=selN>0?selMsg:'<span class="ok">예약 완료</span> · 빈자리 '+open+'석';bt='<button class="bk ghost" onclick="openBook(\''+s.id+'\')">'+(selN>0?selN+'명 추가':'자리 추가')+'</button>';}
+  else if(s.exclusive){st='<span class="ex">팀 단독</span> · 채우기 불가';bt='<button class="bk" disabled>마감</button>';}
+  else if(open===0){st='<span class="full">만석</span> · 4인 확정';bt='<button class="bk" disabled>대기</button>';}
+  else if(open===4){st=selN>0?selMsg:'빈 티타임 · <span class="ex">단독</span> 또는 <span class="ok">채우기</span>';bt='<button class="bk" onclick="openBook(\''+s.id+'\')">'+(selN>0?selN+'명 예약':'예약')+'</button>';}
+  else{st=selN>0?selMsg:'<span class="ok">채우기 가능</span> · '+open+'석 남음';bt='<button class="bk" onclick="openBook(\''+s.id+'\')">'+(selN>0?selN+'명 채우기':'채우기')+'</button>';}
+  return '<div class="card'+(s.exclusive?' exclusive':'')+(s.night?' night':'')+(selN>0?' picked':'')+'">'
+    +(s.exclusive?'<div class="ribbon exc">단독팀</div>':(s.night?'<div class="ribbon night">야간</div>':(s.hot?'<div class="ribbon">특가</div>':'')))
+    +'<div class="c-top"><div>'
+      +'<div class="c-time"><span class="ap">'+amPm(s.time).split(' ')[0]+'</span>'+amPm(s.time).split(' ')[1]+'</div>'
+      +'<div class="c-meta"><span class="chip '+(s.holes===18?'h18':'h9')+'">'+s.holes+'홀</span>'
+      +(s.night?'<span class="chip nite">'+ico('bulb',12)+' 조명</span>':'')
+      +(s.hot?'<span class="chip hot">특가</span>':'')+'</div>'
+    +'</div><div class="c-price">'
+      +(s.hot?'<s>'+s.base.toLocaleString()+'원</s>':'')
+      +'<div class="p">'+s.price.toLocaleString()+'<span style="font-size:11px">원</span></div><div class="per">1인 · 그린피</div>'
+    +'</div></div>'
+    +'<div class="seats">'+cardSeats(s)+'</div>'
+    +'<div class="c-foot"><div class="f-status">'+st+'</div>'+bt+'</div>'
+  +'</div>';
+}
+function renderCards(){
+  var list=visible();
+  document.getElementById('cnt').innerHTML='예약 가능 티타임 <b>'+list.length+'</b>건 · '+DATES[STATE.dateIdx].key;
+  var host=document.getElementById('sects');
+  if(!list.length){host.innerHTML='<div class="cards"><div class="empty"><b>조건에 맞는 티타임이 없습니다</b>조건을 조정하거나 <a onclick="resetFilt()">초기화</a> 후 다시 확인하세요.</div></div>';return;}
+  if(STATE.sort!=='time'){host.innerHTML='<div class="cards">'+list.map(cardHTML).join('')+'</div>';return;}
+  host.innerHTML=PARTS.map(function(p){
+    var rows=list.filter(function(s){return partOf(s.tmin)===p.k;});
+    if(!rows.length)return '';
+    return '<section class="sect'+(p.k===3?' night':'')+'"><div class="sect-h"><span class="nm">'+ico(p.ic,15)+' '+p.nm+'</span><span class="rg">'+p.rg+'</span><span class="ln"></span><span class="n">'+rows.length+'타임</span></div>'
+      +'<div class="cards">'+rows.map(cardHTML).join('')+'</div></section>';
+  }).join('');
+}
+function renderAll(){renderDate();renderFilters();renderCards();}
+
+/* ============================================================ 상호작용 */
+function setSort(k){STATE.sort=k;renderFilters();renderCards();}
+function setFilt(k,v){STATE.filt[k]=v;renderFilters();renderCards();}
+function resetFilt(){STATE.filt={part:0,qty:0,holes:0};renderFilters();renderCards();toast('예약 조건을 초기화했습니다');}
+function scrollToBook(){window.scrollTo({top:document.getElementById('bookArea').offsetTop-90,behavior:'smooth'});}
+function showMine(){toast(STATE.mine?'내 예약 '+STATE.mine+'건 — 마이페이지 샘플':'예약 내역이 없습니다');}
+
+/* ---------- 예약 모달 ---------- */
+function slotById(id){return sheet().filter(function(s){return s.id===id;})[0];}
+function openBook(id){
+  var s=slotById(id);if(!s)return;var open=openCount(s);
+  if(open===0||(s.exclusive&&!s.seats.some(function(x){return x&&x.owner==='me';}))){toast('예약할 수 없는 티타임입니다');return;}
+  var canTeam=(open===4),selPax=STATE.sel[id]||0;
+  STATE.book={id:id,pax:selPax>0?Math.min(selPax,open):1,type:selPax>0?'join':(canTeam?'team':'join'),canTeam:canTeam,name:'',phone:'',gender:'남'};
+  renderModal();document.getElementById('ov').classList.add('open');
+}
+function closeModal(){STATE.book=null;document.getElementById('ov').classList.remove('open');}
+function bookSet(k,v){if(!STATE.book)return;STATE.book[k]=v;renderModal();}
+function renderModal(){
+  var b=STATE.book;if(!b)return;var s=slotById(b.id),open=openCount(s);
+  var maxPax=(b.type==='team')?4:open;if(b.pax>maxPax)b.pax=maxPax;
+  var deposit=5000*(b.type==='team'?4:b.pax);
+  var green=(b.type==='team')?s.price*4:s.price*b.pax;
+  var caddie=(s.holes===18)?150000:80000;  // 고양CC — 캐디피
+  var openIdx=[];s.seats.forEach(function(y,j){if(!y)openIdx.push(j);});
+  var fill=openIdx.slice(0,b.pax);
+  var prev=s.seats.map(function(x,i){
+    if(x&&x.owner!=='me')return seatHTML(x);
+    if(b.type==='team')return x?seatHTML(x):'<div class="seat mine"><span class="who">우리팀</span><span class="sub">단독</span></div>';
+    if(fill.indexOf(i)>=0)return '<div class="seat mine"><span class="who">나</span><span class="sub">예약</span></div>';
+    return seatHTML(x);
+  }).join('');
+  var typeSec=b.canTeam?(
+    '<div class="mrow"><label>예약 방식</label><div class="btype">'
+    +'<div class="opt '+(b.type==='team'?'on':'')+'" onclick="bookSet(\'type\',\'team\')"><div class="ot">팀 단독 <span class="badge kr">한국식</span></div><div class="od">티타임을 통째로 예약 · 우리 팀만 라운드</div></div>'
+    +'<div class="opt '+(b.type==='join'?'on':'')+'" onclick="bookSet(\'type\',\'join\')"><div class="ot">채우기 허용 <span class="badge us">좌석제</span></div><div class="od">우리 인원만 예약 · 남는 자리는 다른 골퍼가 채웁니다</div></div>'
+    +'</div></div>'
+  ):'<div class="mrow"><label>예약 방식</label><div class="btype"><div class="opt on"><div class="ot">채우기 예약 <span class="badge us">좌석제</span></div><div class="od">이미 골퍼가 있는 티타임 · 빈자리를 채워 4인을 완성합니다</div></div></div></div>';
+  var pax='';for(var p=1;p<=4;p++)pax+='<button class="'+(b.pax===p?'on':'')+'" '+(p>maxPax?'disabled':'')+' onclick="bookSet(\'pax\','+p+')">'+p+'인</button>';
+  document.getElementById('modal').innerHTML=
+    '<div class="m-top"><div class="mk">9</div><div><h3>'+(b.type==='team'?'팀 단독 예약':'채우기 예약')+'</h3>'
+      +'<div class="m-sub">고양 컨트리클럽 · '+s.course+' 코스 · '+DATES[STATE.dateIdx].key+' · '+amPm(s.time)+' · '+s.holes+'홀'+(s.night?' · 야간 조명':'')+'</div></div>'
+      +'<button class="m-x" onclick="closeModal()">✕</button></div>'
+    +'<div class="m-body"><div class="m-seats">'+prev+'</div>'+typeSec
+      +'<div class="mrow"><label>'+(b.type==='team'?'라운드 인원 (요금 4인 기준)':'예약 인원 (빈자리 '+open+'석 이내)')+'</label><div class="paxsel">'+pax+'</div></div>'
+      +'<div class="mrow"><label>예약자명</label><input placeholder="이름" value="'+b.name+'" oninput="STATE.book.name=this.value"></div>'
+      +'<div class="mrow"><label>연락처</label><input placeholder="010-0000-0000" value="'+b.phone+'" oninput="STATE.book.phone=this.value"></div>'
+      +((b.type!=='team'&&b.pax<=2)?'<div class="m-warn">1~2인 예약은 취소될 수 있으며, 예약하신 티타임과 근접한 다른 티타임과의 합치기를 요청드릴 수 있습니다.</div>':'')
+      +'<div class="summary">'
+        +'<div class="sr"><span>그린피 ('+s.holes+'홀)</span><span class="v">'+s.price.toLocaleString()+'원 × '+(b.type==='team'?'4 (단독)':b.pax+'인')+'</span></div>'
+        +'<div class="sr"><span>예약 방식</span><span class="v">'+(b.type==='team'?'팀 단독 (채우기 없음)':'채우기 ('+(4-open)+'명과 함께)')+'</span></div>'
+        +'<div class="sr total"><span>결제 예정 그린피</span><span class="v">'+green.toLocaleString()+'원</span></div>'
+        +'<div class="dep">현장 정산 · 캐디피 '+caddie.toLocaleString()+'원 ('+s.holes+'홀 기준)<br>'
+        +'＋ 위약 예치금 '+deposit.toLocaleString()+'원 · <b>3일 전까지 취소 시 위약 없음</b> · '+s.holes+'홀 약 '+(s.holes===18?'4시간':'2시간')+' 소요</div>'
+      +'</div></div>'
+    +'<div class="m-foot"><button class="cancel" onclick="closeModal()">취소</button>'
+      +'<button class="confirm" onclick="confirmBook()">'+(b.type==='team'?'팀 단독 예약 확정':'채우기 예약 확정')+'</button></div>';
+}
+function confirmBook(){
+  var b=STATE.book;if(!b)return;var s=slotById(b.id);
+  var name=(b.name||'').trim();if(!name){toast('예약자명을 입력하세요');return;}
+  var open=openCount(s),placed=0;
+  delete STATE.sel[b.id];
+  if(b.type==='team'){
+    for(var i=0;i<4;i++){if(!s.seats[i]||s.seats[i].owner==='me'){s.seats[i]={who:i===0?name:name+' 동반',gender:i===0?b.gender:(i%2?'여':'남'),owner:'me',exc:true};placed++;}}
+    s.exclusive=true;STATE.mine++;renderCards();renderDate();closeModal();
+    toast('✓ 팀 단독 예약 완료 · '+amPm(s.time)+' (우리 팀만 라운드)');
+  }else{
+    var want=Math.min(b.pax,open);
+    for(var j=0;j<4&&placed<want;j++){if(!s.seats[j]){s.seats[j]={who:placed===0?name:name+' 동반',gender:placed===0?b.gender:(placed%2?'여':'남'),owner:'me'};placed++;}}
+    STATE.mine++;renderCards();renderDate();closeModal();
+    var left=openCount(s);
+    toast('✓ 채우기 예약 완료 · '+amPm(s.time)+' · '+placed+'명'+(left>0?(' · 남은 '+left+'자리는 다른 골퍼가 채웁니다'):' · 4인 완성! 출발 확정'));
+  }
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
+paintIcons();renderAll();
+
+</script>
+
+<script>
+
+/* ============================================================ 단색 아이콘 (currentColor) */
+var MICO={
+  flag:'<path d="M6.5 21V4l11 3.6-11 3.6"/>',
+  save:'<path d="M5 4h11l3 3v13H5z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  bell:'<path d="M18 15V10a6 6 0 1 0-12 0v5l-1.5 2.5h15Z"/><path d="M10 20.5a2.2 2.2 0 0 0 4 0"/>',
+  chat:'<path d="M20 15a2 2 0 0 1-2 2H8l-4 3.5V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2Z"/>',
+  flame:'<path d="M12 22a6 6 0 0 0 6-6c0-4-3-5.5-3-9 0 0-3 1.5-3 5 0-2-1.5-3-1.5-3S6 11 6 16a6 6 0 0 0 6 6Z"/>'
+};
+function mIco(n,sz){return '<svg class="ic-svg" width="'+(sz||15)+'" height="'+(sz||15)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(MICO[n]||'')+'</svg>';}
+function mPaintIcons(){document.querySelectorAll('#pgMatch [data-ic]').forEach(function(el){el.innerHTML=mIco(el.getAttribute('data-ic'),15);});}
+
+/* ============================================================ 공통 */
+function mToast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show');},2100);}
+function mSeeded(n){var x=Math.sin(n)*10000;return x-Math.floor(x);}
+
+var MSUR=['김','이','박','최','정','강','조','윤','장','임','한','신','서','권','황','안','송','류','홍','전'];
+var MGIV=['도윤','서준','하준','민서','지호','서윤','하율','서진','지우','예은','시우','수아','유진','건우','채원','태현','다은','준서','지안','로운'];
+function mNameOf(i){return MSUR[Math.floor(mSeeded(i*3.7)*MSUR.length)]+MGIV[Math.floor(mSeeded(i*7.1)*MGIV.length)];}
+
+/* ============================================================ 날짜 */
+function mBuildDays(){var b=new Date(2026,6,4),o=[],D=['일','월','화','수','목','금','토'];
+  for(var i=0;i<14;i++){var d=new Date(b.getFullYear(),b.getMonth(),b.getDate()+i);
+    o.push({key:d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'),dow:D[d.getDay()]});}
+  return o;}
+var MDAYS=mBuildDays();
+
+/* ============================================================ 상태 */
+var MSTATE={dayIdx:0,course:0,times:[],queue:[],qseq:0,pseq:0,justFilled:null};
+/* 묶음 표기 도우미 — 조인은 1~3인이 한 단위(파티)로 움직인다 */
+function mPartyLabel(mem){return mem.length>1?(mem[0].nm+' 외 '+(mem.length-1)+'명'):mem[0].nm;}
+function mPartyAt(t,si){var s=t.seats[si];if(!s)return [];var out=[];t.seats.forEach(function(x,j){if(x&&x.pid===s.pid)out.push(j);});return out;}
+function mOpenIdx(t){var o=[];t.seats.forEach(function(s,j){if(!s)o.push(j);});return o;}
+/* 좌석 정리 — 앞에서부터 채우고, 같은 묶음은 반드시 붙여 놓는다 */
+function mCompact(t){
+  var order=[],byPid={};
+  t.seats.forEach(function(s){
+    if(!s)return;
+    if(!byPid[s.pid]){byPid[s.pid]=[];order.push(s.pid);}
+    byPid[s.pid].push(s);
+  });
+  var out=[null,null,null,null],k=0;
+  order.forEach(function(pid){byPid[pid].forEach(function(p){out[k++]=p;});});
+  t.seats=out;
+}
+
+/* 티시트 생성 — 06:00 시작 · 7분 간격 · 12타임 (18홀 2바퀴) */
+function mGenTimes(){
+  var seed=MSTATE.dayIdx*137+MSTATE.course*29+11;
+  var out=[],t=390; // 06:30
+  for(var i=0;i<12;i++){
+    var hot=(i===1||i===2);
+    var price=hot?165000:(i===0||i===3?200000:185000);
+    var seats=[null,null,null,null];
+    /* 이미 예약된 좌석은 1~3인 묶음(조인 단위)으로 채운다 */
+    var pre=Math.floor(mSeeded(seed+i*5.3)*3.6); // 0~3
+    if(i===0||i===1||i===2||i===6)pre=0;
+    var filled=0;
+    while(filled<pre){
+      var n=Math.min(1+Math.floor(mSeeded(seed+i*31+filled*3)*3),pre-filled); // 1~3인
+      var pid=++MSTATE.pseq;
+      for(var j=0;j<n;j++){
+        seats[filled+j]={nm:mNameOf(seed+i*11+filled+j),g:mSeeded(seed+i*13+filled+j)>.5?'여':'남',pid:pid,pn:n};
+      }
+      filled+=n;
+    }
+    var pg=i<3?'':(i<6?(mSeeded(seed+i)>0.68?'late':'ok'):'soon');
+    out.push({t:String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0'),price:price,hot:hot,seats:seats,pg:pg});
+    t+=9;
+  }
+  return out;
+}
+/* 대기열 — 1~3인 묶음 단위 */
+function mGenQueue(){
+  var seed=MSTATE.dayIdx*61+7,q=[],k=0,people=0;
+  while(people<9){
+    var n=1+Math.floor(mSeeded(seed+k*13)*3); // 1~3인
+    var mem=[];
+    for(var j=0;j<n;j++)mem.push({nm:mNameOf(seed+k*17+j*5),g:(k+j)%2?'여':'남'});
+    q.push({id:++MSTATE.qseq,n:n,members:mem});
+    people+=n;k++;
+  }
+  return q;
+}
+function mQueuePeople(){return MSTATE.queue.reduce(function(a,q){return a+q.n;},0);}
+function mInitData(){MSTATE.qseq=0;MSTATE.pseq=0;MSTATE.times=mGenTimes();MSTATE.queue=mGenQueue();MSTATE.justFilled=null;}
+
+/* ============================================================ 렌더 */
+function mOpenCount(x){return x.seats.filter(function(s){return !s;}).length;}
+function mRenderDays(){
+  document.getElementById('selDay').innerHTML=MDAYS.map(function(d,i){
+    return '<option value="'+i+'"'+(i===MSTATE.dayIdx?' selected':'')+'>'+d.key+' ('+d.dow+')</option>';}).join('');
+  document.getElementById('bizDay').textContent=MDAYS[MSTATE.dayIdx].key;
+}
+function mRenderHot(){
+  var hs=MSTATE.times.filter(function(x){return x.hot&&mOpenCount(x)>0;});
+  document.getElementById('hotbar').innerHTML='<span class="lb">'+mIco('flame',13)+' 핫딜 자동 노출</span>'+(hs.length
+    ? hs.map(function(x){return '<span class="hotchip">'+x.t+' · <b>'+x.price.toLocaleString()+'원</b> · '+mOpenCount(x)+'석</span>';}).join('')
+    : '<span class="hotchip" style="color:var(--text-3)">노출 중인 핫딜 없음 — 모두 채워졌습니다</span>');
+}
+function mRenderKpi(){
+  var tn=MSTATE.times.length,total=tn*4;
+  var taken=0;MSTATE.times.forEach(function(x){taken+=4-mOpenCount(x);});
+  var rate=total?Math.round(taken/total*100):0;
+  var K=[['타임',tn+'개',''],['좌석',total+'석',''],['예약',taken+'석','b'],['빈 좌석',(total-taken)+'석','a'],['체결률',rate+'%','g']];
+  document.getElementById('kpis').innerHTML=K.map(function(k){
+    return '<div class="kpi '+k[2]+'"><div class="k">'+k[0]+'</div><div class="v">'+k[1]+'</div></div>';}).join('');
+}
+function mSeatHTML(s,ti,si){
+  if(!s)return '<div class="mseat open" ondragover="mDOver(event,this)" ondragleave="mDLeave(this)" ondrop="mDDrop(event,'+ti+','+si+')" onclick="mAssign('+ti+','+si+')">OPEN</div>';
+  var isNew=MSTATE.justFilled===ti+':'+si;
+  var grp=(s.pn>1);
+  var mates=grp?mPartyAt(MSTATE.times[ti],si):[si];
+  var first=(mates[0]===si);
+  /* 묶음은 항상 함께 이동한다 — 한 명을 드래그하면 일행 전원이 따라간다 */
+  return '<div class="mseat take'+(isNew?' new':'')+(grp?' grp':'')+'" draggable="true"'
+    +' ondragstart="mSeatDrag(event,'+ti+','+si+',this)" ondragend="mDEnd(this)"'
+    +' title="'+(grp?s.pn+'인 묶음 — 드래그하면 일행이 함께 이동합니다':'드래그해 다른 티타임으로 이동')+'">'
+    +'<span class="g '+(s.g==='여'?'f':'m')+'">'+(s.g==='여'?'여':'남')+'</span>'
+    +'<span class="who">'+s.nm+'</span>'
+    +(grp&&first?'<span class="pb">'+s.pn+'인</span>':'')
+    +'<span class="x" draggable="false" onclick="mUnassign('+ti+','+si+')" title="'+(grp?'일행 전원 대기열로':'대기열로 되돌리기')+'">✕</span></div>';
+}
+function mRenderSheet(){
+  document.getElementById('sheet').innerHTML=MSTATE.times.map(function(x,ti){
+    var op=mOpenCount(x),full=(op===0);
+    var pg=x.pg==='ok'?'<span class="t-prog ok">▶ 3H · 정상</span>'
+          :x.pg==='late'?'<span class="t-prog late">▶ 1H · 지연</span>'
+          :x.pg==='soon'?'<span class="t-prog soon">예정</span>':'';
+    return '<div class="trow'+(full?' done':'')+'">'
+      +'<div class="t-time">'+x.t+'</div>'
+      +'<div class="t-price'+(x.hot?' hot':'')+'">'+x.price.toLocaleString()+(x.hot?'<span class="hb">HOT</span>':'')+'</div>'
+      +'<div class="t-seats">'+x.seats.map(function(s,si){return mSeatHTML(s,ti,si);}).join('')+'</div>'
+      +'<div class="t-right">'+pg+'<span class="t-cnt'+(full?' full':'')+'">'+(4-op)+'/4</span></div>'
+      +'</div>';
+  }).join('');
+}
+function mRenderQueue(){
+  document.getElementById('qn').textContent=mQueuePeople();
+  var el=document.getElementById('qlist');
+  if(!MSTATE.queue.length){el.innerHTML='<div class="qempty">대기 중인 조인이 없습니다.<br>아래 버튼으로 추가하세요.</div>';return;}
+  el.innerHTML=MSTATE.queue.map(function(q){
+    var names=q.members.map(function(m){return m.nm+'('+m.g+')';}).join(' · ');
+    return '<div class="qi'+(q.n>1?' grp':'')+'" draggable="true" ondragstart="mDStart(event,'+q.id+',this)" ondragend="mDEnd(this)" title="'+names+'">'
+      +'<span class="h">⋮⋮</span><span class="nm">'+mPartyLabel(q.members)+'</span>'
+      +(q.n===1?'<span class="g '+(q.members[0].g==='여'?'f':'m')+'">'+q.members[0].g+'</span>':'')
+      +'<span class="tp n'+q.n+'">'+(q.n===1?'싱글':q.n+'인 묶음')+'</span></div>';
+  }).join('');
+}
+function mRenderAll(){mRenderDays();mRenderHot();mRenderKpi();mRenderSheet();mRenderQueue();}
+
+/* ============================================================ 배정 */
+/* 대기열의 묶음을 통째로 배정 — si 는 드롭 지점(없으면 -1) */
+function mPlace(qid,ti,si,quiet){
+  var qi=MSTATE.queue.findIndex(function(q){return q.id===qid;});
+  if(qi<0)return false;
+  var t=MSTATE.times[ti];if(!t)return false;
+  var q=MSTATE.queue[qi];
+  var open=mOpenIdx(t);
+  if(open.length<q.n){
+    if(!quiet)mToast('빈 좌석 부족 · '+t.t+' 는 '+open.length+'석뿐이라 '+q.n+'인 묶음을 넣을 수 없습니다');
+    return false;
+  }
+  /* 드롭 지점과 무관하게 앞쪽 빈 좌석부터 채운다 — 묶음이 갈라지지 않도록 */
+  var use=open.slice(0,q.n);
+  var pid=++MSTATE.pseq;
+  use.forEach(function(j,k){t.seats[j]={nm:q.members[k].nm,g:q.members[k].g,pid:pid,pn:q.n};});
+  mCompact(t);
+  MSTATE.queue.splice(qi,1);
+  MSTATE.justFilled=ti+':'+t.seats.findIndex(function(s){return s&&s.pid===pid;});
+  if(!quiet){
+    mRenderAll();
+    setTimeout(function(){MSTATE.justFilled=null;},500);
+    var left=mOpenCount(t);
+    mToast('✓ '+mPartyLabel(q.members)+(q.n>1?' ('+q.n+'인 묶음)':'')+' 배정 · '+t.t
+      +(left===0?' · 포섬 완성 (4/4)':' · 빈 좌석 '+left+'석'));
+  }
+  return true;
+}
+function mAssign(ti,si){
+  if(!MSTATE.queue.length){mToast('대기 중인 조인이 없습니다');return;}
+  mPlace(MSTATE.queue[0].id,ti,si);
+}
+/* ✕ — 일행 전원을 대기열로 되돌린다 */
+function mUnassign(ti,si){
+  var t=MSTATE.times[ti],s=t.seats[si];if(!s)return;
+  var idxs=mPartyAt(t,si);
+  var mem=idxs.map(function(j){return {nm:t.seats[j].nm,g:t.seats[j].g};});
+  idxs.forEach(function(j){t.seats[j]=null;});
+  mCompact(t);
+  MSTATE.queue.push({id:++MSTATE.qseq,n:mem.length,members:mem});
+  mRenderAll();
+  mToast('↩ '+mPartyLabel(mem)+(mem.length>1?' ('+mem.length+'인 묶음)':'')+' · 대기열로 되돌렸습니다');
+}
+function mAutoPair(){
+  if(!MSTATE.queue.length){mToast('대기 중인 조인이 없습니다');return;}
+  var people=0,parties=0,guard=0;
+  /* 큰 묶음부터, 빈 좌석이 적은(=거의 찬) 타임부터 넣어 포섬을 빨리 완성한다 */
+  while(MSTATE.queue.length&&guard++<200){
+    var qi=0;
+    for(var z=1;z<MSTATE.queue.length;z++)if(MSTATE.queue[z].n>MSTATE.queue[qi].n)qi=z;
+    var q=MSTATE.queue[qi];
+    var cand=MSTATE.times.map(function(x,i){return {i:i,op:mOpenCount(x)};})
+      .filter(function(o){return o.op>=q.n;})
+      .sort(function(a,b){return a.op-b.op;});
+    if(!cand.length)break;
+    if(!mPlace(q.id,cand[0].i,-1,true))break;
+    people+=q.n;parties++;
+  }
+  mRenderAll();
+  var left=mQueuePeople();
+  mToast(people
+    ?('✓ 자동 페어링 완료 · '+parties+'팀 '+people+'명 배정'+(left?(' · 대기 '+left+'명 남음'):''))
+    :'남은 빈 좌석으로는 대기 묶음을 넣을 수 없습니다');
+}
+/* 대기 묶음 추가 — 1~3인 */
+function mAdd(n){
+  n=n||1;
+  var mem=[];
+  for(var j=0;j<n;j++){MSTATE.qseq++;mem.push({nm:mNameOf(MSTATE.qseq*23+j*7+MSTATE.times.length),g:(MSTATE.qseq+j)%2?'남':'여'});}
+  MSTATE.queue.push({id:++MSTATE.qseq,n:n,members:mem});
+  mRenderQueue();
+  mToast('＋ '+(n===1?'싱글':n+'인 묶음')+'을 대기열에 추가했습니다');
+}
+function mLoad(){
+  mInitData();mRenderAll();
+  mToast('예약현황 데이터를 불러왔습니다 (샘플)');
+}
+function mReset(){mInitData();mRenderAll();mToast('티시트를 초기화했습니다');}
+function mSetDay(v){MSTATE.dayIdx=+v;mInitData();mRenderAll();mToast(MDAYS[MSTATE.dayIdx].key+' 티시트를 불러왔습니다');}
+function mSetCourse(v){MSTATE.course=document.getElementById('selCourse').selectedIndex;mInitData();mRenderAll();}
+
+/* ============================================================ 드래그&드롭 */
+/* 드래그 출발지는 두 가지 — 대기열('q') 또는 이미 배정된 좌석('s') */
+var MDRAG=null;
+function mDStart(e,qid,el){
+  MDRAG={t:'q',id:qid};el.classList.add('drag');
+  try{e.dataTransfer.setData('text/plain','q:'+qid);e.dataTransfer.effectAllowed='move';}catch(x){}
+}
+function mSeatDrag(e,ti,si,el){
+  MDRAG={t:'s',ti:ti,si:si};el.classList.add('drag');
+  try{e.dataTransfer.setData('text/plain','s:'+ti+':'+si);e.dataTransfer.effectAllowed='move';}catch(x){}
+}
+function mDEnd(el){el.classList.remove('drag');MDRAG=null;}
+function mDOver(e,el){e.preventDefault();try{e.dataTransfer.dropEffect='move';}catch(x){}el.classList.add('dragover');}
+function mDLeave(el){el.classList.remove('dragover');}
+function mDDrop(e,ti,si){
+  e.preventDefault();
+  var d=MDRAG;
+  try{
+    var raw=e.dataTransfer.getData('text/plain');
+    if(raw){var p=raw.split(':');d=(p[0]==='q')?{t:'q',id:+p[1]}:{t:'s',ti:+p[1],si:+p[2]};}
+  }catch(x){}
+  document.querySelectorAll('.mseat.dragover').forEach(function(n){n.classList.remove('dragover');});
+  if(!d)return;
+  if(d.t==='q')mPlace(d.id,ti,si);
+  else mMoveSeat(d.ti,d.si,ti,si);
+}
+/* 배정된 내장자를 대기열을 거치지 않고 다른 티타임으로 바로 이동 — 묶음은 전원 함께 */
+function mMoveSeat(fti,fsi,tti,tsi){
+  if(fti===tti)return;
+  var from=MSTATE.times[fti],to=MSTATE.times[tti];
+  if(!from||!to)return;
+  var occ=from.seats[fsi];if(!occ)return;
+  var idxs=mPartyAt(from,fsi);          // 일행 전원
+  var mem=idxs.map(function(j){return from.seats[j];});
+  var n=mem.length;
+  var open=mOpenIdx(to);
+  if(open.length<n){
+    mToast('빈 좌석 부족 · '+to.t+' 는 '+open.length+'석뿐이라 '+n+'인 묶음을 옮길 수 없습니다');
+    return;
+  }
+  /* 드롭 지점과 무관하게 앞쪽 빈 좌석부터 — 일행은 항상 붙어 앉는다 */
+  var use=open.slice(0,n);
+  idxs.forEach(function(j){from.seats[j]=null;});
+  mCompact(from);
+  var pid=++MSTATE.pseq;
+  use.forEach(function(j,k){to.seats[j]={nm:mem[k].nm,g:mem[k].g,pid:pid,pn:n};});
+  mCompact(to);
+  MSTATE.justFilled=tti+':'+to.seats.findIndex(function(s){return s&&s.pid===pid;});
+  mRenderAll();
+  setTimeout(function(){MSTATE.justFilled=null;},500);
+  var left=mOpenCount(to);
+  mToast('↔ '+mPartyLabel(mem)+(n>1?' ('+n+'인 묶음)':'')+' · '+from.t+' → '+to.t+' 이동'
+    +(left===0?' · 포섬 완성 (4/4)':' · 빈 좌석 '+left+'석'));
+}
+/* F3 — 대기 싱글 추가 (묶음은 사이드바 버튼으로) */
+document.addEventListener('keydown',function(e){
+  if(e.key==='F3'){e.preventDefault();mAdd();}
+});
+
+
+</script>
+
+<script>
+/* ============================================================ 화면 전환 */
+var MATCH_READY=false;
+function showPage(p){
+  var book=(p!=='match');
+  document.getElementById('pgBook').classList.toggle('on',book);
+  document.getElementById('pgMatch').classList.toggle('on',!book);
+  if(!book&&!MATCH_READY){MATCH_READY=true;mPaintIcons();mInitData();mRenderAll();}
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>
