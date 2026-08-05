@@ -1,0 +1,1582 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>라미드그룹 골프장 일일 실적 현황</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F8F9FA; --card:#ffffff; --line:#E9ECEF; --line2:#CED4DA;
+  --text:#6E6B7B; --text2:#6C757D; --text3:#999999;
+  --gold:#D1A12B; --gold-d:#B98B19; --gold-l:#fdf6e5; --gold-bar:#D1A12B;
+  --green:#28C76F; --green-l:#DCF6E8;
+  --orange:#FF9E43; --orange-l:#FFEFE1;
+  --red:#FF4C51; --red-l:#fdeceb;
+  --blue:#2B8AE8; --purple:#7366EF; --teal:#00BAD0; --pink:#ec6ba0;
+  --dark:#6C757D; --gray-l:#F5F5F5;
+  --sh:0 4px 16px rgba(0,0,0,.15); --r:.428rem;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',-apple-system,sans-serif;font-size:13px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-0.2px}
+.main{min-width:0;padding:0 30px 50px;max-width:1600px;margin:0 auto}
+
+/* 상단 브랜드 바 — 사이드바를 없애고 로고를 여기로 옮김 */
+.topbar{display:flex;align-items:center;gap:14px;padding:16px 2px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-size:21px;font-weight:900;font-style:italic;letter-spacing:-.5px;color:var(--gold);line-height:1}
+.brand span{font-style:normal;font-size:14px;font-weight:700;letter-spacing:.5px;margin-left:5px;color:var(--gold-d)}
+
+.utilbar{display:flex;align-items:center;justify-content:space-between;padding:12px 2px 10px;flex-wrap:wrap;gap:10px}
+.util-date{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;color:#6E6B7B}
+.util-date svg{width:14px;height:14px;color:var(--text3)}
+.util-right{display:flex;align-items:center;gap:18px;font-size:12.5px;color:var(--text2)}
+.util-right span{display:flex;align-items:center;gap:5px}
+.util-right svg{width:13px;height:13px;opacity:.65}
+.live{width:6px;height:6px;border-radius:50%;background:var(--green);animation:bl 1.5s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.25}}
+.bread{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text2);padding:0 2px 16px}
+.bread svg{width:14px;height:14px;color:var(--text3)}
+.bread b{color:#6E6B7B;font-weight:500}
+
+/* 사이드바를 없앴으므로 탭이 유일한 내비게이션 → 상단 고정 */
+.tabs{display:flex;align-items:flex-end;gap:2px;border-bottom:1px solid var(--line2);margin-bottom:18px;flex-wrap:wrap;
+      position:sticky;top:0;z-index:40;background:var(--bg);padding-top:6px}
+.tab{border:1px solid transparent;border-bottom:none;background:none;font-family:inherit;font-size:13.5px;font-weight:500;color:var(--text2);padding:11px 20px;cursor:pointer;border-radius:6px 6px 0 0;margin-bottom:-1px;transition:.15s}
+.tab:hover{color:var(--gold)}
+.tab.on{background:#fff;border-color:var(--line2);color:var(--gold);font-weight:700}
+
+/* 화면 전환 — 상단 탭이 화면을 바꿈 ('전체'=누적 종합현황 / 골프장=전용 페이지) */
+.view{display:none}
+.view.on{display:block}
+/* 골프장 전용 페이지일 때만 첫 섹션 헤더를 위로 붙임. 누적 화면은 기본 간격 유지 */
+body:not(.stacked) .view>.sec:first-child{margin-top:6px}
+
+/* 골프장 전용 페이지 */
+.ch-rows{padding:6px 22px 18px}
+.ch-item{padding:9px 0;border-bottom:1px solid var(--line)}
+.ch-item:last-child{border-bottom:none}
+.ch-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px}
+.ch-nm{font-size:12.5px;font-weight:500;color:var(--text)}
+.ch-vl{font-size:15px;font-weight:700}
+.ch-vl small{font-size:10.5px;font-weight:500;color:var(--text3);margin-left:3px}
+.ch-meta{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin-top:3px}
+
+.sec{display:flex;align-items:center;gap:8px;margin:26px 2px 12px}
+.sec .ico{color:var(--gold);display:flex}
+.sec .ico svg{width:16px;height:16px}
+.sec h2{font-size:18px;font-weight:600;color:#212529}
+.sec .unit{font-size:12.5px;color:var(--text3);font-weight:400}
+.sec .rest{margin-left:auto;font-size:11.5px;color:var(--text3)}
+
+.card{background:var(--card);border:none;border-radius:var(--r);box-shadow:var(--sh)}
+.card-h{display:flex;align-items:center;justify-content:space-between;padding:16px 22px 0}
+.card-h h3{font-size:14.5px;font-weight:700;color:#212529}
+.card-h .note{font-size:11.5px;color:var(--text3)}
+.chip{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.chip svg{width:18px;height:18px}
+.chip-y{background:var(--gold-l);color:var(--gold)}
+.chip-g{background:var(--green-l);color:var(--green)}
+.chip-o{background:var(--orange-l);color:var(--orange)}
+.chip-n{background:var(--gray-l);color:#b0b5bb}
+
+.today-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.today-body{display:flex;align-items:center;gap:20px;padding:20px 24px 26px}
+.tb-left{flex:1;min-width:0;display:flex;flex-direction:column;gap:18px}
+.tb-item{display:flex;align-items:center;gap:14px}
+.tb-lbl{font-size:12px;color:var(--text2);margin-bottom:1px}
+.tb-val{font-size:24px;font-weight:700;line-height:1.15;color:#212529}
+.tb-val small{font-size:12px;font-weight:500;color:var(--text3);margin-left:2px}
+.tb-sub{font-size:11px;color:var(--text3);margin-top:3px}
+.gauge-wrap{width:210px;flex-shrink:0;text-align:center}
+.gauge-cap{font-size:12.5px;color:var(--text2);margin-bottom:2px}
+.gauge-box{position:relative;height:110px}
+.gauge-box svg{width:100%;height:auto;display:block}
+.gauge-num{position:absolute;left:0;right:0;bottom:4px;font-size:25px;font-weight:700;line-height:1}
+.gauge-legend{display:flex;justify-content:center;gap:14px;font-size:10.5px;color:var(--text3)}
+
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.mini-card{padding:18px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.mc-lbl{font-size:12px;color:var(--text2);margin-bottom:6px}
+.mc-val{font-size:21px;font-weight:700;line-height:1.1}
+.mc-val small{font-size:11px;font-weight:500;color:var(--text3)}
+.mc-delta{font-size:12px;font-weight:700;margin-top:5px}
+.mc-meta{font-size:10.5px;color:var(--text3);margin-top:3px}
+.mc-chart{display:flex;align-items:flex-end;gap:6px;height:70px;flex-shrink:0;padding-bottom:16px;box-sizing:content-box}
+.mbar{width:15px;background:#EFEFEF;border-radius:999px;position:relative}
+.mbar span{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--text3);white-space:nowrap}
+
+.acc-card{padding:18px 20px 20px}
+.acc-top{display:flex;align-items:flex-start;justify-content:space-between}
+.acc-lbl{font-size:12px;color:var(--text2)}
+.acc-val{font-size:22px;font-weight:700;line-height:1.2;margin-top:3px}
+.acc-val small{font-size:11.5px;font-weight:500;color:var(--text3)}
+.acc-cmp-l{font-size:11.5px;color:var(--text2);margin-top:13px}
+.acc-cmp-v{font-size:15px;font-weight:600;color:#6E6B7B}
+.pbar-head{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin:12px 0 4px}
+.pbar{height:18px;background:#E9ECEF;border-radius:4px;overflow:hidden}
+.pbar i{display:block;height:100%;border-radius:0;font-style:normal;font-size:12px;font-weight:700;color:#fff;text-align:center;line-height:18px;min-width:40px;transition:width .6s ease}
+.pbar-foot{text-align:right;font-size:9.5px;color:var(--text3);margin-top:2px}
+
+.filterbar{background:#fff;border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:12px 18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.fb-l{font-size:12px;color:var(--text2)}
+.fb-date{border:1px solid var(--line2);border-radius:5px;padding:7px 12px;font-size:12.5px;color:#6E6B7B;background:#fff;display:flex;align-items:center;gap:7px}
+.fb-date svg{width:13px;height:13px;color:var(--text3)}
+.fb-sp{margin-left:auto;display:flex;gap:8px}
+.btn{border:1px solid var(--gold-bar);border-radius:5px;padding:7px 16px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;background:#fff;color:var(--gold)}
+.btn svg{width:13px;height:13px}
+.btn:hover{background:var(--gold-l)}
+.btn-excel{background:#1D6F42;border-color:#1D6F42;color:#fff}
+.btn-excel:hover{background:#165934;border-color:#165934;color:#fff}
+
+.rev-block{margin-bottom:14px}
+.rev-h{padding:14px 22px;border-bottom:1px solid var(--line);font-size:14px;font-weight:700}
+.rev-body{display:grid;grid-template-columns:repeat(4,1fr)}
+.rev-col{padding:18px 22px;border-right:1px solid var(--line)}
+.rev-col:last-child{border-right:none}
+.rev-top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px}
+.rev-name{font-size:13px;color:#6E6B7B;font-weight:500}
+.rev-amt{font-size:17px;font-weight:700}
+.rev-m{margin-bottom:12px}
+.rev-m:last-child{margin-bottom:0}
+.rev-mh{display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:4px}
+.rev-mh b{color:#6E6B7B;font-weight:500}
+.rev-t{height:18px;background:#E9ECEF;border-radius:4px;overflow:hidden}
+.rev-t i{display:block;height:100%;font-style:normal;font-size:12px;font-weight:700;color:#fff;text-align:center;line-height:18px;min-width:40px;transition:width .6s ease}
+.rev-f{text-align:right;font-size:9px;color:var(--text3);margin-top:2px}
+
+.prog-card{padding:6px 22px 18px}
+.prow{display:flex;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid var(--line)}
+.prow:last-child{border-bottom:none}
+.pname{width:108px;flex-shrink:0;font-size:13px;font-weight:500;color:#6E6B7B}
+.ptrack{flex:1;height:18px;background:#E9ECEF;border-radius:4px;position:relative;overflow:hidden;min-width:80px}
+.pfill{height:100%;border-radius:0;display:flex;align-items:center;padding-left:10px;font-size:12px;font-weight:700;color:#fff;transition:width .7s ease}
+.pmark{position:absolute;top:0;bottom:0;left:40%;width:2px;background:rgba(75,82,89,.2);z-index:2}
+.pinfo{width:260px;flex-shrink:0;display:flex;align-items:center;gap:9px;font-size:12px;justify-content:flex-end}
+.pact{font-weight:700;color:#6E6B7B}
+.ptgt{color:var(--text3)}
+.bdg{font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px}
+.bdg-y{background:var(--gold-l);color:var(--gold-d)}
+.bdg-g{background:var(--green-l);color:#28C76F}
+.bdg-r{background:var(--red-l);color:#FF4C51}
+.bdg-o{background:var(--orange-l);color:#FF9E43}
+.bdg-n{background:var(--gray-l);color:var(--text2)}
+
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.corp-h{padding:16px 18px 13px;border-bottom:1px solid var(--line);position:relative}
+.corp-rk{position:absolute;top:15px;right:16px;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px}
+.corp-nm{font-size:14px;font-weight:700;color:#212529}
+.corp-td{font-size:20px;font-weight:700;margin-top:8px;line-height:1.1}
+.corp-td small{font-size:11px;font-weight:500;color:var(--text3)}
+.corp-b{padding:12px 18px 18px}
+.kv{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:11.5px}
+.kv .k{color:var(--text3)}
+.kv .v{font-weight:600;color:#6E6B7B}
+.mini-pl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--text3);margin:12px 0 4px}
+.mtrack{height:6px;background:#E9ECEF;border-radius:3px;overflow:hidden}
+.mtrack i{display:block;height:100%;border-radius:3px;transition:width .6s ease}
+.fbox{border-radius:6px;padding:11px 13px;margin-top:12px;border:1px solid}
+.fbox .fl{font-size:10px;font-weight:700;letter-spacing:.4px;margin-bottom:4px;opacity:.9}
+.fbox .fv{font-size:15px;font-weight:700;line-height:1.2}
+.fbox .fs{font-size:10.5px;margin-top:3px;opacity:.92}
+
+.d-h{padding:15px 18px 13px;border-bottom:1px solid var(--line)}
+.d-nm{font-size:14px;font-weight:700;color:#212529}
+.d-b{padding:5px 18px 18px}
+.d-sec{margin-top:14px}
+.d-st{font-size:10px;font-weight:700;letter-spacing:.8px;color:var(--text2);padding-bottom:6px;border-bottom:1.5px solid var(--line2);margin-bottom:8px}
+.d-row{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;padding:3px 0}
+.d-row .k{color:var(--text3);font-size:10.5px}
+.d-row .v{font-weight:600;color:#6E6B7B}
+.d-row .v em{font-style:normal;font-size:9.5px;font-weight:500;color:var(--text3);margin-left:3px}
+.btrack{height:5px;background:#E9ECEF;border-radius:3px;overflow:hidden;margin:3px 0 7px}
+.btrack i{display:block;height:100%;border-radius:3px}
+.sched{display:flex;gap:6px;margin-top:9px}
+.sbox{flex:1;background:#fafafb;border:1px solid var(--line);border-radius:6px;padding:8px 4px;text-align:center}
+.s-d{font-size:9.5px;color:var(--text3)}
+.s-n{font-size:18px;font-weight:700;color:var(--gold);line-height:1.25}
+.s-x{font-size:8.5px;color:var(--text3);margin-top:1px}
+
+/* 그리드 아이템 기본 min-width:auto 는 min-content 라 표·긴 행이 있으면 열이 축소되지 않고 페이지가 가로로 밀림 */
+.today-grid>*,.g3>*,.g5>*,.mkt-2>*,.mkt-sum>*,.rev-body>*,.kv-list>*{min-width:0}
+
+.mkt-panel{display:none}
+.mkt-panel.on{display:block}
+.mkt-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+.msum{padding:16px 18px;position:relative;overflow:hidden}
+.msum::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--mc,var(--gold))}
+.ms-l{font-size:11px;color:var(--text3);margin-bottom:5px}
+.ms-v{font-size:21px;font-weight:700;line-height:1.1;color:#212529}
+.ms-s{font-size:10.5px;color:var(--text3);margin-top:5px}
+.mkt-2{display:grid;grid-template-columns:1.15fr 1fr;gap:16px}
+.mbar-card{padding:18px 22px 20px}
+.mb-row{display:flex;align-items:center;gap:11px;margin-bottom:9px}
+.mb-l{width:92px;flex-shrink:0;font-size:11.5px;font-weight:500;text-align:right;color:var(--text2)}
+.mb-t{flex:1;height:20px;background:#E9ECEF;border-radius:4px;overflow:hidden;min-width:40px}
+.mb-f{height:100%;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:10.5px;font-weight:700;color:#fff;min-width:44px;transition:width .7s ease}
+.mb-m{width:120px;flex-shrink:0;font-size:11.5px;font-weight:700;color:#6E6B7B}
+.mtab-card{padding:18px 20px 20px}
+.mtab-t{font-size:13px;font-weight:700;color:#212529;margin-bottom:12px}
+table.mt{width:100%;border-collapse:collapse;font-size:11px}
+table.mt th{background:#f5f5f6;color:var(--text2);font-size:10px;font-weight:700;padding:9px 8px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line2)}
+table.mt th:first-child{text-align:center}
+table.mt th i{display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:5px;vertical-align:middle}
+table.mt td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums;color:#6E6B7B}
+table.mt td:first-child{text-align:center;color:var(--text2);font-weight:500}
+table.mt tr:last-child td{border-bottom:none;font-weight:700;background:#fdfbf5;color:var(--gold)}
+table.mt tbody tr:hover td{background:#fdfaf2}
+.hh{color:#28C76F!important;font-weight:700}
+.hm{color:#FF9E43!important;font-weight:700}
+.hl{color:var(--text3)!important}
+
+.tw{overflow-x:auto}
+table.rt{width:100%;border-collapse:collapse;font-size:11.5px;min-width:1080px}
+table.rt th{background:#f5f5f6;color:var(--text2);font-size:10.5px;font-weight:700;padding:13px 12px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--line2)}
+table.rt td{padding:13px 12px;border-bottom:1px solid var(--line);white-space:nowrap;color:#6E6B7B;font-variant-numeric:tabular-nums;text-align:center}
+table.rt td:first-child{text-align:left}
+table.rt tr:last-child td{border-bottom:none}
+table.rt tbody tr:hover td{background:#fdfaf2}
+.tn{font-weight:700;color:#212529}
+.c-y{color:var(--gold)} .c-g{color:#28C76F} .c-r{color:#FF4C51} .c-o{color:#FF9E43} .c-3{color:var(--text3)}
+.fw{font-weight:700}
+
+.note-card{padding:18px 22px;font-size:12px;color:var(--text2);line-height:1.9}
+.note-t{font-size:12.5px;font-weight:700;color:var(--gold);margin:16px 0 6px}
+.note-t:first-child{margin-top:0}
+.note-f{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:10.5px;color:var(--text3);line-height:1.9}
+/* 정의 목록 — 용어 / 산식·설명 2열 */
+.note-def{display:grid;grid-template-columns:132px 1fr;gap:6px 14px;align-items:baseline}
+.note-def dt{font-weight:700;color:var(--text)}
+.note-def dd{margin:0}
+.note-def code{background:var(--gray-l);border-radius:3px;padding:1px 6px;font-size:11.5px;
+               font-family:inherit;color:var(--text);white-space:nowrap}
+.note-eg{color:var(--text3);font-size:11px}
+/* 전망 임계값 표 */
+table.note-th{border-collapse:collapse;font-size:11.5px;margin-top:4px}
+table.note-th td{padding:4px 14px 4px 0;vertical-align:middle}
+table.note-th td:first-child{white-space:nowrap}
+.foot{text-align:left;border-top:1px solid var(--line);margin-top:28px;padding:16px 2px 0;font-size:11px;color:var(--text3);letter-spacing:.4px}
+
+@media(max-width:1400px){.g5{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:1180px){
+  .today-grid,.mkt-2{grid-template-columns:1fr}
+  .mkt-sum{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:1fr}
+  .rev-body{grid-template-columns:1fr 1fr}
+  .rev-col:nth-child(2){border-right:none}
+  .rev-col:nth-child(1),.rev-col:nth-child(2){border-bottom:1px solid var(--line)}
+  .pinfo{width:auto}
+}
+@media(max-width:992px){
+  .main{padding:0 16px 40px}
+  .g5{grid-template-columns:repeat(2,1fr)}
+  .today-body{flex-direction:column;align-items:stretch}
+  .gauge-wrap{width:100%}
+}
+@media(max-width:640px){
+  .g5,.mkt-sum,.rev-body{grid-template-columns:1fr}
+  .rev-col{border-right:none;border-bottom:1px solid var(--line)}
+  .mc-chart{display:none}
+  .pname{width:76px;font-size:12px} .pinfo{display:none}
+  .tab{padding:10px 12px;font-size:12.5px}
+  /* 산출 기준 정의 목록 — 좁은 폭에서는 용어/설명을 세로로 */
+  .note-def{grid-template-columns:1fr;gap:2px 0}
+  .note-def dt{margin-top:8px}
+  .note-def dt:first-child{margin-top:0}
+}
+@media print{.filterbar,.tabs{display:none}.topbar{border-bottom:none}}
+</style>
+</head>
+<body>
+<main class="main" id="top">
+
+  <div class="topbar">
+    <div class="brand">Ramid<span>EIS</span></div>
+  </div>
+
+  <div class="utilbar" id="utilbar"></div>
+
+  <div class="bread">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg>
+    &gt; 골프사업부 &gt; <b id="bread-cur">일일 매출 실적 현황</b>
+  </div>
+
+  <div class="tabs" id="tabs" role="tablist" aria-label="골프장 선택"></div>
+
+  <!-- ── 종합현황 ─────────────────────────────────────────── -->
+  <section class="view on" data-view="overview">
+    <div class="today-grid" id="today-grid"></div>
+    <div class="g3" style="margin-top:16px" id="month-items"></div>
+    <div class="g3" style="margin-top:16px" id="acc-cards"></div>
+  </section>
+
+  <!-- ── 경영데이터 > 매출현황 ─────────────────────────────── -->
+  <section class="view" data-view="revenue">
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg></span>
+      <h2>매출현황</h2><span class="unit">(단위: 천원)</span><span class="rest" id="rev-period"></span>
+    </div>
+    <div class="filterbar">
+      <span class="fb-l">조회 기간</span>
+      <div class="fb-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span id="fb-from"></span></div>
+      <span style="color:var(--text3)">~</span>
+      <div class="fb-date"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg><span id="fb-to"></span></div>
+      <div class="fb-sp">
+        <button class="btn btn-excel" onclick="exportCSV()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>Excel(CSV)</button>
+        <button class="btn" onclick="window.print()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6M6 18H4v-6h16v6h-2M8 14h8v7H8z"/></svg>인쇄</button>
+      </div>
+    </div>
+    <div id="rev-blocks"></div>
+  </section>
+
+  <!-- ── 경영데이터 > 목표 진행 ────────────────────────────── -->
+  <section class="view" data-view="progress">
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h11M4 18h7"/></svg></span>
+      <h2>골프장별 월 목표 달성 진행</h2><span class="rest" id="prog-rest"></span>
+    </div>
+    <div class="card prog-card" id="prog-card"></div>
+  </section>
+
+  <!-- ── 골프장 관리 > 골프장 종합 (골프장별 전용 페이지) ───── -->
+  <section class="view" data-view="course">
+    <div id="course-view"></div>
+  </section>
+
+  <!-- ── 골프장 관리 > 골프장별 현황 ───────────────────────── -->
+  <section class="view" data-view="corp">
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/></svg></span>
+      <h2>골프장별 현황</h2><span class="unit">(단위: 천원)</span><span class="rest">카드를 누르면 해당 골프장 페이지로 이동</span>
+    </div>
+    <div class="g5" id="corp-cards"></div>
+  </section>
+
+  <!-- ── 골프장 관리 > 상세 현황 ───────────────────────────── -->
+  <section class="view" data-view="detail">
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span>
+      <h2>골프장별 상세 현황</h2><span class="unit">금일 실적 · 항목별 월누계 · 내장객 · 예약</span>
+    </div>
+    <div class="g5" id="detail-cards"></div>
+  </section>
+
+  <!-- ── 매출 분석 > 마켓타입 매출 ─────────────────────────── -->
+  <section class="view" data-view="mkt">
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.5 3.8"/></svg></span>
+      <h2>마켓타입별 매출 분석</h2><span class="unit" id="mkt-unit"></span><span class="rest">상단 탭 연동</span>
+    </div>
+    <div id="mkt-panels"></div>
+  </section>
+
+  <!-- ── 매출 분석 > 종합 순위 ─────────────────────────────── -->
+  <section class="view" data-view="rank">
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M6 4h12v5a6 6 0 0 1-12 0V4zM18 5h3v2a3 3 0 0 1-3 3M6 5H3v2a3 3 0 0 0 3 3"/></svg></span>
+      <h2>종합 순위 비교표</h2><span class="unit">(단위: 천원)</span>
+    </div>
+    <div class="card tw" id="rank-wrap"></div>
+  </section>
+
+  <div id="note-wrap">
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg></span>
+      <h2>산출 기준</h2>
+    </div>
+    <div class="card note-card" id="note-card"></div>
+  </div>
+
+  <div class="foot">© PLAN-G. ALL RIGHT RESERVED.</div>
+</main>
+
+<script>
+/* =========================================================================
+   DATA — 일자별 재생성 시 이 객체만 교체하면 됩니다.
+   티스푼 ERP 연동 시 이 구조로 JSON을 생성해 주입하세요.
+   금액 단위: 천원 (마켓타입 월별표는 백만원, 연간 요약은 억원 문자열)
+   ========================================================================= */
+const DATA = {
+  meta: {
+    /* ★ 마감일 (ISO). 여기서 파생: 제목 · 마감 표기(요일 포함) · 조회기간 ·
+       경과일수 · 경과율 · 월 총일수 · 매출현황 블록 제목 · 누계 카드 월 표기
+       → applyMeta() 참고. 일자별 재생성 시 이 값만 바꾸면 됩니다.
+       (예약 3일치는 파생하지 않습니다 — sched[].date 가 실제 예약일을 직접 가짐) */
+    closeDate: '2026-04-24',
+    annualTarget: 12835387,
+    admin: '관리자'
+  },
+
+  /* 골프장 키 매핑 — 표기 순서 고정 (인계서 3절) */
+  corps: [
+    { key: 'yp',  name: '양평TPC',      short: '양평' },
+    { key: 'nyj', name: '남양주CC',     short: '남양' },
+    { key: 'dj',  name: '플라밍고CC',   short: '플라' },
+    { key: 'us',  name: '엠스클럽 의성', short: '엠스' },
+    { key: 'srs', name: '속리산CC',     short: '속리' }
+  ],
+
+  today: {
+    totalRevenue: 359994,
+    monthForecast: 7191160,           /* 월 마감 예상 = 월누계 ÷ 경과일 × 총일수 (인계서 7절: 목표 정의 확인 필요) */
+    forecastNote: '현 페이스 단순 추정',
+    gauge: { pct: 0.872, label: '87.2%', act: 2876464, tgt: 3296787 }
+  },
+
+  ytd: {
+    actual: 11305917,
+    prevYear: 10915825,
+    yoyLabel: '104%',
+    diffLabel: '+390,092천원',
+    gauge: { pct: 0.881, label: '88.1%' },
+    legend1: '객단가 127천',
+    legend2: '전년比 95%'
+  },
+
+  /* 항목별 미니 바차트 3개 — bars는 corps 순서, 첫 막대에 color 적용 */
+  monthItems: [
+    { label: '월 누계 그린피', value: 2037148, color: 'var(--gold)',   deltaColor: 'var(--red)',    delta: '목표 86% · 전년 104%', meta: '금일 267,803 · 객단가 90천(93%)',  bars: [100, 36, 77, 63, 54], barColor: '#D1A12B' },
+    { label: '월 누계 카트료', value: 545073,  color: 'var(--green)',  deltaColor: 'var(--green)',  delta: '목표 91% · 전년 119%', meta: '금일 58,798 · 객단가 24천(106%)',  bars: [100, 44, 91, 87, 58], barColor: '#28C76F' },
+    { label: '월 누계 식음료', value: 294243,  color: 'var(--orange)', deltaColor: 'var(--orange)', delta: '목표 88% · 전년 107%', meta: '금일 33,394 · 객단가 13천(95%)',   bars: [100, 14, 58, 75, 44], barColor: '#FF9E43' }
+  ],
+
+  /* 누계 요약 3개 카드 — 2번 카드 전년 수치는 인계서 7절 확인 필요 항목 */
+  accCards: [
+    { label: '{M} 누적 매출',   value: '₩2,876,464', small: ' 천', color: 'var(--gold)',   chip: 'y', icon: 'bars',
+      cmpL: '{M} 목표', cmpV: '₩3,296,787 천', cmpTag: { text: '(△420,323)', color: 'var(--text3)', bold: false },
+      barHead: '달성률', barW: 87.2, barLabel: '87.2%', barColor: 'var(--gold-bar)' },
+    { label: '{M} 누적 내장객', value: '22,659', small: ' 명', color: 'var(--green)', chip: 'g', icon: 'people',
+      cmpL: '전년 동월 누적 내장객', cmpV: '21,478 명', cmpTag: { text: '(106%)', color: 'var(--green)', bold: true },
+      barHead: '달성률', barW: 100, barLabel: '113%', barColor: 'var(--green)' },
+    { label: '금일 평균 객단가', value: '₩127,000', small: '', color: 'var(--orange)', chip: 'o', icon: 'card',
+      cmpL: '전년 동일 평균 객단가', cmpV: '₩134,000', cmpTag: { text: '(95%)', color: 'var(--red)', bold: true },
+      barHead: '비율', barW: 95, barLabel: '95%', barColor: 'var(--orange)' }
+  ],
+
+  /* 매출현황 블록 — YTD 항목별 연 목표는 역산 추정치 (인계서 7절) */
+  revBlocks: [
+    { title: '', /* applyMeta() 파생 */ color: 'var(--gold)', amtColor: 'var(--gold)', subBg: '#fdfbf5',
+      cols: [
+        { name: '그린피', amt: '2,037,148', tgt: { v: '2,367,396', w: 86,   bar: 'var(--gold-bar)', lab: '86.0%' },  yoy: { v: '104%', w: 100, bar: 'var(--dark)', lab: '104.0%' } },
+        { name: '카트료', amt: '545,073',   tgt: { v: '595,767',   w: 91.5, bar: 'var(--gold-bar)', lab: '91.5%' },  yoy: { v: '119%', w: 100, bar: 'var(--dark)', lab: '119.0%' } },
+        { name: '식음료', amt: '294,243',   tgt: { v: '333,624',   w: 88.2, bar: 'var(--gold-bar)', lab: '88.2%' },  yoy: { v: '107%', w: 100, bar: 'var(--dark)', lab: '107.0%' } },
+        { name: '소계', sub: true, amt: '2,876,464', tgt: { v: '3,296,787', w: 87.2, bar: 'var(--gold-bar)', lab: '87.2%' }, yoy: { v: '107%', w: 100, bar: 'var(--dark)', lab: '107.0%' } }
+      ] },
+    { title: '', /* applyMeta() 파생 */ color: 'var(--green)', amtColor: 'var(--green)', subBg: '#f7fcfa',
+      cols: [
+        { name: '그린피', amt: '7,533,482', tgt: { v: '9,076,484', w: 83,  bar: 'var(--green)', lab: '83.0%' },     yoy: { v: '97% ⚠', vColor: 'var(--red)', w: 97,  bar: 'var(--dark)', lab: '97.0%' } },
+        { name: '카트료', amt: '2,533,111', tgt: { v: '2,507,040', w: 100, bar: 'var(--green)', lab: '101.0% ✓' },  yoy: { v: '124%', w: 100, bar: 'var(--dark)', lab: '124.0%' } },
+        { name: '식음료', amt: '1,239,324', tgt: { v: '1,277,653', w: 97,  bar: 'var(--green)', lab: '97.0%' },     yoy: { v: '109%', w: 100, bar: 'var(--dark)', lab: '109.0%' } },
+        { name: '소계', sub: true, amt: '11,305,917', tgt: { v: '12,835,387', w: 88.1, bar: 'var(--green)', lab: '88.1%' }, yoy: { v: '10,915,825', vNum: true, w: 100, bar: 'var(--dark)', lab: '104.0%' } }
+      ] }
+  ],
+
+  /* 월 목표 달성 진행바 — 첫 행(합계)은 corp 없음 → 탭 필터에서 항상 표시 */
+  progress: [
+    { name: '합계', total: true, w: 87.2, color: 'var(--gold-bar)', lab: '87.2%',  act: '2,876,464', tgt: '3,296,787', bdg: 'bdg-g', bdgT: '전년 107%' },
+    { corp: 'yp',  name: '양평TPC',      w: 100,  color: 'var(--green)',  lab: '100% ✓', act: '863,016', tgt: '863,596', bdg: 'bdg-g', bdgT: '전년 108%' },
+    { corp: 'nyj', name: '남양주CC',     w: 93.2, color: 'var(--green)',  lab: '93.2%',  act: '300,340', tgt: '322,188', bdg: 'bdg-g', bdgT: '전년 112%' },
+    { corp: 'dj',  name: '플라밍고CC',   w: 77.7, color: 'var(--orange)', lab: '77.7%',  act: '665,166', tgt: '856,234', bdg: 'bdg-g', bdgT: '전년 122% ↑' },
+    { corp: 'us',  name: '엠스클럽 의성', w: 78.5, color: 'var(--red)',    lab: '78.5%',  act: '588,175', tgt: '749,626', bdg: 'bdg-r', bdgT: '전년 88% ↓' },
+    { corp: 'srs', name: '속리산CC',     w: 91,   color: 'var(--green)',  lab: '91.0%',  act: '459,767', tgt: '505,142', bdg: 'bdg-g', bdgT: '전년 112%' }
+  ],
+
+  /* 골프장별 현황 카드 5 — rank는 실제 성과 순위 (표시 순서와 무관, 인계서 7절) */
+  corpCards: [
+    { corp: 'yp', name: '양평TPC', rank: { t: '1위', c: 'bdg-y' }, today: { v: '95,611', c: 'var(--green)' },
+      kv: [
+        { k: '월 누계',   v: '863,016' },
+        { k: '월 목표',   v: '863,596', c: 'c-3' },
+        { k: '목표 달성', v: '100% ✓', c: 'c-g' },
+        { k: '전년比',    v: '108% ↑', c: 'c-g' },
+        { k: '객단가',    v: '169천 (100%)', c: 'c-y' },
+        { k: 'YTD',      v: '3,016,529' },
+        { k: 'YTD 달성', v: '115% ✓', c: 'c-g' }
+      ],
+      prog: { t: '100%', c: 'var(--green)', w: 100, bar: 'var(--green)' },
+      fbox: { tone: 'g', fv: '≈ 2,157,540천원', fs: '목표 초과 확실 ✓' } },
+    { corp: 'nyj', name: '남양주CC', rank: { t: '2위', c: 'bdg-y' }, today: { v: '39,183', c: 'var(--gold)' },
+      kv: [
+        { k: '월 누계',   v: '300,340' },
+        { k: '월 목표',   v: '322,188', c: 'c-3' },
+        { k: '목표 달성', v: '93%', c: 'c-g' },
+        { k: '전년比',    v: '112% ↑', c: 'c-g' },
+        { k: '객단가',    v: '110천 (97%)', c: 'c-g' },
+        { k: 'YTD',      v: '1,178,356' },
+        { k: 'YTD 달성', v: '97%', c: 'c-o' }
+      ],
+      prog: { t: '93%', w: 93, bar: 'var(--green)' },
+      fbox: { tone: 'y', fv: '≈ 750,850천원', fs: '목표 322,188 → 초과 예상 ✓' } },
+    { corp: 'dj', name: '플라밍고CC', rank: { t: '5위 ⚠', c: 'bdg-o' }, today: { v: '97,000', c: 'var(--orange)' },
+      kv: [
+        { k: '월 누계',   v: '665,166' },
+        { k: '월 목표',   v: '856,234', c: 'c-3' },
+        { k: '목표 달성', v: '78% ⚠', c: 'c-o' },
+        { k: '전년比',    v: '122% ↑', c: 'c-g' },
+        { k: '객단가',    v: '118천 (88%)', c: 'c-r' },
+        { k: 'YTD',      v: '2,769,313' },
+        { k: 'YTD 달성', v: '75% ⚠', c: 'c-r' }
+      ],
+      prog: { t: '78%', c: 'var(--orange)', w: 77.7, bar: 'var(--orange)' },
+      fbox: { tone: 'o', fv: '≈ 1,662,915천원', fs: '객단가 정상화 시 목표 달성 가능' } },
+    { corp: 'us', name: '엠스클럽 의성', rank: { t: '4위 ⚠', c: 'bdg-r' }, today: { v: '70,540', c: 'var(--red)' },
+      kv: [
+        { k: '월 누계',   v: '588,175' },
+        { k: '월 목표',   v: '749,626', c: 'c-3' },
+        { k: '목표 달성', v: '78% ⚠', c: 'c-r' },
+        { k: '전년比',    v: '88% ↓', c: 'c-r' },
+        { k: '객단가',    v: '106천 (92%)', c: 'c-o' },
+        { k: 'YTD',      v: '2,602,603' },
+        { k: 'YTD 달성', v: '75% ⚠', c: 'c-r' }
+      ],
+      prog: { t: '78%', c: 'var(--red)', w: 78, bar: 'var(--red)' },
+      fbox: { tone: 'r', fv: '≈ 1,470,438천원', fs: '목표 749,626 대비 미달 위험 ⚠' } },
+    { corp: 'srs', name: '속리산CC', rank: { t: '3위', c: 'bdg-y' }, today: { v: '57,660', c: 'var(--gold)' },
+      kv: [
+        { k: '월 누계',   v: '459,767' },
+        { k: '월 목표',   v: '505,142', c: 'c-3' },
+        { k: '목표 달성', v: '91%', c: 'c-g' },
+        { k: '전년比',    v: '112% ↑', c: 'c-g' },
+        { k: '객단가',    v: '128천 (100%)', c: 'c-g' },
+        { k: 'YTD',      v: '1,739,116' },
+        { k: 'YTD 달성', v: '95%', c: 'c-o' }
+      ],
+      prog: { t: '91%', w: 91, bar: 'var(--green)' },
+      fbox: { tone: 'y', fv: '≈ 1,149,418천원', fs: '목표 505,142 → 초과 예상 ✓' } }
+  ],
+
+  /* 골프장별 상세 현황 카드 5 */
+  detailCards: [
+    { corp: 'yp', name: '양평TPC',
+      today: [
+        { k: '내장객',   v: '477명 (123팀)' },
+        { k: '금일 매출', v: '95,611천' },
+        { k: '객단가',   v: '169천' }
+      ],
+      items: [
+        { k: '그린피', v: '618,291', c: 'c-g', em: '목97·전103',  w: 97,  bar: 'var(--green)' },
+        { k: '카트료', v: '143,365', c: 'c-g', em: '목112·전134', w: 100, bar: 'var(--green)' },
+        { k: '식음료', v: '101,360', c: 'c-g', em: '목102·전116', w: 100, bar: 'var(--green)' }
+      ],
+      visitors: [
+        { k: 'M내장/목표', v: '5,117명 (108%)',  c: 'c-g' },
+        { k: 'Y내장/목표', v: '21,799명 (145%)', c: 'c-g' }
+      ],
+      sched: [
+        { date: '2026-04-25', n: 116, x: '1부56+2부60' },
+        { date: '2026-04-26', n: 108, x: '1부52+2부56' },
+        { date: '2026-04-27', n: 114, x: '1부60+2부54' }
+      ] },
+    { corp: 'nyj', name: '남양주CC',
+      today: [
+        { k: '내장객',   v: '290명 (74팀)' },
+        { k: '금일 매출', v: '39,183천' },
+        { k: '객단가',   v: '110천' }
+      ],
+      items: [
+        { k: '그린피', v: '223,669', c: 'c-o', em: '목91·전110', w: 91, bar: 'var(--orange)' },
+        { k: '카트료', v: '62,659',  c: 'c-g', em: '목99·전117', w: 99, bar: 'var(--green)' },
+        { k: '식음료', v: '14,011',  c: 'c-g', em: '목98·전116', w: 98, bar: 'var(--green)' }
+      ],
+      visitors: [
+        { k: 'M내장/목표', v: '2,734명 (116%)',  c: 'c-g' },
+        { k: 'Y내장/목표', v: '12,787명 (122%)', c: 'c-g' }
+      ],
+      sched: [
+        { date: '2026-04-25', n: 51, x: '21+22+8' },
+        { date: '2026-04-26', n: 36, x: '9+16+11' },
+        { date: '2026-04-27', n: 41, x: '12+16+13' }
+      ] },
+    { corp: 'dj', name: '플라밍고CC',
+      today: [
+        { k: '내장객',   v: '728명 (182팀)' },
+        { k: '금일 매출', v: '97,000천' },
+        { k: '객단가',   v: '118천' }
+      ],
+      items: [
+        { k: '그린피', v: '475,922', c: 'c-o', em: '목81·전120', w: 81, bar: 'var(--orange)' },
+        { k: '카트료', v: '130,818', c: 'c-r', em: '목73·전141', w: 73, bar: 'var(--red)' },
+        { k: '식음료', v: '58,426',  c: 'c-r', em: '목64·전105', w: 64, bar: 'var(--red)' }
+      ],
+      visitors: [
+        { k: 'M내장/목표', v: '5,659명 (138% ↑)', c: 'c-g' },
+        { k: 'Y내장/목표', v: '27,894명 (124%)',  c: 'c-g' }
+      ],
+      sched: [
+        { date: '2026-04-25', n: 88,  x: '1부37+2부51' },
+        { date: '2026-04-26', n: 109, x: '31+65+13' },
+        { date: '2026-04-27', n: 114, x: '45+59+10' }
+      ] },
+    { corp: 'us', name: '엠스클럽 의성',
+      today: [
+        { k: '내장객',   v: '616명 (155팀)' },
+        { k: '금일 매출', v: '70,540천' },
+        { k: '객단가',   v: '106천' }
+      ],
+      items: [
+        { k: '그린피', v: '387,253', c: 'c-r', em: '목73·전86', w: 73, bar: 'var(--red)' },
+        { k: '카트료', v: '124,721', c: 'c-o', em: '목88·전96', w: 88, bar: 'var(--orange)' },
+        { k: '식음료', v: '76,200',  c: 'c-o', em: '목94·전89', w: 94, bar: 'var(--orange)' }
+      ],
+      visitors: [
+        { k: 'M내장/목표',  v: '5,546명 (96% ↓)',        c: 'c-r' },
+        { k: '전년比 내장', v: '△244명 (5,790→5,546)',   c: 'c-r' }
+      ],
+      sched: [
+        { date: '2026-04-25', n: 88,  x: '1부44+2부44' },
+        { date: '2026-04-26', n: 112, x: '50+51+11' },
+        { date: '2026-04-27', n: 114, x: '42+63+9' }
+      ] },
+    { corp: 'srs', name: '속리산CC',
+      today: [
+        { k: '내장객',   v: '348명 (87팀)' },
+        { k: '금일 매출', v: '57,660천' },
+        { k: '객단가',   v: '128천' }
+      ],
+      items: [
+        { k: '그린피', v: '332,013', c: 'c-o', em: '목89·전110', w: 89, bar: 'var(--orange)' },
+        { k: '카트료', v: '83,509',  c: 'c-g', em: '목97·전113', w: 97, bar: 'var(--green)' },
+        { k: '식음료', v: '44,245',  c: 'c-g', em: '목93·전127', w: 93, bar: 'var(--green)' }
+      ],
+      visitors: [
+        { k: 'M내장/목표', v: '3,603명 (112%)',  c: 'c-g' },
+        { k: 'Y내장/목표', v: '16,017명 (112%)', c: 'c-g' }
+      ],
+      sched: [
+        { date: '2026-04-25', n: 84, x: '1부43+2부41' },
+        { date: '2026-04-26', n: 78, x: '1부38+2부40' },
+        { date: '2026-04-27', n: 78, x: '1부41+2부37' }
+      ] }
+  ],
+
+  /* 마켓타입 패널 6 — 월별표는 각 골프장 상위 5개 타입 기준 (총합계와 소폭 차이) */
+  mkt: {
+    unit: '2025년 연간 (그린피+카트)',
+    panels: [
+      { corp: 'all',
+        sum: [
+          { mc: '#D1A12B', l: '연간 총매출 (5개소 합계)', v: '3,986.5억', gold: true, s: '그린피+카트료 기준' },
+          { mc: '#28C76F', l: '그린피 합계', v: '3,235.1억', s: '전체의 81.2%' },
+          { mc: '#2B8AE8', l: '카트료 합계', v: '751.2억', s: '전체의 18.8%' },
+          { mc: '#FF9E43', l: '최대 마켓타입', v: '계약업체', text: true, s: '33.4% (1,331.5억)' }
+        ],
+        barsTitle: '마켓타입별 매출 비중 — 그룹 합계',
+        bars: [
+          { l: '계약업체',      w: 100,  c: '#D1A12B', pct: '33.4%', amt: '1,331.5억' },
+          { l: '계절요금',      w: 99.8, c: '#28C76F', pct: '33.3%', amt: '1,329.5억' },
+          { l: '게릴라',        w: 42.8, c: '#FF4C51', pct: '14.3%', amt: '570.4억' },
+          { l: '연단체',        w: 41.5, c: '#7366EF', pct: '13.9%', amt: '553.2억' },
+          { l: '반납자',        w: 5.4,  c: '#a855f7', pct: '1.8%',  amt: '71.7억' },
+          { l: '선불카드',      w: 3.5,  c: '#9333ea', pct: '1.2%',  amt: '46.0억' },
+          { l: '여성/오프라인', w: 2.9,  c: '#ec6ba0', pct: '1.0%',  amt: '38.6억' },
+          { l: '포털사',        w: 1.5,  c: '#00BAD0', pct: '0.5%',  amt: '19.3억' },
+          { l: '계절요금할인',  w: 0.9,  c: '#2B8AE8', pct: '0.3%',  amt: '11.4억' },
+          { l: '채권자·기타',   w: 0.8,  c: '#999999', pct: '0.3%',  amt: '14.3억' }
+        ],
+        tableTitle: '월별 × 골프장 매출 (2025년 / 백만원)',
+        cols: [
+          { l: '양평TPC',   c: '#D1A12B' },
+          { l: '남양주CC',  c: '#28C76F' },
+          { l: '플라밍고CC', c: '#FF9E43' },
+          { l: '엠스클럽',  c: '#FF4C51' },
+          { l: '속리산CC',  c: '#00BAD0' }
+        ],
+        rows: [
+          { m: '1월',  v: [943, 710, 1838, 2452, 1150],       t: 7093,  tc: 'hl' },
+          { m: '2월',  v: [413, 827, 2057, 3214, 1041],       t: 7552,  tc: 'hl' },
+          { m: '3월',  v: [8370, 3687, 9004, 9152, 5569],     t: 35782, tc: 'hm' },
+          { m: '4월',  v: [12800, 4890, 9490, 10358, 7598],   t: 45136, tc: 'hh' },
+          { m: '5월',  v: [15074, 5824, 11361, 10826, 9229],  t: 52314, tc: 'hh' },
+          { m: '6월',  v: [13928, 5598, 11084, 10097, 8323],  t: 49030, tc: 'hh' },
+          { m: '7월',  v: [7802, 2786, 6631, 6802, 5878],     t: 29899, tc: 'hm' },
+          { m: '8월',  v: [8755, 1175, 7410, 6712, 6011],     t: 30063, tc: 'hm' },
+          { m: '9월',  v: [11158, 1499, 9661, 7372, 7098],    t: 36788, tc: 'hm' },
+          { m: '10월', v: [13862, 1847, 12567, 10004, 9598],  t: 47878, tc: 'hh' },
+          { m: '11월', v: [12750, 1507, 11272, 8970, 8177],   t: 42676, tc: 'hh' },
+          { m: '12월', v: [1680, 188, 2985, 4050, 2254],      t: 11157, tc: 'hl' },
+          { m: '합계', v: [107535, 30538, 95359, 90008, 71927], t: 395368 }
+        ],
+        footnote: '※ 각 골프장 상위 5개 마켓타입 기준 집계로 총합계와 소폭 차이 발생' },
+      { corp: 'yp',
+        sum: [
+          { mc: '#D1A12B', l: '연간 총매출', v: '1,075.5억', gold: true, s: '107,545,985,073원' },
+          { mc: '#28C76F', l: '그린피 합계', v: '913.0억', s: '전체의 84.9%' },
+          { mc: '#2B8AE8', l: '카트료 합계', v: '162.5억', s: '전체의 15.1%' },
+          { mc: '#FF9E43', l: '최대 마켓타입', v: '계약업체', text: true, s: '55.4% (596.0억)' }
+        ],
+        barsTitle: '마켓타입별 매출 비중 — 양평TPC',
+        bars: [
+          { l: '계약업체',  w: 100, c: '#D1A12B', pct: '55.4%', amt: '596.0억' },
+          { l: '계절요금',  w: 46,  c: '#28C76F', pct: '25.5%', amt: '273.8억' },
+          { l: '연단체',    w: 27,  c: '#7366EF', pct: '15.0%', amt: '161.1억' },
+          { l: '반납자',    w: 6,   c: '#a855f7', pct: '3.3%',  amt: '35.0억' },
+          { l: '채권자',    w: 1.6, c: '#c084fc', pct: '0.9%',  amt: '9.4억' },
+          { l: '평가·할인', w: 0.6, c: '#999999', pct: '0.0%',  amt: '0.1억' }
+        ],
+        tableTitle: '월별 × 마켓타입 (2025년 / 백만원)',
+        cols: [
+          { l: '계약업체', c: '#D1A12B' },
+          { l: '계절요금', c: '#28C76F' },
+          { l: '연단체',   c: '#7366EF' },
+          { l: '반납자',   c: '#a855f7' },
+          { l: '채권자',   c: '#c084fc' }
+        ],
+        rows: [
+          { m: '1월',  v: [859, 84, 0, 0, 0],           t: 943,   tc: 'hl' },
+          { m: '2월',  v: [295, 105, 13, 0, 0],         t: 413,   tc: 'hl' },
+          { m: '3월',  v: [4623, 1839, 1639, 248, 21],  t: 8370,  tc: 'hm' },
+          { m: '4월',  v: [6221, 3771, 2280, 459, 69],  t: 12800, tc: 'hh' },
+          { m: '5월',  v: [7889, 4395, 2185, 510, 95],  t: 15074, tc: 'hh' },
+          { m: '6월',  v: [7556, 3501, 2219, 545, 107], t: 13928, tc: 'hh' },
+          { m: '7월',  v: [4508, 1721, 1252, 226, 95],  t: 7802,  tc: 'hm' },
+          { m: '8월',  v: [6176, 1676, 705, 94, 104],   t: 8755,  tc: 'hm' },
+          { m: '9월',  v: [5947, 2739, 1995, 365, 111], t: 11158, tc: 'hh' },
+          { m: '10월', v: [7444, 3827, 1922, 529, 141], t: 13862, tc: 'hh' },
+          { m: '11월', v: [6694, 3515, 1855, 520, 167], t: 12750, tc: 'hh' },
+          { m: '12월', v: [1392, 210, 43, 4, 32],       t: 1680,  tc: 'hl' },
+          { m: '합계', v: [59603, 27384, 16107, 3499, 942], t: 107535 }
+        ] },
+      { corp: 'nyj',
+        sum: [
+          { mc: '#D1A12B', l: '연간 총매출', v: '334.3억', gold: true, s: '33,429,026,127원' },
+          { mc: '#28C76F', l: '그린피 합계', v: '267.2억', s: '전체의 79.9%' },
+          { mc: '#2B8AE8', l: '카트료 합계', v: '67.1억', s: '전체의 20.1%' },
+          { mc: '#FF9E43', l: '최대 마켓타입', v: '계약업체', text: true, s: '44.1% (147.5억)' }
+        ],
+        barsTitle: '마켓타입별 매출 비중 — 남양주CC',
+        bars: [
+          { l: '계약업체',      w: 100, c: '#D1A12B', pct: '44.1%', amt: '147.5억' },
+          { l: '계절요금',      w: 44,  c: '#28C76F', pct: '19.5%', amt: '65.3억' },
+          { l: '반납자',        w: 25,  c: '#a855f7', pct: '11.0%', amt: '36.6억' },
+          { l: '여성/오프라인', w: 20,  c: '#ec6ba0', pct: '8.7%',  amt: '29.0억' },
+          { l: '연단체',        w: 18,  c: '#7366EF', pct: '8.1%',  amt: '26.9억' },
+          { l: '포털사',        w: 11,  c: '#00BAD0', pct: '4.9%',  amt: '16.3억' },
+          { l: '계절요금할인',  w: 7.7, c: '#2B8AE8', pct: '3.4%',  amt: '11.3억' },
+          { l: '일반단체',      w: 1,   c: '#6366f1', pct: '0.4%',  amt: '1.3억' }
+        ],
+        tableTitle: '월별 × 마켓타입 (2025년 / 백만원)',
+        cols: [
+          { l: '계약업체', c: '#D1A12B' },
+          { l: '계절요금', c: '#28C76F' },
+          { l: '반납자',   c: '#a855f7' },
+          { l: '여성/OFF', c: '#ec6ba0' },
+          { l: '연단체',   c: '#7366EF' }
+        ],
+        rows: [
+          { m: '1월',  v: [484, 195, 30, 0, 0],       t: 710,  tc: 'hl' },
+          { m: '2월',  v: [566, 211, 39, 0, 10],      t: 827,  tc: 'hl' },
+          { m: '3월',  v: [2198, 838, 353, 0, 298],   t: 3687, tc: 'hm' },
+          { m: '4월',  v: [2997, 950, 605, 0, 338],   t: 4890, tc: 'hh' },
+          { m: '5월',  v: [3594, 1205, 657, 0, 368],  t: 5824, tc: 'hh' },
+          { m: '6월',  v: [3486, 1196, 539, 0, 378],  t: 5598, tc: 'hh' },
+          { m: '7월',  v: [1418, 615, 283, 225, 245], t: 2786, tc: 'hm' },
+          { m: '8월',  v: [6, 267, 99, 631, 171],     t: 1175, tc: 'hl' },
+          { m: '9월',  v: [0, 283, 257, 643, 316],    t: 1499, tc: 'hl' },
+          { m: '10월', v: [0, 413, 364, 751, 319],    t: 1847, tc: 'hm' },
+          { m: '11월', v: [0, 332, 387, 537, 252],    t: 1507, tc: 'hl' },
+          { m: '12월', v: [0, 22, 48, 118, 0],        t: 188,  tc: 'hl' },
+          { m: '합계', v: [14750, 6527, 3662, 2905, 2694], t: 30538 }
+        ] },
+      { corp: 'dj',
+        sum: [
+          { mc: '#D1A12B', l: '연간 총매출', v: '954.1억', gold: true, s: '95,409,415,439원' },
+          { mc: '#28C76F', l: '그린피 합계', v: '769.3억', s: '전체의 80.6%' },
+          { mc: '#2B8AE8', l: '카트료 합계', v: '184.7억', s: '전체의 19.4%' },
+          { mc: '#FF9E43', l: '최대 마켓타입', v: '계절요금', text: true, s: '61.1% (583.2억)' }
+        ],
+        barsTitle: '마켓타입별 매출 비중 — 플라밍고CC',
+        bars: [
+          { l: '계절요금',      w: 100, c: '#28C76F', pct: '61.1%', amt: '583.2억' },
+          { l: '계약업체',      w: 34,  c: '#D1A12B', pct: '20.5%', amt: '195.6억' },
+          { l: '게릴라',        w: 28,  c: '#FF4C51', pct: '17.0%', amt: '162.1억' },
+          { l: '여성/오프라인', w: 2,   c: '#ec6ba0', pct: '1.0%',  amt: '9.6억' },
+          { l: '포털사',        w: 1,   c: '#00BAD0', pct: '0.3%',  amt: '3.0억' }
+        ],
+        tableTitle: '월별 × 마켓타입 (2025년 / 백만원)',
+        cols: [
+          { l: '계절요금', c: '#28C76F' },
+          { l: '계약업체', c: '#D1A12B' },
+          { l: '게릴라',   c: '#FF4C51' },
+          { l: '여성/OFF', c: '#ec6ba0' },
+          { l: '포털사',   c: '#00BAD0' }
+        ],
+        rows: [
+          { m: '1월',  v: [622, 492, 706, 17, 0],      t: 1838,  tc: 'hl' },
+          { m: '2월',  v: [989, 524, 495, 45, 4],      t: 2057,  tc: 'hl' },
+          { m: '3월',  v: [6203, 1583, 1186, 1, 30],   t: 9004,  tc: 'hh' },
+          { m: '4월',  v: [6437, 1361, 1535, 107, 49], t: 9490,  tc: 'hh' },
+          { m: '5월',  v: [7526, 1802, 1857, 126, 49], t: 11361, tc: 'hh' },
+          { m: '6월',  v: [7281, 2081, 1516, 153, 53], t: 11084, tc: 'hh' },
+          { m: '7월',  v: [4202, 1163, 1167, 93, 7],   t: 6631,  tc: 'hm' },
+          { m: '8월',  v: [3744, 1760, 1800, 95, 12],  t: 7410,  tc: 'hm' },
+          { m: '9월',  v: [6199, 2032, 1303, 104, 23], t: 9661,  tc: 'hh' },
+          { m: '10월', v: [6883, 3388, 2165, 93, 38],  t: 12567, tc: 'hh' },
+          { m: '11월', v: [7034, 2388, 1716, 98, 35],  t: 11272, tc: 'hh' },
+          { m: '12월', v: [1205, 985, 766, 28, 2],     t: 2985,  tc: 'hl' },
+          { m: '합계', v: [58325, 19559, 16215, 960, 301], t: 95359 }
+        ] },
+      { corp: 'us',
+        sum: [
+          { mc: '#D1A12B', l: '연간 총매출', v: '903.3억', gold: true, s: '90,325,736,455원' },
+          { mc: '#28C76F', l: '그린피 합계', v: '705.0억', s: '전체의 78.1%' },
+          { mc: '#2B8AE8', l: '카트료 합계', v: '198.2억', s: '전체의 21.9%' },
+          { mc: '#FF4C51', l: '최대 마켓타입', v: '게릴라', text: true, s: '45.2% (408.3억)' }
+        ],
+        barsTitle: '마켓타입별 매출 비중 — 엠스클럽 의성',
+        bars: [
+          { l: '게릴라',   w: 100, c: '#FF4C51', pct: '45.2%', amt: '408.3억' },
+          { l: '연단체',   w: 72,  c: '#7366EF', pct: '32.6%', amt: '294.6억' },
+          { l: '계절요금', w: 28,  c: '#28C76F', pct: '12.5%', amt: '112.7억' },
+          { l: '선불카드', w: 11,  c: '#9333ea', pct: '5.1%',  amt: '46.0억' },
+          { l: '계약업체', w: 9.4, c: '#D1A12B', pct: '4.3%',  amt: '38.4억' },
+          { l: '기타',     w: 1,   c: '#999999', pct: '0.3%',  amt: '2.6억' }
+        ],
+        tableTitle: '월별 × 마켓타입 (2025년 / 백만원)',
+        cols: [
+          { l: '게릴라',   c: '#FF4C51' },
+          { l: '연단체',   c: '#7366EF' },
+          { l: '계절요금', c: '#28C76F' },
+          { l: '선불카드', c: '#9333ea' },
+          { l: '계약업체', c: '#D1A12B' }
+        ],
+        rows: [
+          { m: '1월',  v: [1883, 144, 331, 91, 2],     t: 2452,  tc: 'hl' },
+          { m: '2월',  v: [1110, 1062, 734, 182, 125], t: 3214,  tc: 'hl' },
+          { m: '3월',  v: [1330, 3510, 3001, 415, 896], t: 9152, tc: 'hh' },
+          { m: '4월',  v: [2868, 3815, 2439, 467, 769], t: 10358, tc: 'hh' },
+          { m: '5월',  v: [4507, 3700, 1307, 656, 656], t: 10826, tc: 'hh' },
+          { m: '6월',  v: [4918, 3532, 749, 542, 356],  t: 10097, tc: 'hh' },
+          { m: '7월',  v: [3913, 2179, 392, 245, 73],   t: 6802,  tc: 'hm' },
+          { m: '8월',  v: [5018, 1169, 310, 146, 69],   t: 6712,  tc: 'hm' },
+          { m: '9월',  v: [3708, 2974, 386, 200, 104],  t: 7372,  tc: 'hm' },
+          { m: '10월', v: [5360, 2892, 833, 612, 306],  t: 10004, tc: 'hh' },
+          { m: '11월', v: [3733, 3565, 542, 660, 470],  t: 8970,  tc: 'hh' },
+          { m: '12월', v: [2486, 921, 246, 381, 16],    t: 4050,  tc: 'hm' },
+          { m: '합계', v: [40833, 29463, 11272, 4598, 3842], t: 90008 }
+        ] },
+      { corp: 'srs',
+        sum: [
+          { mc: '#D1A12B', l: '연간 총매출', v: '719.3억', gold: true, s: '71,926,956,906원' },
+          { mc: '#28C76F', l: '그린피 합계', v: '580.6억', s: '전체의 80.7%' },
+          { mc: '#2B8AE8', l: '카트료 합계', v: '138.7억', s: '전체의 19.3%' },
+          { mc: '#FF9E43', l: '최대 마켓타입', v: '계약업체', text: true, s: '49.2% (354.0억)' }
+        ],
+        barsTitle: '마켓타입별 매출 비중 — 속리산CC',
+        bars: [
+          { l: '계약업체', w: 100, c: '#D1A12B', pct: '49.2%', amt: '354.0억' },
+          { l: '계절요금', w: 83,  c: '#28C76F', pct: '40.9%', amt: '294.5억' },
+          { l: '연단체',   w: 20,  c: '#7366EF', pct: '9.8%',  amt: '70.5억' },
+          { l: '지역할인', w: 1,   c: '#FF9E43', pct: '0.0%',  amt: '0.3억' }
+        ],
+        tableTitle: '월별 × 마켓타입 (2025년 / 백만원)',
+        cols: [
+          { l: '계약업체', c: '#D1A12B' },
+          { l: '계절요금', c: '#28C76F' },
+          { l: '연단체',   c: '#7366EF' },
+          { l: '지역할인', c: '#FF9E43' }
+        ],
+        rows: [
+          { m: '1월',  v: [701, 450, 0, 0],      t: 1150, tc: 'hl' },
+          { m: '2월',  v: [674, 317, 47, 2],     t: 1041, tc: 'hl' },
+          { m: '3월',  v: [2828, 1914, 811, 15], t: 5569, tc: 'hm' },
+          { m: '4월',  v: [3469, 3111, 1011, 7], t: 7598, tc: 'hh' },
+          { m: '5월',  v: [5132, 2958, 1139, 0], t: 9229, tc: 'hh' },
+          { m: '6월',  v: [4664, 2446, 1213, 1], t: 8323, tc: 'hh' },
+          { m: '7월',  v: [3050, 2178, 646, 3],  t: 5878, tc: 'hm' },
+          { m: '8월',  v: [3244, 2542, 222, 3],  t: 6011, tc: 'hm' },
+          { m: '9월',  v: [3073, 3388, 637, 1],  t: 7098, tc: 'hh' },
+          { m: '10월', v: [3969, 4831, 798, 0],  t: 9598, tc: 'hh' },
+          { m: '11월', v: [3365, 4286, 527, 0],  t: 8177, tc: 'hh' },
+          { m: '12월', v: [1228, 1026, 0, 1],    t: 2254, tc: 'hl' },
+          { m: '합계', v: [35396, 29447, 7050, 34], t: 71927 }
+        ] }
+    ]
+  },
+
+  /* 종합 순위 비교표 — 셀 단위 {t, c(클래스), bdg(배지 클래스), fw(굵게)} */
+  rank: {
+    headers: ['골프장', '금일', '월누계', '목표달성', '월순위', '전년比', '전년순위', '객단가', '객단比', 'YTD', 'YTD달성', 'YTD순위', '마감예상', '전망'],
+    rows: [
+      { corp: 'yp', cells: [
+        { t: '양평TPC', c: 'tn' }, { t: '95,611', c: 'c-g' }, { t: '863,016' },
+        { t: '100% ✓', c: 'c-g', fw: true }, { t: '1위', bdg: 'bdg-y' },
+        { t: '108%', c: 'c-g' }, { t: '4위', bdg: 'bdg-n' },
+        { t: '169천', c: 'c-y' }, { t: '100%', c: 'c-g' },
+        { t: '3,016,529' }, { t: '115% ✓', c: 'c-g' }, { t: '1위', bdg: 'bdg-y' },
+        { t: '~2,157,540', c: 'c-g' }, { t: '초과 확실', bdg: 'bdg-g' }
+      ] },
+      { corp: 'nyj', cells: [
+        { t: '남양주CC', c: 'tn' }, { t: '39,183' }, { t: '300,340' },
+        { t: '93%', c: 'c-g' }, { t: '2위', bdg: 'bdg-y' },
+        { t: '112%', c: 'c-g' }, { t: '3위', bdg: 'bdg-y' },
+        { t: '110천', c: 'c-g' }, { t: '97%', c: 'c-o' },
+        { t: '1,178,356' }, { t: '97%', c: 'c-o' }, { t: '2위', bdg: 'bdg-y' },
+        { t: '~750,850', c: 'c-y' }, { t: '초과 예상', bdg: 'bdg-g' }
+      ] },
+      { corp: 'dj', cells: [
+        { t: '플라밍고CC', c: 'tn' }, { t: '97,000', c: 'c-g' }, { t: '665,166' },
+        { t: '78% ⚠', c: 'c-o', fw: true }, { t: '5위', bdg: 'bdg-r' },
+        { t: '122% ↑', c: 'c-g' }, { t: '1위', bdg: 'bdg-y' },
+        { t: '118천', c: 'c-o' }, { t: '88%', c: 'c-r' },
+        { t: '2,769,313' }, { t: '75% ⚠', c: 'c-r' }, { t: '5위', bdg: 'bdg-r' },
+        { t: '~1,662,915', c: 'c-o' }, { t: '개선 필요', bdg: 'bdg-o' }
+      ] },
+      { corp: 'us', cells: [
+        { t: '엠스클럽 의성', c: 'tn' }, { t: '70,540' }, { t: '588,175' },
+        { t: '78% ⚠', c: 'c-r', fw: true }, { t: '4위', bdg: 'bdg-n' },
+        { t: '88% ↓', c: 'c-r' }, { t: '5위', bdg: 'bdg-r' },
+        { t: '106천', c: 'c-o' }, { t: '92%', c: 'c-r' },
+        { t: '2,602,603' }, { t: '75% ⚠', c: 'c-r' }, { t: '4위', bdg: 'bdg-n' },
+        { t: '~1,470,438', c: 'c-r' }, { t: '미달 위험', bdg: 'bdg-r' }
+      ] },
+      { corp: 'srs', cells: [
+        { t: '속리산CC', c: 'tn' }, { t: '57,660' }, { t: '459,767' },
+        { t: '91%', c: 'c-g' }, { t: '3위', bdg: 'bdg-y' },
+        { t: '112%', c: 'c-g' }, { t: '2위', bdg: 'bdg-y' },
+        { t: '128천', c: 'c-g' }, { t: '100%', c: 'c-g' },
+        { t: '1,739,116' }, { t: '95%', c: 'c-o' }, { t: '3위', bdg: 'bdg-y' },
+        { t: '~1,149,418', c: 'c-y' }, { t: '초과 예상', bdg: 'bdg-g' }
+      ] }
+    ]
+  }
+};
+
+/* =========================================================================
+   렌더러 — DATA를 DOM에 주입. 신규 요소에는 반드시 data-corp를 부여할 것.
+   ========================================================================= */
+const fmt = n => Number(n).toLocaleString('ko-KR');
+const $ = id => document.getElementById(id);
+
+/* 카드 칩 아이콘 */
+const ICONS = {
+  bars:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V9M12 20V4M19 20v-8"/></svg>',
+  people: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.6 3-6 7-6s7 2.4 7 6M17 20c0-3-1.4-4.8-3-5.6M16 5.2a3.5 3.5 0 0 1 0 6.6"/></svg>',
+  card:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg>',
+  chart:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V11M11 20V4M17 20v-7M21 20H3"/></svg>',
+  trend:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v5h-5"/></svg>',
+  star:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.8.8-5 4.7 1.3 6.8L12 17.3 6 20.6l1.3-6.8-5-4.7 6.8-.8z"/></svg>',
+  redo:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>'
+};
+
+/* 골드 테마 fbox 색상 톤 */
+const TONES = {
+  g: { bg: 'var(--green-l)',  bd: '#c4ecd9', fg: '#28C76F' },
+  y: { bg: 'var(--gold-l)',   bd: '#f0dfae', fg: 'var(--gold-d)' },
+  o: { bg: 'var(--orange-l)', bd: '#f9ddbe', fg: '#FF9E43' },
+  r: { bg: 'var(--red-l)',    bd: '#f8cfcc', fg: '#FF4C51' }
+};
+
+/* =========================================================================
+   월 마감 예상 · 전망 — AI 없이 산술식 + 임계값으로 계산
+   ★ 월 목표는 '월 전체값' 기준 (2026-07-29 확정)
+
+     월 마감 예상 = 월 누계 ÷ 경과일수 × 월 총일수
+     예상 달성률  = 월 마감 예상 ÷ 월 목표 × 100
+     전망         = 예상 달성률을 아래 임계값에 대입
+
+   하드코딩하지 말고 이 함수로 산출하세요. DATA의 월누계/월목표만 갱신하면 따라옵니다.
+   ========================================================================= */
+const OUTLOOK = [
+  { min: 110, label: '초과 확실', tone: 'g', bdg: 'bdg-g', c: 'c-g' },
+  { min: 100, label: '초과 예상', tone: 'y', bdg: 'bdg-g', c: 'c-y' },
+  { min:  90, label: '개선 필요', tone: 'o', bdg: 'bdg-o', c: 'c-o' },
+  { min:  -1, label: '미달 위험', tone: 'r', bdg: 'bdg-r', c: 'c-r' }
+];
+
+const toNum = s => Number(String(s).replace(/[^0-9.-]/g, ''));
+
+/* =========================================================================
+   날짜 파생 — meta.closeDate(마감일) 하나에서 모든 날짜 표기를 산출
+   날짜 문자열을 여러 곳에 하드코딩하면 갱신 때 서로 어긋나므로 전부 여기서 계산합니다.
+   ========================================================================= */
+const WD = ['일', '월', '화', '수', '목', '금', '토'];
+const pad2 = n => String(n).padStart(2, '0');
+
+function applyMeta() {
+  const m = DATA.meta;
+  const d = new Date(m.closeDate + 'T00:00:00');
+  const y = d.getFullYear(), mo = d.getMonth() + 1, day = d.getDate();
+
+  m.monthDays   = new Date(y, mo, 0).getDate();      /* 해당 월 총일수 (윤년 자동) */
+  m.elapsedDays = day;                               /* 경과일수 = 마감일의 '일' */
+  m.progressPct = Math.round(day / m.monthDays * 100);
+  m.monthLabel  = pad2(mo) + '월';
+  m.dotDate     = `${y}.${pad2(mo)}.${pad2(day)}`;
+  m.closeLabel  = `${m.dotDate}(${WD[d.getDay()]}) 마감`;
+  m.periodFrom  = `${y}-${pad2(mo)}-01`;
+  m.periodTo    = m.closeDate;
+  m.fileDate    = m.closeDate;
+  m.title       = `라미드그룹 골프장 일일 실적 현황 ${m.dotDate}`;
+
+  /* 매출현황 블록 제목 */
+  const mmdd = `${pad2(mo)}.${pad2(day)}`;
+  DATA.revBlocks[0].title = `월 누계 (${pad2(mo)}.01 ~ ${mmdd})`;
+  DATA.revBlocks[1].title = `연 누계 YTD (${y}.01.01 ~ ${mmdd})`;
+
+  /* 누계 요약 카드의 {M} 토큰 → 월 표기 */
+  DATA.accCards.forEach(c => {
+    ['label', 'cmpL'].forEach(k => { if (c[k]) c[k] = c[k].replace(/\{M\}/g, m.monthLabel); });
+  });
+
+}
+
+/* 예약 날짜 라벨 — sched[].date(ISO)를 '4/25(토)' 형태로. 날짜는 파생하지 않고 데이터가 직접 가집니다 */
+function mdLabel(iso) {
+  const n = new Date(iso + 'T00:00:00');
+  return `${n.getMonth() + 1}/${n.getDate()}(${WD[n.getDay()]})`;
+}
+
+/* =========================================================================
+   데이터 연동 점검 — 주입된 DATA의 구조적 오류를 콘솔에 경고
+   값의 정확성이 아니라 '연결'이 맞는지만 봅니다.
+   ========================================================================= */
+function validateData() {
+  const w = [];
+  const keys = DATA.corps.map(c => c.key);
+  const check = (name, list, getKey) => {
+    const have = list.map(getKey);
+    keys.filter(k => !have.includes(k)).forEach(k => w.push(`${name}: '${k}' 누락`));
+    have.filter(k => k !== 'all' && !keys.includes(k)).forEach(k => w.push(`${name}: '${k}' 은 corps 에 없는 키`));
+  };
+  check('corpCards',   DATA.corpCards,   x => x.corp);
+  check('detailCards', DATA.detailCards, x => x.corp);
+  check('progress',    DATA.progress.filter(p => p.corp), x => x.corp);
+  check('rank.rows',   DATA.rank.rows,   x => x.corp);
+  check('mkt.panels',  DATA.mkt.panels,  x => x.corp);
+
+  /* 예약은 마감일 이후여야 함 */
+  DATA.detailCards.forEach(dc => dc.sched.forEach(s => {
+    if (!s.date) w.push(`sched(${dc.corp}): date 없음`);
+    else if (s.date <= DATA.meta.closeDate) w.push(`sched(${dc.corp}): ${s.date} 는 마감일(${DATA.meta.closeDate}) 이전`);
+  }));
+
+  /* 진행바 첫 행은 합계여야 함 (corp 없음) */
+  if (DATA.progress[0].corp) w.push('progress: 첫 행은 합계(corp 없음)여야 합니다');
+
+  if (w.length) console.warn('[DATA 연동 점검]\n- ' + w.join('\n- '));
+  return w;
+}
+
+function forecastOf(act, tgt) {
+  const m = DATA.meta;
+  const forecast = Math.round(act / m.elapsedDays * m.monthDays);
+  const pct = tgt ? Math.round(forecast / tgt * 100) : 0;
+  return Object.assign({ forecast, pct }, OUTLOOK.find(o => pct >= o.min));
+}
+
+/* 계산 결과를 DATA에 주입 — 렌더 함수는 기존 필드를 그대로 읽습니다 */
+function applyForecasts() {
+  /* 합계 */
+  const t = forecastOf(DATA.today.gauge.act, DATA.today.gauge.tgt);
+  DATA.today.monthForecast = t.forecast;
+  DATA.today.forecastNote = `월 목표 대비 ${t.pct}% · ${t.label}`;
+
+  /* 골프장별 */
+  DATA.corps.forEach(c => {
+    const pr = DATA.progress.find(p => p.corp === c.key);
+    const cc = DATA.corpCards.find(x => x.corp === c.key);
+    const rk = DATA.rank.rows.find(r => r.corp === c.key);
+    const f = forecastOf(toNum(pr.act), toNum(pr.tgt));
+
+    cc.fbox = { tone: f.tone, fv: `≈ ${fmt(f.forecast)}천원`,
+                fs: `월 목표 ${pr.tgt} 대비 ${f.pct}% · ${f.label}` };
+    rk.cells[12] = { t: '~' + fmt(f.forecast), c: f.c };   /* 마감예상 */
+    rk.cells[13] = { t: f.label, bdg: f.bdg };             /* 전망 */
+  });
+}
+
+/* 반원 게이지 — 반지름 78 고정. SVG 좌표와 Math.PI*78은 한 쌍 (인계서 6절) */
+function gaugeHTML(cap, g, color, numColor, leg1, leg2) {
+  return `<div class="gauge-wrap">
+    <div class="gauge-cap">${cap}</div>
+    <div class="gauge-box">
+      <svg viewBox="0 0 200 112" aria-hidden="true">
+        <path d="M22 100 A 78 78 0 0 1 178 100" fill="none" stroke="#E9ECEF" stroke-width="16" stroke-linecap="round"/>
+        <path class="gg" data-pct="${g.pct}" d="M22 100 A 78 78 0 0 1 178 100" fill="none" stroke="${color}" stroke-width="16" stroke-linecap="round"/>
+      </svg>
+      <div class="gauge-num num" style="color:${numColor}" role="meter" aria-valuenow="${(g.pct * 100).toFixed(1)}" aria-valuemin="0" aria-valuemax="100" aria-label="${cap}">${g.label}</div>
+    </div>
+    <div class="gauge-legend"><span>${leg1}</span><span>${leg2}</span></div>
+  </div>`;
+}
+
+function renderUtilbar() {
+  const m = DATA.meta;
+  document.title = m.title;
+  $('utilbar').innerHTML = `
+    <div class="util-date">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      ${m.closeLabel} · ${m.elapsedDays}일 경과 / ${m.monthDays}일
+    </div>
+    <div class="util-right">
+      <span><i class="live"></i> 진행률 ${m.progressPct}%</span>
+      <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>${m.admin}</span>
+    </div>`;
+}
+
+function renderTabs() {
+  const btns = [{ k: 'all', name: '전체' }].concat(DATA.corps.map(c => ({ k: c.key, name: c.name })));
+  $('tabs').innerHTML = btns.map((b, i) =>
+    `<button class="tab${i === 0 ? ' on' : ''}" role="tab" aria-selected="${i === 0}" data-k="${b.k}" onclick="setTab(this)">${b.name}</button>`
+  ).join('');
+}
+
+function renderToday() {
+  const t = DATA.today, y = DATA.ytd, m = DATA.meta;
+  $('today-grid').innerHTML = `
+    <div class="card">
+      <div class="card-h"><h3>오늘의 매출 현황</h3><span class="note">단위: 천원</span></div>
+      <div class="today-body">
+        <div class="tb-left">
+          <div class="tb-item">
+            <div class="chip chip-y">${ICONS.chart}</div>
+            <div><div class="tb-lbl">금일 합계 매출</div><div class="tb-val num" style="color:var(--gold)">₩${fmt(t.totalRevenue)}<small>천</small></div></div>
+          </div>
+          <div class="tb-item">
+            <div class="chip chip-n">${ICONS.trend}</div>
+            <div><div class="tb-lbl">월 마감 예상 (×${m.monthDays}/${m.elapsedDays})</div><div class="tb-val num" style="font-size:21px">₩${fmt(t.monthForecast)}<small>천</small></div><div class="tb-sub">${t.forecastNote}</div></div>
+          </div>
+        </div>
+        ${gaugeHTML('달성률', t.gauge, '#D1A12B', 'var(--gold)', fmt(t.gauge.act), '/ ' + fmt(t.gauge.tgt))}
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-h"><h3>연 누계(YTD) 현황</h3><span class="note">연 목표 ${fmt(m.annualTarget)}천원</span></div>
+      <div class="today-body">
+        <div class="tb-left">
+          <div class="tb-item">
+            <div class="chip chip-g">${ICONS.star}</div>
+            <div><div class="tb-lbl">연 누계 실적</div><div class="tb-val num" style="color:var(--green)">₩${fmt(y.actual)}<small>천</small></div></div>
+          </div>
+          <div class="tb-item">
+            <div class="chip chip-n">${ICONS.redo}</div>
+            <div><div class="tb-lbl">전년 동기 누계</div><div class="tb-val num" style="font-size:21px">₩${fmt(y.prevYear)}<small>천</small></div><div class="tb-sub">전년比 <b style="color:var(--green)">${y.yoyLabel}</b> · ${y.diffLabel}</div></div>
+          </div>
+        </div>
+        ${gaugeHTML('연 목표 달성률', y.gauge, '#28C76F', 'var(--green)', y.legend1, y.legend2)}
+      </div>
+    </div>`;
+}
+
+function renderMonthItems() {
+  const shorts = DATA.corps.map(c => c.short);
+  $('month-items').innerHTML = DATA.monthItems.map(it => `
+    <div class="card mini-card">
+      <div>
+        <div class="mc-lbl">${it.label}</div>
+        <div class="mc-val num" style="color:${it.color}">${fmt(it.value)}<small> 천원</small></div>
+        <div class="mc-delta" style="color:${it.deltaColor}">${it.delta}</div>
+        <div class="mc-meta">${it.meta}</div>
+      </div>
+      <div class="mc-chart" aria-hidden="true">
+        ${it.bars.map((h, i) => `<div class="mbar" style="height:${h}%${i === 0 ? ';background:' + it.barColor : ''}"><span>${shorts[i]}</span></div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderAccCards() {
+  $('acc-cards').innerHTML = DATA.accCards.map(c => `
+    <div class="card acc-card">
+      <div class="acc-top">
+        <div><div class="acc-lbl">${c.label}</div><div class="acc-val num" style="color:${c.color}">${c.value}${c.small ? `<small>${c.small}</small>` : ''}</div></div>
+        <div class="chip chip-${c.chip}">${ICONS[c.icon]}</div>
+      </div>
+      <div class="acc-cmp-l">${c.cmpL}</div>
+      <div class="acc-cmp-v num">${c.cmpV} <span style="font-size:11px;color:${c.cmpTag.color}${c.cmpTag.bold ? ';font-weight:700' : ''}">${c.cmpTag.text}</span></div>
+      <div class="pbar-head"><span>${c.barHead}</span><span>100</span></div>
+      <div class="pbar" role="progressbar" aria-valuenow="${c.barW}" aria-valuemin="0" aria-valuemax="100" aria-label="${c.label} ${c.barHead}"><i style="width:${c.barW}%;background:${c.barColor}">${c.barLabel}</i></div>
+      <div class="pbar-foot">100%</div>
+    </div>`).join('');
+}
+
+function renderRevBlocks() {
+  const m = DATA.meta;
+  $('rev-period').textContent = m.periodFrom + ' ~ ' + m.periodTo;
+  $('fb-from').textContent = m.periodFrom;
+  $('fb-to').textContent = m.periodTo;
+  $('rev-blocks').innerHTML = DATA.revBlocks.map(b => `
+    <div class="card rev-block">
+      <div class="rev-h" style="color:${b.color}">${b.title}</div>
+      <div class="rev-body">
+        ${b.cols.map(col => `
+        <div class="rev-col"${col.sub ? ` style="background:${b.subBg}"` : ''}>
+          <div class="rev-top"><span class="rev-name"${col.sub ? ' style="font-weight:700"' : ''}>${col.name}</span><span class="rev-amt num" style="color:${b.amtColor}">${col.amt}</span></div>
+          <div class="rev-m"><div class="rev-mh"><span>목표 대비</span><b class="num">${col.tgt.v}</b></div><div class="rev-t" role="progressbar" aria-valuenow="${col.tgt.w}" aria-valuemin="0" aria-valuemax="100" aria-label="${col.name} 목표 대비"><i style="width:${Math.min(col.tgt.w, 100)}%;background:${col.tgt.bar}">${col.tgt.lab}</i></div><div class="rev-f">100%</div></div>
+          <div class="rev-m"><div class="rev-mh"><span>전년 대비</span><b${col.yoy.vNum ? ' class="num"' : ''}${col.yoy.vColor ? ` style="color:${col.yoy.vColor}"` : ''}>${col.yoy.v}</b></div><div class="rev-t" role="progressbar" aria-valuenow="${col.yoy.w}" aria-valuemin="0" aria-valuemax="100" aria-label="${col.name} 전년 대비"><i style="width:${Math.min(col.yoy.w, 100)}%;background:${col.yoy.bar}">${col.yoy.lab}</i></div><div class="rev-f">100%</div></div>
+        </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function renderProgress() {
+  const m = DATA.meta;
+  $('prog-rest').textContent = `기준선 ${m.progressPct}% (${m.elapsedDays}일 / ${m.monthDays}일 경과)`;
+  $('prog-card').innerHTML = DATA.progress.map(r => `
+    <div class="prow"${r.corp ? ` data-corp="${r.corp}"` : ''}>
+      <div class="pname"${r.total ? ' style="color:var(--gold);font-weight:700"' : ''}>${r.name}</div>
+      <div class="ptrack" role="progressbar" aria-valuenow="${r.w}" aria-valuemin="0" aria-valuemax="100" aria-label="${r.name} 월 목표 달성률"><div class="pmark" style="left:${m.progressPct}%"></div><div class="pfill" style="width:${Math.min(r.w, 100)}%;background:${r.color}">${r.lab}</div></div>
+      <div class="pinfo"><span class="pact num">${r.act}</span><span class="ptgt num">/ ${r.tgt}</span><span class="bdg ${r.bdg}">${r.bdgT}</span></div>
+    </div>`).join('');
+}
+
+function renderCorpCards() {
+  $('corp-cards').innerHTML = DATA.corpCards.map(c => {
+    const tone = TONES[c.fbox.tone];
+    return `
+    <div class="card" data-corp="${c.corp}">
+      <div class="corp-h">
+        <div class="corp-rk ${c.rank.c}">${c.rank.t}</div>
+        <div class="corp-nm">${c.name}</div>
+        <div class="corp-td num" style="color:${c.today.c}">${c.today.v}<small> 천원</small></div>
+      </div>
+      <div class="corp-b">
+        <div class="kv-list">
+          ${c.kv.map(r => `<div class="kv"><span class="k">${r.k}</span><span class="v num${r.c ? ' ' + r.c : ''}">${r.v}</span></div>`).join('')}
+        </div>
+        <div class="corp-foot">
+          <div class="corp-prog">
+            <div class="mini-pl"><span>월 목표 진행</span><span style="${c.prog.c ? `color:${c.prog.c};` : ''}font-weight:700">${c.prog.t}</span></div>
+            <div class="mtrack" role="progressbar" aria-valuenow="${c.prog.w}" aria-valuemin="0" aria-valuemax="100" aria-label="${c.name} 월 목표 진행"><i style="width:${Math.min(c.prog.w, 100)}%;background:${c.prog.bar}"></i></div>
+          </div>
+          <div class="fbox" style="background:${tone.bg};border-color:${tone.bd};color:${tone.fg}">
+            <div class="fl">월 마감 예상</div><div class="fv num">${c.fbox.fv}</div><div class="fs">${c.fbox.fs}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderDetailCards() {
+  const dRow = r => `<div class="d-row"><span class="k">${r.k}</span><span class="v num${r.c ? ' ' + r.c : ''}">${r.v}${r.em ? `<em>${r.em}</em>` : ''}</span></div>`;
+  $('detail-cards').innerHTML = DATA.detailCards.map(d => `
+    <div class="card" data-corp="${d.corp}">
+      <div class="d-h"><div class="d-nm">${d.name}</div></div>
+      <div class="d-b">
+        <div class="d-sec">
+          <div class="d-st">금일 실적</div>
+          ${d.today.map(dRow).join('')}
+        </div>
+        <div class="d-sec">
+          <div class="d-st">항목별 월누계</div>
+          ${d.items.map(it => dRow(it) + `<div class="btrack" role="progressbar" aria-valuenow="${it.w}" aria-valuemin="0" aria-valuemax="100" aria-label="${d.name} ${it.k} 목표 대비"><i style="width:${Math.min(it.w, 100)}%;background:${it.bar}"></i></div>`).join('')}
+        </div>
+        <div class="d-sec">
+          <div class="d-st">내장객 · 예약</div>
+          ${d.visitors.map(dRow).join('')}
+          <div class="sched">
+            ${d.sched.map(s => `<div class="sbox"><div class="s-d">${mdLabel(s.date)}</div><div class="s-n num">${s.n}</div><div class="s-x">${s.x}</div></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* 마켓타입 패널 본문 — 마켓타입 뷰와 골프장 종합 페이지가 공유 */
+function mktBodyHTML(p) {
+  return `
+      <div class="mkt-sum">
+        ${p.sum.map(s => `<div class="card msum" style="--mc:${s.mc}"><div class="ms-l">${s.l}</div><div class="ms-v${s.text ? '' : ' num'}" style="${s.gold ? 'color:var(--gold)' : ''}${s.text ? 'font-size:17px' : ''}">${s.v}</div><div class="ms-s">${s.s}</div></div>`).join('')}
+      </div>
+      <div class="mkt-2">
+        <div class="card mbar-card">
+          <div class="mtab-t">${p.barsTitle}</div>
+          ${p.bars.map((b, i) => `<div class="mb-row"${i === p.bars.length - 1 ? ' style="margin-bottom:0"' : ''}><div class="mb-l">${b.l}</div><div class="mb-t" role="progressbar" aria-valuenow="${b.w}" aria-valuemin="0" aria-valuemax="100" aria-label="${b.l} 매출 비중"><div class="mb-f" style="width:${b.w}%;background:${b.c}">${b.pct}</div></div><div class="mb-m num">${b.amt}</div></div>`).join('')}
+        </div>
+        <div class="card mtab-card">
+          <div class="mtab-t">${p.tableTitle}</div>
+          <div style="overflow-x:auto">
+          <table class="mt">
+            <thead><tr><th scope="col">월</th>${p.cols.map(c => `<th scope="col"><i style="background:${c.c}"></i>${c.l}</th>`).join('')}<th scope="col">월합계</th></tr></thead>
+            <tbody>
+              ${p.rows.map(r => `<tr><td>${r.m}</td>${r.v.map(v => `<td>${fmt(v)}</td>`).join('')}<td${r.tc ? ` class="${r.tc}"` : ''}>${fmt(r.t)}</td></tr>`).join('')}
+            </tbody>
+          </table>
+          </div>
+          ${p.footnote ? `<div style="font-size:10px;color:var(--text3);margin-top:8px">${p.footnote}</div>` : ''}
+        </div>
+      </div>`;
+}
+
+function renderMkt() {
+  $('mkt-unit').textContent = DATA.mkt.unit;
+  $('mkt-panels').innerHTML = DATA.mkt.panels.map(p => `
+    <div class="mkt-panel${p.corp === 'all' ? ' on' : ''}" data-corp="${p.corp}">${mktBodyHTML(p)}
+    </div>`).join('');
+}
+
+function renderRank() {
+  const cell = c => {
+    if (c.bdg) return `<td><span class="bdg ${c.bdg}">${c.t}</span></td>`;
+    const cls = [c.c, c.fw ? 'fw' : ''].filter(Boolean).join(' ');
+    return `<td${cls ? ` class="${cls}"` : ''}>${c.t}</td>`;
+  };
+  $('rank-wrap').innerHTML = `
+    <table class="rt">
+      <thead><tr>${DATA.rank.headers.map(h => `<th scope="col">${h}</th>`).join('')}</tr></thead>
+      <tbody>
+        ${DATA.rank.rows.map(r => `<tr data-corp="${r.corp}">${r.cells.map(cell).join('')}</tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderNotes() {
+  const m = DATA.meta;
+  const t = forecastOf(DATA.today.gauge.act, DATA.today.gauge.tgt);
+
+  $('note-card').innerHTML = `
+    <div class="note-t">1. 기준 시점</div>
+    <dl class="note-def">
+      <dt>경과일수</dt>
+      <dd><code>${m.elapsedDays}일</code> / 월 총 <code>${m.monthDays}일</code>
+        <span class="note-eg">— ${m.closeLabel} 시점</span></dd>
+      <dt>경과율</dt>
+      <dd><code>${m.elapsedDays} ÷ ${m.monthDays} = ${m.progressPct}%</code>
+        <span class="note-eg">— 목표 진행바의 세로 기준선. 달성률이 이 선보다 오른쪽이면 페이스가 앞선 것</span></dd>
+      <dt>월 목표</dt>
+      <dd><b>월 전체값</b> 기준
+        <span class="note-eg">— 월 중 시점의 달성률이 100% 미만인 것은 정상. 반드시 경과율과 함께 보세요</span></dd>
+    </dl>
+
+    <div class="note-t">2. 월 마감 예상 — 현 페이스 단순 추정</div>
+    <dl class="note-def">
+      <dt>산식</dt>
+      <dd><code>월 누계 실적 ÷ 경과일수 × 월 총일수</code></dd>
+      <dt>합계 대입 예</dt>
+      <dd><code>${fmt(DATA.today.gauge.act)} ÷ ${m.elapsedDays} × ${m.monthDays} = ${fmt(t.forecast)}</code>
+        <span class="note-eg">천원</span></dd>
+    </dl>
+
+    <div class="note-t">3. 예상 달성률과 전망 배지</div>
+    <dl class="note-def">
+      <dt>예상 달성률</dt>
+      <dd><code>월 마감 예상 ÷ 월 목표 × 100</code>
+        <span class="note-eg">— 합계 ${fmt(t.forecast)} ÷ ${fmt(DATA.today.gauge.tgt)} = <b>${t.pct}%</b></span></dd>
+      <dt>전망 판정</dt>
+      <dd><table class="note-th"><tbody>
+        ${OUTLOOK.map((o, i) => {
+          const range = i === 0 ? `${o.min}% 이상`
+                      : i === OUTLOOK.length - 1 ? `${OUTLOOK[i - 1].min}% 미만`
+                      : `${o.min}% 이상 ~ ${OUTLOOK[i - 1].min}% 미만`;
+          return `<tr><td><span class="bdg ${o.bdg}">${o.label}</span></td><td>예상 달성률 ${range}</td></tr>`;
+        }).join('')}
+      </tbody></table></dd>
+    </dl>
+    <div class="note-eg" style="margin-top:6px">
+      전망은 <b>현재 달성률이 아니라 예상 달성률</b>로 판정합니다. 월 중 시점에서 물어야 할 것은
+      "지금 몇 % 채웠나"가 아니라 "이 페이스면 월말에 목표를 넘느냐"이기 때문입니다.
+      AI 없이 위 산식과 임계값만으로 계산되며, 임계값은 코드의 <code>OUTLOOK</code> 배열에서 조정합니다.
+    </div>
+
+    <div class="note-f">
+      ※ 단순 일평균 추정치 / 주말·공휴일·기상 변수 미반영 · 실제 마감 수치와 차이 발생 가능<br>
+      ※ 정확도를 높이려면 영업일 가중 안분, 전년 동월 일별 패턴 투영, 확정 예약분 반영을 검토할 수 있습니다 (모두 산술식으로 구현 가능)<br>
+      ※ YTD 목표달성율 = ${m.monthLabel.replace('월', '')}월 ${m.elapsedDays}일 기준 연간 누계 ÷ 연간 목표(${fmt(m.annualTarget)}천원)<br>
+      ※ 매출현황 블록의 항목별 연 목표는 소계 연 목표를 항목 달성률로 역산한 값<br>
+      ※ 마켓타입 월별표는 각 골프장 상위 5개 타입 기준이라 총합계와 소폭 차이 발생<br>
+      ※ 순위 배지는 표시 순서와 무관한 실제 성과 순위<br>
+      ※ 골프장 표기 순서: ${DATA.corps.map(c => c.name).join(' → ')}
+    </div>`;
+}
+
+/* =========================================================================
+   골프장 종합 페이지 — 선택된 1개소의 현황·상세·마켓타입을 한 화면에
+   ========================================================================= */
+function renderCourse() {
+  const key = curCorp === 'all' ? DATA.corps[0].key : curCorp;
+  const corp = DATA.corps.find(c => c.key === key);
+  const cc   = DATA.corpCards.find(c => c.corp === key);
+  const dc   = DATA.detailCards.find(d => d.corp === key);
+  const mp   = DATA.mkt.panels.find(p => p.corp === key);
+  const pr   = DATA.progress.find(p => p.corp === key);
+  const m    = DATA.meta;
+  const tone = TONES[cc.fbox.tone];
+  const dRow = r => `<div class="d-row"><span class="k">${r.k}</span><span class="v num${r.c ? ' ' + r.c : ''}">${r.v}</span></div>`;
+
+  $('course-view').innerHTML = `
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-5h6v5"/></svg></span>
+      <h2>${corp.name}</h2><span class="unit">골프장 종합 (단위: 천원)</span>
+      <span class="rest">${m.closeLabel} · ${m.elapsedDays}일 경과 / ${m.monthDays}일</span>
+    </div>
+
+    <div class="today-grid">
+      <div class="card">
+        <div class="card-h"><h3>월 목표 달성</h3><span class="note"><span class="bdg ${cc.rank.c}">${cc.rank.t}</span></span></div>
+        <div class="today-body">
+          <div class="tb-left">
+            <div class="tb-item">
+              <div class="chip chip-y">${ICONS.chart}</div>
+              <div><div class="tb-lbl">금일 매출</div><div class="tb-val num" style="color:${cc.today.c}">${cc.today.v}<small>천</small></div></div>
+            </div>
+            <div class="tb-item">
+              <div class="chip chip-n">${ICONS.trend}</div>
+              <div><div class="tb-lbl">월 마감 예상</div><div class="tb-val num" style="font-size:21px;color:${tone.fg}">${cc.fbox.fv}</div><div class="tb-sub">${cc.fbox.fs}</div></div>
+            </div>
+          </div>
+          ${gaugeHTML('월 목표 달성률', { pct: Math.min(pr.w, 100) / 100, label: pr.lab }, cc.prog.bar, tone.fg, pr.act, '/ ' + pr.tgt)}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-h"><h3>주요 지표</h3><span class="note">단위: 천원</span></div>
+        <div class="corp-b" style="padding-top:14px">
+          <div class="kv-list">
+            ${cc.kv.map(r => `<div class="kv"><span class="k">${r.k}</span><span class="v num${r.c ? ' ' + r.c : ''}">${r.v}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg></span>
+      <h2>항목별 월누계</h2><span class="unit">목표 대비 진행률 · 전년 대비</span>
+    </div>
+    <div class="card ch-rows">
+      ${dc.items.map(it => `
+      <div class="ch-item">
+        <div class="ch-top"><span class="ch-nm">${it.k}</span><span class="ch-vl num ${it.c}">${it.v}<small>천원</small></span></div>
+        <div class="btrack" role="progressbar" aria-valuenow="${it.w}" aria-valuemin="0" aria-valuemax="100" aria-label="${it.k} 목표 대비"><i style="width:${Math.min(it.w, 100)}%;background:${it.bar}"></i></div>
+        <div class="ch-meta"><span>목표 대비 ${it.em.split('·')[0].replace('목', '')}%</span><span>전년 대비 ${it.em.split('·')[1].replace('전', '')}%</span></div>
+      </div>`).join('')}
+    </div>
+
+    <div class="g3" style="margin-top:16px">
+      <div class="card">
+        <div class="card-h"><h3>금일 실적</h3><span class="note">${m.fileDate}</span></div>
+        <div class="ch-rows">${dc.today.map(dRow).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>내장객 · 목표</h3><span class="note">월 / 연 누계</span></div>
+        <div class="ch-rows">${dc.visitors.map(dRow).join('')}</div>
+      </div>
+      <div class="card">
+        <div class="card-h"><h3>예약 현황</h3><span class="note">향후 3일</span></div>
+        <div style="padding:10px 22px 18px">
+          <div class="sched" style="margin-top:0">
+            ${dc.sched.map(s => `<div class="sbox"><div class="s-d">${mdLabel(s.date)}</div><div class="s-n num">${s.n}</div><div class="s-x">${s.x}</div></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.5 3.8"/></svg></span>
+      <h2>마켓타입별 매출</h2><span class="unit">${DATA.mkt.unit}</span>
+    </div>
+    ${mktBodyHTML(mp)}`;
+
+  animateGauges($('course-view'));
+}
+
+/* =========================================================================
+   라우팅 — 상단 탭이 곧 화면 전환. 상태는 curCorp 하나뿐입니다.
+     '전체'  → 종합현황 (전 섹션 누적)
+     골프장  → 해당 골프장 전용 페이지
+   사이드바는 두지 않습니다 (항목이 '종합현황' 하나뿐 = 전체 탭과 중복).
+   ========================================================================= */
+let curCorp = 'all';   /* 'all' | corp key */
+
+/* curCorp 를 화면 전체에 반영 */
+function applyRoute() {
+  const stacked = curCorp === 'all';
+
+  /* 종합현황은 전 섹션 누적, 골프장 선택 시에는 전용 페이지만 */
+  document.body.classList.toggle('stacked', stacked);
+  document.querySelectorAll('.view').forEach(v => {
+    v.classList.toggle('on', stacked ? v.dataset.view !== 'course' : v.dataset.view === 'course');
+  });
+
+  /* 탭 활성 */
+  document.querySelectorAll('.tab').forEach(t => {
+    const on = t.dataset.k === curCorp;
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-selected', String(on));
+  });
+
+  /* 누적 화면은 항상 전체 기준이므로 마켓 패널도 전체 */
+  document.querySelectorAll('.mkt-panel').forEach(p => p.classList.toggle('on', p.dataset.corp === 'all'));
+
+  const corp = DATA.corps.find(c => c.key === curCorp);
+  $('bread-cur').textContent = stacked ? '일일 매출 실적 현황' : '일일 매출 실적 현황 > ' + corp.name;
+
+  if (!stacked) renderCourse();
+}
+
+function setTab(el) {
+  curCorp = el.dataset.k;
+  applyRoute();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* =========================================================================
+   동작 — 게이지 애니메이션 / CSV 내보내기
+   ========================================================================= */
+
+function animateGauges(root) {
+  /* 반지름 78 고정 → 둘레 Math.PI*78. SVG path 좌표와 한 쌍 */
+  const L = Math.PI * 78;
+  (root || document).querySelectorAll('.gg').forEach(p => {
+    p.style.strokeDasharray = L + ' ' + L;
+    p.style.strokeDashoffset = L;
+    p.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(.4,0,.2,1)';
+    setTimeout(() => { p.style.strokeDashoffset = L * (1 - parseFloat(p.dataset.pct)); }, 220);
+  });
+}
+
+/* 골프장별 현황 카드 → 해당 골프장 전용 페이지 */
+function bindCorpCardLinks() {
+  $('corp-cards').querySelectorAll('.card[data-corp]').forEach(card => {
+    card.style.cursor = 'pointer';
+    card.setAttribute('role', 'link');
+    card.setAttribute('tabindex', '0');
+    const go = () => { curCorp = card.dataset.corp; applyRoute(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    card.addEventListener('click', go);
+    card.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } });
+  });
+}
+
+/* Excel 내보내기 — 외부 라이브러리 없이 CSV(UTF-8 BOM). .xlsx가 필요하면 SheetJS 번들 필요 */
+function exportCSV() {
+  const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const rows = [];
+  rows.push([DATA.meta.title + ' — 종합 순위 비교표 (단위: 천원)']);
+  rows.push(DATA.rank.headers);
+  DATA.rank.rows.forEach(r => rows.push(r.cells.map(c => c.t)));
+  rows.push([]);
+  rows.push(['골프장별 월 목표 달성 진행']);
+  rows.push(['골프장', '달성률', '월 누계', '월 목표', '전년比']);
+  DATA.progress.forEach(r => rows.push([r.name, r.lab, r.act, r.tgt, r.bdgT]));
+  const csv = '﻿' + rows.map(r => r.map(q).join(',')).join('\r\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'ramid-eis-daily_' + DATA.meta.fileDate + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+/* 초기 렌더 — 파생값 주입이 먼저 (날짜 → 예상·전망 순서 고정) */
+applyMeta();
+applyForecasts();
+validateData();
+renderUtilbar();
+renderTabs();
+renderToday();
+renderMonthItems();
+renderAccCards();
+renderRevBlocks();
+renderProgress();
+renderCorpCards();
+renderDetailCards();
+renderMkt();
+renderRank();
+renderNotes();
+bindCorpCardLinks();
+applyRoute();
+animateGauges();
+</script>
+</body>
+</html>
