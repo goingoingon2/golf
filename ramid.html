@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -27,6 +26,90 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans KR',-apple-sy
 .topbar{display:flex;align-items:center;gap:14px;padding:16px 2px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .brand{font-size:21px;font-weight:900;font-style:italic;letter-spacing:-.5px;color:var(--gold);line-height:1}
 .brand span{font-style:normal;font-size:14px;font-weight:700;letter-spacing:.5px;margin-left:5px;color:var(--gold-d)}
+
+/* 화면 전환 축 — 골프장 탭(가로축)과 별개로 '무슨 화면'을 고른다 */
+.topnav{display:flex;gap:2px;margin-left:14px;flex-wrap:wrap}
+.tn{border:none;background:none;border-radius:6px;padding:8px 14px;font-family:inherit;
+    font-size:13.5px;font-weight:500;color:var(--text2);cursor:pointer;transition:.12s;white-space:nowrap}
+.tn:hover{background:var(--gold-l);color:var(--gold)}
+.tn.on{background:var(--gold);color:#fff;font-weight:700}
+.tn small{font-size:11px;opacity:.7;margin-right:5px}
+
+/* ═══ 일자 스트립 — 가로 날짜 선택 ═══════════════════════════ */
+.strip{display:flex;align-items:stretch;gap:0;background:#fff;border:1px solid var(--line);
+       border-radius:var(--r);box-shadow:var(--sh);margin-bottom:16px;overflow:hidden}
+.strip-m{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+         padding:10px 14px;border-right:1px solid var(--line);flex-shrink:0;background:#fcfcfd}
+.strip-m select{border:1px solid var(--line2);border-radius:5px;padding:4px 8px;font-family:inherit;
+                font-size:12.5px;color:var(--text);background:#fff;cursor:pointer}
+.strip-days{display:flex;overflow-x:auto;flex:1;scrollbar-width:thin}
+.day{flex:0 0 auto;width:62px;padding:8px 2px 9px;text-align:center;border-right:1px solid #f3f4f6;
+     background:none;font-family:inherit;cursor:pointer;transition:.12s}
+.day:last-child{border-right:none}
+.day:hover{background:var(--gold-l)}
+.day .w{font-size:10.5px;color:var(--text3);line-height:1.3}
+.day .d{font-size:12.5px;font-weight:500;color:var(--text2);line-height:1.4}
+.day .v1{font-size:13.5px;font-weight:700;color:var(--text);line-height:1.4;font-variant-numeric:tabular-nums}
+.day .v2{font-size:10px;color:var(--text3);line-height:1.3;font-variant-numeric:tabular-nums}
+.day.sat .w,.day.sat .d,.day.sat .v1{color:var(--blue)}
+.day.sun .w,.day.sun .d,.day.sun .v1{color:var(--red)}
+.day.on{background:var(--gold);box-shadow:inset 0 0 0 1px var(--gold-d)}
+.day.on .w,.day.on .d,.day.on .v1,.day.on .v2{color:#fff}
+.day:focus-visible{outline:2px solid var(--gold-d);outline-offset:-2px}
+
+/* ═══ 접이식 데이터 블록 ═══════════════════════════════════ */
+.blk{background:#fff;border:1px solid var(--gold-bar);border-radius:var(--r);margin-bottom:12px;overflow:hidden}
+.blk-h{display:flex;align-items:center;gap:8px;width:100%;padding:11px 16px;background:none;border:none;
+       border-bottom:1px solid var(--line);font-family:inherit;font-size:13px;font-weight:500;
+       color:var(--text);cursor:pointer;text-align:left}
+.blk-h:hover{background:#fcfbf7}
+.blk-h .cv{margin-left:auto;font-size:11px;color:var(--text3);transition:.15s}
+.blk.closed .blk-h{border-bottom:none}
+.blk.closed .blk-b{display:none}
+.blk.closed .cv{transform:rotate(180deg)}
+.blk-b{padding:0}
+
+/* 경영데이터 표 */
+table.dt{width:100%;border-collapse:collapse;font-size:12.5px}
+table.dt th{background:#f7f7f8;color:var(--text2);font-size:11.5px;font-weight:700;padding:11px 12px;
+            text-align:center;white-space:nowrap;border-bottom:1px solid var(--line)}
+table.dt td{padding:11px 12px;border-bottom:1px solid #f4f4f5;text-align:right;
+            font-variant-numeric:tabular-nums;color:var(--text)}
+table.dt td:first-child{text-align:center;color:var(--text2)}
+table.dt tr:last-child td{border-bottom:none}
+table.dt tbody tr:hover td{background:#fdfaf2}
+table.dt tr.tot td{font-weight:700;color:var(--gold);background:#fdfbf5}
+table.dt tr.tot td:first-child{color:var(--gold)}
+
+/* 티타임 예약 필터 */
+.tfil{display:flex;align-items:center;gap:16px;padding:12px 16px;flex-wrap:wrap;font-size:12.5px}
+.tfil label{display:inline-flex;align-items:center;gap:6px;cursor:pointer;color:var(--text2);user-select:none}
+.tfil input{margin:0;cursor:pointer;accent-color:var(--gold)}
+.tfil label:hover{color:var(--gold)}
+.btn-book{border:1px solid var(--gold-bar);background:var(--gold-bar);color:#fff;border-radius:4px;
+          padding:4px 14px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.btn-book:hover{background:var(--gold-d);border-color:var(--gold-d)}
+.btn-cancel{border:1px solid var(--red);background:var(--red);color:#fff;border-radius:4px;
+            padding:4px 14px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.btn-cancel:hover{background:#c53030;border-color:#c53030}
+.t-open{color:var(--text3)}
+.empty-row{text-align:center;color:var(--text3);padding:26px 0}
+
+/* 유보타임 — 한눈에 구분되도록 행 전체를 물들이고 왼쪽에 색띠 */
+table.dt tr.held td{background:#f6f4ff}
+table.dt tr.held:hover td{background:#efebff}
+table.dt tr.held td:first-child{box-shadow:inset 3px 0 0 var(--purple)}
+.bdg-hold{display:inline-flex;align-items:center;gap:4px;background:#ece9fe;color:#5b4bd6;
+          border:1px solid #ddd6fe;border-radius:4px;padding:2px 8px;font-size:10.5px;font-weight:700;white-space:nowrap}
+.t-hold{color:#5b4bd6;font-weight:500}
+.btn-hold{border:1px solid var(--purple);background:var(--purple);color:#fff;border-radius:4px;
+          padding:4px 14px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+.btn-hold:hover{background:#5b4bd6;border-color:#5b4bd6}
+.tfil .sep{width:1px;height:16px;background:var(--line2);margin:0 2px}
+.tfil .hint{font-size:11px;color:var(--text3)}
+/* 타인이 등록한 예약 — 취소 불가 */
+.t-lock{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);white-space:nowrap}
+.t-lock svg{width:11px;height:11px}
 
 .utilbar{display:flex;align-items:center;justify-content:space-between;padding:12px 2px 10px;flex-wrap:wrap;gap:10px}
 .util-date{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:500;color:#6E6B7B}
@@ -292,6 +375,7 @@ table.note-th td:first-child{white-space:nowrap}
 
   <div class="topbar">
     <div class="brand">Ramid<span>EIS</span></div>
+    <nav class="topnav" id="topnav" aria-label="화면 선택"></nav>
   </div>
 
   <div class="utilbar" id="utilbar"></div>
@@ -377,6 +461,47 @@ table.note-th td:first-child{white-space:nowrap}
       <h2>종합 순위 비교표</h2><span class="unit">(단위: 천원)</span>
     </div>
     <div class="card tw" id="rank-wrap"></div>
+  </section>
+
+  <!-- ── 경영데이터 > 매출 ─────────────────────────────────── -->
+  <section class="view" data-view="sales">
+    <div id="strip-sales"></div>
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg></span>
+      <h2>매출액 및 내장객</h2><span class="unit">(단위: 원)</span><span class="rest" id="sales-rest"></span>
+    </div>
+    <div id="sales-sum"></div>
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 20V11M10 20V4M16 20v-6M22 20H2"/></svg></span>
+      <h2>매출액 상세</h2><span class="unit">그린피 · 대여료 · 식음</span>
+    </div>
+    <div class="card" style="overflow-x:auto"><div id="sales-detail"></div></div>
+  </section>
+
+  <!-- ── 경영데이터 > 예약 ─────────────────────────────────── -->
+  <section class="view" data-view="booking">
+    <div id="strip-book"></div>
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span>
+      <h2>티타임 예약현황</h2><span class="rest" id="book-rest"></span>
+    </div>
+    <div id="book-status"></div>
+    <div class="sec">
+      <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></span>
+      <h2>티타임 예약</h2><span class="rest" id="tee-rest"></span>
+    </div>
+    <div class="card">
+      <div class="tfil" id="tee-filters">
+        <label><input type="checkbox" data-f="time" checked>시간순</label>
+        <label><input type="checkbox" data-f="course">코스순</label>
+        <label><input type="checkbox" data-f="booked">예약완료</label>
+        <label><input type="checkbox" data-f="open">예약가능</label>
+        <span class="sep"></span>
+        <label><input type="checkbox" data-f="held">유보타임 예약 허용</label>
+        <span class="hint" id="held-hint"></span>
+      </div>
+      <div style="overflow-x:auto"><div id="tee-table"></div></div>
+    </div>
   </section>
 
   <div id="note-wrap">
@@ -892,6 +1017,79 @@ const DATA = {
         ] }
     ]
   },
+
+  /* =======================================================================
+     경영데이터 — 매출 / 예약 화면
+     ★ 현재 값은 자리표시자입니다. ERP 연동 시 이 구조로 주입하세요.
+     ======================================================================= */
+
+  /* 매출 총계 — 일계 / 월계 / 년계
+     ★ 행 구분은 '마켓타입'이며 골프장마다 다릅니다. 타입 목록과 비중은
+       mkt.panels[].bars 를 그대로 재사용하고, 아래 총계를 그 비중으로 배분합니다.
+       (실제 마켓타입별 집계가 오면 marketRows() 를 직접 조회로 바꾸세요) */
+  salesTotals: {
+    day:   { visitors:   467, green:   37905738, rental:   12867897, food:   7966908 },
+    month: { visitors: 10737, green: 1137172125, rental:  386027360, food: 239007230 },
+    year:  { visitors: 53685, green: 5685860625, rental: 1930136800, food: 1195036150 }
+  },
+
+  /* 티타임 예약현황 — 부별. tee=티타임 수, booked=예약팀, played=내장팀, member=회원팀 */
+  booking: {
+    parts: ['1부', '2부', '3부'],
+    /* corp 키별. 'all' 은 5개소 합계 */
+    byCorp: {
+      all: [{ tee: 60, booked: 58, played: 57, member: 39 },
+            { tee: 60, booked: 57, played: 56, member: 30 },
+            { tee: 43, booked: 40, played: 41, member: 15 }],
+      yp:  [{ tee: 18, booked: 18, played: 18, member: 13 },
+            { tee: 18, booked: 17, played: 17, member: 10 },
+            { tee: 12, booked: 12, played: 12, member:  5 }],
+      nyj: [{ tee:  8, booked:  7, played:  7, member:  5 },
+            { tee:  8, booked:  7, played:  6, member:  4 },
+            { tee:  5, booked:  4, played:  4, member:  2 }],
+      dj:  [{ tee: 14, booked: 14, played: 13, member:  9 },
+            { tee: 14, booked: 13, played: 13, member:  7 },
+            { tee: 10, booked:  9, played:  9, member:  3 }],
+      us:  [{ tee: 12, booked: 11, played: 11, member:  7 },
+            { tee: 12, booked: 11, played: 11, member:  5 },
+            { tee:  9, booked:  8, played:  9, member:  3 }],
+      srs: [{ tee:  8, booked:  8, played:  8, member:  5 },
+            { tee:  8, booked:  9, played:  9, member:  4 },
+            { tee:  7, booked:  7, played:  7, member:  2 }]
+    }
+  },
+
+  /* 티타임 예약 목록
+       name/phone 없음 → 빈 티타임
+       bookedBy        → 예약을 등록한 담당자. meta.admin(로그인 사용자)과 같을 때만 취소 가능
+       held: true      → ERP 유보타임. 평소에는 예약 불가이고,
+                         '유보타임 예약 허용'을 켜야 예약 가능해집니다.
+       holdNote        → 유보 사유 (툴팁으로 표시) */
+  teeList: [
+    { time: '05:20', corp: 'yp',  course: '레이크', part: 1, amount: 150000, name: '김철우', phone: '010-1234-5678', bookedBy: '관리자' },
+    { time: '05:20', corp: 'dj',  course: '밸리',   part: 1, amount: 150000, name: '홍만표', phone: '010-2345-6789', bookedBy: '이수진' },
+    { time: '05:28', corp: 'srs', course: '마운틴', part: 1, amount: 140000, name: '원희석', phone: '010-3456-7890', bookedBy: '관리자' },
+    { time: '05:36', corp: 'yp',  course: '레이크', part: 1, amount: 150000, name: null,     phone: null },
+    { time: '05:44', corp: 'nyj', course: '밸리',   part: 1, amount: 130000, name: '이서연', phone: '010-4567-8901', bookedBy: '박정호' },
+    { time: '05:52', corp: 'us',  course: '마운틴', part: 1, amount: 120000, name: null,     phone: null,
+      held: true,  holdNote: '단체 배정 유보' },
+    { time: '06:00', corp: 'yp',  course: '밸리',   part: 1, amount: 155000, name: null,     phone: null,
+      held: true,  holdNote: '회원 우선 유보' },
+    { time: '11:04', corp: 'yp',  course: '레이크', part: 2, amount: 180000, name: '박보검', phone: '010-5678-9012', bookedBy: '관리자' },
+    { time: '11:12', corp: 'dj',  course: '밸리',   part: 2, amount: 175000, name: null,     phone: null },
+    { time: '11:20', corp: 'srs', course: '마운틴', part: 2, amount: 165000, name: '임영웅', phone: '010-6789-0123', bookedBy: '이수진' },
+    { time: '11:28', corp: 'nyj', course: '레이크', part: 2, amount: 160000, name: '전지현', phone: '010-7890-1234', bookedBy: '관리자' },
+    { time: '11:36', corp: 'dj',  course: '마운틴', part: 2, amount: 170000, name: null,     phone: null,
+      held: true,  holdNote: '대행사 배정 유보' },
+    { time: '12:00', corp: 'us',  course: '레이크', part: 2, amount: 165000, name: '노현철', phone: '010-1122-3344', bookedBy: '박정호',
+      held: true,  holdNote: '회원 우선 유보 — 배정 완료' },
+    { time: '17:10', corp: 'us',  course: '마운틴', part: 3, amount: 110000, name: null,     phone: null },
+    { time: '17:18', corp: 'yp',  course: '밸리',   part: 3, amount: 120000, name: '차동현', phone: '010-8901-2345', bookedBy: '관리자' },
+    { time: '17:26', corp: 'dj',  course: '레이크', part: 3, amount: 115000, name: null,     phone: null },
+    { time: '17:34', corp: 'srs', course: '마운틴', part: 3, amount: 105000, name: '류준열', phone: '010-9012-3456', bookedBy: '이수진' },
+    { time: '17:42', corp: 'srs', course: '밸리',   part: 3, amount: 105000, name: null,     phone: null,
+      held: true,  holdNote: '기상 대비 유보' }
+  ],
 
   /* 종합 순위 비교표 — 셀 단위 {t, c(클래스), bdg(배지 클래스), fw(굵게)} */
   rank: {
@@ -1470,24 +1668,319 @@ function renderCourse() {
 }
 
 /* =========================================================================
-   라우팅 — 상단 탭이 곧 화면 전환. 상태는 curCorp 하나뿐입니다.
-     '전체'  → 종합현황 (전 섹션 누적)
-     골프장  → 해당 골프장 전용 페이지
-   사이드바는 두지 않습니다 (항목이 '종합현황' 하나뿐 = 전체 탭과 중복).
+   경영데이터 — 매출 / 예약 화면
    ========================================================================= */
-let curCorp = 'all';   /* 'all' | corp key */
+const pct = (a, b) => b ? Math.round(a / b * 100) : 0;
+const sumBy = (arr, k) => arr.reduce((s, x) => s + (x[k] || 0), 0);
 
-/* curCorp 를 화면 전체에 반영 */
+/* ── 일자 스트립 ── 월 선택 + 가로 날짜. 날짜별 2줄 지표는 화면마다 다름 */
+let stripDate = null;                       /* 선택 일자 (ISO). null 이면 마감일 */
+function stripDays() {
+  const d = new Date(DATA.meta.closeDate + 'T00:00:00');
+  const y = d.getFullYear(), mo = d.getMonth() + 1;
+  const last = new Date(y, mo, 0).getDate();
+  return Array.from({ length: last }, (_, i) => `${y}-${pad2(mo)}-${pad2(i + 1)}`);
+}
+/* 날짜별 지표 — 실제 연동 시 일자별 집계로 교체. 지금은 마감일 값을 기준으로 흔든다 */
+function dayMetric(iso, kind) {
+  const n = new Date(iso + 'T00:00:00');
+  const wd = n.getDay();
+  const seed = (n.getDate() * 37) % 11 - 5;                 /* -5 ~ +5 */
+  if (kind === 'sales') {
+    const teams = 42 + seed + (wd === 0 || wd === 6 ? 6 : 0);
+    return { v1: teams, v2: fmt(120000 + seed * 1500) };
+  }
+  const slots = 120, booked = Math.min(slots, 108 + seed + (wd === 0 || wd === 6 ? 8 : 0));
+  return { v1: pct(booked, slots) + '%', v2: `${booked}/${slots}` };
+}
+function renderStrip(slotId, kind) {
+  const days = stripDays();
+  const cur = stripDate || DATA.meta.closeDate;
+  const mo = cur.slice(0, 7);
+  $(slotId).innerHTML = `
+    <div class="strip">
+      <div class="strip-m">
+        <select id="strip-mo-${kind}" aria-label="월 선택">
+          <option value="${mo}">${+mo.slice(5, 7)}월</option>
+        </select>
+      </div>
+      <div class="strip-days">
+        ${days.map(iso => {
+          const n = new Date(iso + 'T00:00:00'), wd = n.getDay();
+          const m = dayMetric(iso, kind);
+          const cls = [wd === 6 ? 'sat' : '', wd === 0 ? 'sun' : '', iso === cur ? 'on' : ''].filter(Boolean).join(' ');
+          return `<button class="day ${cls}" data-day="${iso}" data-kind="${kind}">
+              <div class="w">${WD[wd]}</div><div class="d">${n.getDate()}</div>
+              <div class="v1">${m.v1}</div><div class="v2">${m.v2}</div>
+            </button>`;
+        }).join('')}
+      </div>
+    </div>`;
+  /* 선택된 날짜가 보이도록 스크롤 */
+  const on = $(slotId).querySelector('.day.on');
+  if (on) on.scrollIntoView({ block: 'nearest', inline: 'center' });
+}
+
+/* ── 매출 화면 ─────────────────────────────────────────────── */
+/* 골프장 탭에 따라 배분 — 전체는 그대로, 개별은 월 누계 비중만큼 축소 */
+function corpShare() {
+  if (curCorp === 'all') return 1;
+  const me = DATA.progress.find(p => p.corp === curCorp);
+  const tot = DATA.progress.find(p => !p.corp);
+  return toNum(me.act) / toNum(tot.act);
+}
+/* =========================================================================
+   마켓타입 순서 통일 — 골프장별 목록을 '전체'의 순서에 맞춘다.
+   원래는 각 골프장의 비중 내림차순이라 골프장을 바꿀 때마다 행 순서가 달라져
+   비교가 어려웠습니다. '전체'에 없는 타입(채권자·기타·지역할인 등)은 뒤로 보내고
+   그들끼리는 비중 내림차순을 유지합니다.
+   ========================================================================= */
+function orderMarketTypes() {
+  const base = DATA.mkt.panels.find(p => p.corp === 'all').bars.map(b => b.l);
+  const norm = l => l === '여성/OFF' ? '여성/오프라인' : l;   /* 월별표 열은 약어를 씀 */
+  const rank = l => { const i = base.indexOf(norm(l)); return i < 0 ? 999 : i; };
+
+  DATA.mkt.panels.forEach(p => {
+    /* ① 비중 바 */
+    p.bars.sort((a, b) => rank(a.l) - rank(b.l) || parseFloat(b.pct) - parseFloat(a.pct));
+
+    /* ② 월별표 열 — 'all' 패널의 열은 골프장명이므로 건너뛴다.
+          열을 옮기면 각 행의 값 배열도 같은 순서로 재배치해야 합니다 */
+    if (p.corp === 'all' || !p.cols) return;
+    const idx = p.cols.map((_, i) => i)
+      .sort((x, y) => rank(p.cols[x].l) - rank(p.cols[y].l) || x - y);
+    p.cols = idx.map(i => p.cols[i]);
+    p.rows.forEach(r => { r.v = idx.map(i => r.v[i]); });
+  });
+}
+
+/* 마켓타입 목록 — 골프장마다 다르다. 마켓타입 분석 화면과 같은 원천을 씁니다 */
+function marketBars() {
+  const p = DATA.mkt.panels.find(x => x.corp === curCorp) || DATA.mkt.panels[0];
+  return p.bars;
+}
+
+/* 총계를 마켓타입 비중으로 배분해 행을 만든다.
+   객단가가 타입마다 같아 보이지 않도록 내장객에만 소폭 계수를 주고 합계는 보존 */
+function marketRows(kind) {
+  const bars = marketBars();
+  const t = DATA.salesTotals[kind], share = corpShare();
+  const totV = Math.round(t.visitors * share);
+  const tot = { green: t.green * share, rental: t.rental * share, food: t.food * share };
+
+  const w = bars.map(b => parseFloat(b.pct) || 0);
+  const sw = w.reduce((a, b) => a + b, 0) || 1;
+  const f = bars.map((_, i) => 0.94 + ((i * 7) % 13) / 100);      /* 0.94 ~ 1.06 */
+  const raw = w.map((x, i) => x / f[i]);
+  const sraw = raw.reduce((a, b) => a + b, 0) || 1;
+
+  return bars.map((b, i) => {
+    const s = w[i] / sw;
+    return {
+      label: b.l,
+      visitors: Math.round(totV * raw[i] / sraw),
+      green:  Math.round(tot.green  * s),
+      rental: Math.round(tot.rental * s),
+      food:   Math.round(tot.food   * s)
+    };
+  });
+}
+
+function salesBlock(title, kind, openDefault) {
+  const r = marketRows(kind);
+  const amt = x => x.green + x.rental + x.food;
+  const tv = sumBy(r, 'visitors');
+  const ta = r.reduce((s, x) => s + amt(x), 0);
+  const label = title.split(' ').pop();
+  return `<div class="blk${openDefault ? '' : ' closed'}">
+      <button class="blk-h" data-blk>${title}<span class="cv">▲</span></button>
+      <div class="blk-b"><div style="overflow-x:auto"><table class="dt">
+        <thead><tr><th>마켓타입</th><th>내장객</th><th>내장 비율</th><th>매출액</th><th>그린피객단가</th></tr></thead>
+        <tbody>
+          ${r.map(x => `<tr><td>${x.label}</td><td>${fmt(x.visitors)}</td>
+             <td>${pct(x.visitors, tv)}%</td><td>${fmt(amt(x))}</td>
+             <td>${fmt(x.visitors ? Math.round(x.green / x.visitors) : 0)}</td></tr>`).join('')}
+          <tr class="tot"><td>${label}</td><td>${fmt(tv)}</td><td>100%</td>
+              <td>${fmt(ta)}</td><td>${fmt(tv ? Math.round(r.reduce((s, x) => s + x.green, 0) / tv) : 0)}</td></tr>
+        </tbody></table></div></div>
+    </div>`;
+}
+
+function renderSales() {
+  const cur = stripDate || DATA.meta.closeDate;
+  const dot = cur.replace(/-/g, '.');
+  const corpName = curCorp === 'all' ? '5개소 합계' : DATA.corps.find(c => c.key === curCorp).name;
+  $('sales-rest').textContent = `${corpName} · ${dot} 기준 · 마켓타입 ${marketBars().length}종`;
+  $('sales-sum').innerHTML =
+      salesBlock(`${dot} 일계`, 'day', true)
+    + salesBlock(`${dot.slice(0, 7)} 월계`, 'month', true)
+    + salesBlock(`${dot.slice(0, 4)} 년계`, 'year', true);
+
+  const sec = (label, kind) => {
+    const r = marketRows(kind);
+    const g = sumBy(r, 'green'), re = sumBy(r, 'rental'), f = sumBy(r, 'food');
+    return r.map(x => `<tr><td>${x.label}</td><td>${fmt(x.green)}</td>
+        <td>${fmt(x.rental)}</td><td>${fmt(x.food)}</td>
+        <td>${fmt(x.green + x.rental + x.food)}</td></tr>`).join('')
+      + `<tr class="tot"><td>${label}</td><td>${fmt(g)}</td><td>${fmt(re)}</td>
+         <td>${fmt(f)}</td><td>${fmt(g + re + f)}</td></tr>`;
+  };
+  $('sales-detail').innerHTML = `<table class="dt">
+      <thead><tr><th>마켓타입</th><th>그린피</th><th>대여료</th><th>식음</th><th>총계</th></tr></thead>
+      <tbody>${sec('일계', 'day')}${sec('월계', 'month')}${sec('년계', 'year')}</tbody>
+    </table>`;
+}
+
+/* ── 예약 화면 ─────────────────────────────────────────────── */
+function bookBlock(title, rows, openDefault) {
+  const t = { tee: sumBy(rows, 'tee'), booked: sumBy(rows, 'booked'),
+              played: sumBy(rows, 'played'), member: sumBy(rows, 'member') };
+  const line = (k, x) => `<tr${k === '전체' ? ' class="tot"' : ''}><td>${k}</td>
+      <td>${x.tee}</td><td>${x.booked}</td><td>${pct(x.booked, x.tee)}%</td>
+      <td>${x.played}</td><td>${pct(x.played, x.tee)}%</td>
+      <td>${x.member}</td><td>${pct(x.member, x.booked)}%</td></tr>`;
+  return `<div class="blk${openDefault ? '' : ' closed'}">
+      <button class="blk-h" data-blk>${title}<span class="cv">▲</span></button>
+      <div class="blk-b"><div style="overflow-x:auto"><table class="dt">
+        <thead><tr><th>구분</th><th>티타임</th><th>예약팀</th><th>예약률</th>
+                   <th>내장팀</th><th>가동률</th><th>회원팀</th><th>회원비율</th></tr></thead>
+        <tbody>${line('전체', t)}${DATA.booking.parts.map((p, i) => line(p, rows[i])).join('')}</tbody>
+      </table></div></div>
+    </div>`;
+}
+function renderBooking() {
+  const cur = stripDate || DATA.meta.closeDate;
+  $('book-rest').textContent = cur.replace(/-/g, '.') + ' 기준';
+  const b = DATA.booking.byCorp;
+  $('book-status').innerHTML = curCorp === 'all'
+    ? bookBlock('전체', b.all, true)
+      + DATA.corps.map(c => bookBlock(c.name, b[c.key], false)).join('')
+    : bookBlock(DATA.corps.find(c => c.key === curCorp).name, b[curCorp], true);
+  renderTeeTable();
+}
+
+let teeFilters = { time: true, course: false, booked: false, open: false, held: false };
+
+/* 예약 가능 여부 — 유보타임은 '유보타임 예약 허용'을 켜야 열립니다 */
+const isBookable = t => !t.name && (!t.held || teeFilters.held);
+
+function renderTeeTable() {
+  let list = DATA.teeList.filter(t => curCorp === 'all' || t.corp === curCorp);
+  /* 예약완료·예약가능 — 둘 다 꺼져 있거나 둘 다 켜져 있으면 전체 */
+  if (teeFilters.booked !== teeFilters.open) {
+    list = list.filter(t => teeFilters.booked ? t.name : isBookable(t));
+  }
+  list = list.slice().sort((a, b) => teeFilters.course
+    ? (a.course.localeCompare(b.course) || a.time.localeCompare(b.time))
+    : a.time.localeCompare(b.time));
+
+  const holdN = list.filter(t => t.held).length;
+  const openN = list.filter(t => isBookable(t)).length;
+  $('tee-rest').textContent = `${list.length}건 · 예약가능 ${openN}`;
+  $('held-hint').textContent = teeFilters.held
+    ? `유보타임도 예약 가능 (표시 중 ${holdN}건)`
+    : `유보타임 ${holdN}건은 예약 불가`;
+
+  $('tee-table').innerHTML = `<table class="dt">
+      <thead><tr><th>시간</th><th>골프장</th><th>코스</th><th>금액</th>
+                 <th>예약자</th><th>전화번호</th><th>예약/취소</th></tr></thead>
+      <tbody>${list.length ? list.map(t => {
+        const corp = DATA.corps.find(c => c.key === t.corp);
+        const hold = t.held ? `<span class="bdg-hold" title="${t.holdNote || '유보타임'}">유보</span>` : '';
+
+        /* 예약자 칸 — 유보타임은 배지를 항상 붙여 한눈에 구분되게 */
+        let who;
+        if (t.name)              who = `<td>${hold} ${t.name}</td>`;
+        else if (t.held)         who = `<td class="t-hold">${hold} ${teeFilters.held ? '예약가능 (유보 해제)' : '유보타임'}</td>`;
+        else                     who = `<td class="t-open">예약가능</td>`;
+
+        /* 버튼 — 예약완료는 '취소'만 가능하고, 본인이 등록한 예약만 취소할 수 있습니다.
+           유보타임은 허용 전까지 예약 불가 */
+        let act;
+        if (t.name) {
+          act = t.bookedBy === DATA.meta.admin
+            ? '<button class="btn-cancel">취소</button>'
+            : `<span class="t-lock" title="${t.bookedBy} 님이 등록한 예약이라 취소할 수 없습니다">
+                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                 ${t.bookedBy} 등록</span>`;
+        }
+        else if (!t.held)        act = '<button class="btn-book">예약</button>';
+        else if (teeFilters.held) act = '<button class="btn-hold">유보 예약</button>';
+        else                     act = '<span class="t-open">—</span>';
+
+        return `<tr class="${t.held ? 'held' : ''}">
+          <td>${t.time}</td><td>${corp ? corp.name : '—'}</td><td>${t.course}</td>
+          <td>${fmt(t.amount)}</td>
+          ${who}
+          <td${t.phone ? '' : ' class="t-open"'}>${t.phone || '—'}</td>
+          <td>${act}</td>
+        </tr>`;
+      }).join('') : '<tr><td colspan="7" class="empty-row">조건에 맞는 티타임이 없습니다</td></tr>'}</tbody>
+    </table>`;
+}
+
+/* 접이식 블록 · 일자 스트립 · 필터 — 위임 방식이라 재렌더에도 유지 */
+document.addEventListener('click', e => {
+  const h = e.target.closest('[data-blk]');
+  if (h) { h.closest('.blk').classList.toggle('closed'); return; }
+  const d = e.target.closest('[data-day]');
+  if (d) { stripDate = d.dataset.day; applyRoute(); }
+});
+document.addEventListener('change', e => {
+  const f = e.target.closest('#tee-filters input');
+  if (!f) return;
+  teeFilters[f.dataset.f] = f.checked;
+  if (f.dataset.f === 'time' && f.checked) {
+    const c = document.querySelector('#tee-filters [data-f="course"]');
+    c.checked = false; teeFilters.course = false;
+  }
+  if (f.dataset.f === 'course' && f.checked) {
+    const t = document.querySelector('#tee-filters [data-f="time"]');
+    t.checked = false; teeFilters.time = false;
+  }
+  renderTeeTable();
+});
+
+/* =========================================================================
+   라우팅 — 축이 둘입니다.
+     curScreen : 무슨 화면인가        (상단 topnav)   종합현황 / 매출 / 예약
+     curCorp   : 어느 골프장인가      (골프장 탭)     전체 / 5개소
+   종합현황에서만 '전체 = 전 섹션 누적 · 골프장 = 전용 페이지'로 동작하고,
+   경영데이터(매출·예약)에서는 탭이 그 화면의 골프장 필터로 쓰입니다.
+   ========================================================================= */
+let curCorp   = 'all';        /* 'all' | corp key */
+let curScreen = 'overview';   /* 'overview' | 'sales' | 'booking' */
+
+const SCREENS = [
+  { key: 'overview', label: '종합현황',            crumb: '일일 매출 실적 현황' },
+  { key: 'sales',    label: '매출',  grp: '경영데이터', crumb: '경영데이터 > 매출' },
+  { key: 'booking',  label: '예약',  grp: '경영데이터', crumb: '경영데이터 > 예약' }
+];
+
+function renderTopnav() {
+  $('topnav').innerHTML = SCREENS.map(s =>
+    `<button class="tn" role="link" data-screen="${s.key}">${s.grp ? `<small>${s.grp} ›</small>` : ''}${s.label}</button>`
+  ).join('');
+  $('topnav').querySelectorAll('[data-screen]').forEach(b =>
+    b.onclick = () => { curScreen = b.dataset.screen; applyRoute(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+}
+
+/* curScreen + curCorp 를 화면 전체에 반영 */
 function applyRoute() {
-  const stacked = curCorp === 'all';
+  const overview = curScreen === 'overview';
+  const stacked  = overview && curCorp === 'all';
 
-  /* 종합현황은 전 섹션 누적, 골프장 선택 시에는 전용 페이지만 */
+  /* 종합현황: 전체=누적 / 골프장=전용 페이지. 경영데이터: 해당 화면만 */
   document.body.classList.toggle('stacked', stacked);
+  const solo = overview ? 'course' : curScreen;
   document.querySelectorAll('.view').forEach(v => {
-    v.classList.toggle('on', stacked ? v.dataset.view !== 'course' : v.dataset.view === 'course');
+    const isData = v.dataset.view === 'sales' || v.dataset.view === 'booking';
+    v.classList.toggle('on', stacked ? (v.dataset.view !== 'course' && !isData) : v.dataset.view === solo);
   });
 
-  /* 탭 활성 */
+  /* 화면 · 탭 활성 */
+  $('topnav').querySelectorAll('[data-screen]').forEach(b =>
+    b.classList.toggle('on', b.dataset.screen === curScreen));
   document.querySelectorAll('.tab').forEach(t => {
     const on = t.dataset.k === curCorp;
     t.classList.toggle('on', on);
@@ -1497,10 +1990,16 @@ function applyRoute() {
   /* 누적 화면은 항상 전체 기준이므로 마켓 패널도 전체 */
   document.querySelectorAll('.mkt-panel').forEach(p => p.classList.toggle('on', p.dataset.corp === 'all'));
 
-  const corp = DATA.corps.find(c => c.key === curCorp);
-  $('bread-cur').textContent = stacked ? '일일 매출 실적 현황' : '일일 매출 실적 현황 > ' + corp.name;
+  /* 산출 기준은 종합현황에서만 */
+  $('note-wrap').style.display = overview ? '' : 'none';
 
-  if (!stacked) renderCourse();
+  const corp = DATA.corps.find(c => c.key === curCorp);
+  const cfg = SCREENS.find(s => s.key === curScreen);
+  $('bread-cur').textContent = cfg.crumb + (corp ? ' > ' + corp.name : '');
+
+  if (overview && !stacked) renderCourse();
+  if (curScreen === 'sales')   { renderStrip('strip-sales', 'sales'); renderSales(); }
+  if (curScreen === 'booking') { renderStrip('strip-book', 'book');   renderBooking(); }
 }
 
 function setTab(el) {
@@ -1560,6 +2059,7 @@ function exportCSV() {
 
 /* 초기 렌더 — 파생값 주입이 먼저 (날짜 → 예상·전망 순서 고정) */
 applyMeta();
+orderMarketTypes();
 applyForecasts();
 validateData();
 renderUtilbar();
@@ -1575,6 +2075,7 @@ renderMkt();
 renderRank();
 renderNotes();
 bindCorpCardLinks();
+renderTopnav();
 applyRoute();
 animateGauges();
 </script>
