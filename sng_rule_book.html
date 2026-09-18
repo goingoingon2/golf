@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <!-- 모바일 최적화를 위한 뷰포트 설정 (확대 방지로 앱처럼 보이게 함) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>제6회 SNG Invitation 규정집</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#064e3b', // Deep green
+                            primary: '#059669', // Emerald green
+                            light: '#d1fae5',
+                            bg: '#f3f4f6'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f3f4f6;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 아코디언 내용 전환 애니메이션 */
+        .accordion-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .accordion-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* 회전 화살표 */
+        .arrow-icon {
+            transition: transform 0.3s ease;
+        }
+        .arrow-icon.rotated {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800 pb-20">
+
+    <header class="bg-brand-primary text-white pt-12 pb-6 px-5 shadow-md rounded-b-3xl relative overflow-hidden">
+        <div class="relative z-10">
+            <p class="text-brand-light text-sm font-semibold tracking-wider mb-1">제6회 SNG Invitation</p>
+            <h1 class="text-3xl font-black tracking-tight leading-tight">골프대회<br>공식 규정집</h1>
+        </div>
+        <!-- 장식용 원형 그래픽 -->
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white opacity-10 rounded-full"></div>
+        <div class="absolute right-20 top-20 w-16 h-16 bg-white opacity-10 rounded-full"></div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 mt-6">
+        
+        <section class="bg-white rounded-2xl shadow-sm border border-red-100 overflow-hidden mb-6">
+            <div class="bg-red-50 px-5 py-4 border-b border-red-100 flex items-center">
+                <span class="text-red-500 mr-2">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+                </span>
+                <h2 class="text-lg font-bold text-red-700">핵심 원칙</h2>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-sm mt-0.5 mr-3">1</div>
+                    <p class="text-base text-gray-800 leading-relaxed"><strong class="text-red-600">멀리건 절대 없음!</strong> 공은 원칙적으로 <strong>'있는 그대로(No Touch)'</strong> 칩니다.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-sm mt-0.5 mr-3">2</div>
+                    <p class="text-base text-gray-800 leading-relaxed">원활한 진행을 위해 준비된 사람 먼저 치는 <strong>'레디 골프(Ready Golf)'</strong>를 적용합니다.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-bold text-sm mt-0.5 mr-3">3</div>
+                    <p class="text-base text-gray-800 leading-relaxed">본인 스코어는 <strong>본인 스스로 카운팅</strong> 하는 것을 원칙으로 합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="space-y-4">
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section1', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">1</span>
+                        <h3 class="text-lg font-bold text-gray-900">티샷 (Tee Shot)</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section1" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <ul class="space-y-5 mt-2">
+                        <li>
+                            <p class="font-bold text-gray-900 text-[16px] mb-1">▪ 멀리건 없음</p>
+                            <p class="text-gray-600 ml-3">첫 홀을 포함하여 전/후반 멀리건은 일절 없습니다.</p>
+                        </li>
+                        <li>
+                            <p class="font-bold text-gray-900 text-[16px] mb-2">▪ 오비(OB) 발생 시 처리 <span class="text-sm font-normal text-brand-primary bg-brand-light px-2 py-0.5 rounded ml-1">택 1</span></p>
+                            <div class="ml-3 space-y-3 bg-gray-50 p-3 rounded-xl text-sm">
+                                <p><strong class="text-red-600">OB 티 이동:</strong> 2벌타 부과 후 OB 티에서 4번째 샷 진행 (OB 1벌타 + 전진 워킹 1벌타)</p>
+                                <p><strong class="text-orange-500">제자리 재티샷:</strong> 1벌타 부과 후 티잉 구역에서 3번째 샷 진행</p>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 ml-3 bg-gray-100 p-2 rounded-lg">※ OB 말뚝이나 경계선을 벗어난 지역에서 공을 찾았더라도, 라인을 벗어났다면 예외 없이 OB 처리합니다.</p>
+                        </li>
+                        <li>
+                            <p class="font-bold text-gray-900 text-[16px] mb-2">▪ 해저드(Hazard) 발생 시 처리</p>
+                            <div class="ml-3 space-y-3 bg-gray-50 p-3 rounded-xl text-sm">
+                                <p><strong class="text-orange-500">해저드 티 이동:</strong> 1벌타 부과 후 해저드 티에서 3번째 샷 진행</p>
+                                <p><strong class="text-green-600">공 발견 시 (살았을 때):</strong> 벌타 없이 그대로 세컨드 샷 가능.</p>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2 ml-3 bg-gray-100 p-2 rounded-lg">※ 안전상 문제가 있다고 판단될 경우, 동반자 확인 후 한 클럽 이내 이동하여 플레이 가능합니다.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section2', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">2</span>
+                        <h3 class="text-lg font-bold text-gray-900">페어웨이 (Fairway)</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section2" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <ul class="space-y-4 mt-2 text-[15px] text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>디봇(Divot):</strong> 논쟁 방지를 위해 그대로 플레이합니다. (이동 불가)</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>배수구/수리지:</strong> 핀과 멀어지는 방향으로 한 클럽 이내 무벌타 드롭 (무릎 높이 드롭 대신, 좋은 자리에 손으로 놓고 쳐도 인정)</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>오비(OB):</strong> 페어웨이에서 친 공이 OB가 나면 1벌타 후 같은 자리에서 다시 칩니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>워터 해저드:</strong> 빠른 진행을 위해 1벌타 후 캐디가 지정해 주는 구역에서 다음 샷을 합니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>일반 해저드:</strong> 공을 발견해 그대로 치면 무벌타. 만약 빼놓고 칠 경우 1벌타를 적용합니다. <br><span class="text-sm font-bold text-red-500 mt-1 inline-block">(★ 공을 만지거나 진흙을 닦는 행위는 절대 금지)</span></p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>자연물 정리:</strong> 공 주변의 나뭇가지, 낙엽 등 '성가신 자연물'은 치워도 됩니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>인공 장애물:</strong> 말뚝, 모래 스크래퍼(고무래), 펜스 등은 이동시킨 후 샷을 하고, 끝난 뒤 제자리에 둡니다.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section3', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">3</span>
+                        <h3 class="text-lg font-bold text-gray-900">러프 및 기타 지역</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section3" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <ul class="space-y-4 mt-2 text-[15px] text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>기본 원칙:</strong> 있는 그대로 칩니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>안전 및 부상 방지:</strong> 나무 등 장애물로 인해 스윙 자세가 안 나오거나 부상 위험이 있을 때, 동반자 2명 이상의 동의를 얻어 한 클럽 이내 이동할 수 있습니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>배수구 / 수리지:</strong> 페어웨이 규칙과 동일하게 적용합니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <div>
+                                <p><strong>카트 도로:</strong> 카트 도로 중심 기준, 가까운 쪽 동일선상 러프 지역으로 한 클럽 이내 무벌타 드롭합니다.</p>
+                                <p class="text-sm text-gray-500 mt-1 bg-gray-50 p-2 rounded">(단, 드롭 구역이 위험지역일 경우 페어웨이 방향 동일선상 러프로 이동 가능)</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section4', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">4</span>
+                        <h3 class="text-lg font-bold text-gray-900">벙커 (Bunker)</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section4" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <ul class="space-y-4 mt-2 text-[15px] text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>기본 원칙:</strong> 이동 불가, 무조건 있는 그대로 칩니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>인공 장애물:</strong> 고무매트, 배수구, 스프링클러 등이 방해될 경우 무벌타 드롭이 가능합니다.</p>
+                        </li>
+                        <li>
+                            <p class="font-bold text-gray-900 mb-2">▪ 벙커 탈출 옵션 (벌타 적용)</p>
+                            <div class="ml-3 space-y-3 bg-[#fff9c4] border border-[#f0e68c] p-3 rounded-xl text-sm">
+                                <p><strong class="text-orange-600">1벌타 드롭:</strong> 벙커 내에서 핀과 가깝지 않게 2클럽 이내 드롭 후 플레이</p>
+                                <p><strong class="text-red-600">2벌타 드롭:</strong> 핀 방향 직후방 라인을 따라 벙커 밖으로 나와서 드롭 후 플레이</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section5', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">5</span>
+                        <h3 class="text-lg font-bold text-gray-900">그린 (Green)</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section5" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <ul class="space-y-4 mt-2 text-[15px] text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>볼 마크 필수:</strong> 그린에 올라가면 반드시 본인의 볼 마커를 공 뒤에 놓아야 합니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>노 터치(No Touch):</strong> 캐디는 공을 닦아주기만 합니다. 공을 놓고 라인을 보는 것은 반드시 플레이어 본인이 직접 해야 합니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <div>
+                                <p><strong>조언 구하기 가능:</strong> 조언을 구하는 대화는 적극 허용합니다.</p>
+                                <p class="text-sm text-gray-500 mt-1 bg-gray-50 p-2 rounded">"언니 어디 보고 쳐요?", "캐디님 왼쪽으로 몇 개 봐요?", "여보 오르막이야 내리막이야?"</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>컨시드 (O.K.) 규정:</strong> 기다리거나 눈치 보지 말고, 퍼터 길이(먹갈치 샤프트 길이 등 합의된 기준) 이내에 들어오면 알아서 컨시드로 간주하고 공을 집습니다. <strong>그 외에는 무조건 마크합니다.</strong></p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section6', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">6</span>
+                        <h3 class="text-lg font-bold text-gray-900">매너 및 경기 운영</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section6" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <ul class="space-y-4 mt-2 text-[15px] text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-red-500 mt-1 mr-2">▪</span>
+                            <p><strong class="text-red-600">알까기 절대 금지:</strong> 부정한 방법으로 공을 놓다 적발 시 엄격히 처벌합니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>오구(Wrong Ball) 플레이:</strong> 남의 공으로 샷을 할 경우 2벌타가 부과됩니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>레디 골프(Ready Golf):</strong> 순서를 기다리지 말고 순서가 어떻든 준비된 사수부터 먼저 칩니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>연습 스윙:</strong> 지나친 연습 스윙으로 경기 진행을 지연시키지 않습니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>구찌(동반자 견제):</strong> 적당한 구찌는 대회의 재미를 위해 적극적으로 활용합니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>티샷 구찌 제한:</strong> 단, 티샷 준비 중 샷에 명백히 방해가 되는 구찌는 1회 경고, 2회 누적 시 1벌타를 부과합니다.</p>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <p><strong>정산:</strong> 캐디피는 N분의 1로 정산하거나, 당일 내기 돈(벌금 등)에서 충당합니다.</p>
+                        </li>
+                        <li class="flex items-start p-3 bg-blue-50 rounded-xl">
+                            <span class="text-blue-600 mt-1 mr-2 font-bold">★</span>
+                            <p><strong class="text-blue-700">땅찬스:</strong> 1인 1회 (전/후반 무방) 티샷 전에 선언하고 파이상 성공할 경우에만 인정됩니다. 공정한 대회 룰을 적용하기 위해서, 파4에서만 가능합니다.</p>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // 첫 번째 섹션은 기본적으로 열려있도록 설정 (원하지 않으면 삭제 가능)
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstSectionBtn = document.querySelector('.accordion-btn');
+            if(firstSectionBtn) {
+                toggleAccordion('section1', firstSectionBtn);
+            }
+        });
+
+        function toggleAccordion(sectionId, buttonElement) {
+            const content = document.getElementById(sectionId);
+            const icon = buttonElement.querySelector('.arrow-icon');
+            
+            // 현재 열려있는 상태인지 확인
+            const isCurrentlyActive = content.classList.contains('active');
+            
+            // 원한다면 다른 열려있는 아코디언을 모두 닫는 로직 (현재는 독립적 개폐)
+            /*
+            document.querySelectorAll('.accordion-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.arrow-icon').forEach(el => el.classList.remove('rotated'));
+            */
+
+            if (isCurrentlyActive) {
+                content.classList.remove('active');
+                icon.classList.remove('rotated');
+            } else {
+                content.classList.add('active');
+                icon.classList.add('rotated');
+            }
+        }
+    </script>
+</body>
+</html>
