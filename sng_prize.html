@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <!-- 모바일 최적화를 위한 뷰포트 설정 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>제6회 SNG Invitation 시상규정</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans KR"', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            dark: '#0f172a', // Slate 900
+                            primary: '#1e3a8a', // Blue 900 (시상식 느낌의 네이비)
+                            light: '#dbeafe', // Blue 100
+                            bg: '#f8fafc' // Slate 50
+                        },
+                        award: {
+                            gold: '#fbbf24',
+                            silver: '#94a3b8'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #f8fafc;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 아코디언 내용 전환 애니메이션 */
+        .accordion-content {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        .accordion-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .arrow-icon {
+            transition: transform 0.3s ease;
+        }
+        .arrow-icon.rotated {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<!-- break-keep: 단어 단위 줄바꿈 적용으로 한 글자만 떨어지는 현상 방지 -->
+<body class="antialiased text-gray-800 pb-20 break-keep">
+
+    <header class="bg-brand-primary text-white pt-12 pb-6 px-5 shadow-md rounded-b-3xl relative overflow-hidden">
+        <div class="relative z-10">
+            <div class="flex items-center mb-2">
+                <span class="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded shadow-sm mr-2 tracking-widest">대외비</span>
+                <p class="text-brand-light text-sm font-semibold tracking-wider">제6회 SNG Invitation</p>
+            </div>
+            <h1 class="text-3xl font-black tracking-tight leading-tight">대회 시상규정</h1>
+        </div>
+        <!-- 장식용 원형 그래픽 -->
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white opacity-10 rounded-full"></div>
+        <div class="absolute right-20 top-20 w-16 h-16 bg-white opacity-10 rounded-full"></div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 mt-6">
+        
+        <!-- 시상 원칙 섹션 -->
+        <section class="bg-white rounded-2xl shadow-sm border border-indigo-100 overflow-hidden mb-6">
+            <div class="bg-indigo-50 px-5 py-4 border-b border-indigo-100 flex items-center">
+                <span class="text-indigo-600 mr-2">
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"></path></svg>
+                </span>
+                <h2 class="text-lg font-bold text-indigo-800">시상 원칙</h2>
+            </div>
+            <div class="p-5 space-y-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-3"></div>
+                    <p class="text-[15px] text-gray-800 leading-relaxed">본 대회는 신페리오 방식을 제외하며, <strong>순수 실제 타수(그로스 스코어) 메인 시상</strong>과 <strong>개인 핸디/파트너전 위주</strong>로 진행됩니다.</p>
+                </div>
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-indigo-500 mt-2 mr-3"></div>
+                    <p class="text-[15px] text-gray-800 leading-relaxed"><strong class="text-indigo-600">핸디상과 메달리스트의 중복 수상은 불가</strong>하며, 특별상 및 파트너상과의 중복 수상은 허용합니다.</p>
+                </div>
+            </div>
+        </section>
+
+        <div class="space-y-4">
+
+            <!-- 1. 주요 시상 -->
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section1', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">1</span>
+                        <h3 class="text-lg font-bold text-gray-900">주요 시상 (패널티 핸디캡 반영)</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section1" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <ul class="space-y-5 mt-2">
+                        <li>
+                            <div class="flex items-center mb-1">
+                                <span class="text-award-gold mr-1"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"></path></svg></span>
+                                <p class="font-bold text-gray-900 text-[17px]">우승</p>
+                            </div>
+                            <p class="text-gray-700 text-[15px] ml-6">당일 실제 타수(그로스 스코어)에 <strong>[우승자 패널티 핸디캡]</strong>을 더한 최종 타수가 가장 낮은 선수</p>
+                        </li>
+                        <li>
+                            <div class="flex items-center mb-1">
+                                <span class="text-award-silver mr-1"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"></path></svg></span>
+                                <p class="font-bold text-gray-900 text-[17px]">준우승</p>
+                            </div>
+                            <p class="text-gray-700 text-[15px] ml-6">패널티 핸디캡을 적용한 최종 타수 기준 전체 2위를 기록한 선수</p>
+                        </li>
+                        
+                        <!-- 패널티 핸디캡 안내 박스 -->
+                        <div class="mt-4 bg-red-50 p-4 rounded-xl border border-red-100">
+                            <h4 class="font-bold text-red-700 text-[15px] mb-2 flex items-center">
+                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                패널티 강제 가산 규정
+                            </h4>
+                            <p class="text-[13px] text-red-600 mb-3">기존 대회 우승 횟수 및 실력을 고려하여 최종 순위표 계산 시 아래 타수를 강제 가산(+ 벌타)합니다.</p>
+                            <ul class="space-y-2 text-[14px]">
+                                <li class="flex items-center justify-between bg-white px-3 py-2 rounded shadow-sm">
+                                    <span class="font-bold text-gray-800">1. 유영호 선수</span>
+                                    <span class="font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">당일 타수 + 2타</span>
+                                </li>
+                                <li class="flex items-center justify-between bg-white px-3 py-2 rounded shadow-sm">
+                                    <span class="font-bold text-gray-800">2. 진호 선수</span>
+                                    <span class="font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">당일 타수 + 1타</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 2. 특별상 및 이벤트상 -->
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section2', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">2</span>
+                        <h3 class="text-lg font-bold text-gray-900">특별상 및 이벤트상</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section2" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <ul class="space-y-5 mt-2 text-[15px] text-gray-700">
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <div>
+                                <strong class="text-gray-900">롱기스트:</strong>
+                                <p>지정된 파5홀에서 티샷을 가장 멀리 보낸 선수 (페어웨이 및 파 이상)</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <div>
+                                <strong class="text-gray-900">니어리스트:</strong>
+                                <p>지정된 파3홀에서 티샷을 홀컵에 가장 가깝게 붙인 선수 (온그린 및 파 이상)</p>
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-brand-primary mt-1 mr-2">▪</span>
+                            <div>
+                                <strong class="text-gray-900 text-blue-600">첫 버디상:</strong>
+                                <p>대회 참가자 중 가장 먼저 버디(Birdie)를 기록한 홀의 주인공 <span class="text-sm bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded ml-1">선착순 1명</span></p>
+                            </div>
+                        </li>
+                        
+                        <li class="pt-3 border-t border-gray-100">
+                            <div class="flex items-center mb-1">
+                                <span class="text-brand-primary mr-2">▪</span>
+                                <strong class="text-gray-900 text-[16px]">핸디상</strong>
+                            </div>
+                            <p class="ml-4 mb-3">기존 대회 개인별 핸디캡 대비, 이번 대회에서 가장 잠재력을 발휘해 잘 친 순서(목표 타수 대비 가장 많이 줄인 사람)로 선정</p>
+                            
+                            <div class="ml-4 bg-gray-800 text-white p-3.5 rounded-xl">
+                                <h4 class="font-bold text-yellow-400 mb-1 flex items-center text-[14px]">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    초보자 캡 105타 제한 룰
+                                </h4>
+                                <p class="text-[13px] text-gray-200 leading-relaxed">기존 핸디캡이 105타 이상인 참가자도 <strong class="text-white">기준 핸디캡은 일괄 105타로 고정</strong>하여 계산합니다.</p>
+                                <p class="text-[12px] text-gray-400 mt-2 bg-gray-900 p-2 rounded">(예: 기존 110타 치던 분이 오늘 100타를 쳤더라도, 10타를 줄인 게 아니라 105타 기준으로 5타를 줄인 것으로 계산)</p>
+                            </div>
+                        </li>
+
+                        <li class="pt-3 border-t border-gray-100">
+                            <div class="flex items-center mb-1">
+                                <span class="text-brand-primary mr-2">▪</span>
+                                <strong class="text-gray-900 text-[16px] text-purple-700">환상의 파트너상 (팀전)</strong>
+                            </div>
+                            <div class="ml-4 space-y-2">
+                                <p><strong class="text-gray-600 text-sm">팀 구성:</strong> [1위+16위] 팀 / [2위+15위] 팀 등 총 8개 팀의 합산 스코어 경쟁</p>
+                                <p><strong class="text-gray-600 text-sm">선정 기준:</strong> 팀 합산 성적이 가장 우수한 팀</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 3. 동점자 및 순위 결정 규정 -->
+            <div class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+                <button class="accordion-btn w-full px-5 py-4 flex justify-between items-center bg-white active:bg-gray-50 transition-colors" onclick="toggleAccordion('section3', this)">
+                    <div class="flex items-center">
+                        <span class="w-8 h-8 rounded-full bg-brand-light text-brand-primary flex items-center justify-center font-bold mr-3">3</span>
+                        <h3 class="text-lg font-bold text-gray-900">동점자 순위 결정 규정</h3>
+                    </div>
+                    <svg class="arrow-icon w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div id="section3" class="accordion-content px-5 pb-5 pt-1 border-t border-gray-50">
+                    <p class="text-xs text-gray-500 mb-4 bg-gray-100 p-2 rounded-lg text-center">Tie-Breaker 규정</p>
+                    
+                    <div class="space-y-6">
+                        <!-- 메달리스트 동점 -->
+                        <div>
+                            <h4 class="font-bold text-brand-primary text-[16px] mb-2 flex items-center">
+                                <span class="w-1.5 h-1.5 bg-brand-primary rounded-full mr-2"></span> 메달리스트(1·2위) 동점
+                            </h4>
+                            <p class="text-xs text-gray-500 mb-2 ml-3">※ 패널티 핸디캡을 합산한 최종 타수가 완전히 같을 경우 적용</p>
+                            <div class="ml-3 space-y-2 text-[14px] text-gray-700 bg-blue-50/50 p-3 rounded-xl border border-blue-50">
+                                <p><strong class="text-blue-700">1순위:</strong> 18홀 중 더블 파(Double Par) 개수가 더 적은 사람</p>
+                                <p><strong class="text-blue-700">2순위:</strong> 버디 개수 > 파 개수 > 보기 개수가 많은 순서</p>
+                                <p><strong class="text-blue-700">3순위:</strong> 백카운트(Back Count) 방식 적용<br>
+                                <span class="text-[12px] text-gray-500">(후반 9홀 합산 → 후반 6홀 합산 → 후반 3홀 합산 → 18번 홀 타수 순)</span></p>
+                            </div>
+                        </div>
+
+                        <!-- 핸디상 동점 -->
+                        <div>
+                            <h4 class="font-bold text-brand-primary text-[16px] mb-2 flex items-center">
+                                <span class="w-1.5 h-1.5 bg-brand-primary rounded-full mr-2"></span> 핸디상 동점
+                            </h4>
+                            <div class="ml-3 space-y-2 text-[14px] text-gray-700 bg-green-50/50 p-3 rounded-xl border border-green-50">
+                                <p><strong class="text-green-700">1순위:</strong> 줄인 타수가 완벽히 동타일 경우, <strong class="text-gray-900">기존 핸디캡이 더 낮은 사람(정통 실력자)</strong>을 앞 순위로 인정</p>
+                                <p><strong class="text-green-700">2순위:</strong> 기존 핸디캡이 동일할 경우, 위 '메달리스트 동점자 처리 규정' 준용</p>
+                            </div>
+                        </div>
+
+                        <!-- 환상의 파트너상 동점 -->
+                        <div>
+                            <h4 class="font-bold text-brand-primary text-[16px] mb-2 flex items-center">
+                                <span class="w-1.5 h-1.5 bg-brand-primary rounded-full mr-2"></span> 환상의 파트너상(팀) 동점
+                            </h4>
+                            <div class="ml-3 space-y-2 text-[14px] text-gray-700 bg-purple-50/50 p-3 rounded-xl border border-purple-50">
+                                <p><strong class="text-purple-700">1순위:</strong> 팀 합산 양파(더블파) 개수가 적은 팀</p>
+                                <p><strong class="text-purple-700">2순위:</strong> 아랫순위(개인 성적 9위 ~ 16위) 팀원의 개별 스코어 합산이 더 우수한 팀</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        // 첫 번째 섹션은 기본적으로 열려있도록 설정
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstSectionBtn = document.querySelector('.accordion-btn');
+            if(firstSectionBtn) {
+                toggleAccordion('section1', firstSectionBtn);
+            }
+        });
+
+        function toggleAccordion(sectionId, buttonElement) {
+            const content = document.getElementById(sectionId);
+            const icon = buttonElement.querySelector('.arrow-icon');
+            
+            const isCurrentlyActive = content.classList.contains('active');
+            
+            if (isCurrentlyActive) {
+                content.classList.remove('active');
+                icon.classList.remove('rotated');
+            } else {
+                content.classList.add('active');
+                icon.classList.add('rotated');
+            }
+        }
+    </script>
+</body>
+</html>
