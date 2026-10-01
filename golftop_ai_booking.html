@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>골프탑 AI 조건 부킹</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* layout: 왼쪽 골퍼 앱(폰 프레임 · 조건 부킹 / AI 매니저 / 내 예약 3탭), 오른쪽 골프탑 매니저 콘솔. 920px 아래에선 상단 세그먼트로 전환 */
+:root{
+  --bg:#E9EEEA; --surface:#FFFFFF; --sunk:#F3F6F4; --ink:#14211A; --muted:#5B6A61; --line:#D5DDD7;
+  --green:#1D6A44; --green-ink:#FFFFFF; --green-soft:#E1EFE6;
+  --amber:#D98A12; --amber-ink:#8F5600; --amber-soft:#FFF2DA; --danger:#B23A3A; --danger-soft:#F8E3E1;
+  --ai:#3456A0; --ai-ink:#FFFFFF; --ai-soft:#E4EAF6; --chat:#EDF1EE;
+  --c-date:#2763A8; --c-time:#7246AE; --c-region:#1D6A44; --c-people:#B0521A; --c-price:#8C6A00; --c-opts:#4B5B52;
+  --t-date:#E3ECF7; --t-time:#EEE7F7; --t-region:#E1EFE6; --t-people:#F8E9DE; --t-price:#F5EDD3; --t-opts:#E8ECEA;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1612; --surface:#18221C; --sunk:#121A15; --ink:#E6EEE9; --muted:#9AA9A0; --line:#2B3831;
+    --green:#3FA872; --green-ink:#08130D; --green-soft:#1C3227;
+    --amber:#F0A93A; --amber-ink:#F0A93A; --amber-soft:#33281A; --danger:#E07070; --danger-soft:#3A1F1F;
+    --ai:#8DA9EA; --ai-ink:#0B1426; --ai-soft:#1C2740; --chat:#111813;
+    --c-date:#7FB0EA; --c-time:#B79BE6; --c-region:#6DCB98; --c-people:#EFA071; --c-price:#E3C35C; --c-opts:#A9B8B0;
+    --t-date:#1B2A3B; --t-time:#272038; --t-region:#1C3227; --t-people:#36261C; --t-price:#332C17; --t-opts:#222C27;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1612; --surface:#18221C; --sunk:#121A15; --ink:#E6EEE9; --muted:#9AA9A0; --line:#2B3831;
+  --green:#3FA872; --green-ink:#08130D; --green-soft:#1C3227;
+  --amber:#F0A93A; --amber-ink:#F0A93A; --amber-soft:#33281A; --danger:#E07070; --danger-soft:#3A1F1F;
+  --ai:#8DA9EA; --ai-ink:#0B1426; --ai-soft:#1C2740; --chat:#111813;
+  --c-date:#7FB0EA; --c-time:#B79BE6; --c-region:#6DCB98; --c-people:#EFA071; --c-price:#E3C35C; --c-opts:#A9B8B0;
+  --t-date:#1B2A3B; --t-time:#272038; --t-region:#1C3227; --t-people:#36261C; --t-price:#332C17; --t-opts:#222C27;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-wrap:anywhere}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+
+.app{max-width:1240px;margin:0 auto;padding:22px 20px 40px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap}
+.top h1{margin:0;font-size:22px;font-weight:700;letter-spacing:-.02em;text-wrap:balance}
+.top p{margin:2px 0 0;color:var(--muted);font-size:14px;max-width:62ch}
+.seg{display:none;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:3px}
+.seg button{border:0;background:none;padding:8px 16px;border-radius:9px;font-weight:600;color:var(--muted)}
+.seg button.on{background:var(--green);color:var(--green-ink)}
+.seg .dot{display:inline-block;min-width:18px;height:18px;border-radius:9px;background:var(--amber);color:#fff;font-size:11px;line-height:18px;margin-left:6px;padding:0 5px}
+
+.stage{display:grid;grid-template-columns:minmax(0,430px) minmax(0,1fr);gap:24px;align-items:start}
+.pane-label{font-size:13px;font-weight:600;color:var(--muted);margin:0 0 8px 4px}
+@media (max-width:920px){
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .seg{display:flex}
+  .pane{display:none}
+  .pane.on{display:block}
+}
+
+/* ---------- golfer phone shell ---------- */
+.phone{background:var(--surface);border:1px solid var(--line);border-radius:28px;height:clamp(620px,calc(100vh - 150px),880px);display:flex;flex-direction:column;overflow:hidden}
+@media (max-width:920px){.phone{height:clamp(540px,calc(100vh - 160px),880px);height:clamp(540px,calc(100dvh - 160px),880px)}}
+.g-bar{flex:none;display:flex;align-items:center;gap:10px;padding:14px 18px 12px;border-bottom:1px solid var(--line);min-height:62px}
+.g-bar .who{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.g-bar .who b{font-size:15.5px;letter-spacing:-.01em}
+.g-bar .who small{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.live{width:7px;height:7px;border-radius:50%;background:var(--green);flex:none;animation:pl 1.6s infinite}
+.logo{width:34px;height:34px;border-radius:11px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;flex:none}
+.ai-av{width:34px;height:34px;border-radius:11px;background:var(--ai);color:var(--ai-ink);display:grid;place-items:center;font-weight:700;font-size:12px;letter-spacing:.03em;flex:none}
+.ai-av.sm{width:24px;height:24px;border-radius:8px;font-size:10px}
+.g-view{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:22px 20px 26px}
+.g-tabs{flex:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:var(--surface)}
+.g-tabs button{border:0;background:none;padding:9px 0 10px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;color:var(--muted);font-weight:600;position:relative}
+.g-tabs svg{width:21px;height:21px}
+.g-tabs button.on{color:var(--green)}
+.g-tabs button.on[data-gtab="chat"]{color:var(--ai)}
+.g-tabs .badge{position:absolute;top:5px;left:calc(50% + 7px);min-width:17px;height:17px;border-radius:9px;background:var(--amber);color:#fff;font-size:10.5px;line-height:17px;padding:0 4px;text-align:center}
+
+/* ---------- golfer: compose ---------- */
+.g-title{margin:0 0 6px;font-size:27px;line-height:1.25;font-weight:700;letter-spacing:-.03em;text-wrap:balance}
+.g-sub{margin:0 0 18px;color:var(--muted);font-size:14px}
+.inbox{position:relative;border:2px solid var(--line);border-radius:18px;background:var(--sunk);transition:border-color .15s}
+.inbox:focus-within{border-color:var(--green);background:var(--surface)}
+.inbox textarea{display:block;width:100%;border:0;background:transparent;resize:none;padding:16px 44px 16px 16px;font-size:18px;line-height:1.45;min-height:88px;outline:none}
+.inbox textarea::placeholder{color:var(--muted);opacity:.8}
+.clear{position:absolute;right:10px;top:12px;width:28px;height:28px;border-radius:14px;border:0;background:var(--line);color:var(--muted);font-size:15px;line-height:28px;display:none}
+.clear.show{display:block}
+
+.mirror{min-height:26px;margin:10px 4px 0;font-size:14px;color:var(--muted);line-height:1.9}
+.mirror .hl{border-radius:5px;padding:1px 3px;color:var(--ink);font-weight:600}
+.hl.date{background:var(--t-date);box-shadow:inset 0 -2px 0 var(--c-date)}
+.hl.time{background:var(--t-time);box-shadow:inset 0 -2px 0 var(--c-time)}
+.hl.region{background:var(--t-region);box-shadow:inset 0 -2px 0 var(--c-region)}
+.hl.people{background:var(--t-people);box-shadow:inset 0 -2px 0 var(--c-people)}
+.hl.price{background:var(--t-price);box-shadow:inset 0 -2px 0 var(--c-price)}
+.hl.opts{background:var(--t-opts);box-shadow:inset 0 -2px 0 var(--c-opts)}
+
+.quick{display:flex;gap:8px;overflow-x:auto;margin:12px -20px 0;padding:2px 20px 4px;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.quick button{flex-shrink:0;border:1px solid var(--line);background:var(--surface);border-radius:20px;padding:7px 13px;font-size:13.5px;color:var(--ink);white-space:nowrap}
+.quick button:hover{border-color:var(--green);color:var(--green)}
+
+.sec-h{font-size:13px;font-weight:600;color:var(--muted);margin:20px 2px 8px}
+.sec-h:first-child{margin-top:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:12px;padding:7px 11px;font-size:14px;border:1.5px solid transparent;background:var(--sunk);text-align:left}
+.chip .k{font-size:12px;font-weight:600;opacity:.85}
+.chip .v{font-weight:600}
+.chip.date{background:var(--t-date)} .chip.date .k{color:var(--c-date)}
+.chip.time{background:var(--t-time)} .chip.time .k{color:var(--c-time)}
+.chip.region{background:var(--t-region)} .chip.region .k{color:var(--c-region)}
+.chip.people{background:var(--t-people)} .chip.people .k{color:var(--c-people)}
+.chip.price{background:var(--t-price)} .chip.price .k{color:var(--c-price)}
+.chip.opts{background:var(--t-opts)} .chip.opts .k{color:var(--c-opts)}
+.chip.miss{background:var(--amber-soft);border:1.5px dashed var(--amber);color:var(--ink)}
+.chip.miss .k{color:var(--amber-ink)}
+.chip.miss.req{animation:nudge 2.2s ease-in-out infinite}
+.chip.opt-miss{background:transparent;border:1.5px dashed var(--line);color:var(--muted)}
+.chip.active{border-style:solid;border-color:var(--ink)}
+.chip.def{background:transparent;border:1.5px dashed var(--line)}
+.chip.def .v::after{content:" 기본";font-weight:500;font-size:11px;color:var(--muted)}
+@keyframes nudge{0%,100%{box-shadow:0 0 0 0 rgba(217,138,18,0)}50%{box-shadow:0 0 0 4px rgba(217,138,18,.22)}}
+
+.editor{margin-top:10px;border-radius:16px;background:var(--sunk);padding:14px;display:none}
+.editor.show{display:block}
+.editor h4{margin:0 0 10px;font-size:14px}
+.opts-row{display:flex;flex-wrap:wrap;gap:6px}
+.opts-row button{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:7px 12px;font-size:14px}
+.opts-row button.on{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.opts-row input[type=date]{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 10px}
+.editor .done{margin-top:12px;display:flex;justify-content:space-between;align-items:center}
+.linkbtn{border:0;background:none;color:var(--muted);font-size:13px;text-decoration:underline;padding:4px}
+
+.send{display:block;width:100%;margin-top:22px;border:0;border-radius:16px;padding:16px;font-size:16px;font-weight:700;background:var(--green);color:var(--green-ink)}
+.send:disabled{background:var(--line);color:var(--muted);cursor:not-allowed}
+.send-note{text-align:center;font-size:12.5px;color:var(--muted);margin-top:8px}
+.ai-entry{display:flex;align-items:center;gap:12px;width:100%;margin-top:22px;border:1px solid var(--line);background:var(--sunk);border-radius:16px;padding:12px 14px;text-align:left}
+.ai-entry span.t{flex:1;min-width:0;display:flex;flex-direction:column}
+.ai-entry b{font-size:14.5px}
+.ai-entry small{font-size:12.5px;color:var(--muted)}
+.ai-entry .arr{color:var(--muted);font-size:18px}
+.ai-entry:hover{border-color:var(--ai)}
+
+/* status view */
+.back{border:0;background:none;color:var(--muted);padding:0;font-size:14px;margin-bottom:14px}
+.status-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.status-head h2{margin:0;font-size:22px;letter-spacing:-.02em}
+.cd{font-variant-numeric:tabular-nums;font-weight:600;color:var(--amber-ink);font-size:14px;white-space:nowrap}
+.seen{font-size:13.5px;color:var(--muted);margin:4px 0 12px}
+.waiting{margin-top:16px;border:1.5px dashed var(--line);border-radius:16px;padding:22px 16px;text-align:center;color:var(--muted);font-size:14px}
+.waiting .pulse{width:10px;height:10px;border-radius:5px;background:var(--green);display:inline-block;margin-right:8px;animation:pl 1.4s infinite}
+@keyframes pl{0%,100%{opacity:.25}50%{opacity:1}}
+
+.prop{border:1px solid var(--line);border-radius:18px;padding:16px;margin-top:12px;background:var(--surface)}
+.prop.new{animation:arrive .5s ease-out}
+@keyframes arrive{from{transform:translateY(8px);opacity:0}to{transform:none;opacity:1}}
+.prop.dim{opacity:.45}
+.prop.won{border:2px solid var(--green)}
+.prop.rec{border:2px solid var(--ai)}
+.p-top{display:flex;justify-content:space-between;gap:10px}
+.p-course{font-size:17px;font-weight:700;margin:0;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.p-area{font-size:13px;color:var(--muted)}
+.p-when{font-size:14px;margin-top:2px}
+.p-price{text-align:right;white-space:nowrap}
+.p-price b{font-size:21px;letter-spacing:-.02em}
+.p-price small{display:block;font-size:12px;color:var(--muted)}
+.p-price s{color:var(--muted);font-size:12.5px}
+.perks{display:flex;flex-wrap:wrap;gap:5px;margin:10px 0 0}
+.perks span{font-size:12px;background:var(--sunk);border-radius:6px;padding:3px 8px;color:var(--muted)}
+.p-memo{margin:10px 0 0;font-size:14px;background:var(--sunk);border-radius:12px;padding:10px 12px}
+.p-mgr{display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13px;color:var(--muted)}
+.avatar{width:28px;height:28px;border-radius:14px;background:var(--green-soft);color:var(--green);display:grid;place-items:center;font-weight:700;font-size:12px;flex-shrink:0}
+.p-act{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.btn{border-radius:12px;padding:11px;font-weight:600;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);line-height:1.3}
+.btn.pri{background:var(--green);border-color:var(--green);color:var(--green-ink)}
+.btn.ai{background:var(--ai);border-color:var(--ai);color:var(--ai-ink)}
+.btn.dan{color:var(--danger);border-color:var(--danger)}
+.btn.sm{padding:8px 11px;font-size:13px;border-radius:10px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.booked{margin-top:14px;background:var(--green-soft);border-radius:16px;padding:14px 16px;font-size:14px}
+.booked b{display:block;font-size:15px;margin-bottom:2px}
+
+/* AI in status view */
+.ai-tag{flex:none;display:inline-block;font-size:10.5px;font-weight:700;letter-spacing:.04em;background:var(--ai-soft);color:var(--ai);border-radius:5px;padding:1px 6px;line-height:1.6}
+.ai-box{margin-top:16px;border:1.5px solid var(--ai-soft);border-radius:18px;background:var(--surface);overflow:hidden}
+.ai-h{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--ai-soft);font-size:13.5px;font-weight:700;color:var(--ai)}
+.ai-h .pill{margin-left:auto}
+.ai-b{padding:12px 14px;display:flex;flex-direction:column;gap:10px;font-size:14px}
+.ai-b p{margin:0;color:var(--muted);font-size:13.5px}
+.ai-b .linkbtn{align-self:flex-start;color:var(--ai);padding:0}
+.ai-note{display:flex;gap:6px;align-items:flex-start;margin-top:10px;font-size:13px;color:var(--muted)}
+.ai-sum{display:flex;gap:8px;align-items:flex-start;margin-top:14px;padding:12px 14px;border-radius:14px;background:var(--ai-soft);font-size:13.5px;color:var(--ink)}
+.ai-sum p{margin:0}
+
+/* slot rows (AI 잔여타임) */
+.slots{display:flex;flex-direction:column;gap:6px}
+.slot{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+.slot.go{grid-template-columns:auto minmax(0,1fr) auto auto}
+.slot.over{opacity:.55}
+.slot.rec{border-color:var(--ai)}
+.slot .t{font-weight:700;font-size:15px;line-height:1.15;font-variant-numeric:tabular-nums;color:var(--ink)}
+.slot .t small{display:block;font-size:10.5px;color:var(--muted);font-weight:500;margin-top:2px}
+.slot .n{min-width:0}
+.slot .n b{display:flex;align-items:center;gap:5px;flex-wrap:wrap;font-size:13.5px;color:var(--ink)}
+.slot .n span{display:block;font-size:11.5px;color:var(--muted);line-height:1.4}
+.slot .pp{text-align:right;font-weight:700;color:var(--ink);white-space:nowrap;font-variant-numeric:tabular-nums;font-size:14px}
+.slot .pp s{display:block;font-size:11px;color:var(--muted);font-weight:400}
+.slot .pp small{display:block;font-size:10.5px;color:var(--muted);font-weight:400}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;line-height:1.5}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-wait{background:var(--amber-soft);color:var(--amber-ink)}
+.p-ok{background:var(--green-soft);color:var(--green)}
+.p-hot{background:var(--danger-soft);color:var(--danger)}
+.p-neu{background:var(--sunk);color:var(--muted)}
+.p-ai{background:var(--ai-soft);color:var(--ai)}
+
+/* ---------- golfer: AI chat ---------- */
+.g-view.chat{padding:0;display:flex;flex-direction:column;background:var(--chat);overflow:hidden}
+.clog{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:14px 12px 10px;display:flex;flex-direction:column;gap:10px}
+.dd{align-self:center;font-size:11.5px;color:var(--muted);background:var(--surface);padding:2px 10px;border-radius:10px}
+.m{display:flex;gap:7px;align-items:flex-end;max-width:95%}
+.m.ai{align-self:flex-start}
+.m.me{align-self:flex-end;flex-direction:row-reverse}
+.m .av{width:30px;height:30px;border-radius:10px;background:var(--ai);color:var(--ai-ink);display:grid;place-items:center;font-weight:700;font-size:11px;flex:none;align-self:flex-start}
+.m .body{display:flex;flex-direction:column;gap:6px;min-width:0}
+.m.me .body{align-items:flex-end}
+.m .name{font-size:11.5px;color:var(--muted);padding-left:2px}
+.m .bub{padding:9px 12px;border-radius:15px;background:var(--surface);border:1px solid var(--line);font-size:14px;line-height:1.55;white-space:pre-wrap;color:var(--ink)}
+.m.ai .bub{border-top-left-radius:4px}
+.m.me .bub{background:var(--green);border-color:var(--green);color:var(--green-ink);border-bottom-right-radius:4px}
+.m .bub .voice{font-size:11px;opacity:.75;margin-right:4px}
+.m .tm{font-size:10.5px;color:var(--muted);flex:none;padding-bottom:3px;font-variant-numeric:tabular-nums}
+.typing{color:var(--muted);font-size:13px}
+.rc{border:1px solid var(--line);border-radius:15px;background:var(--surface);overflow:hidden;width:min(326px,100%)}
+.rc.hot{border-color:var(--amber)}
+.rc.done{opacity:.82}
+.rc .rh{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line);background:var(--sunk);font-size:12.5px;font-weight:600;color:var(--ink)}
+.rc .rh .pill{margin-left:auto}
+.rc .rb{padding:10px 12px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;color:var(--muted)}
+.rc .rb strong{color:var(--ink)}
+.rc .ra{display:flex;gap:6px;padding:0 12px 12px;flex-wrap:wrap}
+.rc .ra .btn{flex:1 1 auto}
+.big{font-size:21px;font-weight:700;color:var(--ink);letter-spacing:-.01em;line-height:1.2;font-variant-numeric:tabular-nums}
+.big small{font-size:12px;font-weight:500;color:var(--muted);margin-left:6px;letter-spacing:0}
+.big.nm{font-size:18px}
+.pr{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
+.pr s{color:var(--muted);font-size:12px}
+.pr b{font-size:17px;color:var(--ink)}
+.pr small{font-size:11.5px;color:var(--muted)}
+.kv{display:grid;grid-template-columns:78px minmax(0,1fr);font-size:12.5px;gap:3px 8px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;color:var(--ink)}
+.wx{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;background:var(--amber-soft);color:var(--ink);font-size:12.5px;line-height:1.5}
+.wx b{font-size:18px;color:var(--amber-ink);flex:none;font-variant-numeric:tabular-nums}
+.verdict{margin:0;font-size:13px;color:var(--ink);line-height:1.55}
+.says{display:flex;flex-wrap:wrap;gap:6px}
+.say{border:1px solid var(--line);background:var(--surface);border-radius:16px;padding:5px 11px;font-size:13px;color:var(--ink);text-align:left;line-height:1.35}
+.say:hover{border-color:var(--ai);color:var(--ai)}
+.qr{flex:none;display:flex;gap:6px;overflow-x:auto;padding:8px 12px 0;scrollbar-width:none;background:var(--surface);border-top:1px solid var(--line)}
+.qr::-webkit-scrollbar{display:none}
+.qr .say{flex:none;white-space:nowrap}
+.composer{flex:none;background:var(--surface);padding:8px 12px 10px;display:flex;flex-direction:column;gap:5px}
+.c-row{display:flex;gap:8px;align-items:center}
+.c-row input{flex:1;min-width:0;height:42px;border:1px solid var(--line);border-radius:21px;padding:0 14px;background:var(--sunk);font-size:14.5px}
+.c-row input:focus{outline:none;border-color:var(--ai);background:var(--surface)}
+.c-row .btn{padding:0 14px;height:42px;border-radius:21px}
+.mic{width:42px;height:42px;border-radius:50%;border:1px solid var(--ai);background:var(--ai);color:var(--ai-ink);display:grid;place-items:center;flex:none;position:relative;padding:0}
+.mic svg{width:19px;height:19px}
+.mic.rec{background:var(--danger);border-color:var(--danger);color:#fff}
+.mic.rec::after{content:"";position:absolute;inset:-5px;border:2px solid var(--danger);border-radius:50%;opacity:.5;animation:ring 1.2s ease-out infinite}
+@keyframes ring{0%{transform:scale(.9);opacity:.6}100%{transform:scale(1.2);opacity:0}}
+.interim{font-size:12px;color:var(--muted);font-style:italic;padding-left:4px}
+.interim:empty{display:none}
+.c-opts{display:flex;gap:14px;font-size:12px;color:var(--muted);padding-left:4px}
+.c-opts label{display:inline-flex;gap:5px;align-items:center;cursor:pointer}
+.c-opts input{accent-color:var(--ai);margin:0}
+
+/* ---------- golfer: 내 예약 ---------- */
+.trip{border:1px solid var(--line);border-radius:16px;background:var(--surface);overflow:hidden;margin-bottom:10px}
+.trip .tt{display:flex;gap:12px;align-items:center;padding:12px 14px}
+.trip .d{text-align:center;line-height:1.15;padding:6px 10px;border-radius:10px;background:var(--green-soft);color:var(--green);flex:none;min-width:48px}
+.trip .d b{display:block;font-size:20px}
+.trip .d small{font-size:11px}
+.trip.past .d{background:var(--sunk);color:var(--muted)}
+.trip .info{min-width:0;flex:1}
+.trip .info b{display:block;font-size:15px}
+.trip .info span{font-size:12.5px;color:var(--muted)}
+.trip .tb{border-top:1px solid var(--line);padding:10px 14px 12px;display:flex;flex-direction:column;gap:9px;font-size:13px;color:var(--muted)}
+.acts{display:flex;gap:6px;flex-wrap:wrap}
+.mini{border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;background:var(--surface);display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.mini .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mini .row .sp{flex:1}
+.mini .id{font-weight:700;font-variant-numeric:tabular-nums}
+.note-s{font-size:13px;color:var(--muted);border:1.5px dashed var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+
+/* ---------- manager ---------- */
+.console{background:var(--surface);border:1px solid var(--line);border-radius:22px;overflow:hidden}
+.c-head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.c-head h2{margin:0;font-size:18px}
+.c-head .me{font-size:13px;color:var(--muted)}
+.c-tabs{display:flex;gap:4px}
+.c-tabs button{border:0;background:none;padding:7px 12px;border-radius:9px;font-size:14px;color:var(--muted);font-weight:600}
+.c-tabs button.on{background:var(--sunk);color:var(--ink)}
+.c-list{padding:6px 20px 20px}
+.req{border-bottom:1px solid var(--line);padding:16px 0}
+.req:last-child{border-bottom:0}
+.req.fresh{background:linear-gradient(90deg,var(--amber-soft),transparent 70%);margin:0 -20px;padding:16px 20px}
+.r-top{display:flex;justify-content:space-between;gap:10px;align-items:baseline;flex-wrap:wrap}
+.r-who{font-weight:700;font-size:15px}
+.r-who .tag{font-size:11.5px;font-weight:600;color:var(--amber-ink);margin-left:6px}
+.r-meta{font-size:13px;color:var(--muted)}
+.r-text{margin:6px 0 10px;font-size:14px;color:var(--muted)}
+.r-text q{color:var(--ink)}
+.r-ai{display:flex;gap:7px;align-items:flex-start;margin-top:10px;font-size:13px;color:var(--muted)}
+.r-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;flex-wrap:wrap}
+.r-count{font-size:13px;color:var(--muted)}
+.r-state{font-size:13.5px;font-weight:600;color:var(--green)}
+.r-state.ai{color:var(--ai)}
+.chips.static .chip{padding:5px 9px;font-size:13px}
+
+.form{margin-top:12px;border-radius:16px;background:var(--sunk);padding:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.form label{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.form select,.form input,.form textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--surface)}
+.form textarea{resize:vertical;min-height:60px}
+.form .full{grid-column:1/-1}
+.form .ai-hint{display:flex;gap:7px;align-items:flex-start;font-size:13px;color:var(--ink);background:var(--ai-soft);border-radius:12px;padding:10px 12px}
+.checks{display:flex;flex-wrap:wrap;gap:6px}
+.checks label{display:inline-flex;align-items:center;gap:6px;margin:0;font-weight:500;color:var(--ink);font-size:13.5px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:6px 10px;cursor:pointer}
+.checks input{width:auto;margin:0}
+.form-act{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.form-act .btn.ai-ghost{margin-right:auto;color:var(--ai);border-color:var(--ai);background:var(--surface)}
+@media (max-width:520px){.form{grid-template-columns:1fr}}
+.empty{padding:40px 10px;text-align:center;color:var(--muted)}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);background:var(--ink);color:var(--surface);padding:11px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;max-width:calc(100% - 32px);z-index:9}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.foot-note{margin-top:22px;font-size:12.5px;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){
+  .chip.miss.req,.waiting .pulse,.prop.new,.live,.mic.rec::after{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div>
+      <h1>골프탑 조건 부킹 · AI 매니저</h1>
+      <p>골퍼가 조건을 한 줄로 올리면 AI 매니저가 연동 골프장 잔여타임을 바로 잡아드리고, 골프탑 매니저들은 비공개 특가·조인·1박2일을 제안합니다.</p>
+    </div>
+    <div class="seg" id="seg">
+      <button data-tab="golfer" class="on">골퍼 화면</button>
+      <button data-tab="manager">매니저 콘솔<span class="dot" id="segDot" hidden>0</span></button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <section class="pane on" id="paneGolfer">
+      <div class="pane-label">골퍼 앱</div>
+      <div class="phone" id="phone">
+        <div class="g-bar" id="gBar"></div>
+        <div class="g-view" id="vBook"></div>
+        <div class="g-view chat" id="vChat" hidden>
+          <div class="clog" id="clog" aria-live="polite"></div>
+          <div class="qr" id="qr">
+            <button class="say" data-say="이번 주말 오전 수도권 4명">이번 주말 잔여타임</button>
+            <button class="say" data-say="받은 제안 비교해줘">제안 비교</button>
+            <button class="say" data-say="내 예약 보여줘">내 예약</button>
+            <button class="say" data-say="대기 목록 보여줘">대기 목록</button>
+            <button class="say" data-say="취소 규정 알려줘">취소 규정</button>
+            <button class="say" data-say="도움말">도움말</button>
+          </div>
+          <div class="composer">
+            <div class="interim" id="interim"></div>
+            <div class="c-row">
+              <button class="mic" id="mic" type="button" aria-label="음성으로 말하기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/></svg></button>
+              <input id="cin" autocomplete="off" aria-label="AI 매니저에게 말하기" placeholder="예) 토요일 아침 양평 쪽 4명">
+              <button class="btn ai" id="csend" type="button">전송</button>
+            </div>
+            <div class="c-opts"><label><input type="checkbox" id="auto" checked> 말 끝나면 전송</label><label><input type="checkbox" id="tts" checked> 읽어주기</label></div>
+          </div>
+        </div>
+        <div class="g-view" id="vTrips" hidden></div>
+        <nav class="g-tabs" id="gTabs">
+          <button data-gtab="book" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V4"/><path d="M6 4h11l-3 3.5 3 3.5H6z"/></svg>조건 부킹</button>
+          <button data-gtab="chat"><span class="badge" id="aiBadge" hidden>0</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4z"/><path d="M9 10.5h.01M12 10.5h.01M15 10.5h.01"/></svg>AI 매니저</button>
+          <button data-gtab="trips"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>내 예약</button>
+        </nav>
+      </div>
+    </section>
+    <section class="pane" id="paneManager">
+      <div class="pane-label">골프탑 매니저 콘솔</div>
+      <div class="console">
+        <div class="c-head">
+          <div><h2>조건 요청함</h2><div class="me">김태오 매니저 · AI가 연동 골프장 즉시 제안을 함께 보여줘요</div></div>
+          <div class="c-tabs" id="cTabs">
+            <button data-f="all" class="on">전체 요청</button>
+            <button data-f="mine">내가 제안한 요청</button>
+          </div>
+        </div>
+        <div class="c-list" id="cList"></div>
+      </div>
+    </section>
+  </div>
+  <p class="foot-note">프로토타입입니다. 골프장 이름, 가격, 매니저, 잔여타임은 모두 가상의 예시입니다. 조건 인식과 AI 매니저 응답은 서버 없이 브라우저 안에서 규칙 기반으로 동작하며, 로그인은 생략했습니다.</p>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const W = ['일','월','화','수','목','금','토'];
+const DOW = {'일':0,'월':1,'화':2,'수':3,'목':4,'금':5,'토':6};
+const today0 = (() => { const d = new Date(); d.setHours(0,0,0,0); return d; })();
+const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const fmt = d => `${d.getMonth()+1}월 ${d.getDate()}일 (${W[d.getDay()]})`;
+const md = d => `${d.getMonth()+1}/${d.getDate()} (${W[d.getDay()]})`;
+const monday = addD(today0, -((today0.getDay() + 6) % 7));
+const weekDay = (dow, off) => addD(monday, off * 7 + ((dow + 6) % 7));
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+const won = n => (Math.round(n * 10) / 10).toString().replace(/\.0$/, '') + '만원';
+const wonGap = n => n < 1 ? `${Math.round(n * 10)}천원` : won(n);
+const pad = n => String(n).padStart(2, '0');
+const hhmm = (d = new Date()) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const sameDay = (a, b) => a.toDateString() === b.toDateString();
+const uid = p => p + Math.random().toString(36).slice(2, 8);
+const teeMinus = (tee, min) => { const [h, m] = tee.split(':').map(Number), t = h * 60 + m - min; return `${pad(Math.floor(t / 60))}:${pad(t % 60)}`; };
+function rng(str){
+  let h = 1779033703 ^ str.length;
+  for (let i = 0; i < str.length; i++){ h = Math.imul(h ^ str.charCodeAt(i), 3432918353); h = h << 13 | h >>> 19; }
+  let a = h >>> 0;
+  return () => { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+}
+
+function dayVal(d){ return { label: fmt(d), dates: [d] }; }
+function weekendVal(off){
+  let sat = addD(monday, 5 + 7 * off), sun = addD(sat, 1);
+  let ds = [sat, sun].filter(d => d >= today0);
+  if (!ds.length){ sat = addD(sat, 7); sun = addD(sun, 7); ds = [sat, sun]; }
+  if (ds.length === 1) return { label: fmt(ds[0]), dates: ds, weekend: true };
+  const label = sat.getMonth() === sun.getMonth()
+    ? `${sat.getMonth()+1}월 ${sat.getDate()}~${sun.getDate()}일 주말`
+    : `${sat.getMonth()+1}월 ${sat.getDate()}일~${sun.getMonth()+1}월 ${sun.getDate()}일 주말`;
+  return { label, dates: ds, weekend: true };
+}
+function weekdaysAhead(){
+  const out = []; for (let i = 1; out.length < 5; i++){ const d = addD(today0, i); if (d.getDay() % 6) out.push(d); }
+  return out;
+}
+
+/* ================= field meta ================= */
+const FIELDS = [
+  { f:'date',   name:'날짜',   ask:'날짜 정하기',   req:true },
+  { f:'time',   name:'시간대', ask:'시간대 정하기', req:true },
+  { f:'region', name:'지역',   ask:'지역 정하기',   req:true },
+  { f:'people', name:'인원',   ask:'인원 정하기',   req:true },
+  { f:'price',  name:'그린피', ask:'그린피 (선택)', req:false },
+  { f:'opts',   name:'옵션',   ask:'옵션 (선택)',   req:false },
+];
+const FNAME = Object.fromEntries(FIELDS.map(x => [x.f, x.name]));
+
+/* ================= parser ================= */
+const DATE_RULES = [
+  [/다음\s*주\s*말|담주\s*주말|차주\s*주말/, () => weekendVal(1)],
+  [/(이번\s*)?주말/, () => weekendVal(0)],
+  [/(다음\s*주|담주|차주)\s*([월화수목금토일])요일?/, m => dayVal(weekDay(DOW[m[2]], 1))],
+  [/(이번\s*주|금주)\s*([월화수목금토일])요일?/, m => { let d = weekDay(DOW[m[2]], 0); if (d < today0) d = addD(d, 7); return dayVal(d); }],
+  [/(\d{1,2})\s*월\s*(\d{1,2})\s*일/, m => monthDay(+m[1], +m[2])],
+  [/(\d{1,2})\s*\/\s*(\d{1,2})/, m => monthDay(+m[1], +m[2])],
+  [/오늘|당일/, () => dayVal(today0)],
+  [/내일/, () => dayVal(addD(today0, 1))],
+  [/모레/, () => dayVal(addD(today0, 2))],
+  [/글피/, () => dayVal(addD(today0, 3))],
+  [/평일/, () => ({ label:'평일 중 아무 날', dates: weekdaysAhead(), flex:true })],
+  [/([월화수목금토일])요일/, m => { let d = weekDay(DOW[m[1]], 0); if (d < today0) d = addD(d, 7); return dayVal(d); }],
+];
+function monthDay(mo, da){
+  if (mo < 1 || mo > 12 || da < 1 || da > 31) return null;
+  let d = new Date(today0.getFullYear(), mo - 1, da);
+  if (d < today0) d = new Date(today0.getFullYear() + 1, mo - 1, da);
+  return dayVal(d);
+}
+const TIME_RULES = [
+  [/새벽|첫\s*티|첫\s*팀/, '새벽'],
+  [/오전|아침|1\s*부/, '오전'],
+  [/오후|점심|낮\s|2\s*부/, '오후'],
+  [/야간|저녁|나이트|3\s*부/, '야간'],
+  [/아무\s*때|시간\s*(무관|상관\s*없)/, '무관'],
+];
+const REGION_RULES = [
+  ['제주',   /제주도?|서귀포/],
+  ['수도권', /수도권|서울|경기\s*(남부|북부)?|인천|용인|이천|여주|가평|포천|파주|양평|안성|화성|남양주|광주시/],
+  ['강원',   /강원도?|춘천|홍천|원주|평창|강릉|횡성|정선/],
+  ['충청',   /충청도?|충북|충남|대전|세종|천안|청주|충주|음성|진천/],
+  ['영남',   /영남|경상도?|경북|경남|부산|대구|울산|경주|김해|창원|양산/],
+  ['호남',   /호남|전라도?|전북|전남|무안|순천|여수|해남|담양/],
+];
+const NUMK = { '한':1, '두':2, '세':3, '네':4 };
+const PEOPLE_RULES = [
+  [/(\d)\s*(인|명|분)/, m => +m[1]],
+  [/(한|두|세|네)\s*(명|분|사람)/, m => NUMK[m[1]]],
+  [/(\d)\s*팀/, m => +m[1] * 4],
+  [/혼자|솔로/, () => 1],
+  [/둘이|부부|커플/, () => 2],
+  [/셋이/, () => 3],
+  [/넷이|풀\s*팀/, () => 4],
+];
+const PRICE_RULES = [
+  [/(\d{1,2}(?:\.\d)?)\s*~\s*(\d{1,2}(?:\.\d)?)\s*만\s*원?/, m => ({ min:+m[1], max:+m[2], label:`${m[1]}~${m[2]}만원` })],
+  [/(\d{1,2})\s*만\s*원?\s*대/, m => ({ min:+m[1], max:+m[1] + 9.5, label:`${m[1]}만원대` })],
+  [/(\d{1,2}(?:\.\d)?)\s*만\s*원?\s*(이하|이내|까지|아래|미만|안쪽|밑)/, m => ({ max:+m[1], label:`${m[1]}만원 이하` })],
+  [/(\d{1,2}(?:\.\d)?)\s*만\s*원?\s*(이상|넘게|부터)/, m => ({ min:+m[1], label:`${m[1]}만원 이상` })],
+  [/(\d{1,2}(?:\.\d)?)\s*만\s*원?/, m => ({ min:+m[1] - 2, max:+m[1] + 2, label:`${m[1]}만원 안팎` })],
+  [/저렴|싼\s|싸게|가성비|특가|최저가/, () => ({ label:'특가 위주', max:null, cheap:true })],
+];
+const OPT_RULES = [
+  [/조인/, '조인'],
+  [/1\s*박\s*2\s*일|숙박/, '1박2일'],
+  [/노\s*캐디/, '노캐디'],
+  [/식사|조식|중식/, '식사 포함'],
+  [/당장|급구|바로/, '급구'],
+];
+const BAND_OF_HOUR = h => h <= 6 ? '새벽' : h <= 11 ? '오전' : h <= 16 ? '오후' : '야간';
+
+function parse(text){
+  const t = text || '', out = {}, marks = [];
+  const mark = (m, f) => marks.push({ s:m.index, e:m.index + m[0].length, f });
+
+  for (const [re, fn] of DATE_RULES){ const m = re.exec(t); if (m){ const v = fn(m); if (v){ out.date = v; mark(m, 'date'); break; } } }
+
+  let band = null;
+  for (const [re, b] of TIME_RULES){ const m = re.exec(t); if (m){ band = b; mark(m, 'time'); break; } }
+  const hm = /(\d{1,2})\s*시(?!간)/.exec(t);
+  if (hm && +hm[1] <= 23){
+    let h = +hm[1];
+    if (band === '오후' && h < 12) h += 12;
+    if (!band) band = (h >= 1 && h <= 4) ? '오후' : BAND_OF_HOUR(h);
+    if (band === '오후' && h < 12) h += 12;
+    out.time = { band, hour:h, label:`${band} ${h > 12 ? h - 12 : h}시경` };
+    mark(hm, 'time');
+  } else if (band){ out.time = { band, label: band === '무관' ? '시간 무관' : band }; }
+
+  for (const [key, re] of REGION_RULES){
+    const m = re.exec(t);
+    if (m){ const w = m[0].replace(/\s+/g,' ').trim(); out.region = { key, label: (w === key || w === key + '도') ? key : `${key} (${w})` }; mark(m, 'region'); break; }
+  }
+  for (const [re, fn] of PEOPLE_RULES){
+    const m = re.exec(t);
+    if (m){ const n = fn(m); if (n){ out.people = { n, label: n >= 8 && n % 4 === 0 ? `${n/4}팀 (${n}명)` : `${n}명` }; mark(m, 'people'); break; } }
+  }
+  for (const [re, fn] of PRICE_RULES){ const m = re.exec(t); if (m){ out.price = fn(m); mark(m, 'price'); break; } }
+  const opts = [];
+  for (const [re, name] of OPT_RULES){ const m = re.exec(t); if (m){ opts.push(name); mark(m, 'opts'); } }
+  if (opts.length) out.opts = opts;
+
+  marks.sort((a, b) => a.s - b.s);
+  const clean = []; let last = -1;
+  for (const mk of marks){ if (mk.s >= last){ clean.push(mk); last = mk.e; } }
+  return { fields: out, marks: clean };
+}
+
+/* ================= sample data (전부 가상) ================= */
+const COURSES = {
+  '수도권':[{n:'은하수CC',a:'경기 이천',b:26},{n:'솔모루GC',a:'경기 가평',b:23},{n:'청림CC',a:'경기 용인',b:29},{n:'북한강CC',a:'경기 양평',b:24},{n:'아라뜰GC',a:'경기 안성',b:21}],
+  '강원':[{n:'설악파인CC',a:'강원 홍천',b:19},{n:'오대마루GC',a:'강원 평창',b:21},{n:'소양호CC',a:'강원 춘천',b:18}],
+  '충청':[{n:'금강노을CC',a:'충북 충주',b:18},{n:'보은숲GC',a:'충북 청주',b:17},{n:'계룡뜰CC',a:'충남 공주',b:16}],
+  '영남':[{n:'낙동CC',a:'경남 김해',b:19},{n:'감포오션GC',a:'경북 경주',b:20},{n:'가야산CC',a:'경남 합천',b:16}],
+  '호남':[{n:'무등벨리CC',a:'전남 담양',b:16},{n:'다도해GC',a:'전남 해남',b:15},{n:'변산마루CC',a:'전북 부안',b:17}],
+  '제주':[{n:'한라오름CC',a:'제주 제주시',b:22},{n:'서귀포해안GC',a:'제주 서귀포',b:24},{n:'성산마루CC',a:'제주 성산',b:19}],
+};
+/* linked: 골프탑과 시스템 연동된 골프장 → AI 매니저가 실시간 잔여타임을 보고 즉시 확정 */
+const INFO = {
+  '은하수CC':     { code:'EH', linked:true,  travel:60,   caddie:'캐디 · 노캐디 선택', cancelDays:3, holes:27, grass:'양잔디',   fac:'락커·샤워·식당·그늘집', tags:['근교','명문'] },
+  '솔모루GC':     { code:'SM', linked:true,  travel:70,   caddie:'노캐디 가능',        cancelDays:3, holes:18, grass:'조선잔디', fac:'락커·샤워·식당', tags:['가성비','초보'] },
+  '청림CC':       { code:'CR', linked:false, travel:50,   caddie:'캐디 필수',          cancelDays:4, holes:18, grass:'양잔디',   fac:'락커·샤워·식당·그늘집·연습장', tags:['명문','근교'] },
+  '북한강CC':     { code:'BH', linked:true,  travel:55,   caddie:'노캐디 가능',        cancelDays:3, holes:18, grass:'조선잔디', fac:'락커·샤워·식당·그늘집', tags:['경치','근교','가성비'] },
+  '아라뜰GC':     { code:'AR', linked:false, travel:75,   caddie:'노캐디 가능',        cancelDays:2, holes:18, grass:'조선잔디', fac:'락커·샤워·식당', tags:['가성비','초보'] },
+  '설악파인CC':   { code:'SA', linked:true,  travel:95,   caddie:'캐디 필수',          cancelDays:3, holes:18, grass:'양잔디',   fac:'락커·샤워·식당·그늘집', tags:['경치','명문'] },
+  '오대마루GC':   { code:'OD', linked:true,  travel:140,  caddie:'노캐디 가능',        cancelDays:5, holes:18, grass:'양잔디',   fac:'락커·샤워·식당·숙박', tags:['경치','가성비'] },
+  '소양호CC':     { code:'SY', linked:false, travel:85,   caddie:'캐디 선택',          cancelDays:3, holes:18, grass:'조선잔디', fac:'락커·샤워·식당', tags:['경치'] },
+  '금강노을CC':   { code:'GN', linked:true,  travel:100,  caddie:'노캐디 가능',        cancelDays:2, holes:18, grass:'조선잔디', fac:'락커·샤워·식당', tags:['가성비','초보'] },
+  '보은숲GC':     { code:'BE', linked:false, travel:130,  caddie:'캐디 선택',          cancelDays:3, holes:18, grass:'조선잔디', fac:'락커·샤워·식당·그늘집', tags:['경치'] },
+  '계룡뜰CC':     { code:'GR', linked:false, travel:120,  caddie:'노캐디 가능',        cancelDays:2, holes:18, grass:'조선잔디', fac:'락커·샤워·식당', tags:['가성비'] },
+  '낙동CC':       { code:'ND', linked:true,  travel:250,  caddie:'캐디 필수',          cancelDays:3, holes:27, grass:'양잔디',   fac:'락커·샤워·식당·그늘집', tags:['명문'] },
+  '감포오션GC':   { code:'GP', linked:false, travel:230,  caddie:'캐디 필수',          cancelDays:3, holes:18, grass:'양잔디',   fac:'락커·샤워·식당·숙박', tags:['경치','명문'] },
+  '가야산CC':     { code:'GY', linked:false, travel:210,  caddie:'노캐디 가능',        cancelDays:3, holes:18, grass:'조선잔디', fac:'락커·샤워·식당', tags:['가성비'] },
+  '무등벨리CC':   { code:'MB', linked:true,  travel:200,  caddie:'노캐디 가능',        cancelDays:3, holes:18, grass:'조선잔디', fac:'락커·샤워·식당', tags:['가성비','초보'] },
+  '다도해GC':     { code:'DH', linked:false, travel:280,  caddie:'캐디 선택',          cancelDays:3, holes:18, grass:'양잔디',   fac:'락커·샤워·식당·숙박', tags:['경치'] },
+  '변산마루CC':   { code:'BS', linked:false, travel:190,  caddie:'노캐디 가능',        cancelDays:3, holes:18, grass:'조선잔디', fac:'락커·샤워·식당', tags:['경치','가성비'] },
+  '한라오름CC':   { code:'HO', linked:true,  travel:null, caddie:'캐디 필수',          cancelDays:5, holes:36, grass:'양잔디',   fac:'락커·샤워·식당·그늘집·숙박', tags:['경치','명문'] },
+  '서귀포해안GC': { code:'SG', linked:true,  travel:null, caddie:'캐디 · 노캐디 선택', cancelDays:5, holes:18, grass:'양잔디',   fac:'락커·샤워·식당·숙박', tags:['경치'] },
+  '성산마루CC':   { code:'SS', linked:false, travel:null, caddie:'노캐디 가능',        cancelDays:5, holes:18, grass:'양잔디',   fac:'락커·샤워·식당', tags:['가성비','경치'] },
+};
+const ALLC = Object.entries(COURSES).flatMap(([key, list]) => list.map(c => Object.assign({ key }, c, INFO[c.n])));
+const LINKED = ALLC.filter(c => c.linked);
+const courseOf = n => ALLC.find(c => c.n === n);
+const findCourse = t => { const s = t.replace(/\s+/g, ''); return ALLC.find(c => s.includes(c.n.replace(/(CC|GC)$/, ''))) || null; };
+const travelLabel = c => !c.travel ? '항공 이동' : c.travel < 120 ? `서울 출발 ${c.travel}분` : `서울 출발 ${Math.floor(c.travel / 60)}시간${c.travel % 60 ? ' ' + c.travel % 60 + '분' : ''}`;
+const cancelRule = c => `${c.cancelDays}일 전 17:00까지 무료 · 이후 50%`;
+function cancelLabel(c, d){ const dl = addD(d, -c.cancelDays); dl.setHours(17, 0, 0, 0); return dl > new Date() ? `${md(dl)} 17:00까지 무료 취소` : '임박 타임 · 예약 후 취소하면 그린피 50%'; }
+const bookingNo = (code, d, tee) => `${code}-${pad(d.getMonth()+1)}${pad(d.getDate())}-${tee.replace(':', '')}`;
+
+const BANDS = { '새벽':['05:42','06:06','06:30'], '오전':['07:24','08:12','09:36','10:48'], '오후':['12:18','13:30','14:06','15:12'], '야간':['17:54','18:30','19:06'] };
+BANDS['무관'] = BANDS['오전'].concat(BANDS['오후']);
+const MANAGERS = [
+  { name:'이도윤 매니저', sub:'평균 응답 2분' },
+  { name:'정하린 매니저', sub:'평균 응답 4분' },
+  { name:'골프탑 특가데스크', sub:'본사 직영' },
+];
+const MEMOS = [
+  '임박분이라 이 가격은 오늘 안에 확정하셔야 해요.',
+  '홈페이지에 안 올라간 비공개 특가입니다.',
+  '앞뒤 팀 간격이 여유 있는 타임으로 잡아드릴게요.',
+  '카트 배정까지 확인해 두었습니다. 바로 진행 가능해요.',
+];
+
+function teeOptions(cond){
+  if (cond.time && cond.time.hour != null){
+    const h = cond.time.hour; return [`${pad(h)}:06`, `${pad(h)}:18`, `${pad(h)}:42`];
+  }
+  return BANDS[(cond.time && cond.time.band) || '오전'];
+}
+function suggestPrice(cond, c, d){
+  const wk = d.getDay() === 0 || d.getDay() === 6;
+  const band = cond.time ? cond.time.band : '오전';
+  let normal = c.b + (wk ? 6 : 0) + (band === '야간' ? -4 : band === '새벽' ? -2 : 0);
+  let price = Math.round(normal * (0.74 + Math.random() * 0.14) * 2) / 2;
+  const p = cond.price || {};
+  if (p.max != null && price > p.max) price = Math.max(8, Math.floor((p.max - Math.random() * 2) * 2) / 2);
+  if (p.min != null && price < p.min) price = p.min + Math.round(Math.random() * 6) / 2;
+  if (normal < price + 2) normal = price + 2 + Math.round(Math.random() * 4) / 2;
+  return { price, normal };
+}
+function genProposal(req, mgr){
+  const cond = req.cond, key = cond.region ? cond.region.key : '수도권';
+  const used = req.proposals.map(p => p.course);
+  const pool = COURSES[key].filter(c => !used.includes(c.n));
+  const c = rnd(pool.length ? pool : COURSES[key]);
+  const d = rnd(cond.date.dates);
+  const { price, normal } = suggestPrice(cond, c, d);
+  const perks = [];
+  const o = cond.opts || [];
+  const n = cond.people ? cond.people.n : 4;
+  if (o.includes('조인') && n < 4) perks.push(`조인 ${4 - n}자리 확정`);
+  if (o.includes('1박2일')) perks.push('리조트 1박 포함');
+  if (o.includes('노캐디')) perks.push('노캐디 운영');
+  if (o.includes('식사 포함')) perks.push('식사 포함');
+  perks.push(rnd(['카트비 포함','카트비 별도','그늘집 쿠폰']));
+  return { id: uid('p'), mgr, course: c.n, area: c.a, date: d, tee: rnd(teeOptions(cond)), price, normal, perks, memo: rnd(MEMOS), at: Date.now(), fresh: true };
+}
+
+/* ================= AI 매니저: 연동 골프장 실시간 잔여타임 ================= */
+const SLOTS = {};            // id → 잔여타임
+const TAKEN = new Set();     // 이미 예약된 타임
+const takenKey = (n, d, tee) => `${n}|${d.toDateString()}|${tee}`;
+
+function aiBlock(c){
+  const n = c.people ? c.people.n : 4, o = c.opts || [];
+  if (c.course && !courseOf(c.course).linked) return '미연동';
+  if (o.includes('조인') || n < 3) return '조인';
+  if (o.includes('1박2일')) return '1박2일';
+  if (n > 4) return '단체';
+  return null;
+}
+function blockMsg(b, c){
+  return {
+    '미연동': `${c.course}는 아직 골프탑과 연동 전이라 제가 바로 잡을 수는 없어요. 골프탑 매니저들이 골프장에 직접 확인해서 제안해 드려요.`,
+    '조인':   '1~2명이나 조인은 다른 팀과 자리를 맞춰야 해서 골프탑 매니저들이 찾아드려요.',
+    '1박2일': '1박2일은 숙소와 이틀 티타임을 묶어야 해서 골프탑 매니저들이 패키지로 제안해 드려요.',
+    '단체':   '2팀 이상은 연속 티타임을 골프장과 조율해야 해서 골프탑 매니저들이 맞춰드려요.',
+  }[b];
+}
+function aiSearch(c){
+  const block = aiBlock(c);
+  const key = c.region ? c.region.key : '수도권';
+  const pool = c.course ? LINKED.filter(x => x.n === c.course) : LINKED.filter(x => x.key === key);
+  if (block) return { block, ok:[], over:[], linked: pool.length };
+  const band = c.time ? c.time.band : '무관', n = c.people ? c.people.n : 4, o = c.opts || [];
+  const tees = teeOptions(c), soon = Date.now() + 2 * 3600e3, all = [];
+  for (const x of pool){
+    if (o.includes('노캐디') && !/노캐디/.test(x.caddie)) continue;
+    for (const d of c.date.dates.slice(0, 3)){
+      const r = rng(x.n + d.toDateString() + band + (c.time && c.time.hour != null ? c.time.hour : ''));
+      if (r() < 0.3) continue;
+      const tee = tees[Math.floor(r() * tees.length)];
+      const [hh, mm] = tee.split(':').map(Number), at = new Date(d); at.setHours(hh, mm, 0, 0);
+      if (at < soon || TAKEN.has(takenKey(x.n, d, tee))) continue;
+      const wk = d.getDay() === 0 || d.getDay() === 6;
+      const normal = x.b + (wk ? 6 : 0) + (band === '야간' ? -4 : band === '새벽' ? -2 : 0);
+      const price = Math.round(normal * (0.7 + r() * 0.22) * 2) / 2;
+      const perks = [];
+      if (r() < 0.5) perks.push('카트비 포함');
+      if (o.includes('식사 포함') || r() < 0.2) perks.push('식사 포함');
+      const id = `s${x.code}${d.getMonth()+1}${pad(d.getDate())}${tee.replace(':', '')}${n}`;
+      all.push(SLOTS[id] = { id, course:x.n, area:x.a, date:d, tee, price, normal: Math.max(normal, price + 1.5), caddie:x.caddie, perks, cancel: cancelLabel(x, d), people:n });
+    }
+  }
+  const p = c.price || {}, fits = s => p.max == null || s.price <= p.max;
+  all.sort((a, b) => a.price - b.price);
+  return { block:null, ok: all.filter(fits).slice(0, 3), over: all.filter(s => !fits(s)).slice(0, 1), linked: pool.length };
+}
+/* 매니저 제안 비교: 예산, 할인율, 요청 옵션 충족, AI 즉시 예약가 대비 */
+function aiAssess(r){
+  const c = r.cond, p = c.price || {}, o = c.opts || [];
+  const aiBest = aiSearch(c).ok[0] || null;
+  const notes = {}; let best = null, bestScore = -Infinity;
+  for (const x of r.proposals){
+    const bits = []; let score = -x.price;
+    if (p.max != null){
+      if (x.price <= p.max){ if (p.max - x.price >= 0.5) bits.push(`예산보다 ${wonGap(p.max - x.price)} 낮아요`); else bits.push('예산 안'); }
+      else { bits.push(`예산 ${wonGap(x.price - p.max)} 초과`); score -= 50; }
+    }
+    const off = Math.round((1 - x.price / x.normal) * 100);
+    if (off >= 10) bits.push(`정상가 대비 -${off}%`);
+    if (o.includes('조인') && x.perks.some(k => /조인/.test(k))){ bits.push('조인 자리 확정'); score += 5; }
+    if (o.includes('1박2일') && x.perks.some(k => /1박/.test(k))){ bits.push('숙박 포함'); score += 5; }
+    if (x.perks.includes('카트비 포함')){ bits.push('카트비 포함'); score += 2; }
+    if (aiBest){ const d = aiBest.price - x.price; if (d >= 0.5) bits.push(`AI 즉시 예약가보다 ${wonGap(d)} 싸요`); else if (d <= -0.5) bits.push(`AI 즉시 예약가보다 ${wonGap(-d)} 비싸요`); }
+    notes[x.id] = bits.slice(0, 3).join(' · ');
+    if (score > bestScore){ bestScore = score; best = x; }
+  }
+  return { best, notes, aiBest };
+}
+function verdictText(r, a){
+  const { best, notes, aiBest } = a, p = r.cond.price || {};
+  if (!best) return '';
+  let t = `매니저 제안 중 추천은 ${best.mgr.name}의 ${best.course} 제안(1인 ${won(best.price)})이에요.` + (notes[best.id] ? ` ${notes[best.id]}.` : '');
+  if (aiBest && aiBest.price < best.price && (p.max == null || aiBest.price <= p.max)) t += ` 가격만 보면 AI 즉시 예약 ${aiBest.course} 타임이 ${wonGap(best.price - aiBest.price)} 더 싸고 지금 바로 확정돼요.`;
+  else if (aiBest) t += ' AI 즉시 예약보다 이 제안이 조건이 더 좋아요.';
+  return t;
+}
+
+/* ================= state ================= */
+const S = {
+  text: '', parsed: { fields:{}, marks:[] }, over: {}, editing: null,
+  view: 'compose', myReq: null, requests: [], filter: 'all', open: null, drafts: {}, tab: 'golfer', unseen: 0,
+  gtab: 'book', aiUnread: 0,
+};
+const BOOKINGS = [], WAITS = [], CONDS = {};
+const AI = { last: null, draft: {}, draftText: '' };
+function cond(){
+  const o = {};
+  for (const { f } of FIELDS){ o[f] = (f in S.over) ? S.over[f] : S.parsed.fields[f]; }
+  if (o.opts && !o.opts.length) o.opts = undefined;
+  return o;
+}
+function missing(c){ return FIELDS.filter(x => x.req && !c[x.f]).map(x => x.name); }
+function valLabel(f, v){ return f === 'opts' ? v.join(', ') : v.label; }
+function cloneCond(c){ return JSON.parse(JSON.stringify(c), (k, v) => (typeof v === 'string' && /^\d{4}-\d\d-\d\dT/.test(v)) ? new Date(v) : v); }
+function summary(c){ return [c.date && c.date.label, c.time && c.time.label, c.region && c.region.label, c.people && c.people.label, c.price && c.price.label, c.opts && c.opts.join('·')].filter(Boolean).join(' · '); }
+function condChips(c, def = []){
+  return FIELDS.filter(x => c[x.f]).map(({ f, name }) => `<span class="chip ${f}${def.includes(f) ? ' def' : ''}"><span class="k">${name}</span><span class="v">${esc(valLabel(f, c[f]))}</span></span>`).join('');
+}
+
+/* seed requests from other golfers */
+function seed(text, who, minsAgo, count){
+  const c = parse(text).fields;
+  const r = { id: uid('r'), who, text, cond:c, created: Date.now() - minsAgo * 60000, proposals: [], status:'open' };
+  for (let i = 0; i < count; i++) r.proposals.push(genProposal(r, MANAGERS[i % 3]));
+  r.proposals.forEach(p => p.fresh = false);
+  return r;
+}
+S.requests = [
+  seed('다음 주 토요일 오전 수도권 4명 25만원 이하', '박*준', 4, 1),
+  seed('내일 오후 강원 홍천 2명 조인 15만원 이하', '최*희', 11, 0),
+  seed('다음 주말 제주 1박2일 부부 20만원대', '이*수', 23, 3),
+];
+
+/* seed booking: 내일 새벽 라운드 (D-1 참석 확인 대상) */
+const TMR = addD(today0, 1);
+BOOKINGS.push({ id: bookingNo('BH', TMR, '06:30'), course:'북한강CC', area:'경기 양평', date:TMR, tee:'06:30', price:14.5, people:4, caddie:'노캐디 가능', cancel:`${md(TMR)} 05:00까지 무료 (우천 예보로 골프장이 연장)`, src:'AI 즉시 예약', status:'예약완료', attend:null, d1:true });
+TAKEN.add(takenKey('북한강CC', TMR, '06:30'));
+
+/* ================= golfer: compose ================= */
+const QUICK = ['이번 주말 수도권 오전 4명', '내일 당장 조인 1명', '평일 새벽 경기 남부 20만원대 4명', '다음 주 수요일 오후 강원 2명 15만원 이하', '다음 주말 제주 1박2일 부부'];
+
+function renderCompose(){
+  $('#vBook').innerHTML = `
+    <h2 class="g-title">어떤 라운딩을<br>원하세요?</h2>
+    <p class="g-sub">날짜, 지역, 인원, 예산을 한 줄로 적어 주세요. AI 매니저가 연동 골프장 잔여타임을 바로 찾고, 골프탑 매니저들도 티타임을 제안해 드려요.</p>
+    <div class="inbox">
+      <textarea id="q" rows="2" aria-label="원하는 라운딩 조건" placeholder="예) 이번 주 금요일 오전 수도권 20만원대 골프장 찾아줘">${esc(S.text)}</textarea>
+      <button class="clear" id="clr" aria-label="입력 지우기">✕</button>
+    </div>
+    <div class="mirror" id="mirror"></div>
+    <div class="quick" id="quick">${QUICK.map(q => `<button data-q="${esc(q)}">${esc(q)}</button>`).join('')}</div>
+    <div class="sec-h">인식된 조건</div>
+    <div class="chips" id="chips"></div>
+    <div class="editor" id="editor"></div>
+    <button class="send" id="send"></button>
+    <div class="send-note" id="sendNote"></div>
+    <button class="ai-entry" data-gtab="chat"><span class="ai-av">AI</span><span class="t"><b>말로 해도 돼요</b><small>AI 매니저에게 말하면 조건을 알아듣고 바로 예약까지 잡아드려요</small></span><span class="arr">›</span></button>`;
+  const q = $('#q');
+  q.addEventListener('input', () => { S.text = q.value; S.parsed = parse(S.text); refresh(); });
+  $('#clr').onclick = () => { S.text = ''; S.over = {}; S.editing = null; q.value = ''; S.parsed = parse(''); refresh(); q.focus(); };
+  $('#quick').onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    S.text = b.dataset.q; S.over = {}; S.editing = null; q.value = S.text; S.parsed = parse(S.text); refresh();
+  };
+  $('#chips').onclick = e => { const b = e.target.closest('[data-f]'); if (!b) return; S.editing = S.editing === b.dataset.f ? null : b.dataset.f; refresh(); };
+  $('#editor').onclick = onEditor;
+  $('#editor').onchange = e => { if (e.target.type === 'date' && e.target.value){ const [y,m,d] = e.target.value.split('-').map(Number); S.over.date = dayVal(new Date(y, m - 1, d)); S.editing = nextMissing('date'); refresh(); } };
+  $('#send').onclick = sendRequest;
+  refresh();
+}
+
+function refresh(){
+  const c = cond();
+  const t = S.text, mk = S.parsed.marks;
+  if (!t.trim()){ $('#mirror').innerHTML = ''; }
+  else {
+    let h = '', i = 0;
+    for (const m of mk){ h += esc(t.slice(i, m.s)) + `<span class="hl ${m.f}" title="${FNAME[m.f]}">${esc(t.slice(m.s, m.e))}</span>`; i = m.e; }
+    $('#mirror').innerHTML = h + esc(t.slice(i));
+  }
+  $('#clr').classList.toggle('show', !!t);
+  $('#chips').innerHTML = FIELDS.map(({ f, name, ask, req }) => {
+    const v = c[f], act = S.editing === f ? ' active' : '';
+    if (v) return `<button class="chip ${f}${act}" data-f="${f}"><span class="k">${name}</span><span class="v">${esc(valLabel(f, v))}</span></button>`;
+    return `<button class="chip ${req ? 'miss req' : 'opt-miss'}${act}" data-f="${f}"><span class="k">+</span><span class="v">${ask}</span></button>`;
+  }).join('');
+  renderEditor(c);
+  const miss = missing(c), b = $('#send');
+  b.disabled = miss.length > 0;
+  b.textContent = miss.length ? `${miss.join(', ')} 선택이 필요해요` : '조건 보내기';
+  $('#sendNote').textContent = miss.length
+    ? (t.trim() ? '주황색 조건을 누르면 바로 고를 수 있어요.' : '추천 문장을 눌러 시작해 보세요.')
+    : '보내면 AI 매니저가 바로 잡을 수 있는 타임을 먼저 보여드리고, 30분 동안 골프탑 매니저들의 제안도 받아요.';
+}
+
+function editorOptions(f, c){
+  const v = c[f];
+  switch (f){
+    case 'date': return [
+      ['오늘', () => dayVal(today0)], ['내일', () => dayVal(addD(today0, 1))],
+      ['이번 주말', () => weekendVal(0)], ['다음 주말', () => weekendVal(1)],
+      ['평일 아무 날', () => ({ label:'평일 중 아무 날', dates: weekdaysAhead(), flex:true })]
+    ].map(([l, fn]) => ({ l, on: v && (v.label === fn().label), set: fn }));
+    case 'time': return ['새벽','오전','오후','야간','무관'].map(b => ({ l: b === '무관' ? '시간 무관' : b, on: v && v.band === b && v.hour == null, set: () => ({ band:b, label: b === '무관' ? '시간 무관' : b }) }));
+    case 'region': return Object.keys(COURSES).map(k => ({ l:k, on: v && v.key === k, set: () => ({ key:k, label:k }) }));
+    case 'people': return [1,2,3,4,8].map(n => ({ l: n === 8 ? '2팀 (8명)' : `${n}명`, on: v && v.n === n, set: () => ({ n, label: n === 8 ? '2팀 (8명)' : `${n}명` }) }));
+    case 'price': return [
+      ['15만원 이하', { max:15, label:'15만원 이하' }], ['15~20만원', { min:15, max:20, label:'15~20만원' }],
+      ['20만원대', { min:20, max:29.5, label:'20만원대' }], ['30만원 이상', { min:30, label:'30만원 이상' }],
+      ['특가 위주', { label:'특가 위주', cheap:true }]
+    ].map(([l, o]) => ({ l, on: v && v.label === o.label, set: () => o }));
+    case 'opts': return ['조인','1박2일','노캐디','식사 포함','급구'].map(o => ({ l:o, on: v && v.includes(o), toggle:o }));
+  }
+}
+function renderEditor(c){
+  const ed = $('#editor'), f = S.editing;
+  if (!f){ ed.classList.remove('show'); ed.innerHTML = ''; return; }
+  const opts = editorOptions(f, c);
+  ed._opts = opts;
+  const extra = f === 'date' ? `<input type="date" aria-label="날짜 직접 선택" min="${today0.getFullYear()}-${pad(today0.getMonth()+1)}-${pad(today0.getDate())}">` : '';
+  ed.innerHTML = `<h4>${FNAME[f]} ${f === 'opts' ? '(여러 개 선택 가능)' : '고르기'}</h4>
+    <div class="opts-row">${opts.map((o, i) => `<button data-i="${i}" class="${o.on ? 'on' : ''}">${esc(o.l)}</button>`).join('')}${extra}</div>
+    <div class="done">${c[f] ? `<button class="linkbtn" data-clear="1">이 조건 지우기</button>` : '<span></span>'}<button class="linkbtn" data-close="1">닫기</button></div>`;
+  ed.classList.add('show');
+}
+function onEditor(e){
+  const b = e.target.closest('button'); if (!b) return;
+  const f = S.editing, ed = $('#editor');
+  if (b.dataset.close){ S.editing = null; return refresh(); }
+  if (b.dataset.clear){ S.over[f] = f === 'opts' ? [] : null; return refresh(); }
+  const o = ed._opts[+b.dataset.i];
+  if (o.toggle){
+    const cur = (cond().opts || []).slice(), k = cur.indexOf(o.toggle);
+    k >= 0 ? cur.splice(k, 1) : cur.push(o.toggle);
+    S.over.opts = cur; return refresh();
+  }
+  S.over[f] = o.set();
+  S.editing = nextMissing(f);
+  refresh();
+}
+function nextMissing(after){
+  const c = cond();
+  const m = FIELDS.find(x => x.req && x.f !== after && !c[x.f]);
+  return m ? m.f : null;
+}
+
+/* ================= golfer: send & status ================= */
+let simTimers = [];
+function createRequest(c, text){
+  const req = { id: uid('r'), who:'김*현', mine:true, text, cond: cloneCond(c), created: Date.now(), proposals: [], status:'open', seen: 0, fresh: true };
+  S.requests.unshift(req); S.myReq = req; S.view = 'status';
+  simTimers.forEach(clearTimeout); simTimers = [];
+  [[1200, () => req.seen = 2], [2600, () => addProp(req, MANAGERS[0])], [3800, () => req.seen = 5], [6500, () => addProp(req, MANAGERS[1])], [11000, () => addProp(req, MANAGERS[2])]]
+    .forEach(([ms, fn]) => simTimers.push(setTimeout(() => { if (req.status !== 'open') return; fn(); refreshGolfer(); renderManager(); }, ms)));
+  S.unseen++; updateDot();
+  aiOnRequest(req);
+  return req;
+}
+function sendRequest(){
+  const c = cond(); if (missing(c).length) return;
+  createRequest(c, S.text.trim() || '(조건 직접 선택)');
+  renderGolfer(); renderManager(); renderTrips();
+  if (matchMedia('(max-width:920px)').matches) toast('매니저 콘솔 탭에 요청이 도착했어요.');
+}
+function addProp(req, mgr){ req.proposals.push(genProposal(req, mgr)); aiOnProposal(req); }
+
+function acceptProposal(r, pid){
+  if (!r || r.status !== 'open') return say('ai', bubble('이미 마감된 조건 요청이에요. 내 예약에서 진행 상황을 확인해 주세요.'));
+  const p = r.proposals.find(x => x.id === pid); if (!p) return;
+  r.status = 'booked'; r.accepted = pid; simTimers.forEach(clearTimeout);
+  const x = courseOf(p.course);
+  const b = addBooking({ id: bookingNo(x.code, p.date, p.tee), course:p.course, area:p.area, date:p.date, tee:p.tee, price:p.price, people: r.cond.people ? r.cond.people.n : 4, caddie:x.caddie, cancel: cancelLabel(x, p.date), src: p.mgr.name + ' 제안', status:'확정 대기' });
+  refreshGolfer(); renderManager(); renderBar();
+  toast('예약 요청을 보냈어요.');
+  say('ai', bubble(`${p.mgr.name}에게 ${p.course} ${md(p.date)} ${p.tee} 예약 요청을 넘겼어요. 골프장 확정이 나면 바로 알려드릴게요.`));
+  setTimeout(() => {
+    b.status = '예약완료'; renderTrips();
+    say('ai', bookedCard(b) + bubble(`${p.mgr.name}가 골프장 확정을 받았어요. 내 예약에 넣어뒀고, 전날 18시에 참석 확인을 보내드릴게요.`));
+    if (S.gtab !== 'chat') toast(`${p.course} 예약이 확정됐어요.`);
+  }, 5000);
+}
+
+function aiBoxHTML(r){
+  if (r.status !== 'open') return '';
+  const a = aiSearch(r.cond);
+  let body;
+  if (a.block) body = `<p>${esc(blockMsg(a.block, r.cond))} 제안이 도착하면 가격과 조건을 비교해 드릴게요.</p>`;
+  else if (!a.ok.length){
+    const w = r.wait && WAITS.find(x => x.id === r.wait);
+    body = `<p>연동 골프장 ${a.linked}곳에 지금 조건에 맞는 잔여타임이 없어요.${w ? ` 대기 ${w.id}를 걸어뒀어요. 자리가 나면 15분 잡아두고 알려드릴게요.` : ' 대기를 걸어두면 자리가 나는 순간 15분 잡아두고 알려드릴게요.'}</p>${w ? '' : '<button class="btn sm" data-aiwait="1" style="align-self:flex-start">대기 걸기</button>'}`;
+  } else {
+    body = `<p>연동 골프장에서 지금 바로 확정되는 타임이에요. 매니저 제안을 기다리지 않아도 돼요.</p>
+      <div class="slots">${a.ok.map(s => `<div class="slot go"><div class="t">${s.tee}<small>${md(s.date)}</small></div><div class="n"><b>${esc(s.course)}</b><span>${esc(s.area)} · ${esc(s.perks.join(' · ') || '카트비 별도')}</span></div><div class="pp"><s>${won(s.normal)}</s>${won(s.price)}</div><button class="btn ai sm" data-aibook="${s.id}">예약</button></div>`).join('')}</div>`;
+  }
+  return `<section class="ai-box"><div class="ai-h"><span class="ai-av sm">AI</span>AI 매니저 · 실시간 잔여타임<span class="pill p-ai">${a.block ? '매니저 제안 필요' : '즉시 확정'}</span></div><div class="ai-b">${body}<button class="linkbtn" data-gtab="chat" data-ctx="1">AI 매니저와 대화하기 →</button></div></section>`;
+}
+
+function renderStatus(){
+  const r = S.myReq, c = r.cond;
+  const chips = condChips(c);
+  const aiDone = r.status === 'booked' && r.accepted === 'ai' ? r.aiBooked : null;
+  const booked = r.status === 'booked' && !aiDone ? r.proposals.find(p => p.id === r.accepted) : null;
+  const closed = r.status !== 'open';
+  const a = r.proposals.length && !closed ? aiAssess(r) : null;
+  const showRec = a && a.best && r.proposals.length >= 2;
+  const props = r.proposals.map(p => {
+    const won_ = booked && booked.id === p.id, dim = closed && !won_, rec = showRec && a.best === p;
+    const html = `<article class="prop${p.gfresh !== false ? ' new' : ''}${won_ ? ' won' : ''}${dim ? ' dim' : ''}${rec ? ' rec' : ''}">
+      <div class="p-top">
+        <div><h3 class="p-course">${esc(p.course)}${rec ? '<span class="pill p-ai">AI 추천</span>' : ''}</h3><div class="p-area">${esc(p.area)}</div><div class="p-when">${fmt(p.date)} ${p.tee} 티오프</div></div>
+        <div class="p-price"><s>${won(p.normal)}</s><br><b>${won(p.price)}</b><small>1인 그린피</small></div>
+      </div>
+      <div class="perks">${p.perks.map(x => `<span>${esc(x)}</span>`).join('')}</div>
+      ${p.memo ? `<p class="p-memo">${esc(p.memo)}</p>` : ''}
+      ${a && a.notes[p.id] ? `<div class="ai-note"><span class="ai-tag">AI</span><span>${esc(a.notes[p.id])}</span></div>` : ''}
+      <div class="p-mgr"><span class="avatar">${esc(p.mgr.name.slice(0,1))}</span><span>${esc(p.mgr.name)}, ${esc(p.mgr.sub)}</span></div>
+      ${closed ? '' : `<div class="p-act"><button class="btn" data-ask="${p.id}">매니저와 대화</button><button class="btn pri" data-acc="${p.id}">이 제안으로 예약</button></div>`}
+    </article>`;
+    p.gfresh = false; return html;
+  }).join('');
+  const head = aiDone ? '예약이 확정됐어요' : booked ? '예약을 요청했어요' : r.status === 'booking' ? '예약하는 중이에요' : '제안을 받고 있어요';
+  $('#vBook').innerHTML = `
+    <button class="back" id="back">← 새 조건 쓰기</button>
+    <div class="status-head"><h2>${head}</h2>${closed ? '' : `<span class="cd" id="cd"></span>`}</div>
+    <div class="seen">${closed ? '' : (r.seen ? `골프탑 매니저 ${r.seen}명이 조건을 확인했어요.` : '조건을 매니저들에게 보내는 중이에요.')}</div>
+    <div class="chips static">${chips}</div>
+    ${aiDone ? `<div class="booked"><b>${esc(aiDone.course)} ${fmt(aiDone.date)} ${aiDone.tee}</b>AI 매니저가 연동 골프장에 바로 확정했어요. 예약번호 ${esc(aiDone.no)} · 1인 ${won(aiDone.price)}</div>` : ''}
+    ${booked ? `<div class="booked"><b>${esc(booked.course)} ${fmt(booked.date)} ${booked.tee}</b>${esc(booked.mgr.name)}가 골프장 확정 후 알림톡으로 안내해 드려요.</div>` : ''}
+    ${r.status === 'booking' ? `<div class="waiting"><span class="pulse"></span>골프장 시스템에 예약을 넣고 있어요.</div>` : ''}
+    ${aiBoxHTML(r)}
+    ${showRec ? `<div class="ai-sum"><span class="ai-tag">AI</span><p>${esc(verdictText(r, a))}</p></div>` : ''}
+    ${r.proposals.length ? `<div class="sec-h">도착한 매니저 제안 ${r.proposals.length}건</div>${props}` : (closed ? '' : `<div class="waiting"><span class="pulse"></span>첫 매니저 제안을 기다리는 중이에요. 보통 몇 분 안에 도착해요.</div>`)}`;
+  $('#back').onclick = () => { S.view = 'compose'; S.text = ''; S.over = {}; S.editing = null; S.parsed = parse(''); renderGolfer(); };
+  $('#vBook').onclick = e => {
+    const ac = e.target.closest('[data-acc]'), q = e.target.closest('[data-ask]'), ab = e.target.closest('[data-aibook]'), aw = e.target.closest('[data-aiwait]');
+    if (ac) acceptProposal(r, ac.dataset.acc);
+    if (q) toast('실서비스에서는 골프톡 대화방으로 연결됩니다.');
+    if (ab) bookSlot(SLOTS[ab.dataset.aibook], { req: r });
+    if (aw){ const w = addWait(r.cond, summary(r.cond)); r.wait = w.id; renderGolfer(); toast(`대기 ${w.id}를 걸었어요. 자리가 나면 AI 매니저가 알려드려요.`); say('ai', bubble('조건 요청과 같은 조건으로 대기를 걸었어요.') + waitCard(w)); }
+  };
+  tick();
+}
+function renderGolfer(){ $('#vBook').onclick = null; S.view === 'compose' ? renderCompose() : renderStatus(); }
+function refreshGolfer(){ if (S.view === 'status') renderGolfer(); renderTrips(); }
+
+/* ================= golfer: 내 예약 ================= */
+function addBooking(o){ const b = Object.assign({ status:'예약완료', attend:null }, o); BOOKINGS.push(b); renderTrips(); renderBar(); return b; }
+const activeBk = () => BOOKINGS.filter(b => b.status === '예약완료' || b.status === '확정 대기');
+const bookingById = id => BOOKINGS.find(b => b.id === id);
+function tripCard(b){
+  const att = b.attend === '참석' ? '<span class="pill p-ok">참석 확인 완료</span>'
+    : b.attend === '날씨' ? '<span class="pill p-wait">날씨 보고 결정 · 04:30 알림</span>'
+    : b.d1 ? '<span class="pill p-hot">D-1 참석 확인 필요</span> <button class="linkbtn" data-gtab="chat">채팅에서 응답하기</button>'
+    : '<span>전날 18시에 참석 확인을 보내드려요.</span>';
+  return `<article class="trip"><div class="tt"><div class="d"><small>${b.date.getMonth()+1}월</small><b>${b.date.getDate()}</b><small>${W[b.date.getDay()]}</small></div><div class="info"><b>${esc(b.course)} ${b.tee}</b><span>${b.people}명 · 1인 ${won(b.price)} · ${esc(b.src)}</span></div><span class="pill ${b.status === '예약완료' ? 'p-ok' : 'p-wait'}">${esc(b.status)}</span></div>
+    <div class="tb"><div>${att}</div><dl class="kv"><dt>예약번호</dt><dd>${esc(b.id)}</dd><dt>취소 시한</dt><dd>${esc(b.cancel)}</dd></dl>
+    <div class="acts"><button class="btn sm" data-say="${esc(b.course)} 시간 바꿔줘">시간 변경</button><button class="btn sm" data-say="${esc(b.course)} 예약 취소하고 싶어">취소</button><button class="btn sm" data-toast="실서비스에서는 동반자에게 카카오톡으로 공유돼요.">동반자 공유</button></div></div></article>`;
+}
+function renderTrips(){
+  const el = $('#vTrips'); if (!el) return;
+  const up = BOOKINGS.filter(b => b.status !== '취소').sort((a, b) => a.date - b.date || a.tee.localeCompare(b.tee));
+  const gone = BOOKINGS.filter(b => b.status === '취소');
+  const r = S.myReq, past = addD(today0, -17);
+  const reqState = r && (r.status === 'open' ? `제안 ${r.proposals.length}건 도착 · 30분 동안 받는 중` : r.accepted === 'ai' ? 'AI 즉시 예약으로 마감' : r.status === 'booking' ? '예약 진행 중' : '매니저 제안으로 예약');
+  el.innerHTML = `
+    <div class="sec-h">예정된 라운드</div>
+    ${up.length ? up.map(tripCard).join('') : '<div class="note-s">예정된 라운드가 없어요. AI 매니저에게 날짜와 인원을 말씀해 보세요.</div>'}
+    <div class="sec-h">대기 중</div>
+    ${WAITS.length ? WAITS.map(w => `<div class="mini"><div class="row"><span class="id">${esc(w.id)}</span><span class="pill ${w.st === '감시 중' ? 'p-neu' : 'p-wait'}">${esc(w.st)}</span><span class="sp"></span><button class="btn sm dan" data-act="wait-cancel" data-id="${esc(w.id)}">대기 취소</button></div><span>${esc(w.label)}</span></div>`).join('') : '<div class="note-s">걸어둔 대기가 없어요. 원하는 타임이 없을 때 AI 매니저에게 "대기 걸어줘"라고 하면 자리가 날 때 15분 잡아두고 알려드려요.</div>'}
+    ${r ? `<div class="sec-h">조건 요청</div><div class="mini"><div class="row"><b>${esc(r.text)}</b></div><span style="color:var(--muted)">${esc(reqState)}</span><div class="row"><button class="btn sm" data-gtab="book">조건 부킹에서 보기</button></div></div>` : ''}
+    <div class="sec-h">지난 라운드</div>
+    <article class="trip past"><div class="tt"><div class="d"><small>${past.getMonth()+1}월</small><b>${past.getDate()}</b><small>${W[past.getDay()]}</small></div><div class="info"><b>청림CC 07:24</b><span>4명 · 1인 21.5만원 · 정하린 매니저 제안</span></div><span class="pill p-neu">완료</span></div></article>
+    ${gone.length ? `<div class="sec-h">취소한 예약</div>${gone.map(b => `<div class="mini"><div class="row"><b>${esc(b.course)} ${b.tee}</b><span class="sp"></span><span class="pill p-neu">취소</span></div><span style="color:var(--muted)">${fmt(b.date)} · ${esc(b.id)}</span></div>`).join('')}` : ''}`;
+}
+
+/* ================= golfer shell: tabs & bar ================= */
+const FLAG = '<svg width="16" height="18" viewBox="0 0 18 20" fill="none" aria-hidden="true"><path d="M4 19V1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M4.9 1.9h9.4L11.6 5.4l2.7 3.5H4.9z" fill="currentColor"/><circle cx="4" cy="19" r="1" fill="currentColor"/></svg>';
+function renderBar(){
+  const up = BOOKINGS.filter(b => b.status !== '취소').length;
+  $('#gBar').innerHTML = {
+    book: `<span class="logo">${FLAG}</span><div class="who"><b>골프탑 조건 부킹</b><small>조건 하나로 AI 즉시 예약과 매니저 제안을 함께</small></div>`,
+    chat: `<span class="ai-av">AI</span><div class="who"><b>골프탑 AI 매니저</b><small><i class="live"></i>연동 골프장 ${LINKED.length}곳 실시간 감시 중${WAITS.length ? ` · 대기 ${WAITS.length}건` : ''}</small></div>`,
+    trips: `<span class="logo">${FLAG}</span><div class="who"><b>내 예약</b><small>예정 ${up}건 · 대기 ${WAITS.length}건</small></div>`,
+  }[S.gtab];
+}
+function setGTab(t){
+  S.gtab = t;
+  $$('#gTabs button').forEach(b => b.classList.toggle('on', b.dataset.gtab === t));
+  $('#vBook').hidden = t !== 'book'; $('#vChat').hidden = t !== 'chat'; $('#vTrips').hidden = t !== 'trips';
+  if (t === 'chat'){ S.aiUnread = 0; scrollChat(); }
+  if (t === 'trips') renderTrips();
+  if (S.tab !== 'golfer') $('#seg [data-tab="golfer"]').click();
+  updateBadges(); renderBar();
+}
+function updateBadges(){ const b = $('#aiBadge'); b.hidden = !S.aiUnread; b.textContent = S.aiUnread; }
+
+/* ================= AI 매니저: chat primitives ================= */
+function scrollChat(){ const l = $('#clog'); l.scrollTop = l.scrollHeight; }
+function bubble(t){ return `<div class="bub">${esc(t)}</div>`; }
+function card(cls, head, pill, body, actions){
+  return `<div class="rc ${cls || ''}"><div class="rh">${head}${pill ? `<span class="pill ${pill[0]}">${pill[1]}</span>` : ''}</div><div class="rb">${body}</div>${actions ? `<div class="ra">${actions}</div>` : ''}</div>`;
+}
+function setPill(el, cls, text){ const p = el && el.querySelector('.rh .pill'); if (p){ p.className = 'pill ' + cls; p.textContent = text; } }
+function done(el, cls, text){ if (!el) return; el.classList.add('done'); el.classList.remove('hot'); setPill(el, cls, text); const ra = el.querySelector('.ra'); if (ra) ra.remove(); }
+function say(role, html, o = {}){
+  const el = document.createElement('div'); el.className = 'm ' + role;
+  el.innerHTML = (role === 'ai' ? '<span class="av">AI</span>' : '') + `<div class="body">${role === 'ai' ? '<span class="name">골프탑 AI 매니저</span>' : ''}${html}</div><span class="tm">${o.tm || hhmm()}</span>`;
+  $('#clog').appendChild(el); scrollChat();
+  if (role === 'ai'){
+    if (S.gtab !== 'chat' && !o.read){ S.aiUnread++; updateBadges(); }
+    if (!o.silent && S.gtab === 'chat'){ const b = el.querySelector('.bub'); if (b) speak(b.textContent); }
+  }
+  return el;
+}
+function typing(on){
+  let t = $('#typing');
+  if (on && !t){ t = document.createElement('div'); t.id = 'typing'; t.className = 'm ai'; t.innerHTML = '<span class="av">AI</span><div class="body"><div class="bub typing">찾는 중…</div></div>'; $('#clog').appendChild(t); scrollChat(); }
+  else if (!on && t) t.remove();
+}
+const saysRow = list => `<div class="says">${list.map(x => `<button class="say" data-say="${esc(x)}">${esc(x)}</button>`).join('')}</div>`;
+function speak(text){
+  if (!$('#tts').checked || !window.speechSynthesis) return;
+  try {
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text.slice(0, 300)); u.lang = 'ko-KR'; u.rate = 1.05;
+    const v = speechSynthesis.getVoices().find(x => /ko/i.test(x.lang)); if (v) u.voice = v;
+    speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* ================= AI 매니저: cards ================= */
+function slotsHTML(list, startNo = 1, overSet = []){
+  return `<div class="slots">${list.map((s, i) => {
+    const over = overSet.includes(s);
+    return `<div class="slot${over ? ' over' : ''}"><div class="t">${s.tee}<small>${over ? '예산 초과' : `${startNo + i}번`} · ${md(s.date)}</small></div><div class="n"><b>${esc(s.course)}</b><span>${esc(s.area)} · ${esc(s.caddie)}${s.perks.length ? ' · ' + esc(s.perks.join('·')) : ''}</span></div><div class="pp"><s>${won(s.normal)}</s>${won(s.price)}<small>1인</small></div></div>`;
+  }).join('')}</div>`;
+}
+function confirmCard(s){
+  return card('', '예약 확인', ['p-wait', '예약 전'],
+    `<div class="big">${s.tee}<small>${fmt(s.date)}</small></div><div><strong>${esc(s.course)}</strong> ${esc(s.area)}</div>
+     <div class="pr"><s>${won(s.normal)}</s><b>${won(s.price)}</b><small>1인 그린피 · 현장 결제</small></div>
+     <dl class="kv"><dt>인원</dt><dd>${s.people}명 통팀</dd><dt>캐디</dt><dd>${esc(s.caddie)}</dd><dt>포함</dt><dd>${esc(s.perks.join(', ') || '카트비 별도')}</dd><dt>취소 시한</dt><dd>${esc(s.cancel)}</dd></dl>`,
+    `<button class="btn pri sm" data-act="book" data-slot="${s.id}">예약 확정</button><button class="btn sm" data-act="drop">접기</button>`);
+}
+function bookedCard(b){
+  return card('', '예약완료', ['p-ok', esc(b.id)],
+    `<div class="big">${b.tee}<small>${fmt(b.date)}</small></div><strong>${esc(b.course)}</strong>
+     <dl class="kv"><dt>예약번호</dt><dd>${esc(b.id)}</dd><dt>인원</dt><dd>${b.people}명</dd><dt>그린피</dt><dd>1인 ${won(b.price)} · 현장 결제</dd><dt>취소 시한</dt><dd>${esc(b.cancel)}</dd><dt>도착</dt><dd>티오프 40분 전(${teeMinus(b.tee, 40)}) 권장</dd></dl>`,
+    `<button class="btn sm" data-toast="실서비스에서는 동반자에게 카카오톡으로 공유돼요.">동반자에게 공유</button><button class="btn sm" data-gtab="trips">내 예약</button>`);
+}
+function bookingCard(b){
+  return card('', `내 예약 · ${esc(b.course)}`, [b.status === '예약완료' ? 'p-ok' : 'p-wait', esc(b.status)],
+    `<div class="big">${b.tee}<small>${fmt(b.date)}</small></div><span>${b.people}명 · 1인 ${won(b.price)} · ${esc(b.src)}</span>
+     <dl class="kv"><dt>예약번호</dt><dd>${esc(b.id)}</dd><dt>취소 시한</dt><dd>${esc(b.cancel)}</dd></dl>`);
+}
+function waitCard(w){
+  return card('', '대기 신청', ['p-wait', '감시 중'],
+    `<dl class="kv"><dt>접수번호</dt><dd>${esc(w.id)}</dd><dt>조건</dt><dd>${esc(w.label)}</dd></dl><span>연동 골프장에 자리가 나면 15분 잡아두고 바로 알려드려요. 그 안에 예약하면 확정이에요.</span>`);
+}
+function d1Card(b){
+  return card('', 'D-1 참석 확인', ['p-hot', '21:00까지'],
+    `<div class="big">${b.tee}<small>${fmt(b.date)}</small></div><span><strong>${esc(b.course)}</strong> ${esc(b.area)} · ${b.people}명 · 1인 ${won(b.price)} · ${esc(b.id)}</span>
+     <div class="wx"><b>70%</b><span>05~09시 강수확률 70%, 예상 6mm. 골프장이 무료 취소 시한을 내일 05:00까지 늘려줬어요. 04:30에 최종 판단 알림을 드릴게요.</span></div>`,
+    `<button class="btn pri sm" data-act="attend" data-id="${esc(b.id)}">참석</button><button class="btn sm" data-act="weather" data-id="${esc(b.id)}">날씨 보고 결정</button><button class="btn sm dan" data-act="d1-cancel" data-id="${esc(b.id)}">취소</button>`);
+}
+const TUT = ['이번 주말 오전 수도권 4명', '다음 주 수요일 새벽 강원 3명 노캐디', '내일 오후 충청 4명 15만원 이하', '은하수CC 정보', '경치 좋은 골프장 추천해줘', '내 예약 보여줘', '북한강CC 시간 바꿔줘', 'AI 즉시 예약이랑 매니저 제안 차이가 뭐야?'];
+function tutorialCard(){
+  return card('', '이렇게 말해보세요', ['p-ai', 'AI 매니저'],
+    `<span>날짜만 있으면 접수돼요. 지역·인원·시간은 기본값(수도권 · 4명 · 시간 무관)으로 채우고, 다르면 고쳐 말씀하시면 돼요. 눌러서 바로 보내볼 수 있어요.</span>${saysRow(TUT)}`);
+}
+function compareCard(r){
+  const a = aiAssess(r), { best, notes, aiBest } = a;
+  const rows = r.proposals.map(p => `<div class="slot${p === best ? ' rec' : ''}"><div class="t">${p.tee}<small>${md(p.date)}</small></div><div class="n"><b>${esc(p.course)}${p === best ? '<span class="pill p-ai">추천</span>' : ''}</b><span>${esc(p.mgr.name)}${notes[p.id] ? ' · ' + esc(notes[p.id]) : ''}</span></div><div class="pp"><s>${won(p.normal)}</s>${won(p.price)}</div></div>`).join('')
+    + (aiBest ? `<div class="slot"><div class="t">${aiBest.tee}<small>${md(aiBest.date)}</small></div><div class="n"><b>${esc(aiBest.course)}</b><span>AI 즉시 예약 · 바로 확정</span></div><div class="pp"><s>${won(aiBest.normal)}</s>${won(aiBest.price)}</div></div>` : '');
+  const acts = (best && r.status === 'open' ? `<button class="btn pri sm" data-act="acc-prop" data-rid="${r.id}" data-pid="${best.id}">추천 제안으로 예약</button>` : '')
+    + (aiBest ? `<button class="btn ai sm" data-act="pick" data-slot="${aiBest.id}">AI 즉시 예약 보기</button>` : '')
+    + '<button class="btn sm" data-gtab="book">제안 전체 보기</button>';
+  return card('', `제안 비교 · 매니저 ${r.proposals.length}건`, ['p-ai', 'AI 분석'], `<div class="slots">${rows}</div><p class="verdict">${esc(verdictText(r, a))}</p>`, acts);
+}
+function courseCard(c){
+  return card('', `골프장 정보 · ${esc(c.n)}`, [c.linked ? 'p-ai' : 'p-neu', c.linked ? 'AI 즉시 예약' : '매니저 제안'],
+    `<div class="big nm">${esc(c.n)}<small>${esc(c.a)} · ${c.holes}홀 · ${esc(c.grass)}</small></div>
+     <dl class="kv"><dt>캐디</dt><dd>${esc(c.caddie)}</dd><dt>이동</dt><dd>${travelLabel(c)}</dd><dt>취소 규정</dt><dd>${cancelRule(c)}</dd><dt>시설</dt><dd>${esc(c.fac)}</dd><dt>예약 방식</dt><dd>${c.linked ? '골프탑 연동 · AI 매니저가 바로 확정' : '미연동 · 골프탑 매니저가 골프장에 확인 후 제안'}</dd></dl>`,
+    `<button class="btn ai sm" data-say="${esc(c.n)} 이번 주말 4명">이번 주말 찾기</button><button class="btn sm" data-say="${esc(c.n)} 다음 주말 4명">다음 주말 찾기</button>`);
+}
+
+/* ================= AI 매니저: 접수 → 잔여타임 → 예약 ================= */
+function intake(t, pr, cs){
+  const f = Object.assign({}, pr.fields);
+  if (cs){ f.region = { key: cs.key, label: `${cs.key} · ${cs.n}` }; f.course = cs.n; }
+  if (f.date && AI.draft.date){ AI.draft = {}; AI.draftText = ''; }
+  if (f.region && !f.course) delete AI.draft.course;
+  const opts = [...new Set([...(AI.draft.opts || []), ...(f.opts || [])])];
+  Object.assign(AI.draft, f); if (opts.length) AI.draft.opts = opts;
+  AI.draftText = AI.draftText ? `${AI.draftText} / ${t}` : t;
+  if (!AI.draft.date) return say('ai', bubble('접수할게요. 날짜만 알려주시면 연동 골프장 잔여타임을 바로 찾아볼게요.') + saysRow(['오늘', '내일', '이번 주말', '다음 주말']));
+
+  const c = Object.assign({}, AI.draft), def = [];
+  if (!c.region){ c.region = { key:'수도권', label:'수도권' }; def.push('region'); }
+  if (!c.people){ c.people = { n:4, label:'4명' }; def.push('people'); }
+  if (!c.time){ c.time = { band:'무관', label:'시간 무관' }; def.push('time'); }
+  const cid = uid('c'); CONDS[cid] = { c, text: AI.draftText }; AI.last = cid;
+  const a = aiSearch(c), d0 = c.date.dates[0];
+  const no = `R-${pad(d0.getMonth()+1)}${pad(d0.getDate())}-${100 + Math.floor(Math.random() * 900)}`;
+  const head = bubble('조건을 접수했어요.' + (def.length ? ' 점선 칩은 기본값으로 채운 거예요. 다르면 말씀해 주세요.' : '')) + card('', '접수 카드', ['p-neu', no], `<div class="chips static">${condChips(c, def)}</div>`);
+  const mgrBtn = label => `<button class="btn sm" data-act="to-mgr" data-cid="${cid}">${label}</button>`;
+  if (a.block) return say('ai', head + bubble(blockMsg(a.block, c) + ' 조건을 매니저들에게 올려서 30분 동안 제안을 받아볼까요?') + card('', '매니저 제안 받기', ['p-neu', '30분'], '<span>골프탑 매니저들이 비공개 특가, 조인 자리, 패키지를 찾아 제안해요. 제안이 모이면 제가 비교해 드릴게요.</span>', `<button class="btn pri sm" data-act="to-mgr" data-cid="${cid}">매니저들에게 조건 보내기</button>`));
+  if (!a.ok.length){
+    const msg = a.over.length ? '예산 안에 맞는 실시간 잔여타임은 없어요. 예산을 조금 넘는 타임은 하나 있어요.' : `연동 골프장 ${a.linked}곳에 지금 맞는 잔여타임이 없어요.`;
+    const body = a.over.length ? slotsHTML(a.over, 1, a.over) : '<span>대기를 걸어두면 자리가 나는 순간 15분 잡아두고 알려드려요. 매니저들에게 조건을 올려 제안을 받을 수도 있어요.</span>';
+    const acts = (a.over.length ? `<button class="btn sm" data-act="pick" data-slot="${a.over[0].id}">예산 넘어도 볼게요</button>` : '') + `<button class="btn ai sm" data-act="wait" data-cid="${cid}">대기 걸기</button>` + mgrBtn('매니저들에게 조건 보내기');
+    return say('ai', head + bubble(msg) + card('', '실시간 잔여타임', ['p-neu', '조건 근접'], body, acts));
+  }
+  const acts = a.ok.map((s, i) => `<button class="btn pri sm" data-act="pick" data-slot="${s.id}" data-n="${i + 1}">${i + 1}번 예약</button>`).join('')
+    + `<button class="btn sm" data-act="wait" data-cid="${cid}">대기 걸기</button>` + mgrBtn('매니저 제안도 받기');
+  return say('ai', head + bubble(`연동 골프장에서 바로 확정되는 타임 ${a.ok.length}건이에요. 번호를 말씀하시거나 눌러주세요.`) + card('', '실시간 잔여타임', ['p-ai', '즉시 확정'], slotsHTML(a.ok.concat(a.over), 1, a.over), acts));
+}
+function bookSlot(s, opt = {}){
+  if (!s) return;
+  const key = takenKey(s.course, s.date, s.tee);
+  if (TAKEN.has(key)){ toast('이미 예약된 타임이에요.'); return; }
+  TAKEN.add(key);
+  const r = opt.req && opt.req.status === 'open' ? opt.req : null;
+  if (r){ r.status = 'booking'; simTimers.forEach(clearTimeout); }
+  if (opt.cardEl){ opt.cardEl.classList.remove('hot'); setPill(opt.cardEl, 'p-wait', '예약 중…'); const ra = opt.cardEl.querySelector('.ra'); if (ra) ra.remove(); }
+  if (opt.wait){ const i = WAITS.findIndex(w => w.id === opt.wait); if (i >= 0) WAITS.splice(i, 1); }
+  say('ai', bubble(`${s.course} ${md(s.date)} ${s.tee} 예약을 골프장 시스템에 넣고 있어요.`));
+  refreshGolfer(); renderManager(); renderBar();
+  setTimeout(() => {
+    const x = courseOf(s.course);
+    const b = addBooking({ id: bookingNo(x.code, s.date, s.tee), course:s.course, area:s.area, date:s.date, tee:s.tee, price:s.price, people:s.people, caddie:s.caddie, cancel:s.cancel, src:'AI 즉시 예약' });
+    if (opt.cardEl){ opt.cardEl.classList.add('done'); setPill(opt.cardEl, 'p-ok', '예약완료'); }
+    if (r){ r.status = 'booked'; r.accepted = 'ai'; r.aiBooked = { course:s.course, price:s.price, date:s.date, tee:s.tee, no:b.id }; }
+    say('ai', bookedCard(b) + bubble('연동 골프장이라 바로 확정됐어요. 골프장에서 예약 확인 문자가 곧 갈 거예요. 전날 18시에 참석 확인을 보내고, 당일 새벽에 출발 확인을 드릴게요.' + (r ? ' 매니저들에게 올린 조건 요청은 마감했어요.' : '')));
+    refreshGolfer(); renderManager(); renderBar();
+    if (S.gtab !== 'chat') toast(`${s.course} ${s.tee} 예약이 확정됐어요.`);
+  }, 1300);
+}
+let holdArmed = false;
+function addWait(c, label){
+  const d0 = c.date.dates[0];
+  const w = { id: `W-${pad(d0.getMonth()+1)}${pad(d0.getDate())}-${100 + Math.floor(Math.random() * 900)}`, cond:c, label, st:'감시 중' };
+  WAITS.unshift(w); renderTrips(); renderBar();
+  if (!holdArmed){ holdArmed = true; setTimeout(() => holdOffer(w), 15000); }
+  return w;
+}
+/* 대기 조건에 자리가 났다고 가정한 시뮬레이션 */
+function holdOffer(w){
+  if (!WAITS.includes(w)) { holdArmed = false; return; }
+  const c = w.cond, p = c.price || {}, key = c.region ? c.region.key : '수도권';
+  const x = (c.course && courseOf(c.course).linked ? courseOf(c.course) : null) || LINKED.find(l => l.key === key) || LINKED[0];
+  const d = c.date.dates[0], tees = teeOptions(c), tee = tees.find(t => !TAKEN.has(takenKey(x.n, d, t))) || tees[0];
+  const wk = d.getDay() % 6 === 0, normal = x.b + (wk ? 6 : 0);
+  const price = p.max != null ? Math.max(8, Math.floor((p.max - 1.5) * 2) / 2) : Math.round(normal * 0.66 * 2) / 2;
+  const id = `h${x.code}${d.getDate()}${tee.replace(':', '')}`;
+  const s = SLOTS[id] = { id, course:x.n, area:x.a, date:d, tee, price, normal: Math.max(normal, price + 3), caddie:x.caddie, perks:['카트비 포함'], cancel: cancelLabel(x, d), people: c.people ? c.people.n : 4 };
+  w.st = '자리 확보 · 홀드 중'; renderTrips(); renderBar();
+  say('ai', bubble(`대기 ${w.id}에 자리가 났어요. ${s.course} ${md(s.date)} ${s.tee}, 1인 ${won(s.price)}이에요. 15분 동안 잡아뒀으니 그 안에 예약하시면 바로 확정돼요.`)
+    + card('hot', `대기 ${esc(w.id)} · 자리 확보`, ['p-wait', `홀드 <span class="cd" data-until="${Date.now() + 15 * 60000}">15:00</span>`],
+      `<div class="big">${s.tee}<small>${fmt(s.date)}</small></div><div><strong>${esc(s.course)}</strong> ${esc(s.area)} · ${esc(s.caddie)}</div><div class="pr"><s>${won(s.normal)}</s><b>${won(s.price)}</b><small>1인 · 현장 결제</small></div><dl class="kv"><dt>취소 시한</dt><dd>${esc(s.cancel)}</dd></dl>`,
+      `<button class="btn pri sm" data-act="book" data-slot="${s.id}" data-wait="${esc(w.id)}">예약하기</button><button class="btn sm" data-act="hold-pass" data-wait="${esc(w.id)}">패스</button>`));
+  toast('AI 매니저: 대기 조건에 자리가 났어요.');
+}
+function toManagers(cid){
+  const k = CONDS[cid]; if (!k) return;
+  if (k.sent) return say('ai', bubble('이 조건은 이미 매니저들에게 올렸어요. 조건 부킹 탭에서 제안을 확인할 수 있어요.'));
+  k.sent = true;
+  createRequest(k.c, k.text);
+  renderGolfer(); renderManager(); renderTrips();
+  say('ai', card('', '조건 요청', ['p-wait', '제안 받는 중'], `<div class="chips static">${condChips(k.c)}</div><span>30분 동안 골프탑 매니저들의 제안을 받아요. 제안이 모이면 여기서 비교해 드릴게요.</span>`, '<button class="btn sm" data-gtab="book">조건 부킹에서 보기</button>'), { silent:true });
+}
+function aiOnRequest(req){
+  const c = req.cond, a = aiSearch(c);
+  let msg = `조건 요청을 골프탑 매니저들에게 올렸어요. (${summary(c)})`;
+  if (a.block) msg += ` ${blockMsg(a.block, c)} 제안이 오면 비교해 드릴게요.`;
+  else if (a.ok.length) msg += ` 기다리는 동안 연동 골프장에서 바로 잡을 수 있는 타임 ${a.ok.length}건도 찾아뒀어요. 최저 ${a.ok[0].course} ${won(a.ok[0].price)}이에요.`;
+  else msg += ' 연동 골프장엔 지금 맞는 잔여타임이 없어서 매니저 제안을 기다려 볼게요.';
+  say('ai', bubble(msg), { silent:true });
+}
+function aiOnProposal(r){
+  if (!r.mine || r.status !== 'open') return;
+  const n = r.proposals.length, p = r.proposals[n - 1];
+  if (n === 1) say('ai', bubble(`첫 매니저 제안이 도착했어요. ${p.mgr.name}, ${p.course} ${md(p.date)} ${p.tee}, 1인 ${won(p.price)}. 제안이 더 모이면 비교해 드릴게요.`));
+  else if (n === 3) say('ai', bubble('매니저 제안 3건이 모였어요. 가격과 조건을 비교해 봤어요.') + compareCard(r));
+  else if (n > 3) say('ai', bubble(`${p.mgr.name}의 제안이 하나 더 왔어요. 총 ${n}건이에요. "비교해줘"라고 하시면 다시 정리해 드릴게요.`));
+}
+
+/* ================= AI 매니저: 예약 후 응대 ================= */
+function pickBooking(t, act){
+  const cs = findCourse(t);
+  if (cs){ return act.find(b => b.course === cs.n) || { none: cs.n }; }
+  if (/내일/.test(t)){ const m = act.find(b => sameDay(b.date, TMR)); if (m) return m; }
+  if (/주말|토요일|일요일/.test(t)){ const m = act.find(b => b.date.getDay() % 6 === 0); if (m) return m; }
+  return act.length === 1 ? act[0] : 'multi';
+}
+function rulesCard(){
+  const act = activeBk();
+  say('ai', card('', '취소 · 위약 규정', null, `<dl class="kv">${act.map(b => `<dt>${esc(b.course)}</dt><dd>${esc(b.cancel)}</dd>`).join('')}<dt>일반</dt><dd>골프장마다 2~5일 전 17:00까지 무료, 이후 그린피 50%, 당일 100%</dd><dt>노쇼</dt><dd>골프장 위약 규정 적용 · 반복되면 이용 제한</dd><dt>우천</dt><dd>골프장이 휴장하면 위약 없이 자동 취소</dd></dl>`));
+}
+function waitList(){
+  if (!WAITS.length) return say('ai', bubble('걸어둔 대기가 없어요. 원하는 타임이 없을 때 "대기 걸어줘"라고 하시면 자리가 날 때 알려드려요.'));
+  say('ai', bubble(`대기 ${WAITS.length}건을 지켜보고 있어요.`) + WAITS.map(w => card('', esc(w.id), [w.st === '감시 중' ? 'p-neu' : 'p-wait', esc(w.st)], `<span>${esc(w.label)}</span>`, `<button class="btn sm dan" data-act="wait-cancel" data-id="${esc(w.id)}">대기 취소</button>`)).join(''));
+}
+function service(t){
+  const isWaitCx = /대기.{0,4}(취소|빼|없애|그만)/.test(t);
+  const isRule = /취소 ?(규정|시한|기한)|위약/.test(t);
+  const isPpl = /(한 ?명|1 ?명).{0,6}(못|빠|안 ?와|안 ?오)|[34] ?(명|인)(으로|만).{0,3}(바꿔|변경|줄|늘|해)|인원.{0,4}(변경|바꾸|바꿔|줄|늘|조정)/.test(t);
+  const isCancel = !isWaitCx && !isRule && !isPpl && ((/취소/.test(t) && !/어떻게|방법|되나요|가능/.test(t)) || /못 ?가|안 ?갈|못 ?갈|못 ?치/.test(t));
+  const isChange = /(시간|타임|날짜|일정).{0,4}(바꾸|바꿔|변경|옮기|옮겨|미루|당기|조정)|다른 ?(시간|타임)으로/.test(t);
+  const isLate = /늦(을|어|게|겠|는)|지각|길.{0,3}막/.test(t);
+  const isMine = /(내|나의|제) ?예약|예약.{0,4}(내역|현황|확인해|보여|목록)/.test(t) && !isCancel && !isChange && !isPpl;
+  const isWx = /비 ?(오|와|온|올)|우천|날씨|강수|예보/.test(t) && activeBk().some(b => b.d1);
+  if (isWaitCx){
+    if (!WAITS.length){ say('ai', bubble('걸어둔 대기가 없어요.')); return true; }
+    waitList(); return true;
+  }
+  if (isRule){ rulesCard(); return true; }
+  if (!(isCancel || isChange || isPpl || isLate || isMine || isWx)) return false;
+  const act = activeBk();
+  if (!act.length){ say('ai', bubble('지금 잡혀 있는 예약이 없어요. 날짜와 인원을 말씀해 주시면 바로 찾아드릴게요.')); return true; }
+  if (isMine && !findCourse(t)){ say('ai', bubble(`잡혀 있는 예약 ${act.length}건이에요.`) + act.map(bookingCard).join('')); return true; }
+  const b = pickBooking(t, act);
+  if (b && b.none){ say('ai', bubble(`${b.none} 예약은 잡혀 있지 않아요. 지금 예약은 ${act.map(x => `${x.course} ${md(x.date)} ${x.tee}`).join(', ')}이에요.`)); return true; }
+  if (b === 'multi'){
+    say('ai', bubble('어느 예약 말씀이세요?') + card('', '예약 선택', null, `<div class="slots">${act.map(x => `<div class="slot"><div class="t">${x.tee}<small>${md(x.date)}</small></div><div class="n"><b>${esc(x.course)}</b><span>${esc(x.id)}</span></div><div class="pp"><button class="say" data-say="${esc(x.course)} ${esc(t)}">선택</button></div></div>`).join('')}</div>`));
+    return true;
+  }
+  if (isMine){ say('ai', bookingCard(b)); return true; }
+  if (isWx && !isCancel){
+    const d1 = act.find(x => x.d1);
+    say('ai', bubble(`내일 ${d1.course} ${d1.tee} 라운드는 05~09시 강수확률 70%, 예상 6mm예요. 골프장이 무료 취소 시한을 내일 05:00까지 늘려줬으니 04:30 최종 판단 알림을 보고 정하셔도 돼요.`)); return true;
+  }
+  if (isLate){
+    const lm = t.match(/(\d{1,2})\s*분/);
+    if (lm){ say('ai', bubble(`${b.course}에 ${lm[1]}분 지연을 전달했어요. ${+lm[1] >= 30 ? '30분 이상이라 골프장이 티오프를 뒤로 옮길 수 있는지 확인 중이에요. 결과가 오면 바로 알려드릴게요.' : '뒤 팀과 순서를 조정해 둘게요.'} 도착하시면 프론트에 ${b.id}를 말씀해 주세요.`)); return true; }
+    say('ai', bubble(`${b.course}에 바로 알릴게요. 몇 분쯤 늦으실까요? 10~20분이면 뒤 팀과 순서를 조정하고, 30분 이상이면 골프장이 티오프를 바꿔줄 수 있어요.`) + card('', `지연 통보 · ${esc(b.course)}`, null, `<span>${b.tee} 티오프 · ${esc(b.id)}</span>`, ['10', '20', '30'].map(m => `<button class="btn sm" data-act="late" data-id="${esc(b.id)}" data-min="${m}">${m === '30' ? '30분 이상' : m + '분'}</button>`).join('')));
+    return true;
+  }
+  if (isPpl){
+    const to = /4 ?(명|인)|늘/.test(t) ? 4 : 3;
+    if (to === b.people){ say('ai', bubble(`지금도 ${b.people}명으로 잡혀 있어요.`)); return true; }
+    say('ai', bubble(`${b.course}는 ${to}명 진행이 가능해요.${to === 3 ? ' 카트비가 팀당 고정이라 1인 부담이 조금 늘 수 있어요.' : ''} ${to}명으로 바꿀까요?`) + card('', `인원 변경 · ${esc(b.course)}`, ['p-wait', '확인 대기'], `<span>${md(b.date)} ${b.tee} · ${b.people}명 → ${to}명</span>`, `<button class="btn pri sm" data-act="ppl" data-id="${esc(b.id)}" data-to="${to}">${to}명으로 변경</button><button class="btn sm" data-act="keep">그대로 둘게요</button>`));
+    return true;
+  }
+  if (isChange){
+    const h = +b.tee.split(':')[0], alts = (BANDS[BAND_OF_HOUR(h)] || BANDS['오전']).filter(x => x !== b.tee && !TAKEN.has(takenKey(b.course, b.date, x))).slice(0, 3);
+    if (!alts.length){ say('ai', bubble(`${b.course}에 지금 비어 있는 다른 타임이 없어요. 원하는 시간대로 대기를 걸어둘까요?`)); return true; }
+    say('ai', bubble(`${b.course} ${md(b.date)}에 바꿀 수 있는 타임이에요. 예약번호는 그대로 유지돼요.`) + card('', `시간 변경 · ${esc(b.course)}`, ['p-neu', `현재 ${b.tee}`], `<div class="slots">${alts.map((x, i) => { const pr = Math.max(8, Math.round((b.price + (i - 1) * 0.5) * 2) / 2); return `<div class="slot"><div class="t">${x}<small>${md(b.date)}</small></div><div class="n"><b>${esc(b.course)}</b><span>${b.people}명 · 같은 조건</span></div><div class="pp">${won(pr)}</div></div>`; }).join('')}</div>`, alts.map((x, i) => `<button class="btn sm" data-act="chg" data-id="${esc(b.id)}" data-t="${x}" data-pr="${Math.max(8, Math.round((b.price + (i - 1) * 0.5) * 2) / 2)}">${x}로 변경</button>`).join('')));
+    return true;
+  }
+  if (isCancel){
+    const free = /무료/.test(b.cancel);
+    say('ai', bubble(`${b.course} ${md(b.date)} ${b.tee} 예약을 취소할까요? ${free ? '지금은 무료 취소 시한 전이라 위약이 없어요.' : '무료 취소 시한이 지나 그린피 50% 위약이 있어요.'}`) + card('', `취소 확인 · ${esc(b.course)}`, ['p-wait', '확인 대기'], `<span>${fmt(b.date)} ${b.tee} · ${b.people}명 · ${esc(b.id)}</span><dl class="kv"><dt>취소 시한</dt><dd>${esc(b.cancel)}</dd><dt>위약</dt><dd>${free ? '없음' : '그린피 50%'}</dd></dl>`, `<button class="btn sm dan" data-act="cx-yes" data-id="${esc(b.id)}">취소할게요</button><button class="btn sm" data-act="keep">유지</button>`));
+    return true;
+  }
+  return false;
+}
+
+/* ================= AI 매니저: 지식 · 잡담 ================= */
+const FAQ = [
+  { c:'예약 방식', q:'AI 즉시 예약과 매니저 제안은 뭐가 달라요?', k:/차이|뭐가 ?달|어떻게 ?달|다른 ?점/, a:'AI 즉시 예약은 골프탑과 연동된 골프장 10곳의 실시간 잔여타임을 바로 잡는 방식이라 누르는 순간 확정돼요. 매니저 제안은 조건을 올리면 30분 동안 골프탑 매니저들이 비공개 특가, 조인, 1박2일 같은 자리를 찾아 제안하는 방식이고, 고르시면 매니저가 골프장 확정을 받아드려요.' },
+  { c:'예약 방식', q:'예약은 언제 확정되나요?', k:/확정.{0,4}(언제|되나|시간|걸려)|언제.{0,4}확정/, a:'AI 즉시 예약은 누르는 즉시 확정되고 예약번호가 바로 나와요. 매니저 제안은 고르신 뒤 매니저가 골프장 확정을 받으면 알려드리고, 보통 10분 안에 끝나요.' },
+  { c:'예약 방식', q:'조건 요청은 얼마 동안 받나요?', k:/(조건 ?요청|제안).{0,6}(얼마|몇 ?분|언제까지|마감)|30 ?분/, a:'조건을 올리면 30분 동안 매니저 제안을 받아요. 마감 전이라도 마음에 드는 제안이 있으면 바로 예약하실 수 있고, 마감 뒤에는 새 조건으로 다시 올리시면 돼요.' },
+  { c:'예약 방식', q:'제안이 하나도 안 오면요?', k:/제안.{0,4}(안 ?와|안 ?오|없|하나도)/, a:'마감까지 제안이 없으면 조건을 조금 넓혀(시간 무관, 인근 지역) 다시 올리거나, 연동 골프장 대기를 걸어두시면 자리가 날 때 15분 잡아두고 알려드려요.' },
+  { c:'예약 방식', q:'어떤 골프장이 연동돼 있나요?', k:/연동|어떤 ?골프장|골프장.{0,4}(목록|리스트|몇 ?곳)/, a:'지금 연동된 골프장은 은하수CC, 솔모루GC, 북한강CC(수도권), 설악파인CC, 오대마루GC(강원), 금강노을CC(충청), 낙동CC(영남), 무등벨리CC(호남), 한라오름CC, 서귀포해안GC(제주) 10곳이에요. 나머지 골프장은 골프탑 매니저 제안으로 예약돼요.' },
+  { c:'예약 방식', q:'대기 걸기가 뭔가요?', k:/대기.{0,3}(걸기가|신청이|가 ?뭐|란|이 ?뭐)|홀드/, a:'조건을 걸어두면 연동 골프장에 자리가 나는 순간 15분 동안 잡아두고 알려드려요. 그 안에 예약하시면 확정이고, 패스하시면 대기는 그대로 유지돼요.' },
+  { c:'취소 · 변경', q:'취소는 어떻게 하나요?', k:/취소.{0,6}(어떻게|방법)/, a:'채팅에 "취소"라고 하시거나 내 예약 탭에서 취소를 누르시면 돼요. 무료 취소 시한 전이면 위약이 없고, 골프장에서 취소 확인 문자가 가요.' },
+  { c:'취소 · 변경', q:'시간이나 인원을 바꿀 수 있나요?', k:/(시간|인원|날짜).{0,6}(바꿀 ?수|변경 ?(가능|되나))/, a:'같은 골프장 같은 날의 다른 타임이면 예약번호를 유지한 채 바꿔드려요. 4명에서 3명으로 줄이는 것도 골프장 규정 안에서 가능해요. "시간 바꿔줘", "한 명 못 와"처럼 말씀해 주세요.' },
+  { c:'취소 · 변경', q:'노쇼하면 어떻게 되나요?', k:/노쇼|불참/, a:'골프장 위약 규정이 적용되고, 반복되면 골프탑 이용이 제한돼요. 못 가게 되면 시한 전에 취소해 주세요.' },
+  { c:'인원 · 조건', q:'혼자나 둘이도 되나요?', k:/혼자|둘이|[12] ?명.{0,4}(되|가능)|조인.{0,4}(뭐|되|가능|어떻게)/, a:'AI 즉시 예약은 3~4명 통팀만 바로 잡을 수 있어요. 1~2명이면 조인으로 조건을 올려 주세요. 골프탑 매니저들이 다른 팀과 자리를 맞춰 제안해 드려요.' },
+  { c:'인원 · 조건', q:'1박2일도 되나요?', k:/1 ?박|숙박|패키지/, a:'1박2일은 숙소와 이틀 티타임을 묶어야 해서 골프탑 매니저 제안으로 진행돼요. 조건에 "1박2일"을 넣어 올려 주시면 패키지로 제안을 받아요.' },
+  { c:'인원 · 조건', q:'2팀 이상 단체는요?', k:/단체|[2-9] ?팀|여러 ?팀/, a:'2팀 이상은 연속 티타임을 골프장과 조율해야 해서 골프탑 매니저들이 맞춰드려요. 인원과 날짜를 조건으로 올려 주세요.' },
+  { c:'인원 · 조건', q:'노캐디로 찾을 수 있나요?', k:/노 ?캐디.{0,6}(되|가능|찾|있)|캐디.{0,6}(선택|필수|없이)/, a:'네. "노캐디"라고 말씀하시면 노캐디 운영하는 타임만 찾아드려요. 캐디 필수인 골프장은 골프장 정보에 표시돼요.' },
+  { c:'비용', q:'이용료가 있나요?', k:/이용료|수수료|무료야|무료인가|돈.{0,3}(내|들)/, a:'골프탑 이용료는 없어요. 그린피는 골프장에서 현장 결제하시면 돼요.' },
+  { c:'비용', q:'그린피는 어디서 내나요?', k:/그린피.{0,6}(어디|어떻게|결제)|결제.{0,4}(어디|어떻게|방법)|선결제|선금/, a:'골프장 현장에서 내세요. 앱 결제나 선금은 없고, 카드에 보이는 금액은 1인 그린피예요.' },
+  { c:'비용', q:'카트비·캐디피는 포함인가요?', k:/카트비|캐디피|포함.{0,4}(인가|돼|되나)/, a:'카드의 금액은 1인 그린피예요. "카트비 포함" 표시가 있으면 카트비가 들어 있고, 캐디피는 골프장 규정대로 현장에서 따로 내요.' },
+  { c:'비용', q:'가격은 믿을 수 있나요?', k:/(가격|할인|특가).{0,6}(믿|진짜|왜|어떻게 ?나)/, a:'AI 즉시 예약가는 연동 골프장이 잔여타임에 붙인 실시간 가격이고, 매니저 제안가는 매니저가 골프장과 확인한 가격이에요. 둘 다 정상가와 같이 보여드리고, 비교는 제가 해드려요.' },
+  { c:'라운드 당일', q:'비 오면 어떻게 되나요?', k:/비 ?(오면|올|와)|우천|강수|태풍/, a:'전날 참석 확인 때 예보를 같이 보내고, 취소 시한 30분 전에 최종 판단 알림을 드려요. 골프장이 휴장하면 위약 없이 자동 취소돼요.' },
+  { c:'라운드 당일', q:'D-1 참석 확인이 뭐예요?', k:/참석 ?확인|D-?1/i, a:'라운드 전날 18시에 참석 여부를 여쭤보는 알림이에요. 21시까지 참석, 날씨 보고 결정, 취소 중 하나로 답해 주세요. 응답이 없으면 담당 매니저가 전화드려요.' },
+  { c:'라운드 당일', q:'몇 시까지 도착해야 하나요?', k:/도착.{0,4}(몇|언제|시간)|얼마나 ?일찍/, a:'티오프 40분 전에 도착하시면 체크인과 카트 배정이 여유 있어요. 예약 카드에 권장 도착 시각을 적어드려요.' },
+  { c:'라운드 당일', q:'예약 확인 문자가 안 왔어요', k:/(문자|알림톡|알림).{0,4}(안 ?왔|안 ?와|없)/, a:'골프장 확인 문자는 예약 후 5분 안에 가요. 카카오 알림톡으로 오기도 하니 카카오톡도 봐 주세요. 그래도 없으면 말씀해 주시면 골프장에 다시 요청할게요.' },
+  { c:'AI 매니저', q:'AI 매니저는 뭘 해주나요?', k:/(AI|에이아이|너|넌).{0,6}(뭐 ?해|뭘 ?해|할 ?수|누구)|매니저.{0,3}(사람|AI)/i, a:'말이나 글로 조건을 받아 연동 골프장 잔여타임을 찾고 바로 예약해요. 매니저 제안이 오면 비교해서 추천하고, 대기, 참석 확인, 취소·변경·지각 통보까지 챙겨요. 사람 손이 필요한 건 골프탑 매니저에게 넘겨드려요.' },
+  { c:'AI 매니저', q:'사람 매니저와 이야기하고 싶어요', k:/사람.{0,4}(연결|통화|매니저|이랑)|상담원|통화/, a:'제안 카드의 "매니저와 대화"를 누르시면 그 제안을 보낸 매니저와 바로 이야기할 수 있어요. 예약 건이면 담당 매니저가 30분 안에 연락드릴게요.' },
+  { c:'AI 매니저', q:'음성이 안 돼요', k:/음성|마이크|말.{0,3}(안 ?되|인식)/, a:'마이크 버튼을 누른 뒤 브라우저의 마이크 권한을 허용해 주세요. Chrome에서 가장 잘 돼요. 인식이 어려우면 입력창에 적으셔도 똑같이 접수돼요.' },
+];
+const CHAT = [
+  { k:/^(안녕|하이|헬로|반가워|굿모닝|좋은 ?아침)/, a:() => '안녕하세요 김지현님. 라운드 잡아드릴까요? 날짜와 인원만 말씀해 주세요.' },
+  { k:/^(고마워|감사|땡큐|고맙)/, a:() => '별말씀을요. 라운드 잘 다녀오세요. 필요하시면 언제든 불러주세요.' },
+  { k:/^(ㅋ+|ㅎ+|ㅠ+|ㅜ+|오케이|ok|넵|네|응|알겠|그래)[.!~ ]*$/i, a:() => '네. 필요하시면 바로 말씀해 주세요.' },
+  { k:/(너|넌|당신).{0,3}(이름|뭐야)|이름이 뭐/, a:() => '골프탑 AI 매니저예요. 연동 골프장 잔여타임을 찾아 예약하고, 매니저 제안 비교부터 라운드 당일까지 챙겨드려요.' },
+  { k:/짜증|화나|불만|엉망|최악/, a:() => '불편을 드려 죄송해요. 어떤 점이 문제였는지 말씀해 주시면 바로 바로잡고, 담당 매니저에게도 전달할게요.' },
+];
+function smalltalk(t){ const x = CHAT.find(c => c.k.test(t.trim())); if (!x) return false; say('ai', bubble(x.a())); return true; }
+function matchFAQ(t){ let best = null, bs = 0; const c = t.replace(/\s+/g, ''); FAQ.forEach(f => { const m = t.match(f.k) || c.match(f.k); if (m && m[0].length > bs){ bs = m[0].length; best = f; } }); return best; }
+const isQuestion = t => /\?|나요|까요|인가요|은가요|어떻게|어떡|뭐|무엇|얼마|왜|되나|가능|알려줘|궁금|해도 ?돼/.test(t);
+function faqCard(f){
+  const rel = FAQ.filter(x => x.c === f.c && x !== f).slice(0, 2);
+  return card('', `도움말 · ${esc(f.c)}`, null, `<strong>${esc(f.q)}</strong><span>${esc(f.a)}</span>${rel.length ? saysRow(rel.map(x => x.q)) : ''}`);
+}
+function recommend(t, pr){
+  const tag = /초보|처음|쉬운/.test(t) ? '초보' : /경치|풍경|뷰|예쁜/.test(t) ? '경치' : /싸|저렴|가성비/.test(t) ? '가성비' : /명문|유명|좋은 ?골프장/.test(t) ? '명문' : /가까|근교|근처/.test(t) ? '근교' : null;
+  const key = pr.fields.region && pr.fields.region.key;
+  let list = ALLC.filter(c => (!key || c.key === key) && (!tag || c.tags.includes(tag)) && (key || (c.travel && c.travel <= 100)));
+  list.sort((a, b) => (b.linked - a.linked) || ((a.travel || 999) - (b.travel || 999)));
+  list = list.slice(0, 3); if (!list.length) list = LINKED.slice(0, 3);
+  const why = { 초보:'노캐디 가능하고 코스가 평이한 곳이에요', 경치:'코스 경치로 많이 찾는 곳이에요', 가성비:'할인 타임이 자주 뜨는 곳이에요', 명문:'코스 관리가 좋은 곳이에요', 근교:'서울에서 가까운 곳이에요' }[tag] || '서울에서 가깝고 평이 좋은 곳이에요';
+  say('ai', bubble(`${tag ? tag + ' 기준으로 ' : ''}세 곳 골라봤어요. ${why}. 연동된 곳은 바로 잡아드리고, 나머지는 매니저 제안으로 받아드려요.`)
+    + card('', '추천 골프장', tag ? ['p-neu', tag] : null, `<div class="slots">${list.map(c => `<div class="slot"><div class="t" style="font-size:12px">${c.linked ? '<span class="pill p-ai">연동</span>' : '<span class="pill p-neu">매니저</span>'}</div><div class="n"><b>${esc(c.n)}</b><span>${esc(c.a)} · ${travelLabel(c)} · ${esc(c.tags.join('·'))}</span></div><div class="pp"><button class="say" data-say="${esc(c.n)} 정보">정보</button></div></div>`).join('')}</div>`));
+}
+function compare(){
+  const r = S.myReq;
+  if (!r) return say('ai', bubble('아직 올린 조건 요청이 없어요. 조건 부킹에서 조건을 보내시면 매니저 제안이 오는 대로 비교해 드릴게요.') + card('', '조건 부킹', null, '<span>한 줄로 조건을 쓰면 AI 즉시 예약과 매니저 제안을 함께 받아요.</span>', '<button class="btn pri sm" data-gtab="book">조건 쓰러 가기</button>'));
+  if (!r.proposals.length) return say('ai', bubble('아직 도착한 매니저 제안이 없어요. 제안이 오면 바로 비교해 드릴게요.'));
+  say('ai', bubble(r.status === 'open' ? '도착한 매니저 제안과 AI 즉시 예약을 비교해 봤어요.' : '이미 마감된 요청이지만 비교 결과를 보여드릴게요.') + compareCard(r));
+}
+
+/* ================= AI 매니저: 라우팅 ================= */
+function lastPickButtons(){
+  const cards = $$('#clog .rc').filter(c => c.querySelector('[data-act="pick"][data-n]'));
+  const last = cards[cards.length - 1];
+  return last ? [...last.querySelectorAll('[data-act="pick"][data-n]')] : [];
+}
+function respond(t){
+  const flat = t.replace(/\s+/g, '');
+  const pk = flat.match(/^([1-3])번(예약|으로|할게|요|이요)?$/);
+  if (pk){ const b = lastPickButtons()[+pk[1] - 1]; if (b) return onAct('pick', b, true); return say('ai', bubble('그 번호의 타임이 없어요. 위 카드의 버튼을 눌러주세요.')); }
+  if (/^(도움말|도움|사용법|튜토리얼|기능|뭐할수있어)/.test(flat)) return say('ai', bubble('제가 할 수 있는 일과 말하는 법을 정리해 드릴게요.') + tutorialCard());
+  if (smalltalk(t)) return;
+  if (/비교|어떤 ?게 ?(나아|좋아|싸)|뭐가 ?(나아|좋아|싸)|제안.{0,6}(어때|정리|골라)/.test(t)) return compare();
+  if (service(t)) return;
+  if (/대기.{0,3}(목록|현황|뭐 ?있|보여)/.test(t)) return waitList();
+  if (/대기.{0,3}(걸어|걸기|걸게|신청|해 ?줘)/.test(t)){
+    if (!AI.last) return say('ai', bubble('어떤 조건으로 대기를 걸까요? 날짜와 인원을 먼저 말씀해 주세요.'));
+    return onAct('wait', { dataset: { cid: AI.last } }, true);
+  }
+  const cs = findCourse(t), pr = parse(t);
+  if (cs && !pr.fields.date) return say('ai', courseCard(cs));
+  if (/추천|어디가 ?좋|갈 ?만한|좋은 ?(데|곳|골프장)|골라 ?줘/.test(t) && !pr.fields.date) return recommend(t, pr);
+  if (/매니저.{0,6}(보내|올려|요청|맡겨|넘겨)|조건.{0,3}(올려|보내)/.test(t)){
+    if (!AI.last) return say('ai', bubble('먼저 조건을 말씀해 주세요. 날짜와 인원만 있으면 접수돼요.'));
+    return toManagers(AI.last);
+  }
+  const hasIntake = !!(pr.fields.date || pr.fields.region || pr.fields.time || pr.fields.people || cs), fq = matchFAQ(t);
+  if (fq && (isQuestion(t) || !hasIntake)) return say('ai', faqCard(fq));
+  if (hasIntake) return intake(t, pr, cs);
+  say('ai', bubble('그 부분은 제가 바로 답하기 어려워요. 골프탑 매니저에게 전달해서 30분 안에 채팅으로 답드릴게요. 라운드를 잡으시려면 날짜와 인원을 말씀해 주세요.') + saysRow(['이번 주말 오전 수도권 4명', '도움말']));
+}
+let busy = false;
+function send(voice){
+  const input = $('#cin'), t = input.value.trim(); if (!t || busy) return;
+  input.value = '';
+  say('me', voice ? `<div class="bub"><span class="voice">🎙</span>${esc(t)}</div>` : bubble(t));
+  busy = true; typing(true);
+  setTimeout(() => {
+    typing(false); busy = false;
+    try { respond(t); } catch (e) { console.error(e); say('ai', bubble('처리 중 문제가 생겼어요. 다시 말씀해 주세요.')); }
+  }, 450 + Math.random() * 350);
+}
+
+/* ================= AI 매니저: 카드 버튼 ================= */
+function onAct(act, el, fromText){
+  const d = el.dataset, rc = el.closest ? el.closest('.rc') : null;
+  switch (act){
+    case 'pick': {
+      const s = SLOTS[d.slot]; if (!s) return;
+      if (!fromText) say('me', bubble(d.n ? `${d.n}번` : el.textContent.trim()));
+      if (TAKEN.has(takenKey(s.course, s.date, s.tee))) return say('ai', bubble('그 타임은 이미 예약됐어요. 다른 타임을 골라 주세요.'));
+      return say('ai', bubble(`${s.course} ${md(s.date)} ${s.tee} 타임이에요. 내용을 확인하고 확정을 눌러주세요.`) + confirmCard(s));
+    }
+    case 'book': say('me', bubble(el.textContent.trim())); return bookSlot(SLOTS[d.slot], { cardEl: rc, wait: d.wait });
+    case 'drop': done(rc, 'p-neu', '접음'); return say('ai', bubble('예약을 접었어요. 다른 타임을 찾거나 대기를 걸어둘 수 있어요.') + saysRow(['대기 걸어줘', '매니저들한테 조건 올려줘']));
+    case 'wait': {
+      const k = CONDS[d.cid]; if (!k) return;
+      if (!fromText) say('me', bubble('대기 걸기'));
+      if (k.wait && WAITS.some(w => w.id === k.wait)) return say('ai', bubble(`이 조건은 이미 대기 ${k.wait}로 지켜보고 있어요.`));
+      const w = addWait(k.c, summary(k.c)); k.wait = w.id;
+      return say('ai', waitCard(w));
+    }
+    case 'to-mgr': if (!fromText) say('me', bubble(el.textContent.trim())); return toManagers(d.cid);
+    case 'acc-prop': say('me', bubble('추천 제안으로 예약')); return acceptProposal(S.requests.find(r => r.id === d.rid), d.pid);
+    case 'hold-pass': {
+      done(rc, 'p-neu', '패스'); say('me', bubble('패스'));
+      const w = WAITS.find(x => x.id === d.wait); if (w){ w.st = '감시 중'; renderTrips(); }
+      return say('ai', bubble(`패스 처리했어요. 홀드를 풀고 ${d.wait} 대기는 그대로 유지할게요. 더 맞는 타임이 뜨면 다시 알려드릴게요.`));
+    }
+    case 'wait-cancel': {
+      const i = WAITS.findIndex(w => w.id === d.id); if (i < 0) return;
+      WAITS.splice(i, 1); renderTrips(); renderBar(); if (S.view === 'status') renderGolfer();
+      if (rc) done(rc, 'p-neu', '대기 취소');
+      return toast(`${d.id} 대기를 취소했어요.`);
+    }
+    case 'keep': done(rc, 'p-ok', '유지'); return say('ai', bubble('그대로 둘게요. 취소 시한 30분 전에 한 번 더 알려드릴게요.'));
+    case 'cx-yes': {
+      const b = bookingById(d.id); if (!b || b.status === '취소') return;
+      const free = /무료/.test(b.cancel);
+      b.status = '취소'; TAKEN.delete(takenKey(b.course, b.date, b.tee)); renderTrips(); renderBar();
+      done(rc, 'p-hot', '취소 완료');
+      return say('ai', bubble(`${b.course} ${md(b.date)} ${b.tee} 예약을 취소했어요. ${free ? '시한 전이라 위약은 없어요.' : '시한이 지나 그린피 50% 위약이 골프장 규정대로 청구돼요.'} 골프장에서 취소 확인 문자가 갈 거예요. 다른 타임을 찾아드릴까요?`) + saysRow(['이번 주말 오전 수도권 4명', '다음 주말 오전 수도권 4명']));
+    }
+    case 'chg': {
+      const b = bookingById(d.id); if (!b) return;
+      const old = b.tee; TAKEN.delete(takenKey(b.course, b.date, old)); b.tee = d.t; b.price = +d.pr; TAKEN.add(takenKey(b.course, b.date, b.tee)); renderTrips();
+      done(rc, 'p-ok', `${old} → ${b.tee}`);
+      return say('ai', bubble(`${b.course} ${md(b.date)} 예약을 ${b.tee}로 바꿨어요. 골프장 시스템에 반영됐고 확인 문자가 갈 거예요. 예약번호는 그대로 ${b.id}예요.`) + bookingCard(b));
+    }
+    case 'ppl': {
+      const b = bookingById(d.id); if (!b) return;
+      b.people = +d.to; renderTrips(); done(rc, 'p-ok', `${b.people}명으로 변경`);
+      return say('ai', bubble(`${b.course} ${md(b.date)} 예약을 ${b.people}명으로 바꿨어요. 골프장에 전달했고 확인 문자가 갈 거예요.`));
+    }
+    case 'late': {
+      const b = bookingById(d.id); done(rc, 'p-wait', `${d.min}분 지연 통보`);
+      return say('ai', bubble(`${b ? b.course : '골프장'}에 ${d.min === '30' ? '30분 이상' : d.min + '분'} 지연을 전달했어요. ${d.min === '30' ? '골프장이 티오프를 뒤로 옮길 수 있는지 확인 중이에요. 결과가 오면 바로 알려드릴게요.' : '뒤 팀과 순서를 조정해 둘게요.'}${b ? ` 도착하시면 프론트에 ${b.id}를 말씀해 주세요.` : ''}`));
+    }
+    case 'attend': case 'weather': case 'd1-cancel': {
+      const b = bookingById(d.id); if (!b) return;
+      if (act === 'attend'){ b.attend = '참석'; done(rc, 'p-ok', `참석 확인 · ${hhmm()}`); say('me', bubble('참석')); say('ai', bubble(`참석 확인했어요. 골프장에도 전달했어요. 내일 04:00에 출발 확인, 04:30에 날씨 최종 판단 알림을 드릴게요. 도착은 ${teeMinus(b.tee, 40)} 권장이에요.`)); }
+      if (act === 'weather'){ b.attend = '날씨'; done(rc, 'p-wait', '날씨 보고 결정 · 04:30 알림'); say('me', bubble('날씨 보고 결정할게요')); say('ai', bubble('알겠어요. 04:30 최종 판단 알림 때 다시 여쭤볼게요. 05:00 전까지는 위약 없이 취소할 수 있어요.')); }
+      if (act === 'd1-cancel'){ b.status = '취소'; TAKEN.delete(takenKey(b.course, b.date, b.tee)); done(rc, 'p-hot', '취소 완료'); say('me', bubble('취소')); say('ai', bubble('연장된 시한 전이라 위약 없이 취소했어요. 골프장 시스템에서 예약을 뺐고, 골프장에서 취소 확인 문자가 갈 거예요.')); }
+      renderTrips(); renderBar(); return;
+    }
+  }
+}
+function aiContext(){
+  const r = S.myReq; if (!r) return;
+  if (r.proposals.length && r.status === 'open') return say('ai', bubble('조건 요청 보고 계셨죠. 지금까지 도착한 제안을 정리해 드릴게요.') + compareCard(r));
+  if (r.status === 'open') return say('ai', bubble(`조건 요청(${summary(r.cond)})을 지켜보고 있어요. 매니저 제안이 오면 바로 비교해 드릴게요. 궁금한 점은 편하게 물어보세요.`));
+}
+
+/* global delegation (골퍼 앱 전체) */
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-gtab]');
+  if (g){ setGTab(g.dataset.gtab); if (g.dataset.ctx) aiContext(); return; }
+  const s = e.target.closest('[data-say]');
+  if (s){ if (S.gtab !== 'chat') setGTab('chat'); $('#cin').value = s.dataset.say; send(); return; }
+  const tt = e.target.closest('[data-toast]');
+  if (tt){ toast(tt.dataset.toast); return; }
+  const a = e.target.closest('#clog [data-act], #vTrips [data-act]');
+  if (a) onAct(a.dataset.act, a);
+});
+$('#csend').addEventListener('click', () => send());
+$('#cin').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) send(); });
+
+/* voice (Web Speech API, Chrome 권장) */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recOn = false;
+const mic = $('#mic');
+function stopRec(){ recOn = false; mic.classList.remove('rec'); if (rec){ try { rec.stop(); } catch (e) {} } }
+mic.addEventListener('click', () => {
+  if (recOn) return stopRec();
+  if (!SR){ say('ai', bubble('이 브라우저에서는 음성 인식을 쓸 수 없어요. Chrome에서 열거나 아래 입력창에 적어 주세요.')); return; }
+  try {
+    rec = new SR(); rec.lang = 'ko-KR'; rec.interimResults = true; let fin = '';
+    rec.onresult = e => { let it = ''; for (let i = e.resultIndex; i < e.results.length; i++){ if (e.results[i].isFinal) fin += e.results[i][0].transcript; else it += e.results[i][0].transcript; } $('#interim').textContent = it ? '듣는 중: ' + it : ''; };
+    rec.onerror = e => { stopRec(); $('#interim').textContent = e.error === 'not-allowed' ? '마이크 권한이 막혀 있어요. 주소창에서 허용해 주세요.' : '음성 인식 오류: ' + e.error; };
+    rec.onend = () => { stopRec(); if (!fin.trim()) return; $('#interim').textContent = ''; $('#cin').value = fin.trim(); if ($('#auto').checked) send(true); };
+    rec.start(); recOn = true; mic.classList.add('rec'); $('#interim').textContent = '듣는 중…';
+  } catch (err) { $('#interim').textContent = '음성 인식을 시작할 수 없어요.'; }
+});
+if (!SR) mic.title = '이 브라우저는 음성 인식을 지원하지 않아요';
+
+/* ================= manager ================= */
+function ago(ts){ const s = Math.floor((Date.now() - ts) / 1000); return s < 60 ? '방금' : s < 3600 ? `${Math.floor(s/60)}분 전` : `${Math.floor(s/3600)}시간 전`; }
+function aiLine(r){
+  if (r.status !== 'open') return '';
+  const a = aiSearch(r.cond);
+  const txt = a.block ? `${a.block === '미연동' ? '미연동 골프장' : a.block} 요청이라 AI 즉시 예약이 안 돼요. 매니저 제안만 받는 건이에요.`
+    : !a.ok.length ? '연동 골프장에 조건 맞는 잔여타임이 없어요. 매니저 제안이 필요한 건이에요.'
+    : `골퍼에게 연동 잔여타임 ${a.ok.length}건을 즉시 예약으로 보여주는 중 · 최저 ${a.ok[0].course} ${won(a.ok[0].price)}`;
+  return `<div class="r-ai"><span class="ai-tag">AI</span><span>${esc(txt)}</span></div>`;
+}
+function renderManager(){
+  const list = S.requests.filter(r => S.filter === 'all' || r.proposals.some(p => p.mine));
+  if (!list.length){ $('#cList').innerHTML = `<div class="empty">아직 제안을 보낸 요청이 없어요. 전체 요청에서 제안을 보내 보세요.</div>`; return; }
+  $('#cList').innerHTML = list.map(r => {
+    const c = r.cond, mine = r.proposals.find(p => p.mine);
+    const acc = r.status === 'booked' && r.accepted !== 'ai' ? r.proposals.find(p => p.id === r.accepted) : null;
+    let state;
+    if (r.accepted === 'ai' && r.aiBooked) state = `<span class="r-state ai">AI 즉시 예약으로 마감 (${esc(r.aiBooked.course)}, ${won(r.aiBooked.price)})</span>`;
+    else if (r.status === 'booking') state = '<span class="r-state ai">골퍼가 AI 즉시 예약 진행 중</span>';
+    else if (acc) state = `<span class="r-state">${acc.mine ? '내 제안으로 예약 확정 요청' : `${esc(acc.mgr.name)} 제안으로 예약됨`}</span>`;
+    else if (mine) state = `<span class="r-state">내 제안 보냄 (${esc(mine.course)}, ${won(mine.price)})</span>`;
+    else state = `<button class="btn pri" data-open="${r.id}">${S.open === r.id ? '접기' : '제안하기'}</button>`;
+    return `<div class="req${r.fresh ? ' fresh' : ''}">
+      <div class="r-top"><span class="r-who">${esc(r.who)}${r.mine ? '<span class="tag">새 요청</span>' : ''}</span><span class="r-meta" data-ago="${r.created}">${ago(r.created)}</span></div>
+      <div class="r-text"><q>${esc(r.text)}</q></div>
+      <div class="chips static">${condChips(c)}</div>
+      ${aiLine(r)}
+      <div class="r-foot"><span class="r-count">제안 ${r.proposals.length}건 도착</span>${state}</div>
+      ${S.open === r.id && !mine && r.status === 'open' ? formHTML(r) : ''}
+    </div>`;
+  }).join('');
+  S.requests.forEach(r => r.fresh = false);
+}
+function perkList(c){
+  const o = c.opts || [];
+  return ['카트비 포함','캐디피 포함','식사 포함','그늘집 쿠폰'].concat(o.includes('조인') ? ['조인 자리 확정'] : [], o.includes('1박2일') ? ['리조트 1박 포함'] : []);
+}
+function formHTML(r){
+  const c = r.cond, key = c.region ? c.region.key : '수도권', d = S.drafts[r.id] || initDraft(r);
+  const courses = COURSES[key], tees = teeOptions(c), a = aiSearch(c);
+  const hint = a.block ? `${a.block === '미연동' ? '미연동 골프장' : a.block} 요청이라 AI가 바로 잡을 수 없는 건이에요. 골퍼는 매니저 제안만 기다리고 있어요.`
+    : a.ok.length ? `골퍼에게 ${a.ok[0].course} AI 즉시 예약가 ${won(a.ok[0].price)}이 이미 보이고 있어요. 이보다 싸거나 조건이 더 좋아야 선택받기 쉬워요.`
+    : '연동 골프장엔 맞는 잔여타임이 없어서 매니저 제안이 유일한 선택지예요.';
+  return `<div class="form" data-form="${r.id}">
+    <div class="full ai-hint"><span class="ai-tag">AI</span><span>${esc(hint)}</span></div>
+    <div><label>골프장</label><select data-k="course">${courses.map(x => `<option ${x.n === d.course ? 'selected' : ''}>${x.n}</option>`).join('')}</select></div>
+    <div><label>날짜</label><select data-k="di">${c.date.dates.map((x, i) => `<option value="${i}" ${+d.di === i ? 'selected' : ''}>${fmt(x)}</option>`).join('')}</select></div>
+    <div><label>티오프</label><select data-k="tee">${tees.map(t => `<option ${t === d.tee ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+    <div><label>1인 그린피 (만원)</label><input type="number" step="0.5" min="1" data-k="price" value="${d.price}"></div>
+    <div class="full"><label>포함 사항</label><div class="checks">${perkList(c).map(x => `<label><input type="checkbox" data-perk="${x}" ${d.perks.includes(x) ? 'checked' : ''}>${x}</label>`).join('')}</div></div>
+    <div class="full"><label>골퍼에게 한마디</label><textarea data-k="memo" placeholder="예) 비공개 특가라 오늘까지만 이 가격이에요.">${esc(d.memo)}</textarea></div>
+    <div class="form-act"><button class="btn ai-ghost" data-aidraft="${r.id}">AI 초안 채우기</button><button class="btn" data-cancel="${r.id}">취소</button><button class="btn pri" data-submit="${r.id}">제안 보내기</button></div>
+  </div>`;
+}
+function initDraft(r){
+  const c = r.cond, key = c.region ? c.region.key : '수도권', course = COURSES[key][0];
+  const { price } = suggestPrice(c, course, c.date.dates[0]);
+  return S.drafts[r.id] = { course: course.n, di: 0, tee: teeOptions(c)[0], price, perks:['카트비 포함'], memo:'' };
+}
+/* AI 초안: 연동 안 된 골프장(매니저만 잡을 수 있는 곳) 우선, AI 즉시 예약가보다 낮게 */
+function aiDraft(r){
+  const c = r.cond, key = c.region ? c.region.key : '수도권', a = aiSearch(c), p = c.price || {}, o = c.opts || [], n = c.people ? c.people.n : 4;
+  const used = r.proposals.map(x => x.course);
+  const pool = COURSES[key].filter(x => !INFO[x.n].linked && !used.includes(x.n));
+  const course = (c.course && COURSES[key].find(x => x.n === c.course)) || pool[0] || COURSES[key][0];
+  let price = suggestPrice(c, course, c.date.dates[0]).price;
+  if (a.ok[0]) price = Math.min(price, a.ok[0].price - 1);
+  if (p.max != null) price = Math.min(price, p.max - 0.5);
+  price = Math.max(8, Math.round(price * 2) / 2);
+  const perks = ['카트비 포함'];
+  if (o.includes('조인')) perks.push('조인 자리 확정');
+  if (o.includes('1박2일')) perks.push('리조트 1박 포함');
+  if (o.includes('식사 포함')) perks.push('식사 포함');
+  const memo = o.includes('조인') ? `조인 ${Math.max(1, 4 - n)}자리 맞춰둔 팀이에요. 동반자 구력도 비슷하게 확인해 두었습니다.`
+    : o.includes('1박2일') ? '리조트 1박과 둘째 날 오전 티타임까지 묶은 패키지예요. 오늘 안에 확정하시면 이 가격 그대로예요.'
+    : a.ok[0] ? `AI 즉시 예약가(${won(a.ok[0].price)})보다 낮은 비공개 특가예요. 오늘 안에 확정하시면 이 가격 그대로 잡아드릴게요.`
+    : '연동 골프장엔 없는 자리를 골프장과 직접 확인해 잡아둔 타임이에요.';
+  S.drafts[r.id] = { course: course.n, di: 0, tee: teeOptions(c)[0], price, perks, memo };
+}
+$('#cList').addEventListener('input', e => {
+  const form = e.target.closest('[data-form]'); if (!form) return;
+  const d = S.drafts[form.dataset.form];
+  if (e.target.dataset.perk){ const p = e.target.dataset.perk; e.target.checked ? d.perks.push(p) : d.perks.splice(d.perks.indexOf(p), 1); }
+  else d[e.target.dataset.k] = e.target.value;
+});
+$('#cList').addEventListener('click', e => {
+  const o = e.target.closest('[data-open]'), x = e.target.closest('[data-cancel]'), s = e.target.closest('[data-submit]'), ad = e.target.closest('[data-aidraft]');
+  if (o){ S.open = S.open === o.dataset.open ? null : o.dataset.open; renderManager(); }
+  if (x){ S.open = null; renderManager(); }
+  if (ad){ aiDraft(S.requests.find(q => q.id === ad.dataset.aidraft)); renderManager(); toast('AI가 초안을 채웠어요. 확인하고 보내세요.'); }
+  if (s){
+    const r = S.requests.find(q => q.id === s.dataset.submit), d = S.drafts[r.id];
+    if (r.status !== 'open'){ toast('이미 마감된 요청이에요.'); S.open = null; renderManager(); return; }
+    const price = parseFloat(d.price);
+    if (!(price > 0)){ toast('그린피를 입력해 주세요.'); return; }
+    const key = r.cond.region ? r.cond.region.key : '수도권', c = COURSES[key].find(q => q.n === d.course);
+    const date = r.cond.date.dates[+d.di];
+    const normal = Math.max(suggestPrice(r.cond, c, date).normal, price + 2);
+    r.proposals.push({ id: uid('p'), mine:true, mgr:{ name:'김태오 매니저', sub:'평균 응답 3분' }, course:c.n, area:c.a, date, tee:d.tee, price, normal, perks: d.perks.length ? d.perks.slice() : ['카트비 별도'], memo:d.memo.trim(), at:Date.now() });
+    S.open = null; renderManager();
+    if (r.mine){ renderGolfer(); aiOnProposal(r); }
+    toast(r.mine ? '제안을 보냈어요. 골퍼 화면에서 확인해 보세요.' : '제안을 보냈어요.');
+  }
+});
+$('#cTabs').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.filter = b.dataset.f; $$('#cTabs button').forEach(x => x.classList.toggle('on', x === b)); renderManager();
+};
+
+/* ================= shell ================= */
+$('#seg').onclick = e => {
+  const b = e.target.closest('button'); if (!b) return;
+  S.tab = b.dataset.tab;
+  $$('#seg button').forEach(x => x.classList.toggle('on', x === b));
+  $('#paneGolfer').classList.toggle('on', S.tab === 'golfer');
+  $('#paneManager').classList.toggle('on', S.tab === 'manager');
+  if (S.tab === 'manager'){ S.unseen = 0; updateDot(); }
+};
+function updateDot(){ const d = $('#segDot'); d.hidden = !S.unseen; d.textContent = S.unseen; }
+let toastT;
+function toast(m){ const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2600); }
+function tick(){
+  const cd = $('#cd');
+  if (cd && S.myReq){ const left = Math.max(0, 30 * 60 - Math.floor((Date.now() - S.myReq.created) / 1000)); cd.textContent = `마감까지 ${pad(Math.floor(left / 60))}:${pad(left % 60)}`; }
+  $$('[data-ago]').forEach(el => el.textContent = ago(+el.dataset.ago));
+  $$('[data-until]').forEach(el => { const left = Math.max(0, +el.dataset.until - Date.now()), s = Math.floor(left / 1000); el.textContent = left ? `${Math.floor(s / 60)}:${pad(s % 60)}` : '만료'; });
+}
+setInterval(tick, 1000);
+
+/* ================= boot ================= */
+function seedChat(){
+  $('#clog').innerHTML = '<div class="dd">오늘</div>';
+  say('ai', bubble(`안녕하세요 김지현님, 골프탑 AI 매니저예요. 연동 골프장 ${LINKED.length}곳의 실시간 잔여타임을 보고 있어요. 날짜와 인원을 말씀하시면 바로 잡아드리고, 조인·1박2일·단체처럼 사람 손이 필요한 건 골프탑 매니저들에게 조건을 올려 제안을 받아드려요.`) + tutorialCard(), { tm: hhmm(new Date(Date.now() - 50 * 60000)), silent:true, read:true });
+  say('ai', bubble('내일 새벽 라운드 참석 확인 부탁드려요. 비 예보가 있어서 골프장이 무료 취소 시한을 내일 05:00까지 늘려줬어요.') + d1Card(BOOKINGS[0]), { tm: hhmm(new Date(Date.now() - 6 * 60000)), silent:true });
+}
+S.parsed = parse('');
+seedChat();
+renderGolfer();
+renderTrips();
+renderBar();
+renderManager();
+updateBadges();
+</script>
+</body>
+</html>
