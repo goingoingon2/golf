@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>골프탑 역제안 검토와 추진 방향</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* layout: 넓은 화면은 왼쪽 목차 + 본문 한 단, 좁은 화면은 한 단. 일정은 시즌 띠가 붙은 간트 차트 */
+:root{
+  --bg:#F0F3F0; --surface:#FFFFFF; --sunk:#F5F7F5; --ink:#14211A; --ink-2:#34433A; --muted:#5B6A61; --line:#D9E0DA; --line-2:#C5CFC8;
+  --green:#1D6A44; --green-ink:#FFFFFF; --green-soft:#E1EFE6;
+  --amber-ink:#8F5600; --amber-soft:#FFF2DA; --danger:#B23A3A; --danger-soft:#F8E3E1;
+  --ai:#3456A0; --ai-soft:#E4EAF6;
+  --s-peak:#A9D3B8; --s-mid:#D6EADC; --s-off:#E3E6E3;
+  --f-sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1612; --surface:#17211B; --sunk:#131B16; --ink:#E6EEE9; --ink-2:#C3CFC8; --muted:#9AA9A0; --line:#2B3831; --line-2:#3A4A41;
+    --green:#3FA872; --green-ink:#08130D; --green-soft:#1C3227;
+    --amber-ink:#F0A93A; --amber-soft:#33281A; --danger:#E07070; --danger-soft:#3A1F1F;
+    --ai:#8DA9EA; --ai-soft:#1C2740;
+    --s-peak:#357A54; --s-mid:#244A36; --s-off:#2A312D;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1612; --surface:#17211B; --sunk:#131B16; --ink:#E6EEE9; --ink-2:#C3CFC8; --muted:#9AA9A0; --line:#2B3831; --line-2:#3A4A41;
+  --green:#3FA872; --green-ink:#08130D; --green-soft:#1C3227;
+  --amber-ink:#F0A93A; --amber-soft:#33281A; --danger:#E07070; --danger-soft:#3A1F1F;
+  --ai:#8DA9EA; --ai-soft:#1C2740;
+  --s-peak:#357A54; --s-mid:#244A36; --s-off:#2A312D;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:20px}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.75 var(--f-sans);word-break:keep-all;overflow-wrap:anywhere;-webkit-font-smoothing:antialiased}
+a{color:var(--green)}
+:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+.wrap{max-width:1160px;margin:0 auto;padding-inline:20px;padding-block:44px 72px;display:grid;grid-template-columns:200px minmax(0,1fr);gap:56px}
+@media (max-width:1000px){.wrap{grid-template-columns:minmax(0,1fr);gap:8px;padding-block:28px 56px}}
+
+/* toc */
+.toc{position:sticky;top:28px;align-self:start;font-size:13.5px;line-height:1.5}
+.toc b{display:block;font-size:12px;letter-spacing:.06em;color:var(--muted);margin-bottom:10px;font-weight:600}
+.toc ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.toc a{display:flex;gap:8px;padding:5px 8px;border-radius:7px;color:var(--ink-2);text-decoration:none}
+.toc a span{font-family:var(--f-mono);color:var(--muted);font-size:12px;min-width:14px;padding-top:1px}
+.toc a:hover{background:var(--surface);color:var(--ink)}
+@media (max-width:1000px){
+  .toc{position:static;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:14px 14px 10px;margin-bottom:16px}
+  .toc ol{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+}
+
+main{min-width:0;max-width:840px}
+@media (max-width:640px){.glossary{grid-template-columns:minmax(0,1fr)}}
+
+/* header */
+.eyebrow{font-size:12.5px;letter-spacing:.08em;color:var(--green);font-weight:600;margin:0 0 10px}
+h1{margin:0;font-size:clamp(28px,4.2vw,40px);line-height:1.25;letter-spacing:-.03em;font-weight:700;text-wrap:balance}
+.meta{margin:14px 0 0;display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13.5px;color:var(--muted)}
+.meta span{display:inline-flex;align-items:center;gap:6px}
+.meta i{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block}
+.intro{margin:22px 0 0;font-size:16.5px;color:var(--ink-2);max-width:62ch}
+
+.verdict{margin-top:28px;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:22px 24px}
+.verdict h2{margin:0 0 12px;font-size:15px;letter-spacing:-.01em}
+.verdict ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px}
+.verdict li::marker{color:var(--green)}
+
+.glossary{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.glossary div{background:var(--surface);padding:12px 16px}
+.glossary dt{font-weight:600;font-size:14px}
+.glossary dd{margin:2px 0 0;font-size:13.5px;color:var(--muted);line-height:1.6}
+
+/* sections */
+section{margin-top:64px}
+h2.sec{display:flex;align-items:baseline;gap:12px;margin:0 0 6px;font-size:24px;letter-spacing:-.02em;line-height:1.35;text-wrap:balance}
+h2.sec .no{font-family:var(--f-mono);font-size:14px;color:var(--green);font-weight:500;flex:none}
+.sec-lede{margin:0 0 20px;color:var(--muted);font-size:15px;max-width:62ch}
+h3{margin:32px 0 10px;font-size:17.5px;letter-spacing:-.01em;line-height:1.4}
+h3 .no{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-weight:500;margin-right:8px}
+p{margin:0 0 12px}
+ul.list,ol.list{margin:0;padding-left:1.15em;display:flex;flex-direction:column;gap:7px}
+ul.list li::marker{color:var(--muted)}
+ol.list li::marker{font-family:var(--f-mono);color:var(--green);font-size:14px}
+strong{font-weight:600}
+
+/* concern grid */
+.concerns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:720px){.concerns{grid-template-columns:minmax(0,1fr)}}
+.concern{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.concern header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.concern h3{margin:0;font-size:16px}
+.concern ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:5px;font-size:14.5px;color:var(--ink-2)}
+.tag{flex:none;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;line-height:1.6}
+.tag.raised{background:var(--amber-soft);color:var(--amber-ink)}
+.tag.added{background:var(--sunk);color:var(--muted);border:1px solid var(--line)}
+.tag.now{background:var(--green);color:var(--green-ink)}
+.tag.next{background:var(--green-soft);color:var(--green)}
+.tag.later{background:var(--sunk);color:var(--muted);border:1px dashed var(--line-2)}
+
+.callout{background:var(--green-soft);border-radius:14px;padding:16px 20px;margin:0 0 18px;font-size:15.5px}
+.callout strong{color:var(--ink)}
+
+/* tables */
+.tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);margin:0 0 16px}
+table{border-collapse:collapse;width:100%;min-width:560px;font-size:14px;line-height:1.55}
+th,td{padding:10px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+thead th{background:var(--sunk);font-weight:600;font-size:13px;color:var(--ink-2);white-space:nowrap}
+tbody th{font-weight:600;white-space:nowrap;color:var(--ink)}
+tbody tr:last-child th,tbody tr:last-child td{border-bottom:0}
+td.mono,th.mono{white-space:nowrap}
+.col-good{color:var(--green)}
+
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:720px){.two{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.panel h4{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+.panel ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;font-size:14.5px;color:var(--ink-2)}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.dot.good{background:var(--green)} .dot.warn{background:var(--danger)}
+
+.fits{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:0 0 8px}
+.fit{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:14px}
+.fit b{display:block;font-size:14.5px;margin-bottom:2px}
+.fit span{color:var(--muted);font-size:13px}
+
+/* gantt */
+.gantt-fig{margin:6px 0 18px;position:relative}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:14px;height:10px;border-radius:3px;display:inline-block}
+.sw.now{background:var(--green)} .sw.next{background:var(--green-soft);border:1.5px solid var(--green)} .sw.later{background:transparent;border:1.5px dashed var(--muted)}
+.sw.peak{background:var(--s-peak)} .sw.mid{background:var(--s-mid)} .sw.off{background:var(--s-off);border:1px solid var(--line)}
+.gantt-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--surface);padding:14px 14px 30px}
+.gantt{position:relative;display:grid;grid-template-columns:136px repeat(27,minmax(24px,1fr));row-gap:6px;min-width:790px;font-size:12px}
+.g-year{font-family:var(--f-mono);font-size:12px;color:var(--ink-2);font-weight:500;border-left:1px solid var(--line-2);padding-left:6px}
+.g-month{font-family:var(--f-mono);font-size:11px;color:var(--muted);text-align:center}
+.g-rowlabel{font-size:13px;color:var(--ink);font-weight:500;padding-right:10px;line-height:1.3;align-self:stretch;display:flex;flex-direction:column;justify-content:center;position:sticky;left:-14px;padding-left:14px;margin-left:-14px;background:var(--surface);z-index:2}
+.g-rowlabel small{display:block;font-family:var(--f-mono);font-size:11px;color:var(--muted);font-weight:400}
+.g-season{height:22px;font-size:10.5px;display:grid;place-items:center;color:var(--ink);border-right:2px solid var(--surface);white-space:nowrap;overflow:hidden}
+.g-season.peak{background:var(--s-peak)} .g-season.mid{background:var(--s-mid)} .g-season.off{background:var(--s-off)}
+.g-bar{height:30px;align-self:center;border-radius:4px;display:flex;align-items:center;padding:0 8px;font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;cursor:default;margin:0 1px}
+.g-bar.now{background:var(--green);color:var(--green-ink)}
+.g-bar.next{background:var(--green-soft);color:var(--green);border:1.5px solid var(--green)}
+.g-bar.later{background:transparent;color:var(--muted);border:1.5px dashed var(--muted);border-right:0;border-radius:4px 0 0 4px;-webkit-mask-image:linear-gradient(90deg,#000 70%,transparent);mask-image:linear-gradient(90deg,#000 70%,transparent)}
+.g-bar:hover,.g-bar:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.g-today{position:absolute;top:0;bottom:0;width:0;border-left:2px solid var(--danger);pointer-events:none}
+.g-today span{position:absolute;bottom:-22px;left:-2px;font-family:var(--f-mono);font-size:10.5px;color:var(--danger);white-space:nowrap;background:var(--surface);padding:0 3px;border-radius:3px}
+.tip{position:absolute;z-index:5;max-width:280px;background:var(--ink);color:var(--surface);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;pointer-events:none;box-shadow:0 8px 24px -10px rgba(0,0,0,.45)}
+.tip b{display:block;font-size:13px;margin-bottom:2px}
+.tip .mono{opacity:.8;font-size:11.5px}
+
+/* phases */
+.phases{display:flex;flex-direction:column;gap:14px}
+.phase{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.phase.is-now{border-color:var(--green)}
+.ph-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:14px 20px;border-bottom:1px solid var(--line);background:var(--sunk)}
+.ph-num{font-family:var(--f-mono);font-size:13px;color:var(--green);font-weight:500}
+.ph-head h3{margin:0;font-size:17px}
+.ph-when{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.ph-body{padding:16px 20px 18px;display:flex;flex-direction:column;gap:12px;font-size:14.5px}
+.ph-goal{margin:0;color:var(--ink)}
+.ph-goal b{color:var(--green);font-weight:600;margin-right:6px}
+.ph-body ul{margin:0;padding-left:1.1em;display:flex;flex-direction:column;gap:6px;color:var(--ink-2)}
+.ph-body ul ul{margin-top:6px;gap:4px}
+.dont{font-size:14px;color:var(--danger);margin:0}
+.dont b{margin-right:6px}
+.gate{background:var(--sunk);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:13.5px}
+.gate b{display:block;font-size:12.5px;color:var(--muted);font-weight:600;margin-bottom:4px}
+.gate ul{gap:3px;color:var(--ink)}
+
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.metric h4{margin:0 0 8px;font-size:14px;display:flex;align-items:center;gap:8px}
+.metric ul{margin:0;padding-left:1.1em;font-size:14px;color:var(--ink-2);display:flex;flex-direction:column;gap:4px}
+.metric .new{font-size:11px;font-weight:600;color:var(--amber-ink);background:var(--amber-soft);border-radius:999px;padding:0 7px;margin-left:4px}
+
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);font-size:13.5px;color:var(--muted);display:flex;flex-direction:column;gap:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav class="toc" aria-label="목차">
+    <b>목차</b>
+    <ol>
+      <li><a href="#s1"><span>1</span>역제안의 핵심 우려사항</a></li>
+      <li><a href="#s2"><span>2</span>숨고·카닥과 다른 이유</a></li>
+      <li><a href="#s3"><span>3</span>제안 주체별 비교</a></li>
+      <li><a href="#s4"><span>4</span>추후 예상 문제</a></li>
+      <li><a href="#s5"><span>5</span>역제안 활용 방식</a></li>
+      <li><a href="#s6"><span>6</span>사업 추진 방향</a></li>
+      <li><a href="#s7"><span>7</span>측정 지표</a></li>
+    </ol>
+  </nav>
+
+  <main>
+    <header>
+      <p class="eyebrow">골프탑 내부 검토</p>
+      <h1>역제안 검토와 사업 추진 방향</h1>
+      <div class="meta">
+        <span class="mono">2026.10.02 작성</span>
+        <span><i></i>일반 부킹 서비스 2026.10.01 오픈 기준</span>
+      </div>
+      <p class="intro">골퍼가 원하는 조건을 올리면 골프탑이 티타임을 찾아 제안하는 역제안을 도입할지, 한다면 누가 언제 어떻게 할지를 정리했어요.</p>
+
+      <div class="verdict">
+        <h2>결론</h2>
+        <ul>
+          <li>역제안은 티타임을 새로 만들지 못하고, 이미 있는 재고를 다시 포장해서 내놓는 구조예요.</li>
+          <li>기본 예약은 지금 운영 중인 <strong>재고 우선 즉시 예약</strong>으로 두고, 역제안은 조인·단체·패키지·비공개 특가를 위한 <strong>예외 채널</strong>로 써요.</li>
+          <li>1단계 제안은 내부 매니저나 회사 관리자가 처리해요. AI가 초안을 쓰고 관리자가 승인하며, 관리자는 <strong>재고 조달</strong>에 집중해요.</li>
+          <li>가을 성수기엔 일반 부킹 안정화와 데이터 수집, 겨울 비수기엔 조건 부킹 시범, 2027년 봄 시즌에 정식 오픈해요.</li>
+          <li>외부 매니저 개방은 2028년 하반기 이후에 검토해요.</li>
+        </ul>
+      </div>
+
+      <dl class="glossary">
+        <div><dt>역제안 (조건 부킹)</dt><dd>골퍼가 조건을 올리면 골프탑 쪽이 티타임을 찾아 제안하는 방식</dd></div>
+        <div><dt>즉시 예약</dt><dd>제휴 골프장의 잔여티를 조회하고 바로 확정하는 방식. 10월 1일 오픈한 일반 부킹</dd></div>
+        <div><dt>블록 티</dt><dd>골프장과 미리 계약해 골프탑이 일정 기간 확보해 두는 티타임</dd></div>
+        <div><dt>결과 없음 비율</dt><dd>검색 중 원하는 티가 하나도 없었던 비율. 역제안 수요를 보여주는 신호</dd></div>
+      </dl>
+    </header>
+
+    <!-- 1 -->
+    <section id="s1">
+      <h2 class="sec"><span class="no">1</span>역제안의 핵심 우려사항</h2>
+      <p class="sec-lede">제안하는 사람이 누구든 생기는 문제예요. 처음 제기된 두 가지에 검토하며 더한 네 가지를 붙였어요.</p>
+      <div class="concerns">
+        <article class="concern">
+          <header><h3>수요의 본질: 빈자리보다 좋은 조건</h3><span class="tag raised">제기된 문제</span></header>
+          <ul>
+            <li>대표나 관계자에게 묻는 건 티가 없어서가 아니라 가성비 좋은 티를 찾기 때문이에요. 핵심은 가용성이 아니라 <strong>조건 우위</strong>예요.</li>
+            <li>고객이 기대하는 건 공개 시장에 없는 비공개 재고나 특가, 즉 <strong>내부자 프리미엄</strong>이에요.</li>
+            <li>제안이 앱 공개가와 같으면 <strong>중개의 존재 이유</strong>가 사라지고, 기다린 만큼 손해 본 느낌만 남아요.</li>
+          </ul>
+        </article>
+        <article class="concern">
+          <header><h3>재고 없는 판매: 빈 진열대 효과</h3><span class="tag raised">제기된 문제</span></header>
+          <ul>
+            <li>상점에 물건이 없으면 제안할 물건도 없듯이, 역제안도 재고가 없으면 제안할 게 없어요.</li>
+            <li>재고 없이 홍보하면 "제안 0건" 경험만 늘어요. 고객은 "여긴 없다"고 학습하고(<strong>부정 학습</strong>), 주변에도 그렇게 말해요(<strong>부정 구전</strong>).</li>
+            <li>결국 마케팅 비용이 <strong>브랜드 훼손 비용</strong>으로 바뀌어요.</li>
+          </ul>
+        </article>
+        <article class="concern">
+          <header><h3>즉시성과 확정성 부족</h3><span class="tag added">추가 검토</span></header>
+          <ul>
+            <li>경쟁 앱은 실시간 조회 후 바로 확정돼요. 30분 대기는 <strong>탐색 비용을 고객에게 떠넘기는</strong> 구조라 그사이 이탈해요.</li>
+            <li>제안을 골랐는데 "그 티는 나갔어요"가 반복되면 <strong>미끼 제안</strong>으로 받아들여요.</li>
+          </ul>
+        </article>
+        <article class="concern">
+          <header><h3>기대치와 수급 불일치</h3><span class="tag added">추가 검토</span></header>
+          <ul>
+            <li>"주말 오전 수도권 10만원" 같은 비현실적 조건이 몰리면 제안 0건이 늘고, 그 실망은 플랫폼 탓이 돼요.</li>
+            <li>남는 재고는 평일·원거리·비인기 시간대인데 수요는 주말·수도권·오전에 몰려요. 제안이 <strong>재고 처분</strong>처럼 보이기 쉬워요.</li>
+          </ul>
+        </article>
+        <article class="concern">
+          <header><h3>비교 피로</h3><span class="tag added">추가 검토</span></header>
+          <ul>
+            <li>카트비, 캐디, 식사 포함 여부가 제각각이면 제안끼리 비교하기 어려워요(<strong>선택 과부하</strong>). 제안 양식을 표준화해야 해요.</li>
+          </ul>
+        </article>
+        <article class="concern">
+          <header><h3>골프장과의 관계</h3><span class="tag added">추가 검토</span></header>
+          <ul>
+            <li>약관으로 양도나 대리예약을 제한하는 골프장도 있어요. 부딪히면 <strong>부킹 브로커</strong> 이미지가 붙거나 공급이 끊길 수 있어요.</li>
+            <li>골프장의 가격 정책(<strong>수익 관리</strong>)을 존중하는 선에서 특가를 다뤄야 해요.</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section id="s2">
+      <h2 class="sec"><span class="no">2</span>숨고·카닥에서는 통하는데 골프탑에서는 약한 이유</h2>
+      <p class="callout">숨고·카닥은 <strong>견적이 있어야 값이 정해지는 서비스</strong>를 팔고, 골프 부킹은 <strong>이미 가격표가 붙은 재고</strong>를 팔아요.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">구분</th><th scope="col">숨고·카닥 (역견적이 통함)</th><th scope="col">골프탑 (역제안이 약함)</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">파는 것</th><td>공급자의 노동·기술</td><td>골프장이 가진 티타임 재고</td></tr>
+            <tr><th scope="row">공급자 역할</th><td>생산자가 공급을 새로 만듦</td><td>남의 재고를 중개, 티 수는 고정</td></tr>
+            <tr><th scope="row">상품 표준화</th><td>비정형이라 견적이 필요</td><td>정형이라 가격표가 이미 있음</td></tr>
+            <tr><th scope="row">가격 투명성</th><td>시세를 몰라 비교 견적 자체가 가치</td><td>앱에 시세가 공개돼 있음</td></tr>
+            <tr><th scope="row">가격 결정권</th><td>공급자 재량</td><td>골프장</td></tr>
+            <tr><th scope="row">구매 특성</th><td>저빈도·고관여, 며칠 기다려도 됨</td><td>고빈도·습관적, 날짜 고정이라 늦으면 마감</td></tr>
+            <tr><th scope="row">차별화 요소</th><td>실력·후기·상담</td><td>같은 티면 가격뿐</td></tr>
+            <tr><th scope="row">탐색 문제</th><td>믿을 만한 동네 업체 찾기가 어려움</td><td>골프장은 이미 잘 알려짐</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <ul class="list">
+        <li><strong>정보 비대칭의 방향이 반대예요.</strong> 카닥 이용자는 시세를 몰라 비교 견적이 불안 해소 장치가 돼요. 골퍼는 시세를 잘 알아서, 확실히 싸지 않은 제안은 쓸모가 없어요.</li>
+        <li><strong>같은 상품이 반복돼요.</strong> 숨고 견적은 고수마다 다른 상품이지만, 골프 제안은 같은 골프장의 같은 티가 반복되기 쉬워요.</li>
+      </ul>
+    </section>
+
+    <!-- 3 -->
+    <section id="s3">
+      <h2 class="sec"><span class="no">3</span>제안 주체별 비교</h2>
+      <p class="sec-lede">1단계는 내부 매니저나 회사 관리자가 제안해요. 외부 매니저는 비교용으로 함께 놓았어요.</p>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">구분</th><th scope="col">외부 매니저</th><th scope="col">내부 매니저</th><th scope="col">회사 관리자</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">제안 명의</th><td>매니저 개인</td><td>골프탑 매니저</td><td>회사 공식</td></tr>
+            <tr><th scope="row">신뢰·책임</th><td>분산, 편차 큼</td><td>회사에 귀속</td><td>단일 창구, 공신력 높음</td></tr>
+            <tr><th scope="row">이해상충</th><td>수수료 경쟁, 체리피킹</td><td>KPI 왜곡 가능</td><td>자사 재고 밀어내기 가능</td></tr>
+            <tr><th scope="row">처리 용량</th><td>인원만큼 분산</td><td>내부 인원이 한계</td><td>소수에게 집중, 병목이 가장 심함</td></tr>
+            <tr><th scope="row">확장성</th><td>높음</td><td>중간 (채용 필요)</td><td>낮음 (본업과 충돌)</td></tr>
+            <tr><th scope="row">속인화</th><td>매니저별로 흩어짐</td><td>매니저 개인 인맥</td><td>대표·관리자 인맥 (키맨 리스크)</td></tr>
+            <tr><th scope="row">실패 시 파급</th><td>개인 실수로 끝남</td><td>회사 책임</td><td>회사 신뢰 문제로 직결</td></tr>
+            <tr><th scope="row">적합한 시기</th><td>6단계 이후</td><td class="col-good">2~5단계</td><td class="col-good">2단계 시범, 이후 승인·조달</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>내부 운영(매니저·관리자) 공통 고려사항</h3>
+      <ul class="list">
+        <li><strong>처리 용량 병목:</strong> 요청이 예약 오픈 시간, 금요일 저녁, 성수기에 몰려요. 응답 시간 목표(SLA)와 피크 인력 계획이 필요해요.</li>
+        <li><strong>단위 경제성:</strong> 건마다 사람이 찾아 제안하는 인건비를 수수료 구조로 감당할 수 있는지 따져봐야 해요.</li>
+        <li><strong>속인화:</strong> 골프장 담당자 정보와 특가 이력을 개인이 아니라 시스템에 남겨야 해요.</li>
+        <li><strong>KPI 왜곡:</strong> 체결 건수만 보면 쉬운 요청만, 매출만 보면 비싼 티만 밀게 돼요. 제안 도달률, 할인폭, 고객 만족을 함께 봐야 해요.</li>
+        <li><strong>책임 귀속:</strong> 문제가 생기면 책임이 바로 회사로 와요. 취소·노쇼·우천 위약금 기준을 미리 정해야 해요.</li>
+        <li><strong>제안 방식:</strong> 여러 명이 경쟁하는 입찰보다 담당자가 1~3건을 골라 주는 <strong>큐레이션 제안</strong>이 자연스러워요.</li>
+      </ul>
+
+      <h3>회사 관리자가 제안할 때</h3>
+      <div class="two">
+        <div class="panel">
+          <h4><span class="dot good"></span>장점</h4>
+          <ul>
+            <li>고객이 대표에게 묻던 경험을 공식 서비스로 만들 수 있어요(<strong>내부자 프리미엄의 제도화</strong>). 단, 실제로 더 나은 조건이 있을 때만이에요.</li>
+            <li>골프장 창구와 요청 데이터가 한곳으로 모여 블록 티 계약, 수요 집계, 공동구매로 이어가기 쉬워요.</li>
+            <li>회사 명의라 가격 보증과 확정 보증을 걸기 쉬워요.</li>
+          </ul>
+        </div>
+        <div class="panel">
+          <h4><span class="dot warn"></span>주의점</h4>
+          <ul>
+            <li>회사 창구에서 답이 없으면 고객은 무시당했다고 느껴요. 누구에겐 제안이 가고 누구에겐 안 가는지에 대한 <strong>형평성</strong> 불만도 생겨요.</li>
+            <li>가격 오류나 확정 실패가 회사 신뢰 문제로 번져요. 제안을 내보내기 전 검수 기준이 필요해요.</li>
+            <li>블록 티를 미리 사두면 회사 재고를 먼저 권할 유인이 생기고, 팔리지 않은 티는 손실로 남아요(<strong>재고 부담</strong>).</li>
+            <li>회사가 직접 골라 파는 구조는 통신판매중개자보다 통신판매업자로 볼 여지가 있어 법률 검토가 필요해요.</li>
+            <li>관리자가 부킹 응대에 묶이면 운영·정산·CS 같은 본업이 밀려요(<strong>기회비용</strong>).</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 -->
+    <section id="s4">
+      <h2 class="sec"><span class="no">4</span>추후 예상 문제 (외부 매니저 개방 시)</h2>
+      <p class="sec-lede">지금은 해당하지 않지만, 6단계에서 외부 매니저에게 문을 열기 전에 대응책을 준비해야 해요.</p>
+      <ul class="list">
+        <li><strong>헛수고 구조:</strong> 여러 명이 제안해도 한 명만 선택돼요. 낙찰률이 낮으면 매니저가 떠나고, 제안이 줄면 골퍼도 떠나는 <strong>유동성 붕괴</strong>가 와요.</li>
+        <li><strong>대리인 문제:</strong> 수수료 높은 티를 밀고(<strong>이해상충</strong>), 쉬운 요청만 골라 잡을(<strong>체리피킹</strong>) 유인이 생겨요.</li>
+        <li><strong>가격 경쟁:</strong> 매니저끼리의 덤핑과 <strong>출혈 경쟁</strong>이 골프장 가격 질서를 흔들어요.</li>
+        <li><strong>중복 제안:</strong> 같은 골프장, 같은 시간대 제안이 반복돼요.</li>
+        <li><strong>검증과 사기:</strong> 가예약, 허위 매물, 선입금 사기 위험이 생겨 매니저 검증 체계가 필요해요.</li>
+        <li><strong>연락 피로:</strong> 조건과 연락처가 여러 매니저에게 퍼져요.</li>
+      </ul>
+    </section>
+
+    <!-- 5 -->
+    <section id="s5">
+      <h2 class="sec"><span class="no">5</span>역제안을 어떻게 쓸 것인가</h2>
+      <h3>역제안이 통하는 영역</h3>
+      <p>비정형이고, 고단가이고, 조율이 필요하고, 골프탑만 가진 재고가 있는 건이에요.</p>
+      <div class="fits">
+        <div class="fit"><b>패키지</b><span>해외 골프 투어, 1박2일·제주 패키지</span></div>
+        <div class="fit"><b>단체</b><span>기업 행사, 동호회 월례회</span></div>
+        <div class="fit"><b>조인</b><span>1~2명을 다른 팀과 맞추는 매칭</span></div>
+        <div class="fit"><b>독점 재고</b><span>블록 티, 골프장과 직접 협상한 비공개 특가</span></div>
+      </div>
+
+      <h3>운영 방식</h3>
+      <ul class="list">
+        <li><strong>재고 우선:</strong> 있는 티타임부터 보여주고 즉시 확정해요. 요청은 원하는 티가 없을 때만 받아요.</li>
+        <li><strong>처리 대상 한정:</strong> 역제안은 위 영역에만 써요.</li>
+        <li><strong>AI 초안, 관리자 승인:</strong> AI가 조건 정리, 즉시 예약, 시세 안내, 제안 초안을 맡고 관리자는 승인과 예외 처리만 해요.</li>
+        <li><strong>제안 보증:</strong> 제안한 가격과 확정을 보증해요. 내부 운영이라 바로 할 수 있어요.</li>
+        <li><strong>응답 보장:</strong> 정한 시간 안에 제안이 없으면 "제안 없음, 사유, 대안(대기, 조건 완화)"을 자동으로 안내해요.</li>
+        <li><strong>시세 가이드:</strong> 요청할 때 "이 조건의 최근 시세"를 보여줘 기대치를 맞춰요.</li>
+        <li><strong>제안 양식 표준화:</strong> 포함 사항을 같은 형식으로 보여줘 비교하기 쉽게 해요.</li>
+        <li><strong>관리자는 조달 담당:</strong> 관리자 시간은 건별 응대보다 골프장과 블록 티·특가 계약을 맺는 데 써요.</li>
+        <li><strong>수요 집계:</strong> 모인 요청을 "이 시간대, 이 가격이면 N팀"으로 묶어 골프장에 제시해요. 역제안이 재고를 끌어오는 장치(<strong>공동구매</strong>)가 되고, 이게 가장 큰 잠재 가치예요.</li>
+        <li><strong>브랜딩:</strong> "골프탑 본사 특가", "골프탑 큐레이션"처럼 공식 상품으로 보이게 해요.</li>
+      </ul>
+    </section>
+
+    <!-- 6 -->
+    <section id="s6">
+      <h2 class="sec"><span class="no">6</span>사업 추진 방향</h2>
+      <p class="sec-lede">10월 1일 일반 부킹 오픈으로 재고 우선 즉시 예약은 이미 시작됐어요. 역제안은 그 위에 얹는 기능으로 순서를 잡았어요.</p>
+
+      <h3>오픈으로 달라진 점</h3>
+      <ul class="list">
+        <li>수동 검증과 공급 확보는 따로 하지 않고, <strong>운영하면서 검증</strong>해요.</li>
+        <li>오픈 직후가 가을 성수기라 <strong>일반 부킹 안정화</strong>가 최우선이에요. 역제안을 크게 열 시기가 아니에요.</li>
+        <li>일반 부킹에서 "검색했는데 원하는 티가 없었다"는 기록을 모으면, 그게 곧 역제안 수요 데이터가 돼요.</li>
+        <li>조건 부킹 시범은 겨울 비수기, 정식 오픈은 2027년 봄 시즌이에요.</li>
+      </ul>
+
+      <h3>원칙</h3>
+      <ol class="list">
+        <li><strong>공급 먼저, 홍보는 나중:</strong> 재고가 확보된 지역과 시간대만 알려요.</li>
+        <li><strong>좁게 시작해서 넓히기:</strong> 수도권, 평일, 특정 고객층부터 시작해요.</li>
+        <li><strong>수동으로 검증하고 자동화는 나중에:</strong> 처음엔 확장되지 않는 방식으로 직접 해봐요.</li>
+        <li><strong>역제안은 예외 채널:</strong> 기본은 즉시 예약이에요.</li>
+        <li><strong>요청 데이터를 자산으로:</strong> 골프장과 협상할 때 근거가 돼요.</li>
+      </ol>
+
+      <h3>일정</h3>
+      <p>골프 성수기는 봄(4~6월)과 가을(9~11월)이에요. 비수기는 준비와 협상에, 성수기는 오픈과 운영에 맞췄어요.</p>
+      <figure class="gantt-fig" id="ganttFig">
+        <div class="legend" aria-hidden="true">
+          <span><i class="sw now"></i>진행 중</span><span><i class="sw next"></i>예정</span><span><i class="sw later"></i>검토</span>
+          <span><i class="sw peak"></i>성수기</span><span><i class="sw mid"></i>준성수기</span><span><i class="sw off"></i>비수기</span>
+        </div>
+        <div class="gantt-scroll"><div class="gantt" id="gantt" role="img" aria-label="2026년 10월부터 2028년까지 6단계 추진 일정. 아래 표와 같은 내용입니다."></div></div>
+        <div class="tip" id="tip" hidden></div>
+      </figure>
+
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th scope="col">단계</th><th scope="col">기간</th><th scope="col">시즌</th><th scope="col">핵심 목표</th><th scope="col">역제안 운영</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">1. 일반 부킹 안정화</th><td class="mono">2026.10~11</td><td>가을 성수기</td><td>예약 안정, 수요 데이터 수집</td><td>"조건 남기기" 접수만</td></tr>
+            <tr><th scope="row">2. 조건 부킹 시범</th><td class="mono">2026.12~2027.02</td><td>겨울 비수기</td><td>관리자 수동 제안 검증, 봄 재고 협상</td><td>관리자 직접, 대상 한정</td></tr>
+            <tr><th scope="row">3. 조건 부킹 정식 오픈</th><td class="mono">2027.03~06</td><td>봄 성수기</td><td>앱 정식 탑재, 승인 체계 운영</td><td>AI 초안 + 관리자 승인</td></tr>
+            <tr><th scope="row">4. 골퍼용 AI 매니저</th><td class="mono">2027.07~11</td><td>여름 구축, 가을 운영</td><td>처리 병목 해소</td><td>AI가 1차 처리</td></tr>
+            <tr><th scope="row">5. 수요 집계·협상</th><td class="mono">2027.12~2028.06</td><td>겨울 협상, 봄 적용</td><td>1년치 데이터로 공동구매·블록 티</td><td>예외 건 + 공동구매</td></tr>
+            <tr><th scope="row">6. 외부 매니저 검토</th><td class="mono">2028.07~</td><td></td><td>공급 채널 확대</td><td>검증된 파트너만 초대</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>단계별 상세</h3>
+      <div class="phases">
+        <article class="phase is-now">
+          <div class="ph-head"><span class="ph-num">1단계</span><h3>일반 부킹 안정화와 수요 데이터 수집</h3><span class="ph-when"><span class="mono">2026.10~11</span><span class="tag now">진행 중</span></span></div>
+          <div class="ph-body">
+            <p class="ph-goal"><b>목표</b>오픈 직후 성수기를 사고 없이 넘기고, 역제안에 필요한 데이터를 모아요.</p>
+            <ul>
+              <li>예약 확정 오류, 취소·환불 처리, 고객 문의 응대를 먼저 안정시켜요.</li>
+              <li>데이터를 모아요.
+                <ul>
+                  <li>검색 조건 (날짜, 지역, 시간, 인원, 가격)</li>
+                  <li>결과 없음 검색</li>
+                  <li>결과가 있었는데도 예약하지 않고 나간 이탈</li>
+                  <li>골프장별 판매율</li>
+                </ul>
+              </li>
+              <li>검색 결과가 없을 때 "원하는 조건 남기기" 버튼을 넣어요. 처음엔 접수만 하고, 맞는 티가 생기면 알려주는 <strong>대기 알림</strong> 수준으로 운영해요.</li>
+              <li>홍보는 재고가 넉넉한 골프장과 시간대에 집중해요.</li>
+            </ul>
+            <p class="dont"><b>하지 않을 것</b>관리자 역제안 전면 운영. 성수기에 열면 운영이 과부하될 위험이 커요.</p>
+            <div class="gate"><b>다음 단계로 넘어갈 조건 (예시)</b><ul><li>예약 오류율 1% 미만</li><li>결과 없음 비율과 주요 원인 파악</li><li>조건 남기기 100건 이상</li></ul></div>
+          </div>
+        </article>
+
+        <article class="phase">
+          <div class="ph-head"><span class="ph-num">2단계</span><h3>조건 부킹 시범 운영</h3><span class="ph-when"><span class="mono">2026.12~2027.02</span><span class="tag next">예정</span></span></div>
+          <div class="ph-body">
+            <p class="ph-goal"><b>목표</b>관리자가 직접 제안해 보며 역제안의 가치를 검증하고, 봄 시즌 재고를 확보해요.</p>
+            <ul>
+              <li>시범 대상은 조건 남기기 이용자 중 일부, 수도권 위주로 해요.</li>
+              <li>겨울에 잘 맞는 상품부터 시작해요.
+                <ul>
+                  <li>해외 골프 투어: 겨울이 성수기이고 견적이 필요한 상품이에요. 사업 범위에 맞으면 넣어요.</li>
+                  <li>제주·남부 지방 동계 라운드</li>
+                  <li>동호회 봄 시즌 월례회 일정을 미리 받는 단체 연간 예약</li>
+                  <li>동계 특가</li>
+                </ul>
+              </li>
+              <li>관리자 업무 도구를 만들어요. 조건 접수 자동 정리, AI 제안 초안, 표준 제안 양식, 무응답 자동 안내가 들어가요.</li>
+              <li>비수기라 골프장 협상의 적기예요. 제휴 골프장을 늘리고, 봄 시즌 블록 티와 특가를 시범 계약해요.</li>
+            </ul>
+            <div class="gate"><b>다음 단계로 넘어갈 조건 (예시)</b><ul><li>시범 요청 100건</li><li>제안 도달률 70%, 체결률 30%</li><li>봄 시즌 블록 티·특가 확보</li></ul></div>
+          </div>
+        </article>
+
+        <article class="phase">
+          <div class="ph-head"><span class="ph-num">3단계</span><h3>조건 부킹 정식 오픈</h3><span class="ph-when"><span class="mono">2027.03~06</span><span class="tag next">예정</span></span></div>
+          <div class="ph-body">
+            <p class="ph-goal"><b>목표</b>조건 부킹을 앱에 정식으로 넣고, 승인 체계로 성수기를 운영해요.</p>
+            <ul>
+              <li>앱의 두 곳에 넣어요.
+                <ul>
+                  <li>검색 결과가 없을 때 보여주는 대안</li>
+                  <li>조인·단체·패키지·특가 별도 메뉴</li>
+                </ul>
+              </li>
+              <li>제안은 AI 초안과 관리자 승인으로 처리하고, 제안 보증과 응답 보장 규칙을 함께 적용해요.</li>
+              <li>동호회·월례회 총무와 평일 고객을 대상으로 마케팅해요.</li>
+            </ul>
+            <div class="gate"><b>다음 단계로 넘어갈 조건 (예시)</b><ul><li>성수기 응답 시간 목표 달성</li><li>관리자 1인당 처리량이 한계에 가까워짐 (자동화가 필요하다는 신호)</li><li>조건 부킹 재이용률 30%</li></ul></div>
+          </div>
+        </article>
+
+        <article class="phase">
+          <div class="ph-head"><span class="ph-num">4단계</span><h3>골퍼용 AI 매니저</h3><span class="ph-when"><span class="mono">2027.07~11</span><span class="tag next">예정</span></span></div>
+          <div class="ph-body">
+            <p class="ph-goal"><b>목표</b>골퍼가 직접 쓰는 AI 매니저로 처리 병목을 풀어요.</p>
+            <ul>
+              <li>7~8월 여름 준수기에 만들어요. 프로토타입에 있는 기능들이에요.
+                <ul>
+                  <li>대화로 조건 접수, 즉시 예약</li>
+                  <li>제안 비교, 대기와 홀드</li>
+                  <li>D-1 참석 확인, 취소·변경</li>
+                </ul>
+              </li>
+              <li>9~11월 가을 성수기에 실전 운영해요. 1년 전 같은 시즌 데이터와 비교할 수 있어요.</li>
+              <li>골프장 시스템 연동을 넓혀요.</li>
+            </ul>
+            <div class="gate"><b>다음 단계로 넘어갈 조건 (예시)</b><ul><li>AI 자동 처리 비율 60%</li><li>1년치 시즌 데이터 축적</li></ul></div>
+          </div>
+        </article>
+
+        <article class="phase">
+          <div class="ph-head"><span class="ph-num">5단계</span><h3>수요 집계와 협상력</h3><span class="ph-when"><span class="mono">2027.12~2028.06</span><span class="tag next">예정</span></span></div>
+          <div class="ph-body">
+            <p class="ph-goal"><b>목표</b>쌓인 수요를 근거로 재고를 끌어와요.</p>
+            <ul>
+              <li>겨울에 1년치 시즌 데이터로 공동구매와 블록 티를 협상하고, 봄 시즌에 적용해요.</li>
+              <li>골프장 대상 서비스(수요 리포트, 잔여티 판매 채널)로 수익원을 넓혀요.</li>
+              <li>강원·충청, 제주 패키지, 단체·기업 행사로 지역과 상품을 넓혀요.</li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="phase">
+          <div class="ph-head"><span class="ph-num">6단계</span><h3>외부 매니저 개방 검토</h3><span class="ph-when"><span class="mono">2028.07~</span><span class="tag later">검토</span></span></div>
+          <div class="ph-body">
+            <p class="ph-goal"><b>목표</b>검증된 파트너로 공급 채널을 넓혀요.</p>
+            <ul>
+              <li>매니저 검증·평가, 제안 보증 규칙, 정산 시스템, <a href="#s4">4장</a>의 대응책이 갖춰진 뒤에 검토해요.</li>
+              <li>검증된 파트너 몇 명을 초대하는 것부터 시작해요.</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+
+      <h3>지금(10월) 바로 할 일</h3>
+      <ol class="list">
+        <li>검색 기록에 "결과 없음"과 검색 조건이 남는지 확인해요.</li>
+        <li>결과 없음 화면에 "조건 남기기"를 추가해요.</li>
+        <li>조건 남기기를 처리할 담당자와 응답 기준(예: 24시간 안에 안내)을 정해요.</li>
+        <li>성수기 예약 안정성(확정 오류, 취소 처리)을 점검해요.</li>
+        <li>겨울 시범 상품(해외 투어, 동계 라운드, 동호회 연간 예약)의 공급처와 접촉을 시작해요.</li>
+        <li>12월 골프장 협상에 쓸 10~11월 판매 실적 리포트를 준비해요.</li>
+      </ol>
+
+      <h3>초기 타깃 후보</h3>
+      <div class="fits">
+        <div class="fit"><b>평일 고객</b><span>자영업자, 시니어, 교대근무자. 평일 잔여티와 수급이 맞아요.</span></div>
+        <div class="fit"><b>동호회·월례회 총무</b><span>정기 단체 예약이라 역제안이 잘 맞고, 한 명이 매달 여러 팀을 데려와요.</span></div>
+        <div class="fit"><b>임박 특가 고객</b><span>골프장이 처분하고 싶은 재고와 맞아요.</span></div>
+      </div>
+
+      <h3>주의할 점</h3>
+      <ul class="list">
+        <li><strong>오픈 직후 안정이 먼저예요.</strong> 예약 경험이 흔들리면 역제안도 신뢰를 얻기 어려워요.</li>
+        <li><strong>성수기 홍보를 조심하세요.</strong> 재고 없이 봄·가을에 홍보하면 빈 진열대 효과가 가장 크게 나타나요.</li>
+        <li><strong>비수기를 활용하세요.</strong> 겨울과 여름은 시범 운영, 개발, 협상 기간이에요.</li>
+        <li><strong>날짜보다 전환 조건이 우선이에요.</strong> 지표가 안 나오면 다음 단계로 넘어가지 마세요. 일정은 팀 규모와 자금에 맞춰 조정해요.</li>
+        <li><strong>자금 계획이 필요해요.</strong> 조건 부킹 정식 오픈(2027년 3월)과 첫 시즌 결과가 나올 때까지 버틸 자금(<strong>런웨이</strong>)을 확보해야 해요.</li>
+      </ul>
+    </section>
+
+    <!-- 7 -->
+    <section id="s7">
+      <h2 class="sec"><span class="no">7</span>측정 지표</h2>
+      <p class="sec-lede">단계가 올라갈 때마다 아래 지표를 더해요.</p>
+      <div class="metrics">
+        <div class="metric"><h4><span class="tag now">1단계부터</span></h4><ul>
+          <li>결과 없음 비율<span class="new">신규</span></li>
+          <li>조건 남기기 전환율<span class="new">신규</span></li>
+          <li>즉시 예약 체결률, 재고 판매율</li>
+          <li>예약 오류율</li>
+          <li>재방문율</li>
+        </ul></div>
+        <div class="metric"><h4><span class="tag next">2단계부터</span></h4><ul>
+          <li>제안 도달률 (요청 중 제안을 1건 이상 받은 비율)</li>
+          <li>첫 제안까지 걸린 시간</li>
+          <li>제안 체결률, 시세 대비 할인폭</li>
+          <li>관리자 1인당 처리 건수</li>
+        </ul></div>
+        <div class="metric"><h4><span class="tag next">3단계부터</span></h4><ul>
+          <li>피크 시간대 응답 시간</li>
+          <li>승인한 제안 대비 체결률</li>
+          <li>조건 부킹 재이용률</li>
+        </ul></div>
+        <div class="metric"><h4><span class="tag next">4단계부터</span></h4><ul>
+          <li>AI 자동 처리 비율</li>
+          <li>블록 티 판매율</li>
+        </ul></div>
+        <div class="metric"><h4><span class="tag next">5단계부터</span></h4><ul>
+          <li>블록 티 비중</li>
+          <li>공동구매 체결률</li>
+          <li>지역별 제안 도달률</li>
+        </ul></div>
+        <div class="metric"><h4><span class="tag later">외부 개방 후</span></h4><ul>
+          <li>매니저 낙찰률·응답률</li>
+          <li>매니저별 확정 이행률</li>
+        </ul></div>
+      </div>
+    </section>
+
+    <footer>
+      <span>단계별 전환 조건의 수치는 예시예요. 1단계에서 쌓이는 실제 데이터를 보고 조정하세요.</span>
+      <span>관련 자료: <a href="golftop_ai_booking.html">골프탑 AI 조건 부킹 프로토타입</a></span>
+    </footer>
+  </main>
+</div>
+
+<script>
+(() => {
+  // 2026.10 ~ 2028.12, 27개월
+  const START = { y: 2026, m: 10 }, N = 27;
+  const months = Array.from({ length: N }, (_, i) => { const t = START.m - 1 + i; return { y: START.y + Math.floor(t / 12), m: t % 12 + 1 }; });
+  const season = m => [4, 5, 6, 9, 10, 11].includes(m) ? 'peak' : [3, 7, 8].includes(m) ? 'mid' : 'off';
+  const SEASON_LABEL = { peak: '성수기', mid: '준성수기', off: '비수기' };
+  const idx = (y, m) => (y - START.y) * 12 + (m - START.m);
+  const PHASES = [
+    { n: 1, name: '일반 부킹 안정화', from: [2026, 10], to: [2026, 11], st: 'now',   when: '2026.10~11',      goal: '예약 안정, 수요 데이터 수집' },
+    { n: 2, name: '조건 부킹 시범',   from: [2026, 12], to: [2027, 2],  st: 'next',  when: '2026.12~2027.02', goal: '관리자 수동 제안 검증, 봄 재고 협상' },
+    { n: 3, name: '조건 부킹 정식 오픈', from: [2027, 3], to: [2027, 6], st: 'next',  when: '2027.03~06',      goal: '앱 정식 탑재, 승인 체계 운영' },
+    { n: 4, name: '골퍼용 AI 매니저', from: [2027, 7],  to: [2027, 11], st: 'next',  when: '2027.07~11',      goal: '처리 병목 해소' },
+    { n: 5, name: '수요 집계·협상',   from: [2027, 12], to: [2028, 6],  st: 'next',  when: '2027.12~2028.06', goal: '1년치 데이터로 공동구매·블록 티' },
+    { n: 6, name: '외부 매니저 검토', from: [2028, 7],  to: [2028, 12], st: 'later', when: '2028.07~',        goal: '검증된 파트너로 공급 채널 확대' },
+  ];
+  const g = document.getElementById('gantt');
+  const cell = (cls, html, col, row, attrs = '') => `<div class="${cls}" style="grid-column:${col};grid-row:${row}" ${attrs}>${html}</div>`;
+  let h = '';
+  // year row (왼쪽 칸은 고정 라벨 영역이라 빈 칸으로 덮음)
+  h += cell('g-rowlabel', '', 1, 1) + cell('g-rowlabel', '', 1, 2);
+  const years = [...new Set(months.map(x => x.y))];
+  years.forEach(y => { const a = months.findIndex(x => x.y === y), b = months.length - 1 - [...months].reverse().findIndex(x => x.y === y); h += cell('g-year', y, `${a + 2}/${b + 3}`, 1); });
+  // month row
+  months.forEach((x, i) => { h += cell('g-month', x.m, i + 2, 2); });
+  // season row
+  h += cell('g-rowlabel', '골프 시즌', 1, 3);
+  const RUN_TEXT = { peak: '성수기', off: '비수기', mid: '여름' };
+  for (let i = 0; i < N;){
+    const s = season(months[i].m); let j = i; while (j + 1 < N && season(months[j + 1].m) === s) j++;
+    const len = j - i + 1, text = len >= 2 ? RUN_TEXT[s] : '';
+    h += cell(`g-season ${s}`, text, `${i + 2}/${j + 3}`, 3, `title="${months[i].y}.${months[i].m}~${months[j].y}.${months[j].m} ${SEASON_LABEL[s]}"`);
+    i = j + 1;
+  }
+  // phases
+  PHASES.forEach((p, r) => {
+    const a = idx(...p.from), b = idx(...p.to), span = b - a + 1, row = r + 4;
+    h += cell('g-rowlabel', `${p.n}. ${p.name}<small>${p.when}</small>`, 1, row);
+    const label = span >= 3 ? (p.st === 'later' ? `${p.from[1]}월~` : `${p.from[1]}~${p.to[1]}월`) : '';
+    h += `<div class="g-bar ${p.st}" tabindex="0" style="grid-column:${a + 2}/${b + 3};grid-row:${row}" data-i="${r}" aria-label="${p.n}단계 ${p.name}, ${p.when}, ${p.goal}">${label}</div>`;
+  });
+  g.innerHTML = h;
+  // 작성 기준일 2026-10-02 표시
+  const pos = 0 + 1 / 31;
+  const today = document.createElement('div');
+  today.className = 'g-today';
+  today.style.left = `calc(136px + (100% - 136px) * ${pos / N})`;
+  today.innerHTML = '<span>기준일 10/2</span>';
+  g.appendChild(today);
+  // tooltip
+  const fig = document.getElementById('ganttFig'), tip = document.getElementById('tip');
+  const ST = { now: '진행 중', next: '예정', later: '검토' };
+  const show = el => {
+    const p = PHASES[+el.dataset.i];
+    tip.innerHTML = `<b>${p.n}단계 · ${p.name}</b><span class="mono">${p.when} · ${ST[p.st]}</span><br>${p.goal}`;
+    tip.hidden = false;
+    const fr = fig.getBoundingClientRect(), br = el.getBoundingClientRect();
+    let left = br.left - fr.left, top = br.bottom - fr.top + 8;
+    left = Math.max(0, Math.min(left, fr.width - tip.offsetWidth));
+    tip.style.left = left + 'px'; tip.style.top = top + 'px';
+  };
+  const hide = () => { tip.hidden = true; };
+  g.querySelectorAll('.g-bar').forEach(el => {
+    el.addEventListener('mouseenter', () => show(el));
+    el.addEventListener('mouseleave', hide);
+    el.addEventListener('focus', () => show(el));
+    el.addEventListener('blur', hide);
+  });
+  fig.querySelector('.gantt-scroll').addEventListener('scroll', hide, { passive: true });
+})();
+</script>
+</body>
+</html>
