@@ -2912,7 +2912,7 @@ const OFFICIAL_RULES = {
     items: ['롱기스트: 지정 파5홀에서 티샷을 가장 멀리 보낸 선수 (페어웨이 및 파 이상)', '니어리스트: 지정 파3홀에서 티샷을 홀컵에 가장 가깝게 붙인 선수 (온그린 및 파 이상)', '첫 버디상: 대회 참가자 중 가장 먼저 버디를 기록한 홀의 주인공 (선착순 1명)', '핸디상 (105타 제한 룰): 기존 개인 핸디캡 대비 목표 타수를 가장 많이 줄인 순서. 기존 핸디캡이 105타 이상이면 기준을 105타로 고정 (예: 110타 → 오늘 100타여도 5타 줄인 것으로 계산). 벌타는 반영하지 않음', '환상의 파트너상 (팀전): 파트너 순위 [1위+16위] / [2위+15위] … 총 8개 팀의 합산 스코어(그로스, 벌타 미반영) 경쟁, 합산 성적이 가장 우수한 팀', '파트너 순위(사전 확정): 지난 대회 최종 순위를 그대로 사용 (불참자 자리에 양재모 13위). 당일 성적·핸디캡과 무관하며, 파트너 탭에서 전체 순위와 조편성을 볼 수 있음']
   }, {
     title: '동점자 및 순위 결정 (Tie-Breaker)',
-    items: ['메달리스트: ① 더블 파 개수가 적은 사람 → ② 버디 → 파 → 보기 개수가 많은 순 → ③ 백카운트 (후반 9홀 → 후반 6홀 → 후반 3홀 → 18번 홀 타수)', '핸디상: 줄인 타수가 같으면 기존 핸디캡이 더 낮은 사람이 앞 순위, 그것도 같으면 메달리스트 규정 준용', '파트너상: ① 팀 합산 양파(더블 파) 개수가 적은 팀 → ② 아랫순위(9~16위) 팀원의 개별 스코어가 더 우수한 팀']
+    items: ['메달리스트: ① 벌타(패널티 핸디캡)가 있는 사람 (벌타가 큰 순) → ② 더블 파 개수가 적은 사람 → ③ 버디 → 파 → 보기 개수가 많은 순 → ④ 백카운트 (후반 9홀 → 후반 6홀 → 후반 3홀 → 18번 홀 타수)', '핸디상: 줄인 타수가 같으면 기존 핸디캡이 더 낮은 사람이 앞 순위, 그것도 같으면 메달리스트 규정 준용', '파트너상: ① 팀 합산 양파(더블 파) 개수가 적은 팀 → ② 아랫순위(9~16위) 팀원의 개별 스코어가 더 우수한 팀']
   }]
 };
 const NOTICE_INFO = {
@@ -5095,7 +5095,7 @@ function OfficialAwardsView({
     }, "최종 ", p.final, "타 (", p.gross, p.penalty > 0 ? `+${p.penalty}` : "", ") · ", p.played, "H")) : React.createElement("span", {
       className: "text-slate-300 font-bold text-sm"
     }, "-"));
-  })), React.createElement(Note, null, "그로스 + 벌타 = 최종 타수 (벌타는 우승·준우승에만 적용). 동점 시 더블파 적은 순 → 버디·파·보기 많은 순 → 백카운트로 순위를 정합니다.", inProgress ? " (경기 진행 중 — 진행 홀 기준 오버파 순)" : ""), React.createElement("div", {
+  })), React.createElement(Note, null, "그로스 + 벌타 = 최종 타수 (벌타는 우승·준우승에만 적용). 동점 시 벌타 있는 사람 우선 → 더블파 적은 순 → 버디·파·보기 많은 순 → 백카운트로 순위를 정합니다.", inProgress ? " (경기 진행 중 — 진행 홀 기준 오버파 순)" : ""), React.createElement("div", {
     className: "space-y-2"
   }, official.medal.map((p, i) => React.createElement(OfficialPlayerRow, {
     key: `${p.tIdx}-${p.pIdx}`,
@@ -6609,7 +6609,7 @@ function App() {
       };
     }));
     const tieCmp = (a, b) => a.doublePars - b.doublePars || b.birdies - a.birdies || b.pars - a.pars || b.bogeys - a.bogeys || a.back9 - b.back9 || a.back6 - b.back6 || a.back3 - b.back3 || a.last - b.last;
-    const medalCmp = (a, b) => a.finalOver - b.finalOver || tieCmp(a, b);
+    const medalCmp = (a, b) => a.finalOver - b.finalOver || b.penalty - a.penalty || tieCmp(a, b);
     const grossCmp = (a, b) => a.grossOver - b.grossOver || tieCmp(a, b);
     const active = players.filter(p => p.played > 0);
     const waiting = players.filter(p => p.played === 0);
