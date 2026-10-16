@@ -3091,22 +3091,56 @@ function ShareModal({
     }, "확인")));
   }
   const inviteUrl = roomId ? `${window.location.origin}${window.location.pathname}?roomId=${roomId}` : window.location.href;
-  const handleCopy = () => {
+  const legacyCopy = () => {
+    let ok = false;
     try {
       const el = document.createElement('textarea');
       el.value = inviteUrl;
-      el.setAttribute('readonly', '');
-      el.style.position = 'absolute';
-      el.style.left = '-9999px';
+      el.style.position = 'fixed';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.opacity = '0';
+      el.style.fontSize = '16px';
       document.body.appendChild(el);
+      el.focus();
       el.select();
-      document.execCommand('copy');
+      el.setSelectionRange(0, inviteUrl.length);
+      ok = document.execCommand('copy');
       document.body.removeChild(el);
+    } catch (e) {}
+    return ok;
+  };
+  const copyUrl = async () => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(inviteUrl);
+        return true;
+      }
+    } catch (e) {}
+    return legacyCopy();
+  };
+  const handleCopy = async () => {
+    if (await copyUrl()) {
       alert('URL이 복사되었습니다.');
-    } catch (e) {
-      alert('복사 실패. 아래 URL을 직접 복사해주세요.');
+      onClose();
+    } else {
+      window.prompt('아래 URL을 길게 눌러 복사해주세요.', inviteUrl);
     }
-    onClose();
+  };
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: '골프 스코어보드',
+          url: inviteUrl
+        });
+        onClose();
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+    }
+    handleCopy();
   };
   return React.createElement("div", {
     className: "fixed inset-0 z-[130] flex items-center justify-center px-4 text-center font-sans"
@@ -3147,13 +3181,7 @@ function ShareModal({
     onClick: handleCopy,
     className: "flex-1 bg-white border border-[#0D8A5E] text-[#0D8A5E] font-bold py-3.5 rounded-xl"
   }, "URL 복사"), React.createElement("button", {
-    onClick: () => {
-      if (navigator.share) navigator.share({
-        title: '골프 스코어보드',
-        url: inviteUrl
-      });
-      onClose();
-    },
+    onClick: handleShare,
     className: "flex-1 bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md"
   }, "공유하기"))));
 }
