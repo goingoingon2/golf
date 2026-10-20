@@ -2231,10 +2231,10 @@ try {
   const urlRoomId = urlParams.get('roomId');
   let localRoomId = null;
   try {
-    const raw = window.localStorage.getItem('seadae_roomId');
+    const raw = window.localStorage.getItem('seadae_roomId_v31');
     localRoomId = raw ? JSON.parse(raw) : null;
   } catch (e) {}
-  if (!urlRoomId && localRoomId || urlRoomId && localRoomId && urlRoomId !== localRoomId) {
+  if (urlRoomId && localRoomId && urlRoomId !== localRoomId) {
     const keysToRemove = [];
     for (let i = 0; i < window.localStorage.length; i++) {
       const key = window.localStorage.key(i);
@@ -2783,18 +2783,22 @@ const POSTER_INFO = {
   place: '안성 파인크리크',
   photo: POSTER_PHOTO_DATA,
   teeTimes: [{
-    course: '파인크리크',
+    course: '크리크 → 밸리 코스',
     times: ['07:37', '07:44', '07:51'],
-    teams: '3팀 · 코스 미정'
+    teams: '3팀'
   }]
 };
 const TEE_TIMES_LABEL = POSTER_INFO.teeTimes.flatMap(t => t.times).join(' · ');
 const NOTICE_INFO = {
   title: '대회 당일 집결 및 티오프 일정',
-  arrival: '06:20 까지 도착',
+  arrival: '06:10 까지 도착',
+  place: {
+    name: '파주옥 미리내직영점',
+    mapUrl: 'https://naver.me/GKItEDak'
+  },
   schedule: [{
-    time: '06:20',
-    label: '집결'
+    time: '06:10',
+    label: '집결 · 파주옥 미리내직영점'
   }, {
     time: '07:37',
     label: '1조 티오프'
@@ -2826,8 +2830,8 @@ const getInitialTeams = () => [[{
   name: "박상연",
   handicap: "+41"
 }, {
-  name: "서대선",
-  handicap: "+25"
+  name: "유영호",
+  handicap: "+22"
 }, {
   name: "이현정",
   handicap: "+23"
@@ -2835,8 +2839,8 @@ const getInitialTeams = () => [[{
   name: "이경구",
   handicap: "+24"
 }, {
-  name: "유영호",
-  handicap: "+22"
+  name: "서대선",
+  handicap: "+25"
 }, {
   name: "김영환",
   handicap: "+22"
@@ -2859,11 +2863,11 @@ const getInitialTeams = () => [[{
 const getInitialGroups = () => [{
   id: 'gSD',
   name: 'SD',
-  members: ['0-0', '0-1', '1-0', '1-1', '2-0', '2-1']
+  members: ['0-0', '0-1', '0-2', '1-0', '2-0', '2-1']
 }, {
   id: 'gDD',
   name: 'DD',
-  members: ['0-2', '0-3', '1-2', '1-3', '2-2', '2-3']
+  members: ['0-3', '1-1', '1-2', '1-3', '2-2', '2-3']
 }];
 const safeDisplayDiff = diff => {
   if (diff == null || isNaN(diff)) return '-';
@@ -2942,23 +2946,60 @@ function ShareModal({
       className: "w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors active:scale-95"
     }, "확인")));
   }
-  const inviteUrl = roomId ? `${window.location.origin}${window.location.pathname}?roomId=${roomId}` : window.location.href;
-  const handleCopy = () => {
+  const inviteUrl = roomId ? `${window.location.origin}${window.location.pathname}?roomId=${roomId}` : '';
+  const shareText = `${POSTER_INFO.titleKo} 스코어보드 초대\n방 코드: ${roomId}\n${inviteUrl}`;
+  const copyText = async text => {
+    try {
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+        return true;
+      }
+    } catch (e) {}
+    let ok = false;
     try {
       const el = document.createElement('textarea');
-      el.value = inviteUrl;
-      el.setAttribute('readonly', '');
-      el.style.position = 'absolute';
-      el.style.left = '-9999px';
+      el.value = text;
+      el.style.position = 'fixed';
+      el.style.top = '0';
+      el.style.left = '0';
+      el.style.opacity = '0';
+      el.style.fontSize = '16px';
       document.body.appendChild(el);
+      el.focus();
       el.select();
-      document.execCommand('copy');
+      el.setSelectionRange(0, text.length);
+      ok = document.execCommand('copy');
       document.body.removeChild(el);
-      alert('URL이 복사되었습니다.');
-    } catch (e) {
-      alert('복사 실패. 아래 URL을 직접 복사해주세요.');
+    } catch (e) {}
+    return ok;
+  };
+  const handleCopy = async () => {
+    if (await copyText(inviteUrl)) {
+      alert('초대 URL이 복사되었습니다.');
+      onClose();
+    } else {
+      window.prompt('아래 URL을 길게 눌러 복사해주세요.', inviteUrl);
     }
-    onClose();
+  };
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${POSTER_INFO.titleKo} 스코어보드`,
+          text: shareText
+        });
+        onClose();
+        return;
+      } catch (e) {
+        if (e && e.name === 'AbortError') return;
+      }
+    }
+    if (await copyText(shareText)) {
+      alert('초대 문구(방 코드 + 링크)를 복사했습니다.\n카톡 등에 붙여넣어 보내주세요.');
+      onClose();
+    } else {
+      window.prompt('아래 내용을 길게 눌러 복사해 보내주세요.', shareText);
+    }
   };
   return React.createElement("div", {
     className: "fixed inset-0 z-[130] flex items-center justify-center px-4 text-center font-sans"
@@ -2978,16 +3019,20 @@ function ShareModal({
     className: "p-2 text-slate-400"
   }, React.createElement(Icons.X, {
     className: "w-5 h-5"
-  }))), React.createElement("div", {
-    className: "bg-[#F8F9FA] rounded-3xl p-6 flex flex-col items-center justify-center mb-6 border border-slate-100"
-  }, React.createElement(Icons.Share2, {
-    className: "w-16 h-16 text-slate-300 mb-3",
-    strokeWidth: 1.5
-  }), React.createElement("div", {
-    className: "text-[10px] text-slate-500 text-center leading-relaxed bg-white p-3 rounded-xl border border-slate-200"
+  }))), !roomId ? React.createElement(React.Fragment, null, React.createElement("div", {
+    className: "bg-[#F8F9FA] rounded-3xl p-6 mb-6 border border-slate-100 text-sm text-slate-600 leading-relaxed text-center"
+  }, "아직 방이 만들어지지 않았습니다.", React.createElement("br", null), "방장이 설정 화면에서 ", React.createElement("b", null, "'대기실 입장'"), "을 눌러 방을 만든 뒤 초대해주세요."), React.createElement("button", {
+    onClick: onClose,
+    className: "w-full bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-md transition-colors active:scale-95"
+  }, "확인")) : React.createElement(React.Fragment, null, React.createElement("div", {
+    className: "bg-[#F8F9FA] rounded-3xl p-6 flex flex-col items-center justify-center mb-4 border border-slate-100"
   }, React.createElement("span", {
-    className: "font-bold text-slate-700"
-  }, "💡 테스트 팁"), React.createElement("br", null), "현재 브라우저에서 열면 '방장' 권한이 유지됩니다. 게스트(참여자) 화면을 보려면 ", React.createElement("b", null, "시크릿 모드"), "나 ", React.createElement("b", null, "다른 기기"), "에서 접속하세요.")), React.createElement("div", {
+    className: "text-slate-500 text-xs font-bold mb-2"
+  }, "방 코드"), React.createElement("span", {
+    className: "text-3xl font-black text-[#0D8A5E] font-mono tracking-[0.2em] select-all"
+  }, roomId), React.createElement("span", {
+    className: "text-[11px] text-slate-500 mt-2 leading-relaxed text-center"
+  }, "링크가 안 열리면 참가자가 설정 화면 맨 위에", React.createElement("br", null), "이 코드를 입력해 입장할 수 있습니다.")), React.createElement("div", {
     className: "mb-6"
   }, React.createElement("label", {
     className: "block text-slate-500 text-xs font-bold mb-2 pl-1"
@@ -2999,15 +3044,50 @@ function ShareModal({
     onClick: handleCopy,
     className: "flex-1 bg-white border border-[#0D8A5E] text-[#0D8A5E] font-bold py-3.5 rounded-xl"
   }, "URL 복사"), React.createElement("button", {
-    onClick: () => {
-      if (navigator.share) navigator.share({
-        title: '골프 스코어보드',
-        url: inviteUrl
-      });
-      onClose();
-    },
+    onClick: handleShare,
     className: "flex-1 bg-[#0D8A5E] text-white font-bold py-3.5 rounded-xl shadow-md"
-  }, "공유하기"))));
+  }, "공유하기")))));
+}
+function JoinRoomCard() {
+  const [code, setCode] = useState('');
+  const handleJoin = () => {
+    const c = code.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (c.length !== 6) {
+      alert('방 코드 6자리를 입력해주세요.');
+      return;
+    }
+    try {
+      const keys = [];
+      for (let i = 0; i < window.localStorage.length; i++) {
+        const k = window.localStorage.key(i);
+        if (k && k.startsWith('seadae_') && k !== POSTER_HIDE_KEY) keys.push(k);
+      }
+      keys.forEach(k => window.localStorage.removeItem(k));
+    } catch (e) {}
+    window.location.href = `${window.location.pathname}?roomId=${c}`;
+  };
+  return React.createElement("div", {
+    className: "bg-white rounded-2xl p-5 shadow-sm border border-slate-100 text-left"
+  }, React.createElement("div", {
+    className: "flex items-center gap-2 mb-4 font-bold text-slate-800"
+  }, React.createElement(Icons.Share2, {
+    className: "w-5 h-5 text-slate-500"
+  }), " 초대받은 참가자이신가요?"), React.createElement("div", {
+    className: "relative mb-3 flex gap-2 w-full"
+  }, React.createElement("input", {
+    type: "text",
+    value: code,
+    maxLength: 6,
+    autoCapitalize: "characters",
+    onChange: e => setCode(e.target.value.toUpperCase()),
+    placeholder: "방 코드 6자리",
+    className: "flex-1 min-w-0 border rounded-xl px-4 py-3 text-sm font-bold focus:outline-none"
+  }), React.createElement("button", {
+    onClick: handleJoin,
+    className: "shrink-0 bg-[#0D8A5E] text-white px-4 py-3 rounded-xl shadow-sm active:scale-95 flex items-center justify-center gap-1.5 font-bold text-sm whitespace-nowrap"
+  }, "입장")), React.createElement("p", {
+    className: "text-[11px] text-slate-500 mt-2 leading-relaxed"
+  }, "방장에게 받은 방 코드를 입력하면 참가자로 입장합니다. 방장은 이 칸을 쓰지 않아도 됩니다."));
 }
 function ScorePasteModal({
   isOpen,
@@ -3456,7 +3536,20 @@ function NoticePopup({
     className: "w-4 h-4"
   }), " 집결"), React.createElement("span", {
     className: "text-[#0D8A5E] font-black text-[15px]"
-  }, NOTICE_INFO.arrival)), React.createElement("div", {
+  }, NOTICE_INFO.arrival)), NOTICE_INFO.place && React.createElement("div", {
+    className: "flex items-center justify-between gap-3 bg-white border border-slate-100 rounded-2xl px-4 py-3 shadow-sm mb-3"
+  }, React.createElement("span", {
+    className: "flex items-center gap-1.5 min-w-0 font-bold text-slate-800 text-sm"
+  }, React.createElement(Icons.MapPin, {
+    className: "w-4 h-4 text-[#0D8A5E] shrink-0"
+  }), React.createElement("span", {
+    className: "truncate"
+  }, NOTICE_INFO.place.name)), React.createElement("a", {
+    href: NOTICE_INFO.place.mapUrl,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    className: "shrink-0 bg-[#0D8A5E] text-white px-4 py-3 rounded-xl shadow-sm active:scale-95 flex items-center justify-center gap-1.5 font-bold text-sm whitespace-nowrap"
+  }, "지도 보기")), React.createElement("div", {
     className: "relative pl-3"
   }, React.createElement("div", {
     className: "absolute left-[5px] top-3 bottom-3 w-px bg-slate-200"
@@ -4726,6 +4819,7 @@ function AwardsPageViewMain({
   }, "자세히 보기 >"))))));
 }
 function SettingsView({
+  roomId,
   teamNames,
   setTeamNames,
   initialData,
@@ -4875,7 +4969,7 @@ function SettingsView({
     className: "text-emerald-100/70 text-[10px] mt-2 font-medium animate-pulse"
   }, "타이틀을 클릭하여 수정할 수 있습니다"))), React.createElement("div", {
     className: "relative z-10 -mt-10 px-4 flex-1 space-y-4"
-  }, React.createElement("div", {
+  }, !roomId && React.createElement(JoinRoomCard, null), React.createElement("div", {
     className: "bg-white rounded-2xl p-5 shadow-sm border border-slate-100 text-left"
   }, React.createElement("div", {
     className: "flex items-center gap-2 mb-4 font-bold text-slate-800"
@@ -5480,31 +5574,31 @@ function SettingsView({
 function App() {
   const urlParams = new URLSearchParams(window.location.search);
   const isInviteLink = !!urlParams.get('roomId');
-  const [currentView, setCurrentView] = usePersistentState('seadae_currentView_v26', isInviteLink ? 'waitingRoom' : 'settings');
-  const [handicapType, setHandicapType] = usePersistentState('seadae_handicapType_v26', 'over');
-  const [eventName, setEventName] = usePersistentState('seadae_eventName_v26', '2026 SEADAE 추계 라운드');
-  const [courseInfo, setCourseInfo] = usePersistentState('seadae_courseInfo_v26', {
+  const [currentView, setCurrentView] = usePersistentState('seadae_currentView_v27', isInviteLink ? 'waitingRoom' : 'settings');
+  const [handicapType, setHandicapType] = usePersistentState('seadae_handicapType_v27', 'over');
+  const [eventName, setEventName] = usePersistentState('seadae_eventName_v27', '2026 SEADAE 추계 라운드');
+  const [courseInfo, setCourseInfo] = usePersistentState('seadae_courseInfo_v27', {
     name: '안성 파인크리크',
-    front: '파인 코스',
-    back: '크리크 코스'
+    front: '크리크 코스',
+    back: '밸리 코스'
   });
-  const [isMultiCourse, setIsMultiCourse] = usePersistentState('seadae_isMultiCourse_v26', false);
+  const [isMultiCourse, setIsMultiCourse] = usePersistentState('seadae_isMultiCourse_v27', false);
   const defaultTeamCourses = Array(20).fill({
-    front: '파인 코스',
-    back: '크리크 코스'
+    front: '크리크 코스',
+    back: '밸리 코스'
   });
-  const [teamCourses, setTeamCourses] = usePersistentState('seadae_teamCourses_v26', defaultTeamCourses);
-  const [isRoundStarted, setIsRoundStarted] = usePersistentState('seadae_isRoundStarted_v26', false);
-  const [teamNames, setTeamNames] = usePersistentState('seadae_teamNames_v26', ['1조', '2조', '3조']);
-  const [teamData, setTeamData] = usePersistentState('seadae_teamData_v26', getInitialTeams());
-  const [enableTeamComp, setEnableTeamComp] = usePersistentState('seadae_enableTeamComp_v26', true);
-  const [enableGroupComp, setEnableGroupComp] = usePersistentState('seadae_enableGroupComp_v26', true);
-  const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('seadae_teamBalanceMode_v26', 'average');
-  const [customGroups, setCustomGroups] = usePersistentState('seadae_customGroups_v26', getInitialGroups());
-  const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('seadae_groupBalanceMode_v26', 'average');
-  const [selectedAwards, setSelectedAwards] = usePersistentState('seadae_selectedAwards_v26', ALL_AWARDS_KEYS);
-  const [stablefordTitle, setStablefordTitle] = usePersistentState('seadae_stablefordTitle_v26', '변형스테이블포드');
-  const [stablefordConfig, setStablefordConfig] = usePersistentState('seadae_stablefordConfig_v26', [{
+  const [teamCourses, setTeamCourses] = usePersistentState('seadae_teamCourses_v27', defaultTeamCourses);
+  const [isRoundStarted, setIsRoundStarted] = usePersistentState('seadae_isRoundStarted_v27', false);
+  const [teamNames, setTeamNames] = usePersistentState('seadae_teamNames_v27', ['1조', '2조', '3조']);
+  const [teamData, setTeamData] = usePersistentState('seadae_teamData_v27', getInitialTeams());
+  const [enableTeamComp, setEnableTeamComp] = usePersistentState('seadae_enableTeamComp_v27', true);
+  const [enableGroupComp, setEnableGroupComp] = usePersistentState('seadae_enableGroupComp_v27', true);
+  const [teamBalanceMode, setTeamBalanceMode] = usePersistentState('seadae_teamBalanceMode_v27', 'average');
+  const [customGroups, setCustomGroups] = usePersistentState('seadae_customGroups_v27', getInitialGroups());
+  const [groupBalanceMode, setGroupBalanceMode] = usePersistentState('seadae_groupBalanceMode_v27', 'average');
+  const [selectedAwards, setSelectedAwards] = usePersistentState('seadae_selectedAwards_v27', ALL_AWARDS_KEYS);
+  const [stablefordTitle, setStablefordTitle] = usePersistentState('seadae_stablefordTitle_v27', '변형스테이블포드');
+  const [stablefordConfig, setStablefordConfig] = usePersistentState('seadae_stablefordConfig_v27', [{
     id: 'albatross',
     label: '알바트로스',
     score: 8
@@ -5529,26 +5623,26 @@ function App() {
     label: '더블보기 이상',
     score: -3
   }]);
-  const [specialHoles, setSpecialHoles] = usePersistentState('seadae_specialHoles_v26', {
+  const [specialHoles, setSpecialHoles] = usePersistentState('seadae_specialHoles_v27', {
     nearest: null,
     longest: null,
     requirePar: true
   });
-  const [specialRecords, setSpecialRecords] = usePersistentState('seadae_specialRecords_v26', Array(18).fill(null).map(() => ({})));
-  const [currentHole, setCurrentHole] = usePersistentState('seadae_currentHole_v26', 1);
-  const [allPars, setAllPars] = usePersistentState('seadae_allPars_v26', []);
-  const [allScores, setAllScores] = usePersistentState('seadae_allScores_v26', []);
-  const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('seadae_hostSelectedTeam_v26', 0);
-  const [currentUserRole, setCurrentUserRole] = usePersistentState('seadae_currentUserRole_v26', isInviteLink ? 'guest' : 'host');
-  const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('seadae_myPlayerInfo_v26', null);
-  const [joinedStatus, setJoinedStatus] = usePersistentState('seadae_joinedStatus_v26', []);
-  const [lastEditors, setLastEditors] = usePersistentState('seadae_lastEditors_v26', {});
-  const [scoreInputPermission, setScoreInputPermission] = usePersistentState('seadae_scoreInputPermission_v26', 'host');
-  const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('seadae_scoreInputAuthorizedPlayers_v26', []);
+  const [specialRecords, setSpecialRecords] = usePersistentState('seadae_specialRecords_v27', Array(18).fill(null).map(() => ({})));
+  const [currentHole, setCurrentHole] = usePersistentState('seadae_currentHole_v27', 1);
+  const [allPars, setAllPars] = usePersistentState('seadae_allPars_v27', []);
+  const [allScores, setAllScores] = usePersistentState('seadae_allScores_v27', []);
+  const [hostSelectedTeam, setHostSelectedTeam] = usePersistentState('seadae_hostSelectedTeam_v27', 0);
+  const [currentUserRole, setCurrentUserRole] = usePersistentState('seadae_currentUserRole_v27', isInviteLink ? 'guest' : 'host');
+  const [myPlayerInfo, setMyPlayerInfo] = usePersistentState('seadae_myPlayerInfo_v27', null);
+  const [joinedStatus, setJoinedStatus] = usePersistentState('seadae_joinedStatus_v27', []);
+  const [lastEditors, setLastEditors] = usePersistentState('seadae_lastEditors_v27', {});
+  const [scoreInputPermission, setScoreInputPermission] = usePersistentState('seadae_scoreInputPermission_v27', 'host');
+  const [scoreInputAuthorizedPlayers, setScoreInputAuthorizedPlayers] = usePersistentState('seadae_scoreInputAuthorizedPlayers_v27', []);
   const [previousView, setPreviousView] = useState('scoreInput');
   const [detailModal, setDetailModal] = useState(null);
   const [isAwardInfoOpen, setIsAwardInfoOpen] = useState(false);
-  const [roomId, setRoomId] = usePersistentState('seadae_roomId_v30', null);
+  const [roomId, setRoomId] = usePersistentState('seadae_roomId_v31', null);
   const manuallyClearedRef = useRef({});
   const [isDbConnected, setIsDbConnected] = useState(false);
   const [user, setUser] = useState(null);
@@ -5565,6 +5659,16 @@ function App() {
       if (rId) setRoomId(rId);
     } catch (e) {}
   }, [setCurrentUserRole, setRoomId]);
+  useEffect(() => {
+    if (!roomId) return;
+    try {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('roomId') !== roomId) {
+        url.searchParams.set('roomId', roomId);
+        window.history.replaceState({}, '', url.toString());
+      }
+    } catch (e) {}
+  }, [roomId]);
   useEffect(() => {
     if (!isConfigValid) return;
     let unsubscribe = null,
@@ -5991,6 +6095,7 @@ function App() {
     switch (viewToRender) {
       case 'settings':
         return React.createElement(SettingsView, {
+          roomId: roomId,
           teamNames: teamNames,
           setTeamNames: setTeamNames,
           initialData: teamData,
